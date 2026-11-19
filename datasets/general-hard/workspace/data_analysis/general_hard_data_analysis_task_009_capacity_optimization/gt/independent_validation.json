@@ -1,0 +1,172 @@
+{
+  "status": "PASS_DUAL_FORMULATION_SOURCE_TRUTH",
+  "source_revision": "v2",
+  "input_sha256": {
+    "capacity.xlsx": "0cb9617bdd921a79a715ea7ea25d37c62992d24061ba24e17cc8429fd61e7ee0",
+    "constraints.md": "3a7556f9f8790e0a1cc7f8de19bc3a13ce9d82f66a7d40f704545e3fd54eb9b5",
+    "costs.csv": "91755d162f0c9f1c0b4995b70ac7494eae9bedd83b53c1b13840318f0f6a8eaf",
+    "demand.csv": "fbe34bfe30f7852d057ca42cd818547aee07b3cec93ab7724de08d2ec86e1590"
+  },
+  "actual_source_records_sha256": "40041d45a7fd8b4fa57cd4d28808a429528321d01d053301bdce63958fc35df6",
+  "methods": [
+    "36 integer quantities +36 positive-line binaries +3 plant binaries",
+    "Complete integer feasible per-SKU allocations, one selected option per SKU; 3 plant binaries"
+  ],
+  "backends": {
+    "scipy_distribution": "1.16.3",
+    "scipy_module": "1.16.3",
+    "numpy_distribution": "2.5.4",
+    "pulp_distribution": "3.2.2",
+    "pulp_module_reported": "3.0.2",
+    "cbc_binary": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h025/authoring/solver-venv/lib/python3.12/site-packages/pulp/solverdir/cbc/osx/i64/cbc",
+    "cbc_sha256": "9eeb33c515945620d89dfc2efef9c6740b559e14a6603153a156c6e288a5765b"
+  },
+  "stage_objectives_match": true,
+  "stages_each": 4,
+  "exact_feasibility_checks_each": 93,
+  "analytic_checks": 6,
+  "optimal_objective": [
+    0,
+    7,
+    22,
+    481355
+  ],
+  "HiGHS": {
+    "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h025/qa/highs-v2-1793165920586534000",
+    "stages": [
+      {
+        "stage": 1,
+        "status": 0,
+        "objective": -22,
+        "mip_dual_bound": -22.0,
+        "mip_gap": 0.0,
+        "nodes": 1,
+        "business_objective": [
+          0,
+          21,
+          22,
+          332320
+        ],
+        "message": "Optimization terminated successfully. (HiGHS Status 7: Optimal)"
+      },
+      {
+        "stage": 2,
+        "status": 0,
+        "objective": -14,
+        "mip_dual_bound": -14.0,
+        "mip_gap": 0.0,
+        "nodes": 1,
+        "business_objective": [
+          0,
+          7,
+          22,
+          492105
+        ],
+        "message": "Optimization terminated successfully. (HiGHS Status 7: Optimal)"
+      },
+      {
+        "stage": 3,
+        "status": 0,
+        "objective": 0,
+        "mip_dual_bound": 0.0,
+        "mip_gap": 0.0,
+        "nodes": 1,
+        "business_objective": [
+          0,
+          7,
+          22,
+          498090
+        ],
+        "message": "Optimization terminated successfully. (HiGHS Status 7: Optimal)"
+      },
+      {
+        "stage": 4,
+        "status": 0,
+        "objective": 481355,
+        "mip_dual_bound": 481354.99999999977,
+        "mip_gap": 0.0,
+        "nodes": 1,
+        "business_objective": [
+          0,
+          7,
+          22,
+          481355
+        ],
+        "message": "Optimization terminated successfully. (HiGHS Status 7: Optimal)"
+      }
+    ]
+  },
+  "CBC": {
+    "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h025/qa/cbc-options-v2-1793165920849714000",
+    "stages": [
+      {
+        "stage": 1,
+        "status": "Optimal",
+        "objective": -22,
+        "business_objective": [
+          0,
+          21,
+          22,
+          329745
+        ]
+      },
+      {
+        "stage": 2,
+        "status": "Optimal",
+        "objective": -14,
+        "business_objective": [
+          0,
+          7,
+          22,
+          484085
+        ]
+      },
+      {
+        "stage": 3,
+        "status": "Optimal",
+        "objective": 0,
+        "business_objective": [
+          0,
+          7,
+          22,
+          487925
+        ]
+      },
+      {
+        "stage": 4,
+        "status": "Optimal",
+        "objective": 481355,
+        "business_objective": [
+          0,
+          7,
+          22,
+          481355
+        ]
+      }
+    ],
+    "enumerated_options": 121,
+    "option_counts": {
+      "S01": 15,
+      "S02": 11,
+      "S03": 4,
+      "S04": 11,
+      "S05": 12,
+      "S06": 12,
+      "S07": 5,
+      "S08": 10,
+      "S09": 12,
+      "S10": 14,
+      "S11": 5,
+      "S12": 10
+    }
+  },
+  "source_calculation_sha256": {
+    "solve_highs.py": "548238539fc3367820441be66c96313c390a0b7c0871544ec8b0318bd0ed9404",
+    "solve_options_cbc.py": "116aa657f8d100d0ce06c6bd920f5e16450ed6942215ea12dd7a60de74c81d4a",
+    "feasibility.py": "eed0131dc923d57c782e753e8d7738c2e874ff7594cba8d79e366f65a344908b"
+  },
+  "candidate_output_used_for_GT": false,
+  "human_expert_review": false,
+  "prior_revision": "v1 sources, code and solver outputs preserved separately; revision tightened material/labour before a reference allocation was authored.",
+  "limit": "Source truth and two optimization formulations only; native reference, business grader and model/Harness calibration are still pending."
+}

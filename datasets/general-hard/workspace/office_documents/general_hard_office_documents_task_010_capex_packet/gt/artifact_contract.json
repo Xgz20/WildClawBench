@@ -1,0 +1,110 @@
+{
+  "schema_version": "h010-artifact-contract/v1",
+  "files": {
+    "budget": "results/budget.xlsx",
+    "application": "results/application.docx",
+    "plan": "results/plan.html",
+    "ledger": "results/assumptions.json"
+  },
+  "line_ids": [
+    "P1-CL",
+    "P1-FAN",
+    "P2-CL",
+    "P2-FAN"
+  ],
+  "tables": {
+    "lines": [
+      "line_id",
+      "phase",
+      "equipment",
+      "vendor",
+      "quantity",
+      "threshold",
+      "unit_low",
+      "unit_high",
+      "equipment_tax_factor",
+      "installation_unit",
+      "installation_tax_factor",
+      "maintenance_unit",
+      "maintenance_tax_factor",
+      "crew_days_per_unit",
+      "equipment_gross",
+      "installation_gross",
+      "maintenance_gross",
+      "crew_days"
+    ],
+    "phases": [
+      "phase",
+      "equipment_gross",
+      "installation_gross",
+      "freight_a",
+      "freight_b",
+      "freight_c",
+      "freight_gross",
+      "contingency_rate",
+      "contingency",
+      "capex",
+      "maintenance_gross",
+      "other_opex",
+      "opex",
+      "total_cash",
+      "capex_limit",
+      "opex_limit",
+      "capex_headroom",
+      "opex_headroom"
+    ],
+    "options": [
+      "option_id",
+      "p1_cl",
+      "p1_fan",
+      "p2_cl",
+      "p2_fan",
+      "p1_capex",
+      "p1_opex",
+      "p2_capex",
+      "p2_opex",
+      "total_cash",
+      "eligible",
+      "reason"
+    ]
+  },
+  "budget_header_aliases": {
+    "phase": [
+      "phase",
+      "阶段",
+      "阶段编号"
+    ],
+    "capex": [
+      "capex",
+      "资本申请",
+      "capex（元）",
+      "capex（CNY）",
+      "capex（CNY元）",
+      "资本申请（元）",
+      "资本申请（CNY）",
+      "资本申请（CNY元）"
+    ],
+    "opex": [
+      "opex",
+      "费用申请",
+      "opex（元）",
+      "opex（CNY）",
+      "opex（CNY元）",
+      "费用申请（元）",
+      "费用申请（CNY）",
+      "费用申请（CNY元）"
+    ],
+    "total_cash": [
+      "total_cash",
+      "总现金",
+      "total_cash（元）",
+      "total_cash（CNY）",
+      "total_cash（CNY元）",
+      "总现金（元）",
+      "总现金（CNY）",
+      "总现金（CNY元）"
+    ]
+  },
+  "numeric_tolerance": "0.005",
+  "layout": "Find logical tables by headers and IDs; sheet/row/column order and reasonable dates are not fixed."
+}

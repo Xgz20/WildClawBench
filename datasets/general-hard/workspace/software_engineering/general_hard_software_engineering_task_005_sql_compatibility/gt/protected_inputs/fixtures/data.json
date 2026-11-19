@@ -1,0 +1,83 @@
+{
+  "customer": [
+    {
+      "id": 1,
+      "name": "Ada",
+      "group": "alpha",
+      "region": "north",
+      "joined_at": "2026-01-01",
+      "credit": 10
+    },
+    {
+      "id": 2,
+      "name": "O'Neil",
+      "group": null,
+      "region": "south",
+      "joined_at": "2026-02-01",
+      "credit": null
+    },
+    {
+      "id": 3,
+      "name": "王同学",
+      "group": "beta",
+      "region": null,
+      "joined_at": null,
+      "credit": 0
+    },
+    {
+      "id": 4,
+      "name": "café",
+      "group": "alpha",
+      "region": "north",
+      "joined_at": "2024-02-29",
+      "credit": -2
+    }
+  ],
+  "order": [
+    {
+      "id": 11,
+      "customer_id": 1,
+      "group": "alpha",
+      "amount": 10,
+      "note": "safe-target",
+      "created_at": "2026-01-31",
+      "select": "keep"
+    },
+    {
+      "id": 12,
+      "customer_id": 2,
+      "group": null,
+      "amount": 0,
+      "note": "x' OR 1=1 --",
+      "created_at": "2026-02-01",
+      "select": null
+    },
+    {
+      "id": 13,
+      "customer_id": 3,
+      "group": "beta",
+      "amount": null,
+      "note": null,
+      "created_at": "2026-02-28",
+      "select": "keep"
+    },
+    {
+      "id": 14,
+      "customer_id": 4,
+      "group": "alpha",
+      "amount": -2,
+      "note": "café_%",
+      "created_at": "2026-03-01",
+      "select": "drop"
+    },
+    {
+      "id": 15,
+      "customer_id": 1,
+      "group": "beta",
+      "amount": 10,
+      "note": "safe-target",
+      "created_at": null,
+      "select": "keep"
+    }
+  ]
+}

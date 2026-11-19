@@ -1,0 +1,958 @@
+{
+  "schema_version": "h026-reviewed-source-expected/v1",
+  "status": "APPROVED_AFTER_TWO_INDEPENDENT_MODEL_READS",
+  "source_sha256": {
+    "ledger.csv": "260b03a3dfa49ce38d596c4b28313bb0e48cd61359e2323583d65938329c68c0",
+    "policy.md": "0d0151d5f228d9d3462a44381cfb0d97328583421f90d62879a0dea66409f070",
+    "vouchers/voucher_01.png": "38cef001b47ebfddedc4416502fce0eb14dc3344b076957d8029c3bc2e7d6024",
+    "vouchers/voucher_02.png": "f02a9596b35e247882c567c66f4f15514706835445362fd55570af308ee61c54",
+    "vouchers/voucher_03.png": "10202bded9197d6ddd5a346fe2578d233f68049f8be6832d78c3ef6285d681d2",
+    "vouchers/voucher_04.png": "10202bded9197d6ddd5a346fe2578d233f68049f8be6832d78c3ef6285d681d2",
+    "vouchers/voucher_05.png": "bc1dc075b70b395198f2cb05c8205064b29051d1d5b2c56b8ff7f2d6cc7bd879",
+    "vouchers/voucher_06.png": "b8a12a8027fc52e49da160f9ff49c02625323fd582061fbb9d7380859dcaefa3",
+    "vouchers/voucher_07.png": "6efd35de4be34c1afadb5de1a7bb9e083af6bc26f3c91f6c0e539883eb14b8c3",
+    "vouchers/voucher_08.png": "d1268cf1160bf87c2398016c1792dcbd8d458cf02cdb7c5d3622bb53993f14d1",
+    "vouchers/voucher_09.png": "4a023e86420dab73b7b79dc3a2d67e9d11e14fb9cbb75900176d1c9f58005ee8",
+    "vouchers/voucher_10.png": "d7e33886797fb46efe246f0a1bdc542e8c9b9dee43000294780776afccfbb498",
+    "vouchers/voucher_11.png": "bd89a4ec0c9456e3813c37db4815af82f8f5b209dc5707c9606363a506d5ffdf",
+    "vouchers/voucher_12.png": "374ce07608e155d4167176553e60e6001a8e3ec0ac9872da23015146be1b75bf"
+  },
+  "annotation_reconciliation_sha256": "eab0f94c285533c9123954cfaf979c0c686dffb1f0b443ef801c52bf900fcf15",
+  "images": [
+    {
+      "file": "vouchers/voucher_01.png",
+      "voucher_no": "NF-260910-018",
+      "counterparty_id": "CP-001",
+      "counterparty_name": "青禾示例服务",
+      "business_date": "2026-09-10",
+      "currency": "CNY",
+      "direction": "expense",
+      "printed_amount": "1280.00",
+      "status_selection": "valid",
+      "handwritten_amount": null,
+      "approval_location": "general",
+      "approval_crossed_out": false,
+      "has_handwritten_correction": false,
+      "correction_status": "none"
+    },
+    {
+      "file": "vouchers/voucher_02.png",
+      "voucher_no": "NF-260910-018",
+      "counterparty_id": "CP-001",
+      "counterparty_name": "青禾示例服务",
+      "business_date": "2026-09-10",
+      "currency": "CNY",
+      "direction": "expense",
+      "printed_amount": "1280.00",
+      "status_selection": "void",
+      "handwritten_amount": null,
+      "approval_location": "general",
+      "approval_crossed_out": false,
+      "has_handwritten_correction": false,
+      "correction_status": "none"
+    },
+    {
+      "file": "vouchers/voucher_03.png",
+      "voucher_no": "NF-260912-004",
+      "counterparty_id": "CP-002",
+      "counterparty_name": "澄星示例供应",
+      "business_date": "2026-09-12",
+      "currency": "CNY",
+      "direction": "expense",
+      "printed_amount": "860.50",
+      "status_selection": "valid",
+      "handwritten_amount": null,
+      "approval_location": "general",
+      "approval_crossed_out": false,
+      "has_handwritten_correction": false,
+      "correction_status": "none"
+    },
+    {
+      "file": "vouchers/voucher_04.png",
+      "voucher_no": "NF-260912-004",
+      "counterparty_id": "CP-002",
+      "counterparty_name": "澄星示例供应",
+      "business_date": "2026-09-12",
+      "currency": "CNY",
+      "direction": "expense",
+      "printed_amount": "860.50",
+      "status_selection": "valid",
+      "handwritten_amount": null,
+      "approval_location": "general",
+      "approval_crossed_out": false,
+      "has_handwritten_correction": false,
+      "correction_status": "none"
+    },
+    {
+      "file": "vouchers/voucher_05.png",
+      "voucher_no": "NF-260914-027",
+      "counterparty_id": "CP-003",
+      "counterparty_name": "溪桥示例设备",
+      "business_date": "2026-09-14",
+      "currency": "CNY",
+      "direction": "expense",
+      "printed_amount": "2400.00",
+      "status_selection": "valid",
+      "handwritten_amount": "2140.00",
+      "approval_location": "correction",
+      "approval_crossed_out": false,
+      "has_handwritten_correction": true,
+      "correction_status": "approved"
+    },
+    {
+      "file": "vouchers/voucher_06.png",
+      "voucher_no": "NF-260914-027",
+      "counterparty_id": "CP-003",
+      "counterparty_name": "溪桥示例设备",
+      "business_date": "2026-09-14",
+      "currency": "CNY",
+      "direction": "expense",
+      "printed_amount": "2400.00",
+      "status_selection": "valid",
+      "handwritten_amount": "2140.00",
+      "approval_location": "general",
+      "approval_crossed_out": false,
+      "has_handwritten_correction": true,
+      "correction_status": "unapproved"
+    },
+    {
+      "file": "vouchers/voucher_07.png",
+      "voucher_no": "NF-260916-108",
+      "counterparty_id": "CP-004",
+      "counterparty_name": "远杉示例用品",
+      "business_date": "2026-09-16",
+      "currency": "CNY",
+      "direction": "expense",
+      "printed_amount": "510.20",
+      "status_selection": "valid",
+      "handwritten_amount": null,
+      "approval_location": "general",
+      "approval_crossed_out": false,
+      "has_handwritten_correction": false,
+      "correction_status": "none"
+    },
+    {
+      "file": "vouchers/voucher_08.png",
+      "voucher_no": "NF-260916-1O8",
+      "counterparty_id": "CP-004",
+      "counterparty_name": "远杉示例用品",
+      "business_date": "2026-09-16",
+      "currency": "CNY",
+      "direction": "expense",
+      "printed_amount": "510.20",
+      "status_selection": "valid",
+      "handwritten_amount": null,
+      "approval_location": "general",
+      "approval_crossed_out": false,
+      "has_handwritten_correction": false,
+      "correction_status": "none"
+    },
+    {
+      "file": "vouchers/voucher_09.png",
+      "voucher_no": "NF-260918-036",
+      "counterparty_id": "CP-005",
+      "counterparty_name": "明川示例支持",
+      "business_date": "2026-09-18",
+      "currency": "CNY",
+      "direction": "expense",
+      "printed_amount": "780.00",
+      "status_selection": "pending",
+      "handwritten_amount": null,
+      "approval_location": "general",
+      "approval_crossed_out": false,
+      "has_handwritten_correction": false,
+      "correction_status": "none"
+    },
+    {
+      "file": "vouchers/voucher_10.png",
+      "voucher_no": "NF-260920-052",
+      "counterparty_id": "CP-006",
+      "counterparty_name": "安桐示例耗材",
+      "business_date": "2026-09-20",
+      "currency": "CNY",
+      "direction": "expense",
+      "printed_amount": "0.00",
+      "status_selection": "valid",
+      "handwritten_amount": null,
+      "approval_location": "general",
+      "approval_crossed_out": false,
+      "has_handwritten_correction": false,
+      "correction_status": "none"
+    },
+    {
+      "file": "vouchers/voucher_11.png",
+      "voucher_no": "NF-260922-062",
+      "counterparty_id": "CP-007",
+      "counterparty_name": "泉屿示例租赁",
+      "business_date": "2026-09-22",
+      "currency": "CNY",
+      "direction": "expense",
+      "printed_amount": "460.00",
+      "status_selection": "valid",
+      "handwritten_amount": null,
+      "approval_location": "general",
+      "approval_crossed_out": false,
+      "has_handwritten_correction": false,
+      "correction_status": "none"
+    },
+    {
+      "file": "vouchers/voucher_12.png",
+      "voucher_no": "NF-260924-080",
+      "counterparty_id": "CP-013",
+      "counterparty_name": "启明示例物流",
+      "business_date": "2026-09-24",
+      "currency": "CNY",
+      "direction": "expense",
+      "printed_amount": "1020.00",
+      "status_selection": "valid",
+      "handwritten_amount": "1200.00",
+      "approval_location": "correction",
+      "approval_crossed_out": true,
+      "has_handwritten_correction": true,
+      "correction_status": "unapproved"
+    }
+  ],
+  "voucher_groups": [
+    {
+      "voucher_no": "NF-260910-018",
+      "counterparty_id": "CP-001",
+      "business_date": "2026-09-10",
+      "currency": "CNY",
+      "direction": "expense",
+      "state": "void",
+      "effective_amount": "0.00",
+      "voucher_files": [
+        "vouchers/voucher_01.png",
+        "vouchers/voucher_02.png"
+      ],
+      "eligible_entry_ids": [
+        "L001",
+        "L002"
+      ],
+      "canonical_entry_id": null
+    },
+    {
+      "voucher_no": "NF-260912-004",
+      "counterparty_id": "CP-002",
+      "business_date": "2026-09-12",
+      "currency": "CNY",
+      "direction": "expense",
+      "state": "confirmed",
+      "effective_amount": "860.50",
+      "voucher_files": [
+        "vouchers/voucher_03.png",
+        "vouchers/voucher_04.png"
+      ],
+      "eligible_entry_ids": [
+        "L003",
+        "L004"
+      ],
+      "canonical_entry_id": "L003"
+    },
+    {
+      "voucher_no": "NF-260914-027",
+      "counterparty_id": "CP-003",
+      "business_date": "2026-09-14",
+      "currency": "CNY",
+      "direction": "expense",
+      "state": "confirmed",
+      "effective_amount": "2140.00",
+      "voucher_files": [
+        "vouchers/voucher_05.png",
+        "vouchers/voucher_06.png"
+      ],
+      "eligible_entry_ids": [
+        "L006",
+        "L007"
+      ],
+      "canonical_entry_id": "L006"
+    },
+    {
+      "voucher_no": "NF-260916-108",
+      "counterparty_id": "CP-004",
+      "business_date": "2026-09-16",
+      "currency": "CNY",
+      "direction": "expense",
+      "state": "confirmed",
+      "effective_amount": "510.20",
+      "voucher_files": [
+        "vouchers/voucher_07.png"
+      ],
+      "eligible_entry_ids": [
+        "L009"
+      ],
+      "canonical_entry_id": "L009"
+    },
+    {
+      "voucher_no": "NF-260916-1O8",
+      "counterparty_id": "CP-004",
+      "business_date": "2026-09-16",
+      "currency": "CNY",
+      "direction": "expense",
+      "state": "confirmed",
+      "effective_amount": "510.20",
+      "voucher_files": [
+        "vouchers/voucher_08.png"
+      ],
+      "eligible_entry_ids": [
+        "L010"
+      ],
+      "canonical_entry_id": "L010"
+    },
+    {
+      "voucher_no": "NF-260918-036",
+      "counterparty_id": "CP-005",
+      "business_date": "2026-09-18",
+      "currency": "CNY",
+      "direction": "expense",
+      "state": "pending",
+      "effective_amount": null,
+      "voucher_files": [
+        "vouchers/voucher_09.png"
+      ],
+      "eligible_entry_ids": [
+        "L011",
+        "L012"
+      ],
+      "canonical_entry_id": null
+    },
+    {
+      "voucher_no": "NF-260920-052",
+      "counterparty_id": "CP-006",
+      "business_date": "2026-09-20",
+      "currency": "CNY",
+      "direction": "expense",
+      "state": "confirmed",
+      "effective_amount": "0.00",
+      "voucher_files": [
+        "vouchers/voucher_10.png"
+      ],
+      "eligible_entry_ids": [
+        "L013",
+        "L014"
+      ],
+      "canonical_entry_id": "L014"
+    },
+    {
+      "voucher_no": "NF-260922-062",
+      "counterparty_id": "CP-007",
+      "business_date": "2026-09-22",
+      "currency": "CNY",
+      "direction": "expense",
+      "state": "confirmed",
+      "effective_amount": "460.00",
+      "voucher_files": [
+        "vouchers/voucher_11.png"
+      ],
+      "eligible_entry_ids": [],
+      "canonical_entry_id": null
+    },
+    {
+      "voucher_no": "NF-260924-080",
+      "counterparty_id": "CP-013",
+      "business_date": "2026-09-24",
+      "currency": "CNY",
+      "direction": "expense",
+      "state": "pending",
+      "effective_amount": null,
+      "voucher_files": [
+        "vouchers/voucher_12.png"
+      ],
+      "eligible_entry_ids": [],
+      "canonical_entry_id": null
+    }
+  ],
+  "ledger_decisions": [
+    {
+      "entry_id": "L001",
+      "voucher_no": "NF-260910-018",
+      "counterparty_id": "CP-001",
+      "counterparty_name": "青禾示例服务",
+      "business_date": "2026-09-10",
+      "currency": "CNY",
+      "direction": "expense",
+      "amount": "1280.00",
+      "book_status": "posted",
+      "posted_at": "2026-09-11T09:00:00+08:00",
+      "scope_status": "eligible",
+      "match_status": "matched_void",
+      "canonical_entry_id": null,
+      "action": "reverse_void",
+      "target_amount": "0.00",
+      "proposed_delta": "-1280.00",
+      "voucher_files": [
+        "vouchers/voucher_01.png",
+        "vouchers/voucher_02.png"
+      ],
+      "rule_ids": [
+        "P3",
+        "P5"
+      ]
+    },
+    {
+      "entry_id": "L002",
+      "voucher_no": "NF-260910-018",
+      "counterparty_id": "CP-001",
+      "counterparty_name": "青禾示例服务",
+      "business_date": "2026-09-10",
+      "currency": "CNY",
+      "direction": "expense",
+      "amount": "1280.00",
+      "book_status": "posted",
+      "posted_at": "2026-09-11T09:10:00+08:00",
+      "scope_status": "eligible",
+      "match_status": "matched_void",
+      "canonical_entry_id": null,
+      "action": "reverse_void",
+      "target_amount": "0.00",
+      "proposed_delta": "-1280.00",
+      "voucher_files": [
+        "vouchers/voucher_01.png",
+        "vouchers/voucher_02.png"
+      ],
+      "rule_ids": [
+        "P3",
+        "P5"
+      ]
+    },
+    {
+      "entry_id": "L003",
+      "voucher_no": "NF-260912-004",
+      "counterparty_id": "CP-002",
+      "counterparty_name": "澄星示例供应",
+      "business_date": "2026-09-12",
+      "currency": "CNY",
+      "direction": "expense",
+      "amount": "860.50",
+      "book_status": "posted",
+      "posted_at": "2026-09-13T10:00:00+08:00",
+      "scope_status": "eligible",
+      "match_status": "matched_confirmed",
+      "canonical_entry_id": "L003",
+      "action": "keep",
+      "target_amount": "860.50",
+      "proposed_delta": "0.00",
+      "voucher_files": [
+        "vouchers/voucher_03.png",
+        "vouchers/voucher_04.png"
+      ],
+      "rule_ids": [
+        "P2",
+        "P4",
+        "P5"
+      ]
+    },
+    {
+      "entry_id": "L004",
+      "voucher_no": "NF-260912-004",
+      "counterparty_id": "CP-002",
+      "counterparty_name": "澄星示例供应",
+      "business_date": "2026-09-12",
+      "currency": "CNY",
+      "direction": "expense",
+      "amount": "860.50",
+      "book_status": "posted",
+      "posted_at": "2026-09-13T10:05:00+08:00",
+      "scope_status": "eligible",
+      "match_status": "matched_confirmed",
+      "canonical_entry_id": "L003",
+      "action": "reverse_duplicate",
+      "target_amount": "0.00",
+      "proposed_delta": "-860.50",
+      "voucher_files": [
+        "vouchers/voucher_03.png",
+        "vouchers/voucher_04.png"
+      ],
+      "rule_ids": [
+        "P2",
+        "P5"
+      ]
+    },
+    {
+      "entry_id": "L005",
+      "voucher_no": "NF-260912-004",
+      "counterparty_id": "CP-002",
+      "counterparty_name": "澄星示例供应",
+      "business_date": "2026-09-12",
+      "currency": "CNY",
+      "direction": "expense",
+      "amount": "860.50",
+      "book_status": "draft",
+      "posted_at": "2026-09-13T09:00:00+08:00",
+      "scope_status": "excluded_status",
+      "match_status": "excluded",
+      "canonical_entry_id": null,
+      "action": "excluded",
+      "target_amount": null,
+      "proposed_delta": null,
+      "voucher_files": [],
+      "rule_ids": [
+        "P1"
+      ]
+    },
+    {
+      "entry_id": "L006",
+      "voucher_no": "NF-260914-027",
+      "counterparty_id": "CP-003",
+      "counterparty_name": "溪桥示例设备",
+      "business_date": "2026-09-14",
+      "currency": "CNY",
+      "direction": "expense",
+      "amount": "2400.00",
+      "book_status": "posted",
+      "posted_at": "2026-09-15T11:00:00+08:00",
+      "scope_status": "eligible",
+      "match_status": "matched_confirmed",
+      "canonical_entry_id": "L006",
+      "action": "correct_amount",
+      "target_amount": "2140.00",
+      "proposed_delta": "-260.00",
+      "voucher_files": [
+        "vouchers/voucher_05.png",
+        "vouchers/voucher_06.png"
+      ],
+      "rule_ids": [
+        "P2",
+        "P4",
+        "P5"
+      ]
+    },
+    {
+      "entry_id": "L007",
+      "voucher_no": "NF-260914-027",
+      "counterparty_id": "CP-003",
+      "counterparty_name": "溪桥示例设备",
+      "business_date": "2026-09-14",
+      "currency": "CNY",
+      "direction": "expense",
+      "amount": "2140.00",
+      "book_status": "posted",
+      "posted_at": "2026-09-15T11:10:00+08:00",
+      "scope_status": "eligible",
+      "match_status": "matched_confirmed",
+      "canonical_entry_id": "L006",
+      "action": "reverse_duplicate",
+      "target_amount": "0.00",
+      "proposed_delta": "-2140.00",
+      "voucher_files": [
+        "vouchers/voucher_05.png",
+        "vouchers/voucher_06.png"
+      ],
+      "rule_ids": [
+        "P2",
+        "P5"
+      ]
+    },
+    {
+      "entry_id": "L008",
+      "voucher_no": "NF-260914-027",
+      "counterparty_id": "CP-003",
+      "counterparty_name": "溪桥示例设备",
+      "business_date": "2026-09-14",
+      "currency": "CNY",
+      "direction": "expense",
+      "amount": "2399.99",
+      "book_status": "reversed",
+      "posted_at": "2026-09-15T08:00:00+08:00",
+      "scope_status": "excluded_status",
+      "match_status": "excluded",
+      "canonical_entry_id": null,
+      "action": "excluded",
+      "target_amount": null,
+      "proposed_delta": null,
+      "voucher_files": [],
+      "rule_ids": [
+        "P1"
+      ]
+    },
+    {
+      "entry_id": "L009",
+      "voucher_no": "NF-260916-108",
+      "counterparty_id": "CP-004",
+      "counterparty_name": "远杉示例用品",
+      "business_date": "2026-09-16",
+      "currency": "CNY",
+      "direction": "expense",
+      "amount": "510.20",
+      "book_status": "posted",
+      "posted_at": "2026-09-17T12:00:00+08:00",
+      "scope_status": "eligible",
+      "match_status": "matched_confirmed",
+      "canonical_entry_id": "L009",
+      "action": "keep",
+      "target_amount": "510.20",
+      "proposed_delta": "0.00",
+      "voucher_files": [
+        "vouchers/voucher_07.png"
+      ],
+      "rule_ids": [
+        "P2",
+        "P4",
+        "P5"
+      ]
+    },
+    {
+      "entry_id": "L010",
+      "voucher_no": "NF-260916-1O8",
+      "counterparty_id": "CP-004",
+      "counterparty_name": "远杉示例用品",
+      "business_date": "2026-09-16",
+      "currency": "CNY",
+      "direction": "expense",
+      "amount": "510.20",
+      "book_status": "posted",
+      "posted_at": "2026-09-17T12:10:00+08:00",
+      "scope_status": "eligible",
+      "match_status": "matched_confirmed",
+      "canonical_entry_id": "L010",
+      "action": "keep",
+      "target_amount": "510.20",
+      "proposed_delta": "0.00",
+      "voucher_files": [
+        "vouchers/voucher_08.png"
+      ],
+      "rule_ids": [
+        "P2",
+        "P4",
+        "P5"
+      ]
+    },
+    {
+      "entry_id": "L011",
+      "voucher_no": "NF-260918-036",
+      "counterparty_id": "CP-005",
+      "counterparty_name": "明川示例支持",
+      "business_date": "2026-09-18",
+      "currency": "CNY",
+      "direction": "expense",
+      "amount": "780.00",
+      "book_status": "posted",
+      "posted_at": "2026-09-19T13:00:00+08:00",
+      "scope_status": "eligible",
+      "match_status": "matched_pending",
+      "canonical_entry_id": null,
+      "action": "hold",
+      "target_amount": null,
+      "proposed_delta": null,
+      "voucher_files": [
+        "vouchers/voucher_09.png"
+      ],
+      "rule_ids": [
+        "P3",
+        "P4",
+        "P5"
+      ]
+    },
+    {
+      "entry_id": "L012",
+      "voucher_no": "NF-260918-036",
+      "counterparty_id": "CP-005",
+      "counterparty_name": "明川示例支持",
+      "business_date": "2026-09-18",
+      "currency": "CNY",
+      "direction": "expense",
+      "amount": "785.00",
+      "book_status": "posted",
+      "posted_at": "2026-09-19T13:10:00+08:00",
+      "scope_status": "eligible",
+      "match_status": "matched_pending",
+      "canonical_entry_id": null,
+      "action": "hold",
+      "target_amount": null,
+      "proposed_delta": null,
+      "voucher_files": [
+        "vouchers/voucher_09.png"
+      ],
+      "rule_ids": [
+        "P3",
+        "P4",
+        "P5"
+      ]
+    },
+    {
+      "entry_id": "L013",
+      "voucher_no": "NF-260920-052",
+      "counterparty_id": "CP-006",
+      "counterparty_name": "安桐示例耗材",
+      "business_date": "2026-09-20",
+      "currency": "CNY",
+      "direction": "expense",
+      "amount": "9.99",
+      "book_status": "posted",
+      "posted_at": "2026-09-21T14:05:00+08:00",
+      "scope_status": "eligible",
+      "match_status": "matched_confirmed",
+      "canonical_entry_id": "L014",
+      "action": "reverse_duplicate",
+      "target_amount": "0.00",
+      "proposed_delta": "-9.99",
+      "voucher_files": [
+        "vouchers/voucher_10.png"
+      ],
+      "rule_ids": [
+        "P2",
+        "P5"
+      ]
+    },
+    {
+      "entry_id": "L014",
+      "voucher_no": "NF-260920-052",
+      "counterparty_id": "CP-006",
+      "counterparty_name": "安桐示例耗材",
+      "business_date": "2026-09-20",
+      "currency": "CNY",
+      "direction": "expense",
+      "amount": "0.00",
+      "book_status": "posted",
+      "posted_at": "2026-09-21T14:00:00+08:00",
+      "scope_status": "eligible",
+      "match_status": "matched_confirmed",
+      "canonical_entry_id": "L014",
+      "action": "keep",
+      "target_amount": "0.00",
+      "proposed_delta": "0.00",
+      "voucher_files": [
+        "vouchers/voucher_10.png"
+      ],
+      "rule_ids": [
+        "P2",
+        "P4",
+        "P5"
+      ]
+    },
+    {
+      "entry_id": "L015",
+      "voucher_no": "NF-260924-080",
+      "counterparty_id": "CP-031",
+      "counterparty_name": "启明示例物流",
+      "business_date": "2026-09-24",
+      "currency": "CNY",
+      "direction": "expense",
+      "amount": "1020.00",
+      "book_status": "posted",
+      "posted_at": "2026-09-25T15:00:00+08:00",
+      "scope_status": "eligible",
+      "match_status": "no_voucher",
+      "canonical_entry_id": null,
+      "action": "hold",
+      "target_amount": null,
+      "proposed_delta": null,
+      "voucher_files": [],
+      "rule_ids": [
+        "P2",
+        "P5"
+      ]
+    },
+    {
+      "entry_id": "L016",
+      "voucher_no": "NF-260916-10B",
+      "counterparty_id": "CP-004",
+      "counterparty_name": "远杉示例用品",
+      "business_date": "2026-09-16",
+      "currency": "CNY",
+      "direction": "expense",
+      "amount": "510.20",
+      "book_status": "posted",
+      "posted_at": "2026-09-17T12:20:00+08:00",
+      "scope_status": "eligible",
+      "match_status": "no_voucher",
+      "canonical_entry_id": null,
+      "action": "hold",
+      "target_amount": null,
+      "proposed_delta": null,
+      "voucher_files": [],
+      "rule_ids": [
+        "P2",
+        "P5"
+      ]
+    },
+    {
+      "entry_id": "L017",
+      "voucher_no": "NF-260916-108",
+      "counterparty_id": "CP-004",
+      "counterparty_name": "远杉示例用品",
+      "business_date": "2026-09-16",
+      "currency": "USD",
+      "direction": "expense",
+      "amount": "510.20",
+      "book_status": "posted",
+      "posted_at": "2026-09-17T12:30:00+08:00",
+      "scope_status": "excluded_currency",
+      "match_status": "excluded",
+      "canonical_entry_id": null,
+      "action": "excluded",
+      "target_amount": null,
+      "proposed_delta": null,
+      "voucher_files": [],
+      "rule_ids": [
+        "P1"
+      ]
+    },
+    {
+      "entry_id": "L018",
+      "voucher_no": "NF-260912-004",
+      "counterparty_id": "CP-002",
+      "counterparty_name": "澄星示例供应",
+      "business_date": "2026-10-01",
+      "currency": "CNY",
+      "direction": "expense",
+      "amount": "860.50",
+      "book_status": "posted",
+      "posted_at": "2026-10-02T09:00:00+08:00",
+      "scope_status": "excluded_period",
+      "match_status": "excluded",
+      "canonical_entry_id": null,
+      "action": "excluded",
+      "target_amount": null,
+      "proposed_delta": null,
+      "voucher_files": [],
+      "rule_ids": [
+        "P1"
+      ]
+    }
+  ],
+  "proposals": [
+    {
+      "voucher_no": "NF-260910-018",
+      "counterparty_id": "CP-001",
+      "business_date": "2026-09-10",
+      "currency": "CNY",
+      "direction": "expense",
+      "entry_id": "L001",
+      "action": "reverse_void",
+      "delta_amount": "-1280.00",
+      "target_amount": "0.00",
+      "source_files": [
+        "vouchers/voucher_01.png",
+        "vouchers/voucher_02.png"
+      ],
+      "approval_required": true,
+      "approval_status": "pending",
+      "applied": false
+    },
+    {
+      "voucher_no": "NF-260910-018",
+      "counterparty_id": "CP-001",
+      "business_date": "2026-09-10",
+      "currency": "CNY",
+      "direction": "expense",
+      "entry_id": "L002",
+      "action": "reverse_void",
+      "delta_amount": "-1280.00",
+      "target_amount": "0.00",
+      "source_files": [
+        "vouchers/voucher_01.png",
+        "vouchers/voucher_02.png"
+      ],
+      "approval_required": true,
+      "approval_status": "pending",
+      "applied": false
+    },
+    {
+      "voucher_no": "NF-260912-004",
+      "counterparty_id": "CP-002",
+      "business_date": "2026-09-12",
+      "currency": "CNY",
+      "direction": "expense",
+      "entry_id": "L004",
+      "action": "reverse_duplicate",
+      "delta_amount": "-860.50",
+      "target_amount": "0.00",
+      "source_files": [
+        "vouchers/voucher_03.png",
+        "vouchers/voucher_04.png"
+      ],
+      "approval_required": true,
+      "approval_status": "pending",
+      "applied": false
+    },
+    {
+      "voucher_no": "NF-260914-027",
+      "counterparty_id": "CP-003",
+      "business_date": "2026-09-14",
+      "currency": "CNY",
+      "direction": "expense",
+      "entry_id": "L006",
+      "action": "correct_amount",
+      "delta_amount": "-260.00",
+      "target_amount": "2140.00",
+      "source_files": [
+        "vouchers/voucher_05.png",
+        "vouchers/voucher_06.png"
+      ],
+      "approval_required": true,
+      "approval_status": "pending",
+      "applied": false
+    },
+    {
+      "voucher_no": "NF-260914-027",
+      "counterparty_id": "CP-003",
+      "business_date": "2026-09-14",
+      "currency": "CNY",
+      "direction": "expense",
+      "entry_id": "L007",
+      "action": "reverse_duplicate",
+      "delta_amount": "-2140.00",
+      "target_amount": "0.00",
+      "source_files": [
+        "vouchers/voucher_05.png",
+        "vouchers/voucher_06.png"
+      ],
+      "approval_required": true,
+      "approval_status": "pending",
+      "applied": false
+    },
+    {
+      "voucher_no": "NF-260920-052",
+      "counterparty_id": "CP-006",
+      "business_date": "2026-09-20",
+      "currency": "CNY",
+      "direction": "expense",
+      "entry_id": "L013",
+      "action": "reverse_duplicate",
+      "delta_amount": "-9.99",
+      "target_amount": "0.00",
+      "source_files": [
+        "vouchers/voucher_10.png"
+      ],
+      "approval_required": true,
+      "approval_status": "pending",
+      "applied": false
+    },
+    {
+      "voucher_no": "NF-260922-062",
+      "counterparty_id": "CP-007",
+      "business_date": "2026-09-22",
+      "currency": "CNY",
+      "direction": "expense",
+      "entry_id": null,
+      "action": "create",
+      "delta_amount": "460.00",
+      "target_amount": "460.00",
+      "source_files": [
+        "vouchers/voucher_11.png"
+      ],
+      "approval_required": true,
+      "approval_status": "pending",
+      "applied": false
+    }
+  ],
+  "summary": {
+    "image_count": 12,
+    "voucher_group_count": 9,
+    "ledger_row_count": 18,
+    "eligible_entry_count": 14,
+    "excluded_entry_count": 4,
+    "eligible_book_amount": "12946.59",
+    "proposed_delta_sum": "-5370.49",
+    "book_amount_after_proposals": "7576.10",
+    "unresolved_book_amount": "3095.20",
+    "unresolved_entry_count": 4,
+    "proposal_count": 7,
+    "unbooked_pending_group_count": 1,
+    "confirmed_voucher_target_sum": "4480.90",
+    "fully_reconciled": false,
+    "applied": false,
+    "approval_required": true
+  }
+}

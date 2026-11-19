@@ -1,0 +1,26 @@
+{
+  "schema_version": "wildclawbench.research-source-policy/v1",
+  "ledger_path": "results/source_ledger.json",
+  "deliverable_paths": [
+    "results/findings.xlsx",
+    "results/source_ledger.json",
+    "results/answer.md"
+  ],
+  "sources_key": "sources",
+  "source_id_key": "source_id",
+  "url_key": "url",
+  "access_status_key": "access_status",
+  "collect_statuses": [
+    "read_full",
+    "read_excerpt"
+  ],
+  "citations_key": "citations",
+  "citation_id_key": "citation_id",
+  "quote_key": "quote",
+  "locator_key": "locator",
+  "as_of_inclusive": "2026-09-30",
+  "timezone": "Asia/Shanghai",
+  "max_sources": 40,
+  "max_bytes_per_source": 20971520,
+  "timeout_seconds": 60
+}

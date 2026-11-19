@@ -1,0 +1,19 @@
+{
+  "acceptance.md": "979488376df8995a907b66388ead02ca8a3493d4573522d611423ba706602f42",
+  "fixtures/configs.json": "35e10bc92cebcb39552f1168f04b6aad7aab23d66056a8d36a369637acf02686",
+  "fixtures/records.json": "6b59d80fb7f9228f59b4674e916430ffd7be43448a03dd1d7b5aed099a5beed6",
+  "mutable_paths.json": "0ab76ee04ca09419bfb0bdd7d7f9c17f9c9e5fabca8a11700a76567b53bb33ec",
+  "offline_wheels/manifest.json": "60871485945e24e686ccb8d3f6da3bfdb592ec1876d73583983a2084192a1504",
+  "offline_wheels/pip-24.0-py3-none-any.whl": "ba0d021a166865d2265246961bec0152ff124de910c5cc39f1156ce3fa7c69dc",
+  "offline_wheels/setuptools-79.0.1-py3-none-any.whl": "e147c0549f27767ba362f9da434eab9c5dc0045d5304feb602a0af001089fc51",
+  "project/LICENSE": "acc9d17d2f480cc5b6a020ce1960403aeca37a275d39467c730981bc07ef0715",
+  "project/batchstamp/resources/banner.txt": "048664a2b6deaba210a00a88e4ea37c857ca742971f6417ceec40b9f0a556926",
+  "project/batchstamp/resources/defaults.json": "83c0c273b5c545012e3f412cefa0140e60c858342423e8e5b0e82265d2439345",
+  "project/src/batchstamp/resources/banner.txt": "048664a2b6deaba210a00a88e4ea37c857ca742971f6417ceec40b9f0a556926",
+  "project/src/batchstamp/resources/defaults.json": "83c0c273b5c545012e3f412cefa0140e60c858342423e8e5b0e82265d2439345",
+  "tests_public/test_compat.py": "7f04da89fedf751b95f8eb6381824296c4eaf41fd69d33362987eabd3d6734ab",
+  "tools/installed_probe.py": "81da53dcec0665dc1325e549ace2489da707a1433c49b97a3864504e40361b9c",
+  "tools/offline_driver.py": "d7e977f26f6d02077cc5be5a98a0e18426414041781c0cf13dc37d85382a2f09",
+  "tools/package_matrix.py": "041d17512cfdcf219ac09a045c4e5139ff5df35729270a271376c1c128bcb921",
+  "tools/verify_install.py": "3c723a64c0699ed58e5b2a6299d547a5e1c0fdaa8ec3a5df22c9ebfe54a4634e"
+}

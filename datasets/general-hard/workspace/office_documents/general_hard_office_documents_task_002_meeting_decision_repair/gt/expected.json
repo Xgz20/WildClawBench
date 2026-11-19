@@ -1,0 +1,199 @@
+{
+  "schema_version": "h002-final-decisions/v1",
+  "cutoff": "2026-10-27T12:30:00+08:00",
+  "issues": [
+    {
+      "issue_id": "A01",
+      "subject": "统一问题登记模板",
+      "owner_id": "U03",
+      "owner_role": "运营经理",
+      "due_date": "2026-10-30",
+      "status": "待办",
+      "evidence_ids": "S007",
+      "status_reason": "主席明确批准，研发只协助",
+      "next_step": "交统一模板及填写说明"
+    },
+    {
+      "issue_id": "A02",
+      "subject": "重试失败复现包",
+      "owner_id": "U02",
+      "owner_role": "研发接口负责人",
+      "due_date": "2026-11-02",
+      "status": "待办",
+      "evidence_ids": "S012",
+      "status_reason": "批准的是研发陈晨，不是运营同名人员",
+      "next_step": "交输入 请求序列和失败点"
+    },
+    {
+      "issue_id": "A03",
+      "subject": "负载窗口回归",
+      "owner_id": "U04",
+      "owner_role": "质量负责人",
+      "due_date": "2026-11-06",
+      "status": "待办",
+      "evidence_ids": "S017;E02",
+      "status_reason": "E02晚于E01且由授权代理批准",
+      "next_step": "按11月6日完成负载窗口回归并保留日志"
+    },
+    {
+      "issue_id": "A04",
+      "subject": "合并试点反馈口径",
+      "owner_id": "U03",
+      "owner_role": "运营经理",
+      "due_date": "2026-11-03",
+      "status": "待办",
+      "evidence_ids": "S022",
+      "status_reason": "主席采纳运营方案，E05发起人无变更权限",
+      "next_step": "运营合并反馈并交差异说明"
+    },
+    {
+      "issue_id": "A05",
+      "subject": "更新字段字典",
+      "owner_id": "U05",
+      "owner_role": "文档管理员",
+      "due_date": "2026-10-30",
+      "status": "待办",
+      "evidence_ids": "S027",
+      "status_reason": "批准补文档，不改线上字段",
+      "next_step": "交字段字典及命名对照"
+    },
+    {
+      "issue_id": "A06",
+      "subject": "归档权限审计日志",
+      "owner_id": "U06",
+      "owner_role": "平台负责人",
+      "due_date": "2026-11-02",
+      "status": "待办",
+      "evidence_ids": "S032",
+      "status_reason": "已有授权的本地副本归档",
+      "next_step": "交审计日志目录和来源清单"
+    },
+    {
+      "issue_id": "A07",
+      "subject": "补齐离线回归证据",
+      "owner_id": "U04",
+      "owner_role": "质量负责人",
+      "due_date": "2026-11-03",
+      "status": "待办",
+      "evidence_ids": "S037",
+      "status_reason": "与A03负载回归不同，不合并丢项",
+      "next_step": "交样本 版本 退出状态和实际差异"
+    },
+    {
+      "issue_id": "A08",
+      "subject": "修复重复导入保护",
+      "owner_id": "U02",
+      "owner_role": "研发接口负责人",
+      "due_date": "2026-11-04",
+      "status": "待办",
+      "evidence_ids": "S042",
+      "status_reason": "不扩大为接口重设计",
+      "next_step": "交修复及幂等失败重试回归"
+    },
+    {
+      "issue_id": "A09",
+      "subject": "核对缓存过期告警",
+      "owner_id": "U06",
+      "owner_role": "平台负责人",
+      "due_date": "2026-11-04",
+      "status": "待办",
+      "evidence_ids": "S047",
+      "status_reason": "E06只是普通成员延期申请，未经批准",
+      "next_step": "按原批准日交告警窗口及实际时区核对"
+    },
+    {
+      "issue_id": "A10",
+      "subject": "编制试点沟通说明",
+      "owner_id": "U03",
+      "owner_role": "运营经理",
+      "due_date": "2026-11-05",
+      "status": "待办",
+      "evidence_ids": "S052",
+      "status_reason": "仅批准编制稿件，不自动发送",
+      "next_step": "交内部试点沟通说明稿"
+    },
+    {
+      "issue_id": "A11",
+      "subject": "验收错误恢复路径",
+      "owner_id": "U04",
+      "owner_role": "质量负责人",
+      "due_date": "2026-11-06",
+      "status": "待办",
+      "evidence_ids": "S057",
+      "status_reason": "离线验收并如实保留失败",
+      "next_step": "交错误恢复前后状态和验收记录"
+    },
+    {
+      "issue_id": "A12",
+      "subject": "整理旧问题索引",
+      "owner_id": "U05",
+      "owner_role": "文档管理员",
+      "due_date": "2026-11-05",
+      "status": "待办",
+      "evidence_ids": "E04",
+      "status_reason": "授权代理在快照补全后明确恢复",
+      "next_step": "按新日期交旧问题索引，不沿用旧撤回状态"
+    },
+    {
+      "issue_id": "A13",
+      "subject": "导出每日访问快照",
+      "owner_id": "U06",
+      "owner_role": "平台负责人",
+      "due_date": "2026-11-03",
+      "status": "撤回",
+      "evidence_ids": "S067;E03",
+      "status_reason": "现有审计已覆盖每日快照，避免额外副本",
+      "next_step": "停止原安排并保留原责任人与日期的撤回审计"
+    },
+    {
+      "issue_id": "A14",
+      "subject": "全量替换历史标签",
+      "owner_id": "U03",
+      "owner_role": "运营经理",
+      "due_date": "2026-11-02",
+      "status": "撤回",
+      "evidence_ids": "S070;S072",
+      "status_reason": "全量替换会破坏追溯",
+      "next_step": "保留历史标签，不执行原替换安排"
+    },
+    {
+      "issue_id": "A15",
+      "subject": "统一重命名历史附件",
+      "owner_id": "U02",
+      "owner_role": "研发接口负责人",
+      "due_date": "2026-11-03",
+      "status": "撤回",
+      "evidence_ids": "S075;S077",
+      "status_reason": "附件改名会断开已有路径引用",
+      "next_step": "保留历史附件名，不执行原重命名安排"
+    },
+    {
+      "issue_id": "A16",
+      "subject": "跨区域备份方案",
+      "owner_id": "",
+      "owner_role": "",
+      "due_date": "",
+      "status": "待定",
+      "evidence_ids": "S082",
+      "status_reason": "预算和数据范围未明确，未批准责任人及日期",
+      "next_step": "先补齐预算和范围，再申请批准；不按建议日期开工"
+    },
+    {
+      "issue_id": "A17",
+      "subject": "外部供应商对接",
+      "owner_id": "",
+      "owner_role": "",
+      "due_date": "",
+      "status": "待定",
+      "evidence_ids": "S087",
+      "status_reason": "选择条件未明确，未批准联系或排期",
+      "next_step": "先明确选择条件，不联系供应商或填入建议日期"
+    }
+  ],
+  "counts": {
+    "待办": 12,
+    "撤回": 3,
+    "待定": 2
+  },
+  "method": "Separately declared final labels, not fold/reference outputs."
+}

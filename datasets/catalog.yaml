@@ -1,0 +1,34 @@
+schema_version: 1
+datasets:
+  general-custom60-v1:
+    kind: legacy
+    manifest: eval_general_e2e/datasets/manifests/general-custom60-v1.json
+  general-hard:
+    definition: datasets/general-hard/dataset.yaml
+  general-custom116-v1:
+    kind: builtin
+    manifest: eval_general_e2e/datasets/manifests/general-custom116-v1.json
+  general-custom70-v2:
+    kind: builtin
+    manifest: eval_general_e2e/datasets/manifests/general-custom70-v2.json
+  general-custom70-v3:
+    kind: builtin
+    manifest: eval_general_e2e/datasets/manifests/general-custom70-v3.json
+  general-custom70-v4:
+    kind: builtin
+    manifest: eval_general_e2e/datasets/manifests/general-custom70-v4.json
+  general-custom70-v5:
+    kind: builtin
+    manifest: eval_general_e2e/datasets/manifests/general-custom70-v5.json
+  general-custom70-v6:
+    kind: builtin
+    manifest: eval_general_e2e/datasets/manifests/general-custom70-v6.json
+  general-info004-open-v1:
+    kind: builtin
+    manifest: eval_general_e2e/datasets/manifests/general-info004-open-v1.json
+  general-info004-open-v2:
+    kind: builtin
+    manifest: eval_general_e2e/datasets/manifests/general-info004-open-v2.json
+  general-info004-open-v3:
+    kind: builtin
+    manifest: eval_general_e2e/datasets/manifests/general-info004-open-v3.json

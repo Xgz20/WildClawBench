@@ -1,0 +1,9 @@
+correction_id,status,approved_date,period,metric,expected_old,old_unit,new_value,new_unit,reason
+C001,approved,2026-10-15,2026-04,REV,1800000,CNY,2100000,CNY,补记同一期间已验收收入，其他月份不动
+C002,approved,2026-10-15,2025-04,REV,1700000,CNY,1900000,CNY,批准重述同比基期收入，不是2026年的新增收入
+C003,approved,2026-10-15,2026-09,COGS,1500000,CNY,1420000,CNY,营业成本更正，不替换期间费用
+C004,approved,2026-10-15,2026-08,OPEX,250000,CNY,0,CNY,有效零值更正，不是空白或沿用原数
+C005,approved,2026-10-15,2026-06,OCF,80000,CNY,-120000,CNY,经营现金流符号更正，不替换收入或利润
+C006,approved,2026-10-15,2026-09,AR,480000,CNY,42,万元,期末应收余额更正，统一换算CNY；不是9个月余额合计
+C007,approved,2026-10-15,2026-03,REV,1650000,CNY,1620000,CNY,单月确认差额冲回，仅影响指定期间及其依赖
+C008,approved,2026-10-15,2025-08,COGS,1200000,CNY,1250000,CNY,批准重述基期营业成本，不改基期收入或本期成本

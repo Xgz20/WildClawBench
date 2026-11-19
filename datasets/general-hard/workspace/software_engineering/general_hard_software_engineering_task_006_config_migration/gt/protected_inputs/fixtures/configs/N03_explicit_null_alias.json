@@ -1,0 +1,34 @@
+{
+  "case_id": "N03_explicit_null_alias",
+  "defaults": {
+    "network": {
+      "timeout_seconds": 30,
+      "retries": 2,
+      "headers": {
+        "x-mode": "default"
+      }
+    },
+    "cache": {
+      "enabled": true
+    },
+    "pipeline": {
+      "workers": 4
+    },
+    "output": {
+      "directory": "out"
+    },
+    "extensions": {
+      "labels": [
+        "a",
+        "b"
+      ],
+      "threshold": 1
+    }
+  },
+  "project": {
+    "timeout_ms": null,
+    "cache_enabled": null,
+    "output_dir": null
+  },
+  "user": {}
+}

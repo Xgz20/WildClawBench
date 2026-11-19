@@ -1,0 +1,372 @@
+{
+  "schema_version": "general-hard-reviewed-authoring/v1",
+  "order": 32,
+  "registered_task_index": 34,
+  "task_id": "general_hard_research_verification_task_006_paper_comparison",
+  "registered": 34,
+  "remaining": 26,
+  "release": "building",
+  "source_inputs": {
+    "exec_files": 11,
+    "controlled_original_PDFs": 8,
+    "physical_pages": 32,
+    "independent_work_identities": 7,
+    "original_claims": 12,
+    "license": "CC0 original controlled-fiction technical reports"
+  },
+  "source_truth_freeze": {
+    "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h032/authoring/source-truth-freeze-receipt.json",
+    "sha256": "db2f60cee1ee109013100e1e27cf29e53d84a7a759583eb33f73fc5cd868d8ab"
+  },
+  "independent_native_reference_review": {
+    "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h032/qa/native-reference-v3-independent/freeze.json",
+    "sha256": "273969c5792983f8b5cf766517ef754e1c83c8f5198ebad56e41f70cd0408824",
+    "issues": 0,
+    "source_quotes": 79,
+    "RFC6901_targets": 95,
+    "matrix_claims": 12,
+    "quantitative_rows": 27,
+    "model_review_not_human_expert": true
+  },
+  "complete_author_handoff": {
+    "schema_version": "h032-final-authoring-handoff/v1",
+    "at_utc": "2026-10-28T20:19:12.310612+00:00",
+    "state": "AUTHOR_CONTROLS_PRIVATE_REFERENCE_COMPLETE_CASE_SPEC_DRY_RUN_ONLY",
+    "private_GT_manifest": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h032/qa/final-authoring-v1/final-private-GT-manifest.json",
+    "private_GT_files": 35,
+    "private_sha256_bindings": 34,
+    "scoring_contract_sha256": "3c0fdb28b7a2b89e62f23b0f7c3b1cb3d75b799c442e16b94c403e31cb6b8c28",
+    "case_spec": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h032/authoring/case-spec.json",
+    "case_spec_sha256": "5df77a477e077736bace83629d38f765bc14c152497418b4755dbfdab6e79993",
+    "task_id": "general_hard_research_verification_task_006_paper_comparison",
+    "dry_run": "DRY_RUN",
+    "formal_registration": false,
+    "repo_assets_unchanged": 967,
+    "real_author_controls": {
+      "schema_version": "h032-final-real-author-control-summary/v1",
+      "initial_actual_attempts": 11,
+      "initial_expectations_met": 10,
+      "initial_real_false_positive_retained": 1,
+      "affected_rerun_and_true_conflict_attempts": 2,
+      "latest_logical_controls": 12,
+      "all_latest_expectations_satisfied": true,
+      "control_attempts": [
+        {
+          "name": "legal-chinese-reordered",
+          "expectation_satisfied": true,
+          "raw_grade_return": {
+            "boundary_cases": 1.0,
+            "business_correctness": 1.0,
+            "delivery_integrity": 1.0,
+            "evidence_binding": 1.0,
+            "overall_score": 1.0
+          },
+          "typed_exception": null,
+          "private_contract_sha256": "3c1983507ef9b45883ddc5a3956f5bf7383655d61be79dbc77f7090565592c58",
+          "worker_pid": 23671,
+          "result_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h032/qa/author-controls-v1/legal-chinese-reordered/result.json"
+        },
+        {
+          "name": "wrong-business-number",
+          "expectation_satisfied": true,
+          "raw_grade_return": {
+            "boundary_cases": 1.0,
+            "business_correctness": 0.9766666666666666,
+            "delivery_integrity": 1.0,
+            "evidence_binding": 1.0,
+            "overall_score": 0.9871666666666666
+          },
+          "typed_exception": null,
+          "private_contract_sha256": "3c1983507ef9b45883ddc5a3956f5bf7383655d61be79dbc77f7090565592c58",
+          "worker_pid": 23847,
+          "result_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h032/qa/author-controls-v1/wrong-business-number/result.json"
+        },
+        {
+          "name": "wrong-fault-arm",
+          "expectation_satisfied": true,
+          "raw_grade_return": {
+            "boundary_cases": 1.0,
+            "business_correctness": 0.9766666666666666,
+            "delivery_integrity": 1.0,
+            "evidence_binding": 1.0,
+            "overall_score": 0.9871666666666666
+          },
+          "typed_exception": null,
+          "private_contract_sha256": "3c1983507ef9b45883ddc5a3956f5bf7383655d61be79dbc77f7090565592c58",
+          "worker_pid": 23933,
+          "result_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h032/qa/author-controls-v1/wrong-fault-arm/result.json"
+        },
+        {
+          "name": "wrong-causal-state",
+          "expectation_satisfied": true,
+          "raw_grade_return": {
+            "boundary_cases": 0.975,
+            "business_correctness": 1.0,
+            "delivery_integrity": 1.0,
+            "evidence_binding": 1.0,
+            "overall_score": 0.99375
+          },
+          "typed_exception": null,
+          "private_contract_sha256": "3c1983507ef9b45883ddc5a3956f5bf7383655d61be79dbc77f7090565592c58",
+          "worker_pid": 24020,
+          "result_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h032/qa/author-controls-v1/wrong-causal-state/result.json"
+        },
+        {
+          "name": "wrong-physical-page",
+          "expectation_satisfied": true,
+          "raw_grade_return": {
+            "boundary_cases": 1.0,
+            "business_correctness": 1.0,
+            "delivery_integrity": 1.0,
+            "evidence_binding": 0.7,
+            "overall_score": 0.985
+          },
+          "typed_exception": null,
+          "private_contract_sha256": "3c1983507ef9b45883ddc5a3956f5bf7383655d61be79dbc77f7090565592c58",
+          "worker_pid": 24107,
+          "result_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h032/qa/author-controls-v1/wrong-physical-page/result.json"
+        },
+        {
+          "name": "missing-docx",
+          "expectation_satisfied": true,
+          "raw_grade_return": {
+            "boundary_cases": 1.0,
+            "business_correctness": 1.0,
+            "delivery_integrity": 0.8666666666666667,
+            "evidence_binding": 1.0,
+            "overall_score": 0.9800000000000001
+          },
+          "typed_exception": null,
+          "private_contract_sha256": "3c1983507ef9b45883ddc5a3956f5bf7383655d61be79dbc77f7090565592c58",
+          "worker_pid": 24218,
+          "result_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h032/qa/author-controls-v1/missing-docx/result.json"
+        },
+        {
+          "name": "empty-workspace",
+          "expectation_satisfied": true,
+          "raw_grade_return": {
+            "boundary_cases": 0.0,
+            "business_correctness": 0.0,
+            "delivery_integrity": 0.0,
+            "evidence_binding": 0.0,
+            "overall_score": 0.0
+          },
+          "typed_exception": null,
+          "private_contract_sha256": "3c1983507ef9b45883ddc5a3956f5bf7383655d61be79dbc77f7090565592c58",
+          "worker_pid": 24303,
+          "result_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h032/qa/author-controls-v1/empty-workspace/result.json"
+        },
+        {
+          "name": "protected-input-drift",
+          "expectation_satisfied": true,
+          "raw_grade_return": {
+            "boundary_cases": 1.0,
+            "business_correctness": 1.0,
+            "delivery_integrity": 0.9681818181818183,
+            "evidence_binding": 1.0,
+            "overall_score": 0.9952272727272727
+          },
+          "typed_exception": null,
+          "private_contract_sha256": "3c1983507ef9b45883ddc5a3956f5bf7383655d61be79dbc77f7090565592c58",
+          "worker_pid": 24362,
+          "result_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h032/qa/author-controls-v1/protected-input-drift/result.json"
+        },
+        {
+          "name": "missing-private-GT",
+          "expectation_satisfied": true,
+          "raw_grade_return": null,
+          "typed_exception": {
+            "type": "ScoringRuntimeError",
+            "code": "RULE_WORKER_FAILED",
+            "detail": "{'code': 'RULE_WORKER_FAILED', 'detail': 'H032 private material drift/missing: machine_anchor_spec.json'}",
+            "traceback": "Traceback (most recent call last):\n  File \"/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h032/qa/author-controls-v1/run_controls.py\", line 78, in control\n    R.run_rules_attempt(attempt_root=attempt,runtime_python=PY,timeout_seconds=120,office_runtime_lock_path=root/'office-lock.json')\n  File \"/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/tools/report/skills/general-e2e/score-general-e2e/scripts/score_general_e2e.py\", line 3000, in run_rules_attempt\n    raise ScoringRuntimeError(error.get(\"code\", \"RULE_EXECUTION_FAILED\"), str(error))\nh032_managed_author_controls_runtime.ScoringRuntimeError: RULE_WORKER_FAILED: {'code': 'RULE_WORKER_FAILED', 'detail': 'H032 private material drift/missing: machine_anchor_spec.json'}\n"
+          },
+          "private_contract_sha256": "3c1983507ef9b45883ddc5a3956f5bf7383655d61be79dbc77f7090565592c58",
+          "worker_pid": 24462,
+          "result_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h032/qa/author-controls-v1/missing-private-GT/result.json"
+        },
+        {
+          "name": "legal-range-review",
+          "expectation_satisfied": true,
+          "raw_grade_return": null,
+          "typed_exception": {
+            "type": "ScoringRuntimeError",
+            "code": "RULE_WORKER_FAILED",
+            "detail": "{'code': 'RULE_WORKER_FAILED', 'detail': 'NEEDS_INDEPENDENT_SCIENTIFIC_REVIEW: legal comparison/condition representation not mechanically confirmed; see frozen observations; no automatic0 or semantic fabrication'}",
+            "traceback": "Traceback (most recent call last):\n  File \"/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h032/qa/author-controls-v1/run_controls.py\", line 78, in control\n    R.run_rules_attempt(attempt_root=attempt,runtime_python=PY,timeout_seconds=120,office_runtime_lock_path=root/'office-lock.json')\n  File \"/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/tools/report/skills/general-e2e/score-general-e2e/scripts/score_general_e2e.py\", line 3000, in run_rules_attempt\n    raise ScoringRuntimeError(error.get(\"code\", \"RULE_EXECUTION_FAILED\"), str(error))\nh032_managed_author_controls_runtime.ScoringRuntimeError: RULE_WORKER_FAILED: {'code': 'RULE_WORKER_FAILED', 'detail': 'NEEDS_INDEPENDENT_SCIENTIFIC_REVIEW: legal comparison/condition representation not mechanically confirmed; see frozen observations; no automatic0 or semantic fabrication'}\n"
+          },
+          "private_contract_sha256": "3c1983507ef9b45883ddc5a3956f5bf7383655d61be79dbc77f7090565592c58",
+          "worker_pid": 24487,
+          "result_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h032/qa/author-controls-v1/legal-range-review/result.json"
+        },
+        {
+          "name": "legal-fact-proof-scopes-after",
+          "expectation_satisfied": true,
+          "raw_grade_return": {
+            "boundary_cases": 1.0,
+            "business_correctness": 1.0,
+            "delivery_integrity": 1.0,
+            "evidence_binding": 1.0,
+            "overall_score": 1.0
+          },
+          "private_contract_sha256": "8a53a20e4d6132f09442b2dd4cedb8367005dc37748f92779d7128b9d8a4863b",
+          "worker_pid": 28035,
+          "result_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h032/qa/author-control-scope-compat-v1/legal-fact-proof-scopes-after/result.json"
+        },
+        {
+          "name": "true-same-fact-verdict-conflict",
+          "expectation_satisfied": true,
+          "raw_grade_return": {
+            "boundary_cases": 0.9642857142857143,
+            "business_correctness": 1.0,
+            "delivery_integrity": 0.75,
+            "evidence_binding": 1.0,
+            "overall_score": 0.9535714285714286
+          },
+          "private_contract_sha256": "8a53a20e4d6132f09442b2dd4cedb8367005dc37748f92779d7128b9d8a4863b",
+          "worker_pid": 28117,
+          "result_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h032/qa/author-control-scope-compat-v1/true-same-fact-verdict-conflict/result.json"
+        }
+      ],
+      "initial_failed_positive_result": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h032/qa/author-controls-v1/legal-fact-proof-scopes/result.json",
+      "initial_controls_freeze_sha256": "58945cf8586082743dd1a89fb8f223a80947dcf5c688eea94d35d86f94ad7681",
+      "scope_fix_freeze_sha256": "0cbf35ba14c0e2641b1f213ff57a6ff0ee3bccdd664d90e76f7f8ae4f8b63657",
+      "scope": "Nonblind author controls, no Harness/Judge/hybrid"
+    },
+    "final_managed_baseline": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h032/qa/managed-reference-v3-full-gt-final-baseline/baseline.json",
+    "final_worker": {
+      "pid": 39557,
+      "python": "3.12.14"
+    },
+    "raw_automatic_grade_return": {
+      "boundary_cases": 1.0,
+      "business_correctness": 1.0,
+      "delivery_integrity": 1.0,
+      "evidence_binding": 1.0,
+      "overall_score": 1.0
+    },
+    "pending_count": 0,
+    "normal_and_relocated_archive_proof": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h032/qa/managed-reference-v3-full-gt-final-baseline/normal-archive-proof.json",
+    "final_baseline_freeze_sha256": "81c8e8ebf61730e59d7d5d4fa8593a15da5db8b3a3ea319f110107b6e093c08d",
+    "immutable_proof_sha256": "a43399382f7d50e089d2b5ef4f3fe9cf6cfb97d28949a19d93b992db59084d03",
+    "formal_semantic_score": null,
+    "hybrid_score": null,
+    "Harness_Judge_finalize_Office_recalculation_network_install_or_commit": false
+  },
+  "source_reference_immutable_proof": {
+    "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h032/qa/final-authoring-v1/immutable-source-proof.json",
+    "sha256": "a43399382f7d50e089d2b5ef4f3fe9cf6cfb97d28949a19d93b992db59084d03",
+    "unchanged": true
+  },
+  "final_private_contract": {
+    "sha256": "3c0fdb28b7a2b89e62f23b0f7c3b1cb3d75b799c442e16b94c403e31cb6b8c28",
+    "private_GT_files": 35,
+    "private_bindings": 34,
+    "reference_is_not_oracle_or_label_whitelist": true
+  },
+  "formal_detached": {
+    "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h032/qa/formal-detached-1793219109200109000/validation.json",
+    "sha256": "20f589e8622546ef794a4b6e72ae2b7ce98ecc3756f482402a0e8c006dd1689c",
+    "raw_auto_scores": {
+      "boundary_cases": 1.0,
+      "business_correctness": 1.0,
+      "delivery_integrity": 1.0,
+      "evidence_binding": 1.0,
+      "overall_score": 1.0
+    },
+    "A": 1.0,
+    "nonruntime_archive_files": 77,
+    "derived_count": 10,
+    "normal_and_archive_verify": true,
+    "repository_sys_path_absent": true,
+    "skill_build": {
+      "archive": "score-general-e2e-skill-v0.26.0.zip",
+      "components": [
+        {
+          "content_hash_algorithm": "wildclawbench.component-content-sha256/v1",
+          "content_sha256": "9332b5351b55b1a11d706d19746502d1070d6321551ba87b15926a07083a2657",
+          "entrypoints": [
+            "workspace-integrity.mjs"
+          ],
+          "name": "workspace-integrity",
+          "source_revision": "3ceb3306e1182578aadc34f1259eb83596b72fc0",
+          "source_root": "tools/report/e2e-shared/handoff",
+          "vendor_root": "vendor/e2e-shared/handoff",
+          "version": "1.0.0"
+        },
+        {
+          "content_hash_algorithm": "wildclawbench.component-content-sha256/v1",
+          "content_sha256": "c5d56c145923f0ab7f22a4548baf899bfeb33969b2862e7fbc0c3be2d9885e9d",
+          "entrypoints": [
+            "__init__.py",
+            "native_text.py",
+            "office_runtime.py",
+            "image_evidence.py",
+            "html_runtime.py",
+            "html_observer.mjs"
+          ],
+          "name": "grading-core",
+          "source_revision": "3ceb3306e1182578aadc34f1259eb83596b72fc0",
+          "source_root": "src/wildclawbench_grading_core",
+          "vendor_root": "vendor/e2e-shared/wildclawbench_grading_core",
+          "version": "0.15.2"
+        }
+      ],
+      "content_hash_algorithm": "wildclawbench.skill-content-sha256/v1",
+      "content_sha256": "ce778459d6864c041b53a9b2f5da1c9303fc91cdcf447a5715c67275153f3483",
+      "development_repository_references": [],
+      "file_count": 46,
+      "name": "score-general-e2e",
+      "scene": "general-e2e",
+      "source_revision": "3ceb3306e1182578aadc34f1259eb83596b72fc0",
+      "version": "0.26.0",
+      "zip_hash_algorithm": "sha256",
+      "zip_sha256": "130251960cff9d64be528d53d83ec6839a1dea6dce614302a2b429c60d834bf7"
+    }
+  },
+  "static": {
+    "single_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h032/qa/static-registered/20261028T202617Z_41ae46e58c/report.json",
+    "single_sha256": "ee5c6b1d57249ffae0a818a765f0714e4896a4b1f970f4e89f512a18cf5c4686",
+    "single": "PASS",
+    "building_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h032/qa/static-building/20261028T202623Z_428cc4a304/report.json",
+    "building_sha256": "0d2ebe6e1e32d2706dbdcaf8af60d69dc11ed305aec5f5fa5fba5dd2cb2c52ca",
+    "registered": 34,
+    "missing_only": 26
+  },
+  "registered_QA": {
+    "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h032/qa/registered-snapshot-v1/qa-sha256.json",
+    "sha256": "d7bd649d65ce6b78e5263859e23a5adbdca100dc9b9f107fe1c85f6f3ca85e73",
+    "bound_files": 11067
+  },
+  "scoring_boundaries": {
+    "outer_weights": {
+      "automated": 0.75,
+      "llm_judge": 0.25
+    },
+    "automatic_weights": {
+      "business_correctness": 0.55,
+      "boundary_cases": 0.25,
+      "delivery_integrity": 0.15,
+      "evidence_binding": 0.05
+    },
+    "fixed_owner_business_claims": 5,
+    "fixed_owner_boundary_claims": 7,
+    "mechanical_uncertainty": "NEEDS_INDEPENDENT_SCIENTIFIC_REVIEW; no fabricated automatic zero",
+    "candidate_scientific_semantics_still_requires_Judge": true
+  },
+  "limits": {
+    "human_expert": false,
+    "Harness": false,
+    "semantic_Judge": false,
+    "semantic_score": null,
+    "hybrid_score": null,
+    "Office_recalculation": false,
+    "network": false,
+    "difficulty": "L4 design estimate, not empirical certification"
+  },
+  "git_material_preservation": {
+    "source_GT_reference_bytes_changed": false,
+    "initial_diff_check_failure": "Git classified ASCII ReportLab PDF bodies as text and flagged valid PDF xref spaces; metadata.csv uses frozen standard CRLF.",
+    "resolution": "Path-scoped binary PDF and cr-at-eol CSV attributes; no source normalization, rule or oracle changes."
+  }
+}

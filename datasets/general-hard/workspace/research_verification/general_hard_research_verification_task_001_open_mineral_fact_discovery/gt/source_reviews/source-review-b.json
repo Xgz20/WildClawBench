@@ -1,0 +1,1541 @@
+{
+  "schema": "h027.independent-source-review.v1",
+  "reviewer": "source-review-b",
+  "review_kind": "模型独立公开来源复核，非人工专家复核",
+  "created_utc": "2026-10-28T08:10:47.007410+00:00",
+  "research_cutoff_date": "2026-09-30",
+  "acquisition_date_utc": "2026-10-28",
+  "independence": {
+    "read_other_agent_outputs": false,
+    "read_expected_ground_truth": false,
+    "read_candidate_answer_or_candidate_trajectory": false,
+    "repository_modified": false,
+    "write_boundary": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h027/qa/source-review-b"
+  },
+  "candidate_semantic_score": null,
+  "candidate_semantic_scoring_performed": false,
+  "document_identity_and_availability": {
+    "latest_edition_selected": 2026,
+    "previous_annual_edition_selected": 2025,
+    "latest_discovery_evidence": [
+      {
+        "source": "raw/usgs-mcs-series-browse.html",
+        "finding": "官方系列目录首项为 MCS 2026，其后为 MCS 2025；没有发现更晚公开年度版。"
+      },
+      {
+        "source": "official-series-search.json",
+        "finding": "官方 Rare Earths 年度章节列表与 MCS 系列页均列至 2026。搜索结果用于发现，统计事实均直接核对所下载官方 PDF。"
+      },
+      {
+        "source": "raw/mcs2026-versionHist.txt",
+        "finding": "明确记录 2026-02-06 首发以及截至 2026-05-27 的 v1.3 修订；所选修订早于研究截止日。"
+      }
+    ],
+    "cutoff_boundary": "现在下载的当前官方字节，取得时间晚于题设截止日；截至截止日的版本归属依据官方明确的首次发布和修订记录，而非网页 Updated、搜索相对时间、文件系统 mtime 或 Last-Modified。没有保存 2026-09-30 当天的独立存档，因此不声称这些字节当日已由本研究抓取。",
+    "mcs2026": {
+      "title": "Mineral Commodity Summaries 2026 — RARE EARTHS",
+      "publisher": "U.S. Geological Survey, U.S. Department of the Interior",
+      "doi": "10.3133/mcs2026",
+      "chapter_preparer": "Shelby N. Johnston",
+      "volume_version": "1.3, May 2026",
+      "first_posted_date": "2026-02-06",
+      "selected_revision_reposted_date": "2026-05-27",
+      "first_posted_date_basis": [
+        "raw/mcs2026-publication.html: First posted February 6, 2026 / Publication Date",
+        "raw/mcs2026-versionHist.txt: First posted online February 6, 2026"
+      ],
+      "revision_date_basis": "raw/mcs2026-versionHist.txt: Revised and reposted May 27, 2026, as version 1.3",
+      "printed_chapter_pages": [
+        152,
+        153
+      ],
+      "chapter_pdf_pages": [
+        1,
+        2
+      ],
+      "chapter_file_has_explicit_version_number": false,
+      "chapter_version_binding_basis": "当前官方章节的巴西 11,000,000 / 世界 >75,000,000，与卷 v1.3 的明确修订内容一致；完整卷封面明确为 v1.3。不能把章节页脚 February 2026 当成 May 修订日期。",
+      "mine_production_statistical_years": [
+        2024,
+        2025
+      ],
+      "latest_mine_production_statistical_year": 2025,
+      "reserves_column_year_label": null,
+      "reserves_temporal_interpretation": "按本版公布的储量列；该列无单独统计年份标签，不能机械标成 2025 或 2026 年末储量。",
+      "original_pdf_acquisition": {
+        "filename": "raw/mcs2026-rare-earths.pdf",
+        "requested_url": "https://pubs.usgs.gov/periodicals/mcs2026/mcs2026-rare-earths.pdf",
+        "retrieval_started_utc": "2026-10-28T08:01:51.081545+00:00",
+        "client": "system curl; TLS verification enabled",
+        "exit_code": 0,
+        "stderr": "",
+        "retrieval_completed_utc": "2026-10-28T08:01:53.958015+00:00",
+        "http_status": 200,
+        "final_url": "https://pubs.usgs.gov/periodicals/mcs2026/mcs2026-rare-earths.pdf",
+        "content_type": "application/pdf",
+        "ssl_verify_result": 0,
+        "byte_size": 639984,
+        "sha256": "0116a192336fec41c38d8e11dad553bb7703308c1fbd1f97dc14b75c7e7d9900",
+        "response_headers_path": "raw/mcs2026-rare-earths.pdf.headers.txt"
+      },
+      "original_volume_acquisition": {
+        "filename": "raw/mcs2026-full.pdf",
+        "requested_url": "https://pubs.usgs.gov/periodicals/mcs2026/mcs2026.pdf",
+        "retrieval_started_utc": "2026-10-28T08:02:46.160466+00:00",
+        "client": "system curl; TLS verification enabled",
+        "exit_code": 0,
+        "stderr": "",
+        "retrieval_completed_utc": "2026-10-28T08:03:04.533336+00:00",
+        "http_status": 200,
+        "final_url": "https://pubs.usgs.gov/periodicals/mcs2026/mcs2026.pdf",
+        "content_type": "application/pdf",
+        "ssl_verify_result": 0,
+        "byte_size": 17646709,
+        "sha256": "595e6e66674236dea40125a03eb1ea6b347f331c0bcf3411a1e77eba53c0d391",
+        "response_headers_path": "raw/mcs2026-full.pdf.headers.txt"
+      }
+    },
+    "mcs2025": {
+      "title": "Mineral Commodity Summaries 2025 — RARE EARTHS",
+      "publisher": "U.S. Geological Survey, U.S. Department of the Interior",
+      "doi": "10.3133/mcs2025",
+      "chapter_preparer": "Daniel J. Cordier",
+      "volume_version": "1.2, March 2025",
+      "first_posted_date": "2025-01-31",
+      "selected_revision_reposted_date": "2025-03-03",
+      "first_posted_date_basis": [
+        "raw/mcs2025-publication.html: First posted January 31, 2025 / Publication Date",
+        "raw/mcs2025-versionHist.txt: First posted online January 31, 2025"
+      ],
+      "revision_date_basis": "raw/mcs2025-versionHist.txt: Revised and reposted March 3, 2025, as version 1.2",
+      "printed_chapter_pages": [
+        144,
+        145
+      ],
+      "chapter_pdf_pages": [
+        1,
+        2
+      ],
+      "chapter_file_has_explicit_version_number": false,
+      "chapter_version_binding_basis": "当前官方章节与当前卷版本联结；v1.2 只修订 p23 Zinc，Rare Earths 保持 v1.1 后内容。当前章已含 v1.1 新增脚注3，因此没有误取 ver.1.0 章。",
+      "mine_production_statistical_years": [
+        2023,
+        2024
+      ],
+      "latest_mine_production_statistical_year": 2024,
+      "reserves_column_year_label": null,
+      "reserves_temporal_interpretation": "按本版公布的储量列；无单独统计年份标签。",
+      "original_pdf_acquisition": {
+        "filename": "raw/mcs2025-rare-earths.pdf",
+        "requested_url": "https://pubs.usgs.gov/periodicals/mcs2025/mcs2025-rare-earths.pdf",
+        "retrieval_started_utc": "2026-10-28T08:01:53.961126+00:00",
+        "client": "system curl; TLS verification enabled",
+        "exit_code": 0,
+        "stderr": "",
+        "retrieval_completed_utc": "2026-10-28T08:01:56.711030+00:00",
+        "http_status": 200,
+        "final_url": "https://pubs.usgs.gov/periodicals/mcs2025/mcs2025-rare-earths.pdf",
+        "content_type": "application/pdf",
+        "ssl_verify_result": 0,
+        "byte_size": 726098,
+        "sha256": "87e73bd28fd9d87b99a2ea58d104d6e41467e3488c181c61161e0abf22c6c7a1",
+        "response_headers_path": "raw/mcs2025-rare-earths.pdf.headers.txt"
+      },
+      "original_volume_acquisition": {
+        "filename": "raw/mcs2025-full.pdf",
+        "requested_url": "https://pubs.usgs.gov/periodicals/mcs2025/mcs2025.pdf",
+        "retrieval_started_utc": "2026-10-28T08:03:04.593981+00:00",
+        "client": "system curl; TLS verification enabled",
+        "exit_code": 0,
+        "stderr": "",
+        "retrieval_completed_utc": "2026-10-28T08:03:20.749582+00:00",
+        "http_status": 200,
+        "final_url": "https://pubs.usgs.gov/periodicals/mcs2025/mcs2025.pdf",
+        "content_type": "application/pdf",
+        "ssl_verify_result": 0,
+        "byte_size": 10431998,
+        "sha256": "4b3e4e00ed65365efb7b1f14c7c2f94b7005d4924e52cfb370cd2a8cd256d7e4",
+        "response_headers_path": "raw/mcs2025-full.pdf.headers.txt"
+      },
+      "date_discrepancy_retained": "v1.1 的 publication landing 元数据写 February 25, 2025，而正式 versionHist 写 Revised and reposted February 28, 2025。此处不擅自消除冲突；所选 v1.2 的 2025-03-03 与首次发布日无此冲突。"
+    }
+  },
+  "units_and_semantic_scope": {
+    "unit_heading_verbatim": "[Data in metric tons, rare-earth-oxide (REO) equivalent, unless otherwise specified]",
+    "mine_production_unit": "metric tons REO equivalent",
+    "reserves_unit": "metric tons REO equivalent, under the chapter default and footnotes",
+    "display_conversion": "1 万吨 = 10,000 metric tons；1 million metric tons = 100 万吨。原表不是 thousand metric tons。",
+    "element_scope": "两版脚注1均为 include lanthanides and yttrium but exclude most scandium；不能将泛称17元素介绍直接当作本表全部17元素统计范围。",
+    "production_scope": "World Mine Production 是矿山产量；不是分离/精炼产量、磁体产量、进口来源占比或美国净进口依赖。",
+    "mine_production_header_flag": "e Estimated；2026 的美国2024值另有脚注11 Reported。",
+    "reserve_definition_evidence": {
+      "sources": [
+        "raw/mcs2026-appendixes.pdf, Appendix C",
+        "raw/mcs2025-appendixes.pdf, Appendix C"
+      ],
+      "definition": "储量是确定时可经济开采或生产的储量基础部分，只包括可回收材料；不等于全部地质资源。",
+      "comparability": "Appendix C 明示各国储量来自多种来源，缺少按相同标准跨地区的完整评价；澳大利亚列采用 Accessible Economic Demonstrated Resources (Accessible EDR)，不同于严格 JORC 储量。"
+    }
+  },
+  "full_source_tables": {
+    "mcs2025": {
+      "table_heading": "World Mine Production and Reserves",
+      "source_printed_page": 145,
+      "column_heading_as_printed": {
+        "mine_production": "Mine production e",
+        "mine_years": [
+          2023,
+          2024
+        ],
+        "reserves": "Reserves 11"
+      },
+      "all_country_other_world_rows": [
+        {
+          "country_as_printed": "United States",
+          "mine_production": {
+            "2023": {
+              "printed_value": "41,600",
+              "value_tonnes_REO": 41600
+            },
+            "2024": {
+              "printed_value": "45,000",
+              "value_tonnes_REO": 45000
+            }
+          },
+          "reserves": {
+            "printed_value": "1,900,000",
+            "value_tonnes_REO": 1900000,
+            "status": "numeric"
+          },
+          "footnote_callouts": {}
+        },
+        {
+          "country_as_printed": "Australia",
+          "mine_production": {
+            "2023": {
+              "printed_value": "16,000",
+              "value_tonnes_REO": 16000
+            },
+            "2024": {
+              "printed_value": "13,000",
+              "value_tonnes_REO": 13000
+            }
+          },
+          "reserves": {
+            "printed_value": "5,700,000",
+            "value_tonnes_REO": 5700000,
+            "status": "numeric"
+          },
+          "footnote_callouts": {
+            "2023": [
+              12
+            ],
+            "2024": [
+              12
+            ],
+            "reserves": [
+              13
+            ]
+          }
+        },
+        {
+          "country_as_printed": "Brazil",
+          "mine_production": {
+            "2023": {
+              "printed_value": "140",
+              "value_tonnes_REO": 140
+            },
+            "2024": {
+              "printed_value": "20",
+              "value_tonnes_REO": 20
+            }
+          },
+          "reserves": {
+            "printed_value": "21,000,000",
+            "value_tonnes_REO": 21000000,
+            "status": "numeric"
+          },
+          "footnote_callouts": {}
+        },
+        {
+          "country_as_printed": "Burma",
+          "mine_production": {
+            "2023": {
+              "printed_value": "43,000",
+              "value_tonnes_REO": 43000
+            },
+            "2024": {
+              "printed_value": "31,000",
+              "value_tonnes_REO": 31000
+            }
+          },
+          "reserves": {
+            "printed_value": "NA",
+            "value_tonnes_REO": null,
+            "status": "not_available"
+          },
+          "footnote_callouts": {
+            "2023": [
+              12
+            ],
+            "2024": [
+              12
+            ]
+          }
+        },
+        {
+          "country_as_printed": "Canada",
+          "mine_production": {
+            "2023": {
+              "printed_value": "—",
+              "value_tonnes_REO": 0
+            },
+            "2024": {
+              "printed_value": "—",
+              "value_tonnes_REO": 0
+            }
+          },
+          "reserves": {
+            "printed_value": "830,000",
+            "value_tonnes_REO": 830000,
+            "status": "numeric"
+          },
+          "footnote_callouts": {}
+        },
+        {
+          "country_as_printed": "China",
+          "mine_production": {
+            "2023": {
+              "printed_value": "255,000",
+              "value_tonnes_REO": 255000
+            },
+            "2024": {
+              "printed_value": "270,000",
+              "value_tonnes_REO": 270000
+            }
+          },
+          "reserves": {
+            "printed_value": "44,000,000",
+            "value_tonnes_REO": 44000000,
+            "status": "numeric"
+          },
+          "footnote_callouts": {
+            "2023": [
+              14
+            ],
+            "2024": [
+              14
+            ]
+          }
+        },
+        {
+          "country_as_printed": "Greenland",
+          "mine_production": {
+            "2023": {
+              "printed_value": "—",
+              "value_tonnes_REO": 0
+            },
+            "2024": {
+              "printed_value": "—",
+              "value_tonnes_REO": 0
+            }
+          },
+          "reserves": {
+            "printed_value": "1,500,000",
+            "value_tonnes_REO": 1500000,
+            "status": "numeric"
+          },
+          "footnote_callouts": {}
+        },
+        {
+          "country_as_printed": "India",
+          "mine_production": {
+            "2023": {
+              "printed_value": "2,900",
+              "value_tonnes_REO": 2900
+            },
+            "2024": {
+              "printed_value": "2,900",
+              "value_tonnes_REO": 2900
+            }
+          },
+          "reserves": {
+            "printed_value": "6,900,000",
+            "value_tonnes_REO": 6900000,
+            "status": "numeric"
+          },
+          "footnote_callouts": {}
+        },
+        {
+          "country_as_printed": "Madagascar",
+          "mine_production": {
+            "2023": {
+              "printed_value": "2,100",
+              "value_tonnes_REO": 2100
+            },
+            "2024": {
+              "printed_value": "2,000",
+              "value_tonnes_REO": 2000
+            }
+          },
+          "reserves": {
+            "printed_value": "NA",
+            "value_tonnes_REO": null,
+            "status": "not_available"
+          },
+          "footnote_callouts": {
+            "2023": [
+              12
+            ],
+            "2024": [
+              12
+            ]
+          }
+        },
+        {
+          "country_as_printed": "Malaysia",
+          "mine_production": {
+            "2023": {
+              "printed_value": "310",
+              "value_tonnes_REO": 310
+            },
+            "2024": {
+              "printed_value": "130",
+              "value_tonnes_REO": 130
+            }
+          },
+          "reserves": {
+            "printed_value": "NA",
+            "value_tonnes_REO": null,
+            "status": "not_available"
+          },
+          "footnote_callouts": {
+            "2023": [
+              12
+            ],
+            "2024": [
+              12
+            ]
+          }
+        },
+        {
+          "country_as_printed": "Nigeria",
+          "mine_production": {
+            "2023": {
+              "printed_value": "7,200",
+              "value_tonnes_REO": 7200
+            },
+            "2024": {
+              "printed_value": "13,000",
+              "value_tonnes_REO": 13000
+            }
+          },
+          "reserves": {
+            "printed_value": "NA",
+            "value_tonnes_REO": null,
+            "status": "not_available"
+          },
+          "footnote_callouts": {
+            "2023": [
+              12
+            ],
+            "2024": [
+              12
+            ]
+          }
+        },
+        {
+          "country_as_printed": "Russia",
+          "mine_production": {
+            "2023": {
+              "printed_value": "2,500",
+              "value_tonnes_REO": 2500
+            },
+            "2024": {
+              "printed_value": "2,500",
+              "value_tonnes_REO": 2500
+            }
+          },
+          "reserves": {
+            "printed_value": "3,800,000",
+            "value_tonnes_REO": 3800000,
+            "status": "numeric"
+          },
+          "footnote_callouts": {}
+        },
+        {
+          "country_as_printed": "South Africa",
+          "mine_production": {
+            "2023": {
+              "printed_value": "—",
+              "value_tonnes_REO": 0
+            },
+            "2024": {
+              "printed_value": "—",
+              "value_tonnes_REO": 0
+            }
+          },
+          "reserves": {
+            "printed_value": "860,000",
+            "value_tonnes_REO": 860000,
+            "status": "numeric"
+          },
+          "footnote_callouts": {}
+        },
+        {
+          "country_as_printed": "Tanzania",
+          "mine_production": {
+            "2023": {
+              "printed_value": "—",
+              "value_tonnes_REO": 0
+            },
+            "2024": {
+              "printed_value": "—",
+              "value_tonnes_REO": 0
+            }
+          },
+          "reserves": {
+            "printed_value": "890,000",
+            "value_tonnes_REO": 890000,
+            "status": "numeric"
+          },
+          "footnote_callouts": {}
+        },
+        {
+          "country_as_printed": "Thailand",
+          "mine_production": {
+            "2023": {
+              "printed_value": "3,600",
+              "value_tonnes_REO": 3600
+            },
+            "2024": {
+              "printed_value": "13,000",
+              "value_tonnes_REO": 13000
+            }
+          },
+          "reserves": {
+            "printed_value": "4,500",
+            "value_tonnes_REO": 4500,
+            "status": "numeric"
+          },
+          "footnote_callouts": {
+            "2023": [
+              12
+            ],
+            "2024": [
+              12
+            ]
+          }
+        },
+        {
+          "country_as_printed": "Vietnam",
+          "mine_production": {
+            "2023": {
+              "printed_value": "300",
+              "value_tonnes_REO": 300
+            },
+            "2024": {
+              "printed_value": "300",
+              "value_tonnes_REO": 300
+            }
+          },
+          "reserves": {
+            "printed_value": "3,500,000",
+            "value_tonnes_REO": 3500000,
+            "status": "numeric"
+          },
+          "footnote_callouts": {
+            "2023": [
+              12
+            ],
+            "2024": [
+              12
+            ]
+          }
+        },
+        {
+          "country_as_printed": "Other",
+          "mine_production": {
+            "2023": {
+              "printed_value": "1,440",
+              "value_tonnes_REO": 1440
+            },
+            "2024": {
+              "printed_value": "1,100",
+              "value_tonnes_REO": 1100
+            }
+          },
+          "reserves": {
+            "printed_value": "NA",
+            "value_tonnes_REO": null,
+            "status": "not_available"
+          },
+          "footnote_callouts": {}
+        },
+        {
+          "country_as_printed": "World total (rounded)",
+          "mine_production": {
+            "2023": {
+              "printed_value": "376,000",
+              "value_tonnes_REO": 376000
+            },
+            "2024": {
+              "printed_value": "390,000",
+              "value_tonnes_REO": 390000
+            }
+          },
+          "reserves": {
+            "printed_value": ">90,000,000",
+            "comparator": ">",
+            "lower_bound_tonnes_REO": 90000000,
+            "value_tonnes_REO": null
+          },
+          "footnote_callouts": {}
+        }
+      ],
+      "source_excerpt_file": "extracted/mcs2025-table-and-footnotes.txt",
+      "full_footnotes_and_legend_verbatim_extracted": "e\n Estimated. E Net exporter. NA Not available. — Zero.\n1\n Data include lanthanides and yttrium but exclude most scandium. See also the Scandium and Yttrium chapters.\n2\n Excludes monazite concentrates for 2021–24.\n3\n In 2023 and 2024, reported production includes that for praseodymium and neodymium compounds in California and rare-earth compounds in\nUtah. Other rare-earth compounds were produced in California, but data were not in the reported totals shown. Total domestic production in 2023\nand 2024 was 1,920 tons and 7,600 tons, respectively.\n4\n REO equivalent or content of various materials were estimated. Source: U.S. Census Bureau.\n5\n Defined as production + imports – exports.\n6\n Source: Argus Media Group, Argus Non-Ferrous Markets.\n7\n Defined as imports – exports.\n8\n In 2020, all domestic production of mineral concentrates was exported or held in inventory, and all compounds and metals consumed were\nassumed to be imported material.\n9\n Includes Hong Kong.\n10\n  Gross weight. See Appendix B for definitions.\n11\n  See Appendix C for resource and reserve definitions and information concerning data sources.\n12\n  Estimated based on reported import data for China. Source: Zen Innovations, Global Trade Tracker.\n13\n  For Australia, Joint Ore Reserves Committee-compliant or equivalent reserves were 3.3 million tons.\n14\n  Production quota; does not include undocumented production.\n\n                                                    U.S. Geological Survey, Mineral Commodity Summaries, January 2025"
+    },
+    "mcs2026": {
+      "table_heading": "World Mine Production and Reserves",
+      "source_printed_page": 153,
+      "column_heading_as_printed": {
+        "mine_production": "Mine production e",
+        "mine_years": [
+          2024,
+          2025
+        ],
+        "reserves": "Reserves 10"
+      },
+      "all_country_other_world_rows": [
+        {
+          "country_as_printed": "United States",
+          "mine_production": {
+            "2024": {
+              "printed_value": "45,500",
+              "value_tonnes_REO": 45500
+            },
+            "2025": {
+              "printed_value": "51,000",
+              "value_tonnes_REO": 51000
+            }
+          },
+          "reserves": {
+            "printed_value": "1,900,000",
+            "value_tonnes_REO": 1900000,
+            "status": "numeric"
+          },
+          "footnote_callouts": {
+            "2024": [
+              11
+            ]
+          }
+        },
+        {
+          "country_as_printed": "Australia",
+          "mine_production": {
+            "2024": {
+              "printed_value": "29,000",
+              "value_tonnes_REO": 29000
+            },
+            "2025": {
+              "printed_value": "29,000",
+              "value_tonnes_REO": 29000
+            }
+          },
+          "reserves": {
+            "printed_value": "6,300,000",
+            "value_tonnes_REO": 6300000,
+            "status": "numeric"
+          },
+          "footnote_callouts": {
+            "reserves": [
+              13
+            ]
+          }
+        },
+        {
+          "country_as_printed": "Brazil",
+          "mine_production": {
+            "2024": {
+              "printed_value": "560",
+              "value_tonnes_REO": 560
+            },
+            "2025": {
+              "printed_value": "2,000",
+              "value_tonnes_REO": 2000
+            }
+          },
+          "reserves": {
+            "printed_value": "11,000,000",
+            "value_tonnes_REO": 11000000,
+            "status": "numeric"
+          },
+          "footnote_callouts": {}
+        },
+        {
+          "country_as_printed": "Burma",
+          "mine_production": {
+            "2024": {
+              "printed_value": "27,000",
+              "value_tonnes_REO": 27000
+            },
+            "2025": {
+              "printed_value": "22,000",
+              "value_tonnes_REO": 22000
+            }
+          },
+          "reserves": {
+            "printed_value": "NA",
+            "value_tonnes_REO": null,
+            "status": "not_available"
+          },
+          "footnote_callouts": {
+            "2024": [
+              12
+            ],
+            "2025": [
+              12
+            ]
+          }
+        },
+        {
+          "country_as_printed": "Canada",
+          "mine_production": {
+            "2024": {
+              "printed_value": "—",
+              "value_tonnes_REO": 0
+            },
+            "2025": {
+              "printed_value": "—",
+              "value_tonnes_REO": 0
+            }
+          },
+          "reserves": {
+            "printed_value": "830,000",
+            "value_tonnes_REO": 830000,
+            "status": "numeric"
+          },
+          "footnote_callouts": {}
+        },
+        {
+          "country_as_printed": "China",
+          "mine_production": {
+            "2024": {
+              "printed_value": "270,000",
+              "value_tonnes_REO": 270000
+            },
+            "2025": {
+              "printed_value": "270,000",
+              "value_tonnes_REO": 270000
+            }
+          },
+          "reserves": {
+            "printed_value": "44,000,000",
+            "value_tonnes_REO": 44000000,
+            "status": "numeric"
+          },
+          "footnote_callouts": {}
+        },
+        {
+          "country_as_printed": "Greenland",
+          "mine_production": {
+            "2024": {
+              "printed_value": "—",
+              "value_tonnes_REO": 0
+            },
+            "2025": {
+              "printed_value": "—",
+              "value_tonnes_REO": 0
+            }
+          },
+          "reserves": {
+            "printed_value": "1,500,000",
+            "value_tonnes_REO": 1500000,
+            "status": "numeric"
+          },
+          "footnote_callouts": {}
+        },
+        {
+          "country_as_printed": "India",
+          "mine_production": {
+            "2024": {
+              "printed_value": "2,900",
+              "value_tonnes_REO": 2900
+            },
+            "2025": {
+              "printed_value": "2,900",
+              "value_tonnes_REO": 2900
+            }
+          },
+          "reserves": {
+            "printed_value": "NA",
+            "value_tonnes_REO": null,
+            "status": "not_available"
+          },
+          "footnote_callouts": {
+            "reserves": [
+              14
+            ]
+          }
+        },
+        {
+          "country_as_printed": "Madagascar",
+          "mine_production": {
+            "2024": {
+              "printed_value": "1,400",
+              "value_tonnes_REO": 1400
+            },
+            "2025": {
+              "printed_value": "2,700",
+              "value_tonnes_REO": 2700
+            }
+          },
+          "reserves": {
+            "printed_value": "NA",
+            "value_tonnes_REO": null,
+            "status": "not_available"
+          },
+          "footnote_callouts": {
+            "2024": [
+              12
+            ],
+            "2025": [
+              12
+            ]
+          }
+        },
+        {
+          "country_as_printed": "Malaysia",
+          "mine_production": {
+            "2024": {
+              "printed_value": "140",
+              "value_tonnes_REO": 140
+            },
+            "2025": {
+              "printed_value": "110",
+              "value_tonnes_REO": 110
+            }
+          },
+          "reserves": {
+            "printed_value": "710,000",
+            "value_tonnes_REO": 710000,
+            "status": "numeric"
+          },
+          "footnote_callouts": {
+            "2024": [
+              12
+            ],
+            "2025": [
+              12
+            ]
+          }
+        },
+        {
+          "country_as_printed": "Nigeria",
+          "mine_production": {
+            "2024": {
+              "printed_value": "1,500",
+              "value_tonnes_REO": 1500
+            },
+            "2025": {
+              "printed_value": "1,500",
+              "value_tonnes_REO": 1500
+            }
+          },
+          "reserves": {
+            "printed_value": "NA",
+            "value_tonnes_REO": null,
+            "status": "not_available"
+          },
+          "footnote_callouts": {}
+        },
+        {
+          "country_as_printed": "Russia",
+          "mine_production": {
+            "2024": {
+              "printed_value": "2,600",
+              "value_tonnes_REO": 2600
+            },
+            "2025": {
+              "printed_value": "2,600",
+              "value_tonnes_REO": 2600
+            }
+          },
+          "reserves": {
+            "printed_value": "3,800,000",
+            "value_tonnes_REO": 3800000,
+            "status": "numeric"
+          },
+          "footnote_callouts": {}
+        },
+        {
+          "country_as_printed": "South Africa",
+          "mine_production": {
+            "2024": {
+              "printed_value": "—",
+              "value_tonnes_REO": 0
+            },
+            "2025": {
+              "printed_value": "—",
+              "value_tonnes_REO": 0
+            }
+          },
+          "reserves": {
+            "printed_value": "860,000",
+            "value_tonnes_REO": 860000,
+            "status": "numeric"
+          },
+          "footnote_callouts": {}
+        },
+        {
+          "country_as_printed": "Tanzania",
+          "mine_production": {
+            "2024": {
+              "printed_value": "—",
+              "value_tonnes_REO": 0
+            },
+            "2025": {
+              "printed_value": "—",
+              "value_tonnes_REO": 0
+            }
+          },
+          "reserves": {
+            "printed_value": "890,000",
+            "value_tonnes_REO": 890000,
+            "status": "numeric"
+          },
+          "footnote_callouts": {}
+        },
+        {
+          "country_as_printed": "Thailand",
+          "mine_production": {
+            "2024": {
+              "printed_value": "2,100",
+              "value_tonnes_REO": 2100
+            },
+            "2025": {
+              "printed_value": "4,800",
+              "value_tonnes_REO": 4800
+            }
+          },
+          "reserves": {
+            "printed_value": "NA",
+            "value_tonnes_REO": null,
+            "status": "not_available"
+          },
+          "footnote_callouts": {
+            "2024": [
+              12
+            ],
+            "2025": [
+              12
+            ]
+          }
+        },
+        {
+          "country_as_printed": "Vietnam",
+          "mine_production": {
+            "2024": {
+              "printed_value": "300",
+              "value_tonnes_REO": 300
+            },
+            "2025": {
+              "printed_value": "150",
+              "value_tonnes_REO": 150
+            }
+          },
+          "reserves": {
+            "printed_value": "3,500,000",
+            "value_tonnes_REO": 3500000,
+            "status": "numeric"
+          },
+          "footnote_callouts": {
+            "2024": [
+              12
+            ],
+            "2025": [
+              12
+            ]
+          }
+        },
+        {
+          "country_as_printed": "Other",
+          "mine_production": {
+            "2024": {
+              "printed_value": "1,000",
+              "value_tonnes_REO": 1000
+            },
+            "2025": {
+              "printed_value": "550",
+              "value_tonnes_REO": 550
+            }
+          },
+          "reserves": {
+            "printed_value": "NA",
+            "value_tonnes_REO": null,
+            "status": "not_available"
+          },
+          "footnote_callouts": {}
+        },
+        {
+          "country_as_printed": "World total (rounded)",
+          "mine_production": {
+            "2024": {
+              "printed_value": "380,000",
+              "value_tonnes_REO": 380000
+            },
+            "2025": {
+              "printed_value": "390,000",
+              "value_tonnes_REO": 390000
+            }
+          },
+          "reserves": {
+            "printed_value": ">75,000,000",
+            "comparator": ">",
+            "lower_bound_tonnes_REO": 75000000,
+            "value_tonnes_REO": null
+          },
+          "footnote_callouts": {}
+        }
+      ],
+      "source_excerpt_file": "extracted/mcs2026-table-and-footnotes.txt",
+      "full_footnotes_and_legend_verbatim_extracted": "e\n Estimated. E Net exporter. NA Not available. — Zero.\n1\n Data include lanthanides and yttrium but exclude most scandium. See also the Rare Earths (Heavy), Scandium, and Yttrium chapters.\n2\n Excludes monazite concentrates.\n3\n Production includes compounds from California and Utah. Data are rounded to two significant digits.\n4\n REO equivalent or content of various materials were estimated. Source: U.S. Census Bureau.\n5\n Defined as production + imports – exports.\n6\n Free on board. Source: Argus Media group, Argus Non-Ferrous Markets.\n7\n Defined as imports – exports.\n8\n Includes Hong Kong.\n9\n Gross weight. See Appendix B for definitions. For fiscal year 2026, the Annual Materials Plan was not released.\n10\n  See Appendix C for resource and reserve definitions and information concerning data sources.\n11\n  Reported.\n12\n  Estimated based on reported import data for China. Source: Trade Data Monitor Inc.\n13\n  For Australia, Joint Ore Reserves Committee-compliant or equivalent reserves were 3.3 million tons.\n14\n  A 2015 report from OSCOM indicated that monazite reserves from their operations were 256,000 tons; rare-earth reserves were not reported.\n\n                                                  U.S. Geological Survey, Mineral Commodity Summaries, February 2026"
+    }
+  },
+  "rankings_and_china_world_arithmetic": {
+    "mcs2025": {
+      "latest_mine_year": 2024,
+      "latest_mine_top3": [
+        {
+          "rank": 1,
+          "country": "China",
+          "value_tonnes_REO": 270000,
+          "share_of_reported_rounded_world_percent": 69.23076923076923
+        },
+        {
+          "rank": 2,
+          "country": "United States",
+          "value_tonnes_REO": 45000,
+          "share_of_reported_rounded_world_percent": 11.538461538461538
+        },
+        {
+          "rank": 3,
+          "country": "Burma",
+          "value_tonnes_REO": 31000,
+          "share_of_reported_rounded_world_percent": 7.948717948717948
+        }
+      ],
+      "other_mine_year_2023_top3": [
+        {
+          "rank": 1,
+          "country": "China",
+          "value_tonnes_REO": 255000,
+          "share_of_reported_rounded_world_percent": 67.81914893617021
+        },
+        {
+          "rank": 2,
+          "country": "Burma",
+          "value_tonnes_REO": 43000,
+          "share_of_reported_rounded_world_percent": 11.436170212765957
+        },
+        {
+          "rank": 3,
+          "country": "United States",
+          "value_tonnes_REO": 41600,
+          "share_of_reported_rounded_world_percent": 11.063829787234042
+        }
+      ],
+      "reserves_top3_among_published_numeric_country_entries": [
+        {
+          "rank": 1,
+          "country": "China",
+          "value_tonnes_REO": 44000000
+        },
+        {
+          "rank": 2,
+          "country": "Brazil",
+          "value_tonnes_REO": 21000000
+        },
+        {
+          "rank": 3,
+          "country": "India",
+          "value_tonnes_REO": 6900000
+        }
+      ],
+      "reserves_global_complete_top3_proven": false,
+      "china_mine_share_latest_year": {
+        "numerator_tonnes_REO": 270000,
+        "denominator_reported_rounded_world_tonnes_REO": 390000,
+        "formula": "270000 / 390000 * 100",
+        "percent": 69.23076923076923,
+        "display_percent_2dp": "69.23%",
+        "precision_caution": "源值为估计值且世界合计已取整；百分数为对已公布数值的核算，不是额外精度。"
+      },
+      "china_mine_share_2023": {
+        "numerator_tonnes_REO": 255000,
+        "denominator_reported_rounded_world_tonnes_REO": 376000,
+        "formula": "255000 / 376000 * 100",
+        "percent": 67.81914893617021,
+        "display_percent_2dp": "67.82%",
+        "precision_caution": "源值为估计值且世界合计已取整；百分数为对已公布数值的核算，不是额外精度。"
+      },
+      "china_reserve_share": {
+        "numerator_tonnes_REO": 44000000,
+        "denominator_printed": ">90,000,000",
+        "exact_share_identifiable": false,
+        "formula_upper_bound": "44000000 / 90000000 * 100",
+        "strict_upper_bound_percent_from_printed_bound": 48.888888888888886,
+        "display_qualified": "小于约 48.89%（按已公布下限核算；不可写成精确占比）"
+      }
+    },
+    "mcs2026": {
+      "latest_mine_year": 2025,
+      "latest_mine_top3": [
+        {
+          "rank": 1,
+          "country": "China",
+          "value_tonnes_REO": 270000,
+          "share_of_reported_rounded_world_percent": 69.23076923076923
+        },
+        {
+          "rank": 2,
+          "country": "United States",
+          "value_tonnes_REO": 51000,
+          "share_of_reported_rounded_world_percent": 13.076923076923078
+        },
+        {
+          "rank": 3,
+          "country": "Australia",
+          "value_tonnes_REO": 29000,
+          "share_of_reported_rounded_world_percent": 7.435897435897436
+        }
+      ],
+      "other_mine_year_2024_top3": [
+        {
+          "rank": 1,
+          "country": "China",
+          "value_tonnes_REO": 270000,
+          "share_of_reported_rounded_world_percent": 71.05263157894737
+        },
+        {
+          "rank": 2,
+          "country": "United States",
+          "value_tonnes_REO": 45500,
+          "share_of_reported_rounded_world_percent": 11.973684210526315
+        },
+        {
+          "rank": 3,
+          "country": "Australia",
+          "value_tonnes_REO": 29000,
+          "share_of_reported_rounded_world_percent": 7.631578947368421
+        }
+      ],
+      "reserves_top3_among_published_numeric_country_entries": [
+        {
+          "rank": 1,
+          "country": "China",
+          "value_tonnes_REO": 44000000
+        },
+        {
+          "rank": 2,
+          "country": "Brazil",
+          "value_tonnes_REO": 11000000
+        },
+        {
+          "rank": 3,
+          "country": "Australia",
+          "value_tonnes_REO": 6300000
+        }
+      ],
+      "reserves_global_complete_top3_proven": false,
+      "china_mine_share_latest_year": {
+        "numerator_tonnes_REO": 270000,
+        "denominator_reported_rounded_world_tonnes_REO": 390000,
+        "formula": "270000 / 390000 * 100",
+        "percent": 69.23076923076923,
+        "display_percent_2dp": "69.23%",
+        "precision_caution": "源值为估计值且世界合计已取整；百分数为对已公布数值的核算，不是额外精度。"
+      },
+      "china_mine_share_2024_revised": {
+        "numerator_tonnes_REO": 270000,
+        "denominator_reported_rounded_world_tonnes_REO": 380000,
+        "formula": "270000 / 380000 * 100",
+        "percent": 71.05263157894737,
+        "display_percent_2dp": "71.05%",
+        "precision_caution": "源值为估计值且世界合计已取整；百分数为对已公布数值的核算，不是额外精度。"
+      },
+      "china_reserve_share": {
+        "numerator_tonnes_REO": 44000000,
+        "denominator_printed": ">75,000,000",
+        "exact_share_identifiable": false,
+        "formula_upper_bound": "44000000 / 75000000 * 100",
+        "strict_upper_bound_percent_from_printed_bound": 58.666666666666664,
+        "display_qualified": "小于约 58.67%（按已公布下限核算；不可写成精确占比）"
+      }
+    },
+    "reserve_ranking_scope": "排名是对该版储量列中有数值的国家排序，排除 Other 和 World，不将 NA 当作0。该限定下前三名唯一；若题意要求所有国家真实储量完整排名，源表存在未估值，不能唯一证明。",
+    "production_ranking_scope": "对原表公布的国家估计值排序；前三名无数值并列。结论不构成真实产量置信区间证明。"
+  },
+  "same_statistical_year_revision_check": {
+    "statistical_year": 2024,
+    "has_revisions": true,
+    "comparison_unit": "metric tons REO equivalent",
+    "all_rows_including_unchanged_and_world": [
+      {
+        "country_as_printed": "United States",
+        "statistical_year": 2024,
+        "mcs2025_tonnes_REO": 45000,
+        "mcs2026_tonnes_REO": 45500,
+        "changed": true,
+        "delta_tonnes_REO": 500,
+        "relative_revision_percent": 1.1111111111111072
+      },
+      {
+        "country_as_printed": "Australia",
+        "statistical_year": 2024,
+        "mcs2025_tonnes_REO": 13000,
+        "mcs2026_tonnes_REO": 29000,
+        "changed": true,
+        "delta_tonnes_REO": 16000,
+        "relative_revision_percent": 123.07692307692308
+      },
+      {
+        "country_as_printed": "Brazil",
+        "statistical_year": 2024,
+        "mcs2025_tonnes_REO": 20,
+        "mcs2026_tonnes_REO": 560,
+        "changed": true,
+        "delta_tonnes_REO": 540,
+        "relative_revision_percent": 2700.0
+      },
+      {
+        "country_as_printed": "Burma",
+        "statistical_year": 2024,
+        "mcs2025_tonnes_REO": 31000,
+        "mcs2026_tonnes_REO": 27000,
+        "changed": true,
+        "delta_tonnes_REO": -4000,
+        "relative_revision_percent": -12.903225806451612
+      },
+      {
+        "country_as_printed": "Canada",
+        "statistical_year": 2024,
+        "mcs2025_tonnes_REO": 0,
+        "mcs2026_tonnes_REO": 0,
+        "changed": false,
+        "delta_tonnes_REO": 0,
+        "relative_revision_percent": 0
+      },
+      {
+        "country_as_printed": "China",
+        "statistical_year": 2024,
+        "mcs2025_tonnes_REO": 270000,
+        "mcs2026_tonnes_REO": 270000,
+        "changed": false,
+        "delta_tonnes_REO": 0,
+        "relative_revision_percent": 0.0
+      },
+      {
+        "country_as_printed": "Greenland",
+        "statistical_year": 2024,
+        "mcs2025_tonnes_REO": 0,
+        "mcs2026_tonnes_REO": 0,
+        "changed": false,
+        "delta_tonnes_REO": 0,
+        "relative_revision_percent": 0
+      },
+      {
+        "country_as_printed": "India",
+        "statistical_year": 2024,
+        "mcs2025_tonnes_REO": 2900,
+        "mcs2026_tonnes_REO": 2900,
+        "changed": false,
+        "delta_tonnes_REO": 0,
+        "relative_revision_percent": 0.0
+      },
+      {
+        "country_as_printed": "Madagascar",
+        "statistical_year": 2024,
+        "mcs2025_tonnes_REO": 2000,
+        "mcs2026_tonnes_REO": 1400,
+        "changed": true,
+        "delta_tonnes_REO": -600,
+        "relative_revision_percent": -30.000000000000004
+      },
+      {
+        "country_as_printed": "Malaysia",
+        "statistical_year": 2024,
+        "mcs2025_tonnes_REO": 130,
+        "mcs2026_tonnes_REO": 140,
+        "changed": true,
+        "delta_tonnes_REO": 10,
+        "relative_revision_percent": 7.692307692307687
+      },
+      {
+        "country_as_printed": "Nigeria",
+        "statistical_year": 2024,
+        "mcs2025_tonnes_REO": 13000,
+        "mcs2026_tonnes_REO": 1500,
+        "changed": true,
+        "delta_tonnes_REO": -11500,
+        "relative_revision_percent": -88.46153846153845
+      },
+      {
+        "country_as_printed": "Russia",
+        "statistical_year": 2024,
+        "mcs2025_tonnes_REO": 2500,
+        "mcs2026_tonnes_REO": 2600,
+        "changed": true,
+        "delta_tonnes_REO": 100,
+        "relative_revision_percent": 4.0000000000000036
+      },
+      {
+        "country_as_printed": "South Africa",
+        "statistical_year": 2024,
+        "mcs2025_tonnes_REO": 0,
+        "mcs2026_tonnes_REO": 0,
+        "changed": false,
+        "delta_tonnes_REO": 0,
+        "relative_revision_percent": 0
+      },
+      {
+        "country_as_printed": "Tanzania",
+        "statistical_year": 2024,
+        "mcs2025_tonnes_REO": 0,
+        "mcs2026_tonnes_REO": 0,
+        "changed": false,
+        "delta_tonnes_REO": 0,
+        "relative_revision_percent": 0
+      },
+      {
+        "country_as_printed": "Thailand",
+        "statistical_year": 2024,
+        "mcs2025_tonnes_REO": 13000,
+        "mcs2026_tonnes_REO": 2100,
+        "changed": true,
+        "delta_tonnes_REO": -10900,
+        "relative_revision_percent": -83.84615384615385
+      },
+      {
+        "country_as_printed": "Vietnam",
+        "statistical_year": 2024,
+        "mcs2025_tonnes_REO": 300,
+        "mcs2026_tonnes_REO": 300,
+        "changed": false,
+        "delta_tonnes_REO": 0,
+        "relative_revision_percent": 0.0
+      },
+      {
+        "country_as_printed": "Other",
+        "statistical_year": 2024,
+        "mcs2025_tonnes_REO": 1100,
+        "mcs2026_tonnes_REO": 1000,
+        "changed": true,
+        "delta_tonnes_REO": -100,
+        "relative_revision_percent": -9.090909090909093
+      },
+      {
+        "country_as_printed": "World total (rounded)",
+        "statistical_year": 2024,
+        "mcs2025_tonnes_REO": 390000,
+        "mcs2026_tonnes_REO": 380000,
+        "changed": true,
+        "delta_tonnes_REO": -10000,
+        "relative_revision_percent": -2.564102564102566
+      }
+    ],
+    "number_changed_country_or_other_rows": 10,
+    "old_2024_top3": [
+      {
+        "rank": 1,
+        "country": "China",
+        "value_tonnes_REO": 270000,
+        "share_of_reported_rounded_world_percent": 69.23076923076923
+      },
+      {
+        "rank": 2,
+        "country": "United States",
+        "value_tonnes_REO": 45000,
+        "share_of_reported_rounded_world_percent": 11.538461538461538
+      },
+      {
+        "rank": 3,
+        "country": "Burma",
+        "value_tonnes_REO": 31000,
+        "share_of_reported_rounded_world_percent": 7.948717948717948
+      }
+    ],
+    "new_2024_top3": [
+      {
+        "rank": 1,
+        "country": "China",
+        "value_tonnes_REO": 270000,
+        "share_of_reported_rounded_world_percent": 71.05263157894737
+      },
+      {
+        "rank": 2,
+        "country": "United States",
+        "value_tonnes_REO": 45500,
+        "share_of_reported_rounded_world_percent": 11.973684210526315
+      },
+      {
+        "rank": 3,
+        "country": "Australia",
+        "value_tonnes_REO": 29000,
+        "share_of_reported_rounded_world_percent": 7.631578947368421
+      }
+    ],
+    "interpretation": "同一2024年，第三名从 MCS2025 的 Burma 31,000 变为 MCS2026 的 Australia 29,000；不能把此差异写成2024到2025的实际产量变化。",
+    "prose_vs_table_check": "MCS2026 表前文字点名 Australia, Brazil, Burma, Madagascar, Nigeria, Vietnam 的显著2024修订，但逐格比较还存在美国、马来西亚、俄罗斯、泰国、Other 的数值变化；Vietnam 的2024值两版均为300。完整差异以两份实际表格为据，未根据这句概述虚构 Vietnam 数值变化。",
+    "china_2024_value_revision_tonnes_REO": 0,
+    "china_2024_share_change_percentage_points": 1.8218623481781435,
+    "same_new_edition_world_2024_to_2025_growth": {
+      "formula": "390000 / 380000 - 1",
+      "percent": 2.6315789473684292
+    },
+    "mixed_edition_apparent_world_growth": {
+      "formula": "MCS2026[2025]390000 / MCS2025[2024]390000 - 1",
+      "percent": 0,
+      "interpretation": "混用版本造成表观0增长，不能据此断言实际零增长。"
+    },
+    "rounded_world_denominator_policy": "占比使用该版 World total (rounded) 原值；没有把各国行相加的未取整和替代源表世界合计。",
+    "rounded_world_total_explanation": {
+      "observed_source_label": "World total (rounded)",
+      "observed_discrepancies_world_minus_country_row_sum_tonnes_REO": {
+        "mcs2025_2023": -90,
+        "mcs2025_2024": -3950,
+        "mcs2026_2024": -4000,
+        "mcs2026_2025": 690
+      },
+      "source_supported_explanation": "原表将世界数值明确标为rounded，各国值亦为公布估计值；表没有要求世界取整值等于公布国家值之和。2024/2025各差额均与世界以万吨粒度取整相容；2023差额与千吨粒度取整相容。",
+      "epistemic_boundary": "这是对rounded标签和数值的核查；来源未公布世界合计的逐项构成或完整取整算法，不能把相容性推断升级成对底层算法的实证。",
+      "denominator_action": "保留官方World原值，不把求和当作勘误依据。"
+    },
+    "country_row_sums_for_rounding_audit_only": {
+      "mcs2025_2023": 376090,
+      "mcs2025_2024": 393950,
+      "mcs2026_2024": 384000,
+      "mcs2026_2025": 389310
+    }
+  },
+  "reserve_uncertainty_and_ranking_identifiability": {
+    "unknowns_mcs2025": [
+      "Burma",
+      "Madagascar",
+      "Malaysia",
+      "Nigeria",
+      "Other"
+    ],
+    "unknowns_mcs2026": [
+      "Burma",
+      "India",
+      "Madagascar",
+      "Nigeria",
+      "Thailand",
+      "Other"
+    ],
+    "NA_is_not_zero": true,
+    "world_lower_bounds": "MCS2025 >90,000,000；MCS2026 >75,000,000。不能删掉 >；不能把中国44,000,000除以下限所得值称为精确世界占比。世界下限本身不破坏有数值国家的排序，但限制世界占比的唯一性。",
+    "india_2026": "储量列为 NA 并带脚注14。脚注报告的是 OSCOM 2015 年其经营范围 monazite reserves 256,000 tons，并明确 rare-earth reserves were not reported；这是独居石矿物吨数且范围不同，不能当作256,000吨REO的印度全国稀土储量，无法在没有含量和回收依据时换算。也不能将2025版6,900,000沿用为2026版数值。",
+    "australia_reserve_basis": "2025主列5,700,000，2026主列6,300,000；两版脚注13另列 JORC-compliant or equivalent reserves 3.3 million tons。差别是储量/资源分类口径，不是单位从吨变千吨。",
+    "australia_alternative_counterexample": "若只把2026澳大利亚主列6,300,000替换成脚注3,300,000，它会落到Russia3,800,000和Vietnam3,500,000之后。这说明需声明按哪一列/口径排名；这种仅替换一国的混口径排序不能宣称为统一JORC口径的全球排名。",
+    "brazil_revision": "2026 v1.3 对本版巴西21,000,000修订为11,000,000，世界>85,000,000修订为>75,000,000；不是仅有首版2026数值即可代表截止日最新修订。该修订不证明一年内实际开采耗减1,000万吨。",
+    "reserve_value_sums_for_audit_only": {
+      "mcs2025_known_numeric_country_sum_tonnes_REO": 90884500,
+      "mcs2026_known_numeric_country_sum_tonnes_REO": 75290000,
+      "replace_world_total_with_sum": false
+    },
+    "unique_answer_assessment": "可以唯一复现：在明确“所选版主表已公布数值”这一范围下的前三名，以及以报告世界产量为分母的数值占比。不能唯一确定：未估值国家参与的完整全球储量排名、精确中国/世界储量比、统一JORC标准的全球排名、未标日期的储量对应年末时点。"
+  },
+  "footnote_and_version_traps": [
+    "MCS2025 中国2023/2024矿山产量附脚注14：Production quota; does not include undocumented production。",
+    "MCS2026 官方v1.1修订明示移除中国2024产量旁脚注14，改附印度储量NA，并改写脚注文本。当前2026章不能继续套用2025的quota脚注。",
+    "MCS2026当前章页脚仍写February 2026，但正确版本归属是2026卷v1.3 May 2026；页脚月份不是最新修订日。",
+    "MCS2025卷v1.2 March 2025的Rare Earths当前章节内容在v1.1已修订脚注，卷v1.2修订是Zinc，不能根据章节HTTP Last-Modified提前于卷v1.2就误判它不属于当前卷。"
+  ],
+  "government_work_license": {
+    "status": "U.S. public domain for USGS-authored text/tables; no custom CC0 license invented for these PDFs",
+    "direct_publication_basis": {
+      "files": [
+        "raw/mcs2026-full.pdf: front matter PDF p4",
+        "raw/mcs2025-full.pdf: front matter PDF p4"
+      ],
+      "verbatim": "Although this report is in the public domain, permission must be secured from the individual copyright owners to reproduce any copyrighted material contained within this report."
+    },
+    "official_policy_snapshot": {
+      "filename": "raw/usgs-publication-faq.html",
+      "requested_url": "https://pubs.usgs.gov/documentation/faq",
+      "final_url": "https://pubs.usgs.gov/documentation/faq",
+      "retrieval_started_utc": "2026-10-28T08:03:16.206605+00:00",
+      "retrieval_completed_utc": "2026-10-28T08:03:17.385384+00:00",
+      "http_status": 200,
+      "exit_code": 0,
+      "content_type": "text/html; charset=utf-8",
+      "ssl_verify_result": 0,
+      "client": "system curl; TLS verification enabled",
+      "sha256": "ecd1d5a103c4321418cd647eccd956898418aa3f8890f0382676b64eb2cf53a3",
+      "byte_size": 35465,
+      "response_headers_path": "raw/usgs-publication-faq.html.headers.txt",
+      "manifest_reconciliation_note": "Captured during official acquisition; merged after independent acquisition commands completed."
+    },
+    "policy_findings": "USGS Publications Warehouse FAQ 明示 USGS-published report PDF 和 USGS-authored/produced data/information 为 public domain；第三方材料可能仍有版权；使用要求给 USGS 适当署名，USGS logo 有限制。",
+    "research_use": "本复核摘录的是 USGS编制的稀土统计表、说明和脚注，并署名来源；不把第三方封面照片或logo宣称为无限制公共领域素材。",
+    "acknowledgement": "Source: U.S. Geological Survey, Mineral Commodity Summaries 2026 (ver. 1.3, May 2026), Rare Earths, pp. 152–153; Mineral Commodity Summaries 2025 (ver. 1.2, March 2025), Rare Earths, pp. 144–145."
+  },
+  "limitations": [
+    "非人工专家，仅模型来源复核；未读取候选答案，未产生候选语义评分。",
+    "部分www.usgs.gov页面对直接curl返回403；这些失败原响应亦保留。核心PDF、版本史、出版页、系列目录、公共领域FAQ均实际HTTP200获取。",
+    "Python urllib初次取源因本机证书链失败，失败记录保留；随后系统curl保持TLS验证并成功，未使用跳过证书校验参数。",
+    "PDF采用pdftotext -layout及-raw两个阅读顺序核对；任务为纯文本数值核验，未做视觉图像判断。原字节和完整章节文本保留，可复查脚注上标位置。",
+    "个别2026附录PDF提取时Poppler给出optional content group语法提示，提取退出码0；所需Appendix C文字完整。此提示不用于弱化源表未知值。",
+    "搜索结果中出现的第三方解释与其他benchmark页面均未打开、未用作统计事实或预期答案。"
+  ],
+  "evidence_files": {
+    "acquisition_manifest": "acquisition-manifest.json",
+    "raw_byte_directory": "raw",
+    "complete_chapter_text": [
+      "extracted/mcs2025-rare-earths.txt",
+      "extracted/mcs2026-rare-earths.txt"
+    ],
+    "alternate_text_order": [
+      "extracted/mcs2025-rare-earths-raw-order.txt",
+      "extracted/mcs2026-rare-earths-raw-order.txt"
+    ],
+    "raw_source_table_and_footnotes": [
+      "extracted/mcs2025-table-and-footnotes.txt",
+      "extracted/mcs2026-table-and-footnotes.txt"
+    ],
+    "tabular_transcription": [
+      "extracted/mcs2025-world-table.csv",
+      "extracted/mcs2026-world-table.csv"
+    ],
+    "appendix_text": [
+      "extracted/mcs2025-appendixes.txt",
+      "extracted/mcs2026-appendixes.txt"
+    ],
+    "frontmatter_text": [
+      "extracted/mcs2025-full-frontmatter.txt",
+      "extracted/mcs2026-full-frontmatter.txt"
+    ],
+    "source_hashes": "SHA256SUMS.raw.txt",
+    "reproduction_script": "build_review.py"
+  },
+  "transcription_validation": {
+    "all_source_rows_and_data_cells_match_alternate_text_order": true,
+    "checks": [
+      {
+        "edition": 2025,
+        "validated_rows": 18,
+        "validated_data_cells": 54,
+        "method": "Against independently ordered pdftotext -raw text, retain footnote callouts separately and compare each row three source tokens exactly."
+      },
+      {
+        "edition": 2026,
+        "validated_rows": 18,
+        "validated_data_cells": 54,
+        "method": "Against independently ordered pdftotext -raw text, retain footnote callouts separately and compare each row three source tokens exactly."
+      }
+    ]
+  }
+}

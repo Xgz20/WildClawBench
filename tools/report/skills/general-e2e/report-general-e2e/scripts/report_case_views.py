@@ -16,6 +16,17 @@ def parse_task(text):
     match = re.match(r"^---\s*\n(.*?)\n---\s*\n", text, re.S)
     if match:
         front = match.group(1)
+        report_contracts = re.findall(r"^dataset_report:[ \t]*(.*)$", front, re.M)
+        if report_contracts:
+            try:
+                if len(report_contracts) != 1:
+                    raise ValueError("REPORT_DATASET_METADATA_INVALID")
+                contract = json.loads(report_contracts[0])
+                if not isinstance(contract, dict):
+                    raise ValueError("REPORT_DATASET_METADATA_INVALID")
+                result["dataset_report"] = contract
+            except json.JSONDecodeError as exc:
+                raise ValueError("REPORT_DATASET_METADATA_INVALID") from exc
         task_id = re.search(r"^id:\s*(.+)$", front, re.M)
         result["task_id"] = task_id.group(1).strip().strip("\"'") if task_id else None
         tags = re.search(r"^tags:[ \t]*(.*)$", front, re.M)
@@ -215,13 +226,19 @@ def compatible_definition_signatures(data, task_id, rows, signatures):
     return {comparison}
 
 
-def build_case_views(data, units, labels, table, categories, modalities):
+def build_case_views(data, units, labels, table, categories, modalities, category_order=None):
     by_task = {}
     for row in data["tasks"]:
         if row["unit_id"] in by_task.setdefault(row["task_id"], {}):
             raise ValueError("REPORT_DUPLICATE_TASK_RUN")
         by_task[row["task_id"]][row["unit_id"]] = row
-    ordered = sorted(by_task, key=lambda task: (next(iter(by_task[task].values())).get("category") or "", int(re.search(r"task_(\d+)", task).group(1)) if re.search(r"task_(\d+)", task) else 999, task))
+    category_order = category_order or {}
+    def task_order(task):
+        category = next(iter(by_task[task].values())).get("category") or ""
+        group = (0, category_order[category], category) if category in category_order else (1, 0, category)
+        number = re.search(r"task_(\d+)", task)
+        return (*group, int(number.group(1)) if number else 999, task)
+    ordered = sorted(by_task, key=task_order)
     compare_rows, meta_by_task = [], {}
     for task_id in ordered:
         rows = by_task[task_id]

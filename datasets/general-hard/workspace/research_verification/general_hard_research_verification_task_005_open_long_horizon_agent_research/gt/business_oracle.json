@@ -1,0 +1,117 @@
+{
+  "assessment_split": {
+    "Judge": "Scientific support, real research process, source-role truth, representativeness, identity deduplication, compatible comparison and bounded recommendations.",
+    "automatic": "Public shape/ID/pointer/native format, independently supplied byte/locator resolution, literal calendar math and effort-budget/graph checks.",
+    "not_permitted": "Name whitelist, fixed 12-claim answer, candidate/reference-derived truth, or semantic support inferred merely from nonempty strings."
+  },
+  "authority": "Three public input bytes bound by protected_sha256.json. This oracle does not add candidate fields or source-name obligations.",
+  "construction_constraints": {
+    "dependencies": "Existing priority IDs or clearly marked external prerequisites, without cycles.",
+    "engineers": 3,
+    "estimates_are_inference_with_assumptions": true,
+    "new_training_or_implementation_or_live_business_actions_required": false,
+    "no_unique_priority_order_or_fixed_technology_stack": true,
+    "nonnegative_lower_upper": true,
+    "person_day_upper_budget": 60,
+    "priority_count_maximum": 3,
+    "priority_count_minimum": 1,
+    "sum_upper_at_most": 60,
+    "upper_at_least_lower": true,
+    "workdays_each": 20
+  },
+  "counterexample_requirement": "Each submitted priority has the public counterexample_or_failure_mode meaning; do not impose a fixed number of counterexample citations or fabricated negative experiments.",
+  "identity_and_evidence_rules": [
+    "Do not count versions/deployments as separate same-group entities or preprint/journal/revisions/benchmark-site-plus-paper as new research contributions.",
+    "Framework and related research work may belong to separate groups if each satisfies its public identity and reading requirements.",
+    "Source status, evidence nature, actual object capability and a runtime guarantee are distinct. Official docs and static code do not prove production cross-day recovery or final-delivery correctness.",
+    "Keep actual date precision, field role, aware timestamps, selected revision and acquisition time separate. Unknown identity/time entries remain records but do not fill qualified minimums.",
+    "Numeric comparisons preserve task/split, metric direction, sample denominator, budget, model/version, hardware and permission conditions as reported; qualitative/unknown results are valid."
+  ],
+  "infrastructure_boundary": "Missing necessary independent source evidence, Office/rule baseline or Judge is evaluation_error/pending evidence as applicable; do not invent candidate zero, reweight or final hybrid score.",
+  "minimum_rules": {
+    "entities": {
+      "distinct_relevant_supported_pre_cutoff_identity": true,
+      "minimum": 5,
+      "unknown_capability_cell_does_not_disqualify_identified_time_supported_entity": true
+    },
+    "key_claims": {
+      "exact": 12,
+      "no_fixed_claim_texts": true,
+      "topics_union": [
+        "planning",
+        "memory",
+        "tool_use",
+        "recovery",
+        "delivery_verification"
+      ]
+    },
+    "minimums_are_floors_not_exact_five_rosters": true,
+    "research_works": {
+      "accepted_full_carriers": [
+        "complete paper manuscript",
+        "complete official benchmark main protocol/document"
+      ],
+      "distinct_contributions": true,
+      "minimum": 5,
+      "unread_or_partial_paper_does_not_become_complete_from_abstract_or_README": true
+    }
+  },
+  "necessary_business_boundaries": [
+    "Execution state differs from chat memory; record input/config/artifact version and recovery granularity.",
+    "When an external tool action may have succeeded before checkpoint persistence, address whether to replay, inspect the outcome or stop pending clarification.",
+    "Retain permission boundaries and non-repeatable side effects; do not promise arbitrary exactly-once external actions.",
+    "Termination criteria differ from delivery acceptance.",
+    "Future falsifiable acceptance and counterexamples cover document, data and software outcomes across the proposal.",
+    "Avoid total leaderboard rankings across incomparable task, metric, denominator or budget setups; absence of evidence is not evidence of absence."
+  ],
+  "schema_version": "h031.public-business-oracle/v1",
+  "scope": {
+    "as_of_inclusive": "2026-09-30",
+    "candidate_source_ledger_maximum": 60,
+    "capability_dimensions": [
+      "planning",
+      "memory",
+      "tool_use",
+      "recovery",
+      "delivery_verification"
+    ],
+    "construction_constraints": {
+      "base_model_training_required": false,
+      "engineers": 3,
+      "implementation_or_live_business_execution_required": false,
+      "priority_count_maximum": 3,
+      "priority_count_minimum": 1,
+      "total_person_days_upper_budget": 60,
+      "workdays_per_engineer": 20
+    },
+    "cutoff_end_exclusive": "2026-10-01T00:00:00+08:00",
+    "date_policy": {
+      "arxiv": "Use official base-ID v1 Submitted as the adopted report submission basis; record the read vN Submitted separately and do not use post-cutoff revisions. Submitted is not asserted to prove actual first public visibility.",
+      "benchmark_protocol": "Identify the actual official fixed document/repository version and its date role; related manuscript dates are separate. Do not use a README to claim unseen manuscript results.",
+      "conference_proceedings": "Use an identified official proceedings publication year/date at its actual precision and state that role. Conference event dates or copyright text do not establish an exact first-online day; retain uncertainty rather than filling one.",
+      "current_carriers": "Current retrieval can expose an identified pre-cutoff report/static version, but is not proof of publication-day bytes. If later changes affect the used claim, identify an applicable version or keep it unknown.",
+      "entity_releases": "Use actual official release published_at or explicit package distribution upload time with its original field role. Release title, tag name, repository created_at or fetch time does not alone prove a release date or capability availability.",
+      "fixed_static_code": "A fixed official commit and its recorded timestamp may identify a pre-cutoff static version. State this role; commit time does not prove first public availability, deployment, tested durability or an independent historical web archive. Do not call current docs the cutoff's latest without evidence.",
+      "journal": "Prefer first_online; use explicit issue_only fallback only when no official online date can be established and retain that unknown. Do not substitute received/accepted/indexed/repository/fetch dates.",
+      "precision": "Keep actual year/month/day precision; a year/month means its entire calendar interval. Confirm cutoff eligibility only if the supported interval is fully before cutoff; crossing/unknown/conflicting dates remain pending or unknown, not favorable guesses.",
+      "source_time_is_not_retrieval_time": true,
+      "timezone": "Retain an actual aware timestamp and convert to Asia/Shanghai for cutoff. Date-only sources without a timezone keep their stated calendar date and disclose timezone unknown; do not assume UTC."
+    },
+    "key_claim_count": 12,
+    "minimum_count_policy": "Minimums require distinct, relevant identities with supported pre-cutoff report/static-version basis. Identity/time unresolved objects may be retained as unknown/pending but do not fill the two minimum-five quotas. An individual capability cell being unknown does not itself disqualify an otherwise identified, time-supported entity; all five capabilities need not exist in every framework.",
+    "minimum_entities": 5,
+    "minimum_publication_or_benchmark_works": 5,
+    "network": {
+      "account_or_paid_access_required": false,
+      "answer_names_or_entry_URLs_provided": false,
+      "domain_whitelist": null,
+      "follow_policy": "Discover publicly accessible primary materials and bounded cross-checks; do not log in, pay, send messages or change network safety rules.",
+      "mode": "open_public_search"
+    },
+    "reading_and_evidence_boundary": "At least five research works require complete relevant manuscript text or complete official benchmark protocol/main documentation. Excerpt/abstract and incomplete downloads support only observed facts. Evidence level, representativeness, identity/version deduplication, actual search/reading and semantic support require independent assessment; mechanically valid strings or URLs do not prove them.",
+    "schema_version": "h031-research-scope/v1",
+    "timezone": "Asia/Shanghai"
+  },
+  "status": "frozen",
+  "task_id": "general_hard_research_verification_task_005_open_long_horizon_agent_research"
+}

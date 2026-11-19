@@ -1,0 +1,13 @@
+{
+  "schema_version": "h024-business-oracle/v1",
+  "source_truth": "expected.json",
+  "methods": [
+    "Decimal grouped monthly tiers and cumulative capped-refund difference",
+    "Integer cents / Fraction bands and sequential refund chronology"
+  ],
+  "source_checks": 16848,
+  "expert_review": false,
+  "author_native_checks": 37275,
+  "source_records": 192,
+  "scenario_month_parameters": 9
+}

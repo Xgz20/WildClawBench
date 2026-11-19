@@ -1,0 +1,11 @@
+{
+  "source_files": {
+    "draft.md": "80bf919d7206f79d14c0e55416fb6eb6847550b83d3f8d176c7eae885c93acab",
+    "editorial.md": "2c19939856d08fa436b18b31f0ad692a67fda46c7b265ee08e519c3f32d5f08c",
+    "facts.csv": "4164d4773ea6d5a1ffbc39c44746316dd13120d9f3b7165c26fe84220536ac00"
+  },
+  "source_locator_policy": "facts.csv#F01..F12 or editorial.md#Q01..Q04",
+  "source_quote_min_nonspace": 6,
+  "target_quote_min_nonspace": 6,
+  "rendering": "actual locked original HTML observation; no real publication/clipboard claim"
+}

@@ -1,0 +1,900 @@
+{
+  "reviewer_identity": "h014-independent-model-reviewer-vi",
+  "locale": "vi",
+  "review_type": "independent_model_review",
+  "human_expert": false,
+  "revision_round": 3,
+  "previous_review_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h014/independent-review/v2/vi/reviewer_vi_v2.json",
+  "input_sha256": {
+    "input/release_notes.md": "f1d6ce2d76230c3af6f6f41ea26dc495908b6d2f749a9dada190d6511a29482c",
+    "input/terms.csv": "701ca9d20e35d376326a88185bacc93f79ec3ce33c27725f263befc5d6885d21",
+    "input/support_cases.csv": "49bb3e68f7c8423b68e2e1dd16903efcd815dca7919e976e41bc176e5aaccf2c",
+    "input/faq_old/vi.md": "87b6af91eaf91232801f17ae494f2972b9b6ecfcff47947a76c6b370643f3937",
+    "proposed/faq_vi.docx": "c3d4715a9d921608a4a729e8a7115bf1282aa80b813d3dab96a85ba25cbb7268",
+    "proposed/faq_vi.md": "02fc9bee975fab9e23ecd4af9873db1d6a65a26467d571d298c96ca9bc67fbc2",
+    "proposed/replies_vi.csv": "8fd956a780df1f695ac5c6239893f069d924258c374c61cc0502aacb18f5667b"
+  },
+  "source_reading_sha256": "9a55989b3c681ca82c82dce1c827768c64cc224b99c181f1b3c2f83c16dddb50",
+  "actual_docx_read": {
+    "file": "proposed/faq_vi.docx",
+    "sha256": "c3d4715a9d921608a4a729e8a7115bf1282aa80b813d3dab96a85ba25cbb7268",
+    "read": true,
+    "member": "word/document.xml",
+    "member_sha256": "ddf5a7b7ab770e0777e0a6359573dbc4c14987949a90130d3f4b7b4c3e87cd6a",
+    "method": "重新实际以ZIP读取本包DOCX的word/document.xml，并解析w:body/w:p及w:t文字，逐项核12个FAQ；没有仅凭文件未变或Markdown作判断。",
+    "paragraph_count": 39,
+    "faq_body_paragraphs": [
+      5,
+      8,
+      11,
+      14,
+      17,
+      20,
+      23,
+      26,
+      29,
+      32,
+      35,
+      38
+    ],
+    "all_faq_bodies_match_markdown": true
+  },
+  "records": [
+    {
+      "record_id": "K01",
+      "decision": "accept",
+      "observed_claims": [
+        "3.2.0为2026-09-24已发布稳定版。",
+        "3.2.1从2026-10-02仅提供已获准加入macOS预览的账号，不是全平台稳定版。",
+        "仅版本号不证明获准参与，其他平台补丁/未发布功能日期未承诺。"
+      ],
+      "supported_fact_ids": [
+        "F01"
+      ],
+      "contradictions": [],
+      "missing_critical": [],
+      "terminology_issues": [],
+      "readability_issues": [
+        {
+          "quote": "Chỉ có số phiên bản không chứng minh tài khoản đã được tham gia.",
+          "comment": "句意清楚，但“仅凭版本号”的结构略显直译。",
+          "severity": "optional_style",
+          "requires_revision": false,
+          "judgment_basis": "仅为模型语言自然度判断，非人工或母语专家验收。"
+        }
+      ],
+      "recommended_edits": [
+        "可选语言润色：用更自然的“仅凭版本号”句式。"
+      ],
+      "rationale": "版本、日期、平台和账号审批均正确；没有把否定错误命题当作肯定。",
+      "evidence": [
+        {
+          "file": "proposed/faq_vi.docx",
+          "locator": "word/document.xml，正文段落5，K01",
+          "quote": "Bản ổn định đã phát hành là 3.2.0, phát hành ngày 2026-09-24. Phiên bản 3.2.1 được cung cấp từ ngày 2026-10-02 chỉ cho tài khoản macOS đã được chấp thuận tham gia bản xem trước; đây không phải bản ổn định cho mọi nền tảng. Chỉ có số phiên bản không chứng minh tài khoản đã được tham gia. Chưa có ngày cam kết cho bản vá trên nền tảng khác hoặc tính năng chưa phát hành."
+        },
+        {
+          "file": "proposed/faq_vi.md",
+          "locator": "K01，行9",
+          "quote": "Bản ổn định đã phát hành là 3.2.0, phát hành ngày 2026-09-24. Phiên bản 3.2.1 được cung cấp từ ngày 2026-10-02 chỉ cho tài khoản macOS đã được chấp thuận tham gia bản xem trước; đây không phải bản ổn định cho mọi nền tảng. Chỉ có số phiên bản không chứng minh tài khoản đã được tham gia. Chưa có ngày cam kết cho bản vá trên nền tảng khác hoặc tính năng chưa phát hành."
+        },
+        {
+          "file": "input/release_notes.md",
+          "locator": "F01，行11",
+          "quote": "截至2026-10-04 08:00 UTC+08:00，已发布稳定版为3.2.0，发布日期2026-09-24。3.2.1于2026-10-02仅向已获准加入预览的macOS账号提供，不是全平台稳定版。未给任何未发布功能或其他平台补丁的承诺日期。"
+        }
+      ]
+    },
+    {
+      "record_id": "K02",
+      "decision": "accept",
+      "observed_claims": [
+        "3.2.0所有套餐须同时满足单文件≤25 MiB、每批≤8文件、总量≤100 MiB，含等值。",
+        "MiB=2^20字节，不能换成MB。",
+        "3.1的10 MB明确标为旧限制。"
+      ],
+      "supported_fact_ids": [
+        "F02"
+      ],
+      "contradictions": [],
+      "missing_critical": [],
+      "terminology_issues": [],
+      "readability_issues": [],
+      "recommended_edits": [],
+      "rationale": "三项独立上限、同时满足、边界及单位完整。",
+      "evidence": [
+        {
+          "file": "proposed/faq_vi.docx",
+          "locator": "word/document.xml，正文段落8，K02",
+          "quote": "Trên 3.2.0, mọi gói đều áp dụng đồng thời: mỗi tệp không quá 25 MiB, mỗi đợt không quá 8 tệp và tổng dung lượng mỗi đợt không quá 100 MiB. Các giá trị bằng giới hạn vẫn được chấp nhận; đủ điều kiện về số lượng không bù cho việc vượt dung lượng. MiB là 2^20 byte, không được đổi thành MB. Giới hạn cũ 10 MB của 3.1 không phải giới hạn hiện hành của 3.2.0."
+        },
+        {
+          "file": "proposed/faq_vi.md",
+          "locator": "K02，行15",
+          "quote": "Trên 3.2.0, mọi gói đều áp dụng đồng thời: mỗi tệp không quá 25 MiB, mỗi đợt không quá 8 tệp và tổng dung lượng mỗi đợt không quá 100 MiB. Các giá trị bằng giới hạn vẫn được chấp nhận; đủ điều kiện về số lượng không bù cho việc vượt dung lượng. MiB là 2^20 byte, không được đổi thành MB. Giới hạn cũ 10 MB của 3.1 không phải giới hạn hiện hành của 3.2.0."
+        },
+        {
+          "file": "input/release_notes.md",
+          "locator": "F02，行15",
+          "quote": "3.2.0对所有套餐统一按每个文件不超过25 MiB、每批不超过8个文件、每批总量不超过100 MiB校验，三项须同时满足，边界值可取。MiB为2^20字节，不能改写为MB或把每文件上限当总量。3.1中的10 MB旧口径不再作为3.2.0的当前限制。"
+        }
+      ]
+    },
+    {
+      "record_id": "K03",
+      "decision": "accept",
+      "observed_claims": [
+        "Starter/Team/Enterprise每次CSV导出500/10000/50000行，含边界。",
+        "仅Owner和Editor可在套餐额度内导出，Viewer不可。",
+        "CSV仅文本字段和元数据，不含附件、二进制或完整工作空间。",
+        "行数够不等于有权限，导出行数不是无限。"
+      ],
+      "supported_fact_ids": [
+        "F03",
+        "F07"
+      ],
+      "contradictions": [],
+      "missing_critical": [],
+      "terminology_issues": [],
+      "readability_issues": [
+        {
+          "quote": "Giới hạn dòng đủ không có nghĩa đã có quyền",
+          "comment": "“Giới hạn dòng đủ”略生硬，含义仍可理解。",
+          "severity": "optional_style",
+          "requires_revision": false,
+          "judgment_basis": "仅为模型语言自然度判断，非人工或母语专家验收。"
+        }
+      ],
+      "recommended_edits": [
+        "可选语言润色：表达为“所需行数在上限内也不代表有权限”。"
+      ],
+      "rationale": "数值、每次导出范围、角色限制和附件排除均正确。",
+      "evidence": [
+        {
+          "file": "proposed/faq_vi.docx",
+          "locator": "word/document.xml，正文段落11，K03",
+          "quote": "Giới hạn mỗi lần xuất CSV là 500 dòng cho Starter, 10000 cho Team và 50000 cho Enterprise, bao gồm giá trị bằng giới hạn. Chỉ Owner và Editor được xuất trong giới hạn gói; Viewer không được xuất. CSV chỉ chứa trường văn bản và siêu dữ liệu, không đóng gói tệp đính kèm, nội dung nhị phân hay toàn bộ không gian làm việc. Giới hạn dòng đủ không có nghĩa đã có quyền, và không gói nào có số dòng không giới hạn trong mỗi lần xuất."
+        },
+        {
+          "file": "proposed/faq_vi.md",
+          "locator": "K03，行21",
+          "quote": "Giới hạn mỗi lần xuất CSV là 500 dòng cho Starter, 10000 cho Team và 50000 cho Enterprise, bao gồm giá trị bằng giới hạn. Chỉ Owner và Editor được xuất trong giới hạn gói; Viewer không được xuất. CSV chỉ chứa trường văn bản và siêu dữ liệu, không đóng gói tệp đính kèm, nội dung nhị phân hay toàn bộ không gian làm việc. Giới hạn dòng đủ không có nghĩa đã có quyền, và không gói nào có số dòng không giới hạn trong mỗi lần xuất."
+        },
+        {
+          "file": "input/release_notes.md",
+          "locator": "F03，行19",
+          "quote": "3.2.0已向Starter/Team/Enterprise分别提供每次500/10000/50000行的CSV导出，上限含边界。CSV只包含文本字段与元数据，不打包附件、二进制内容或完整工作空间。导出还受F07角色权限约束，不能把套餐行数足够当成已有导出权限，也不是无限行数。"
+        },
+        {
+          "file": "input/release_notes.md",
+          "locator": "F07，行35",
+          "quote": "角色标签为Owner、Editor、Viewer。Owner和Editor可在套餐上限内导出CSV，Viewer不能导出。SSO配置和跨区域迁移评估请求均须Owner办理；客服回复不能替用户改角色、授权或声称操作已经完成。角色条件与套餐、区域、渠道条件同时适用。"
+        }
+      ]
+    },
+    {
+      "record_id": "K04",
+      "decision": "accept",
+      "observed_claims": [
+        "3.2.0支持可提取文本PDF。",
+        "扫描页及图片PDF需OCR，稳定版和3.2.1预览均未发布。",
+        "可提供文本版或文字内容；无承诺日期，不声称已启用或完成。"
+      ],
+      "supported_fact_ids": [
+        "F04",
+        "F01"
+      ],
+      "contradictions": [],
+      "missing_critical": [],
+      "terminology_issues": [],
+      "readability_issues": [],
+      "recommended_edits": [],
+      "rationale": "正确保留文本PDF能力，否定未发布OCR已启用和所有PDF不支持两类过度断言。",
+      "evidence": [
+        {
+          "file": "proposed/faq_vi.docx",
+          "locator": "word/document.xml，正文段落14，K04",
+          "quote": "Phiên bản 3.2.0 hỗ trợ PDF có văn bản trích xuất được. Trang quét và PDF chỉ chứa ảnh cần OCR; OCR chưa phát hành trong cả bản ổn định lẫn bản xem trước 3.2.1 và chưa có ngày phát hành được cam kết. Có thể đề nghị khách hàng cung cấp phiên bản có văn bản trích xuất được hoặc nội dung dạng chữ. Không được nói rằng OCR đã được bật hay thực hiện, cũng không được nói mọi PDF đều không được hỗ trợ."
+        },
+        {
+          "file": "proposed/faq_vi.md",
+          "locator": "K04，行27",
+          "quote": "Phiên bản 3.2.0 hỗ trợ PDF có văn bản trích xuất được. Trang quét và PDF chỉ chứa ảnh cần OCR; OCR chưa phát hành trong cả bản ổn định lẫn bản xem trước 3.2.1 và chưa có ngày phát hành được cam kết. Có thể đề nghị khách hàng cung cấp phiên bản có văn bản trích xuất được hoặc nội dung dạng chữ. Không được nói rằng OCR đã được bật hay thực hiện, cũng không được nói mọi PDF đều không được hỗ trợ."
+        },
+        {
+          "file": "input/release_notes.md",
+          "locator": "F04，行23",
+          "quote": "3.2.0支持可提取文本的PDF。扫描页、纯图片PDF需要OCR，该功能在稳定版及3.2.1预览中均未发布，也无承诺上线日期。可请用户提供可提取文本的版本或文字内容，但不能声称已为其完成OCR或启用了未发布功能。"
+        },
+        {
+          "file": "input/release_notes.md",
+          "locator": "F01，行11",
+          "quote": "截至2026-10-04 08:00 UTC+08:00，已发布稳定版为3.2.0，发布日期2026-09-24。3.2.1于2026-10-02仅向已获准加入预览的macOS账号提供，不是全平台稳定版。未给任何未发布功能或其他平台补丁的承诺日期。"
+        }
+      ]
+    },
+    {
+      "record_id": "K05",
+      "decision": "accept",
+      "observed_claims": [
+        "Windows 3.2.0有已知重复同步问题。",
+        "先另存未同步草稿副本，再关并重开受影响文档，最后重试一次。",
+        "是临时绕过而非已发布修复；不删缓存/工作空间、不覆盖未同步内容。",
+        "macOS预览不证明Windows修复，Windows补丁无承诺日期。"
+      ],
+      "supported_fact_ids": [
+        "F05",
+        "F01"
+      ],
+      "contradictions": [],
+      "missing_critical": [],
+      "terminology_issues": [],
+      "readability_issues": [],
+      "recommended_edits": [],
+      "rationale": "步骤先后、一次重试、数据保护与临时性质均完整。",
+      "evidence": [
+        {
+          "file": "proposed/faq_vi.docx",
+          "locator": "word/document.xml，正文段落17，K05",
+          "quote": "Đây là sự cố đã biết; các bước hiện có là biện pháp tạm thời, không phải bản sửa lỗi đã phát hành. Trước tiên lưu riêng một bản sao của bản nháp chưa đồng bộ, sau đó đóng rồi mở lại tài liệu bị ảnh hưởng và thử đồng bộ một lần. Không đề nghị xóa bộ nhớ đệm, xóa không gian làm việc hoặc ghi đè nội dung chưa đồng bộ. 3.2.1 chỉ là bản xem trước trên macOS, không chứng minh Windows đã được sửa lỗi; chưa có ngày cam kết cho bản vá Windows."
+        },
+        {
+          "file": "proposed/faq_vi.md",
+          "locator": "K05，行33",
+          "quote": "Đây là sự cố đã biết; các bước hiện có là biện pháp tạm thời, không phải bản sửa lỗi đã phát hành. Trước tiên lưu riêng một bản sao của bản nháp chưa đồng bộ, sau đó đóng rồi mở lại tài liệu bị ảnh hưởng và thử đồng bộ một lần. Không đề nghị xóa bộ nhớ đệm, xóa không gian làm việc hoặc ghi đè nội dung chưa đồng bộ. 3.2.1 chỉ là bản xem trước trên macOS, không chứng minh Windows đã được sửa lỗi; chưa có ngày cam kết cho bản vá Windows."
+        },
+        {
+          "file": "input/release_notes.md",
+          "locator": "F05，行27",
+          "quote": "Windows 3.2.0存在重复同步记录的已知问题。临时绕过步骤为先把未同步草稿另存副本，再关闭并重新打开受影响文档，最后重试同步一次；这不是已发布修复。不要让用户删除缓存、删除工作空间或覆盖未同步内容。3.2.1仅为macOS预览，不证明Windows已修复，也无Windows补丁承诺日期。"
+        },
+        {
+          "file": "input/release_notes.md",
+          "locator": "F01，行11",
+          "quote": "截至2026-10-04 08:00 UTC+08:00，已发布稳定版为3.2.0，发布日期2026-09-24。3.2.1于2026-10-02仅向已获准加入预览的macOS账号提供，不是全平台稳定版。未给任何未发布功能或其他平台补丁的承诺日期。"
+        }
+      ]
+    },
+    {
+      "record_id": "K06",
+      "decision": "accept",
+      "observed_claims": [
+        "离线仅限此前打开且缓存内容，最近在线验证后≤24小时，含24小时。",
+        "超过窗口须联网认证，不等于删除，不保证永久离线。",
+        "离线禁止新建工作空间、导出CSV、处理账单/支付、更改SSO。",
+        "审计保留是不同规则。"
+      ],
+      "supported_fact_ids": [
+        "F06",
+        "F09"
+      ],
+      "contradictions": [],
+      "missing_critical": [],
+      "terminology_issues": [],
+      "readability_issues": [],
+      "recommended_edits": [],
+      "rationale": "缓存前提、24小时闭区间、四项禁止和不删除含义准确。",
+      "evidence": [
+        {
+          "file": "proposed/faq_vi.docx",
+          "locator": "word/document.xml，正文段落20，K06",
+          "quote": "Không. Truy cập ngoại tuyến chỉ áp dụng cho nội dung đã mở và được lưu đệm trước đó, trong vòng 24 giờ kể từ lần xác thực trực tuyến gần nhất, bao gồm mốc 24 giờ. Khi hết thời hạn, cần kết nối mạng để xác thực lại; điều đó không có nghĩa nội dung đã bị xóa và cũng không bảo đảm dùng ngoại tuyến vĩnh viễn. Không thể tạo không gian làm việc mới, xuất CSV, xử lý thanh toán hoặc thay đổi cài đặt SSO khi ngoại tuyến. Thời hạn lưu bản ghi kiểm toán theo ngày là quy tắc khác."
+        },
+        {
+          "file": "proposed/faq_vi.md",
+          "locator": "K06，行39",
+          "quote": "Không. Truy cập ngoại tuyến chỉ áp dụng cho nội dung đã mở và được lưu đệm trước đó, trong vòng 24 giờ kể từ lần xác thực trực tuyến gần nhất, bao gồm mốc 24 giờ. Khi hết thời hạn, cần kết nối mạng để xác thực lại; điều đó không có nghĩa nội dung đã bị xóa và cũng không bảo đảm dùng ngoại tuyến vĩnh viễn. Không thể tạo không gian làm việc mới, xuất CSV, xử lý thanh toán hoặc thay đổi cài đặt SSO khi ngoại tuyến. Thời hạn lưu bản ghi kiểm toán theo ngày là quy tắc khác."
+        },
+        {
+          "file": "input/release_notes.md",
+          "locator": "F06，行31",
+          "quote": "离线访问只适用于之前打开且已缓存的内容，须在最近一次在线身份验证后24小时以内（含24小时）。超过窗口应先联网重新验证，不表示内容在24小时后已删除。离线时不能新建工作空间、导出CSV、处理账单或更改SSO设置；不能保证永久离线使用。"
+        },
+        {
+          "file": "input/release_notes.md",
+          "locator": "F09，行43",
+          "quote": "Starter/Team/Enterprise的审计记录分别保留7/30/90个自然日，按记录产生时间计算，边界当天可查询。超过保留期无自助恢复能力，不承诺备份找回；升级套餐不能保证恢复已过期记录。此保留期与F06离线访问窗口不同。"
+        }
+      ]
+    },
+    {
+      "record_id": "K07",
+      "decision": "accept",
+      "observed_claims": [
+        "Owner和Editor可在套餐额度内导出，Viewer不可。",
+        "SSO配置及迁移评估申请须Owner。",
+        "SSO需符合相应套餐/地区/版本/预览参与条件；迁移只先人工评估，实施另审批。",
+        "客服不得自称改角色、授权或完成配置；Owner不自动参加所有预览。"
+      ],
+      "supported_fact_ids": [
+        "F07",
+        "F03",
+        "F08",
+        "F11"
+      ],
+      "contradictions": [],
+      "missing_critical": [],
+      "terminology_issues": [],
+      "readability_issues": [],
+      "recommended_edits": [],
+      "rationale": "SSO条件与迁移评估及实施审批分开；没有把预览资格作为所有迁移申请前提。",
+      "evidence": [
+        {
+          "file": "proposed/faq_vi.docx",
+          "locator": "word/document.xml，正文段落23，K07",
+          "quote": "Owner và Editor được xuất CSV trong giới hạn của gói; Viewer không được xuất. Chỉ Owner được cấu hình SSO hoặc gửi yêu cầu đánh giá di chuyển liên khu vực. SSO còn phải đáp ứng các điều kiện tương ứng về gói, khu vực, phiên bản và quyền tham gia bản xem trước; yêu cầu di chuyển chỉ được đưa vào đánh giá thủ công, còn việc thực hiện phải được xét duyệt riêng. Câu trả lời hỗ trợ không được tự nhận đã đổi vai trò, cấp quyền hay hoàn tất cấu hình. Vai trò Owner không tự động cho tài khoản tham gia mọi bản xem trước."
+        },
+        {
+          "file": "proposed/faq_vi.md",
+          "locator": "K07，行45",
+          "quote": "Owner và Editor được xuất CSV trong giới hạn của gói; Viewer không được xuất. Chỉ Owner được cấu hình SSO hoặc gửi yêu cầu đánh giá di chuyển liên khu vực. SSO còn phải đáp ứng các điều kiện tương ứng về gói, khu vực, phiên bản và quyền tham gia bản xem trước; yêu cầu di chuyển chỉ được đưa vào đánh giá thủ công, còn việc thực hiện phải được xét duyệt riêng. Câu trả lời hỗ trợ không được tự nhận đã đổi vai trò, cấp quyền hay hoàn tất cấu hình. Vai trò Owner không tự động cho tài khoản tham gia mọi bản xem trước."
+        },
+        {
+          "file": "input/release_notes.md",
+          "locator": "F07，行35",
+          "quote": "角色标签为Owner、Editor、Viewer。Owner和Editor可在套餐上限内导出CSV，Viewer不能导出。SSO配置和跨区域迁移评估请求均须Owner办理；客服回复不能替用户改角色、授权或声称操作已经完成。角色条件与套餐、区域、渠道条件同时适用。"
+        },
+        {
+          "file": "input/release_notes.md",
+          "locator": "F03，行19",
+          "quote": "3.2.0已向Starter/Team/Enterprise分别提供每次500/10000/50000行的CSV导出，上限含边界。CSV只包含文本字段与元数据，不打包附件、二进制内容或完整工作空间。导出还受F07角色权限约束，不能把套餐行数足够当成已有导出权限，也不是无限行数。"
+        },
+        {
+          "file": "input/release_notes.md",
+          "locator": "F08，行39",
+          "quote": "SSO仅适用于Enterprise套餐并由Owner配置。稳定版3.2.0目前仅在cn-sh、ap-sg开放；eu-fr尚未GA。eu-fr只能在Enterprise、Owner、macOS、3.2.1预览渠道、账号已获准加入预览这六项同时满足时试用。未获准加入可申请评估，不能回复成已启用；未给EU正式发布或其他平台预览的日期。"
+        },
+        {
+          "file": "input/release_notes.md",
+          "locator": "F11，行51",
+          "quote": "稳定版未提供自助跨区域迁移。Owner可提交人工评估请求，实际实施另需审核，不代表请求已经批准；没有承诺可保留工作空间ID或自动转移附件，也没有上线时间。CSV导出/导入只在F03范围内，不等于完整迁移。EU的SSO预览资格不会自动赋予迁移权限。"
+        }
+      ]
+    },
+    {
+      "record_id": "K08",
+      "decision": "accept",
+      "observed_claims": [
+        "SSO仅Enterprise并由Owner配置；稳定3.2.0仅cn-sh/ap-sg开放。",
+        "eu-fr未GA，试用需eu-fr、Enterprise、Owner、macOS、3.2.1预览渠道和已获准账号同时满足。",
+        "未获准可申请评估，不等于已启用；EU GA及其他平台预览日期未知。"
+      ],
+      "supported_fact_ids": [
+        "F08",
+        "F01",
+        "F07"
+      ],
+      "contradictions": [],
+      "missing_critical": [],
+      "terminology_issues": [],
+      "readability_issues": [],
+      "recommended_edits": [],
+      "rationale": "eu-fr由句首限定，3.2.1与预览渠道分列仍保留同时条件；GA译法“phát hành chính thức rộng rãi”可接受。",
+      "evidence": [
+        {
+          "file": "proposed/faq_vi.docx",
+          "locator": "word/document.xml，正文段落26，K08",
+          "quote": "SSO chỉ áp dụng cho Enterprise và phải do Owner cấu hình. Trong bản ổn định 3.2.0, tính năng hiện chỉ mở tại cn-sh và ap-sg; SSO tại eu-fr chưa được phát hành chính thức rộng rãi. Muốn thử tại eu-fr phải đồng thời có Enterprise, Owner, macOS, phiên bản ứng dụng 3.2.1, kênh xem trước và tài khoản đã được chấp thuận tham gia. Tài khoản chưa được chấp thuận có thể yêu cầu đánh giá, nhưng không được coi là đã bật SSO. Chưa có ngày cam kết cho bản chính thức tại EU hoặc bản xem trước trên nền tảng khác."
+        },
+        {
+          "file": "proposed/faq_vi.md",
+          "locator": "K08，行51",
+          "quote": "SSO chỉ áp dụng cho Enterprise và phải do Owner cấu hình. Trong bản ổn định 3.2.0, tính năng hiện chỉ mở tại cn-sh và ap-sg; SSO tại eu-fr chưa được phát hành chính thức rộng rãi. Muốn thử tại eu-fr phải đồng thời có Enterprise, Owner, macOS, phiên bản ứng dụng 3.2.1, kênh xem trước và tài khoản đã được chấp thuận tham gia. Tài khoản chưa được chấp thuận có thể yêu cầu đánh giá, nhưng không được coi là đã bật SSO. Chưa có ngày cam kết cho bản chính thức tại EU hoặc bản xem trước trên nền tảng khác."
+        },
+        {
+          "file": "input/release_notes.md",
+          "locator": "F08，行39",
+          "quote": "SSO仅适用于Enterprise套餐并由Owner配置。稳定版3.2.0目前仅在cn-sh、ap-sg开放；eu-fr尚未GA。eu-fr只能在Enterprise、Owner、macOS、3.2.1预览渠道、账号已获准加入预览这六项同时满足时试用。未获准加入可申请评估，不能回复成已启用；未给EU正式发布或其他平台预览的日期。"
+        },
+        {
+          "file": "input/release_notes.md",
+          "locator": "F01，行11",
+          "quote": "截至2026-10-04 08:00 UTC+08:00，已发布稳定版为3.2.0，发布日期2026-09-24。3.2.1于2026-10-02仅向已获准加入预览的macOS账号提供，不是全平台稳定版。未给任何未发布功能或其他平台补丁的承诺日期。"
+        },
+        {
+          "file": "input/release_notes.md",
+          "locator": "F07，行35",
+          "quote": "角色标签为Owner、Editor、Viewer。Owner和Editor可在套餐上限内导出CSV，Viewer不能导出。SSO配置和跨区域迁移评估请求均须Owner办理；客服回复不能替用户改角色、授权或声称操作已经完成。角色条件与套餐、区域、渠道条件同时适用。"
+        }
+      ]
+    },
+    {
+      "record_id": "K09",
+      "decision": "accept",
+      "observed_claims": [
+        "审计保留Starter/Team/Enterprise为7/30/90自然日，按记录创建时间，边界当天可查。",
+        "超期无自助恢复，不承诺备份找回，升级不保证恢复。",
+        "与24小时离线窗口不同，不推断备份全不存在。"
+      ],
+      "supported_fact_ids": [
+        "F09",
+        "F06"
+      ],
+      "contradictions": [],
+      "missing_critical": [],
+      "terminology_issues": [],
+      "readability_issues": [
+        {
+          "quote": "vẫn có thể truy vấn vào ngày bằng giới hạn",
+          "comment": "边界当天可查的含义可理解，但“ngày bằng giới hạn”不够自然。",
+          "severity": "optional_style",
+          "requires_revision": false,
+          "judgment_basis": "仅为模型语言自然度判断，非人工或母语专家验收。"
+        }
+      ],
+      "recommended_edits": [
+        "可选语言润色：以“达到保留期限的当天”表达，保留可查询的闭边界。"
+      ],
+      "rationale": "自然日、起点、边界和恢复不保证均保留；未知备份没有被改成肯定存在或必然不存在。",
+      "evidence": [
+        {
+          "file": "proposed/faq_vi.docx",
+          "locator": "word/document.xml，正文段落29，K09",
+          "quote": "Starter, Team và Enterprise lần lượt lưu bản ghi kiểm toán trong 7, 30 và 90 ngày theo lịch, tính từ khi bản ghi được tạo; vẫn có thể truy vấn vào ngày bằng giới hạn. Sau thời hạn lưu không có chức năng khôi phục tự phục vụ và không cam kết lấy lại được từ bản sao lưu. Nâng cấp gói cũng không bảo đảm khôi phục bản ghi đã hết hạn. Đây không phải thời hạn truy cập ngoại tuyến 24 giờ; các quy tắc này không cho phép kết luận rằng mọi bản sao lưu đều không tồn tại."
+        },
+        {
+          "file": "proposed/faq_vi.md",
+          "locator": "K09，行57",
+          "quote": "Starter, Team và Enterprise lần lượt lưu bản ghi kiểm toán trong 7, 30 và 90 ngày theo lịch, tính từ khi bản ghi được tạo; vẫn có thể truy vấn vào ngày bằng giới hạn. Sau thời hạn lưu không có chức năng khôi phục tự phục vụ và không cam kết lấy lại được từ bản sao lưu. Nâng cấp gói cũng không bảo đảm khôi phục bản ghi đã hết hạn. Đây không phải thời hạn truy cập ngoại tuyến 24 giờ; các quy tắc này không cho phép kết luận rằng mọi bản sao lưu đều không tồn tại."
+        },
+        {
+          "file": "input/release_notes.md",
+          "locator": "F09，行43",
+          "quote": "Starter/Team/Enterprise的审计记录分别保留7/30/90个自然日，按记录产生时间计算，边界当天可查询。超过保留期无自助恢复能力，不承诺备份找回；升级套餐不能保证恢复已过期记录。此保留期与F06离线访问窗口不同。"
+        },
+        {
+          "file": "input/release_notes.md",
+          "locator": "F06，行31",
+          "quote": "离线访问只适用于之前打开且已缓存的内容，须在最近一次在线身份验证后24小时以内（含24小时）。超过窗口应先联网重新验证，不表示内容在24小时后已删除。离线时不能新建工作空间、导出CSV、处理账单或更改SSO设置；不能保证永久离线使用。"
+        }
+      ]
+    },
+    {
+      "record_id": "K10",
+      "decision": "accept",
+      "observed_claims": [
+        "标准退款路径只直接月付，付款后≤7自然日且消耗≤10 credits，两项含边界。",
+        "符合条件仅能申请审核，不等于批准，不保证即时/全额/金额/完成时间。",
+        "不符合标准找账单团队，年付及代理等按合同/渠道审核，非一律可退或不可退。",
+        "税费、渠道费、审批和金额未知，不按credits计算也不擅填0。"
+      ],
+      "supported_fact_ids": [
+        "F10",
+        "F12"
+      ],
+      "contradictions": [],
+      "missing_critical": [],
+      "terminology_issues": [],
+      "readability_issues": [
+        {
+          "quote": "Đường yêu cầu tiêu chuẩn",
+          "comment": "可理解为标准申请路径，语感略生硬。",
+          "severity": "optional_style",
+          "requires_revision": false,
+          "judgment_basis": "仅为模型语言自然度判断，非人工或母语专家验收。"
+        }
+      ],
+      "recommended_edits": [
+        "可选语言润色：用更自然的“标准申请流程”表达。"
+      ],
+      "rationale": "条件、渠道、自然日及审核与批准边界完整；“0”只被明确禁止擅填。",
+      "evidence": [
+        {
+          "file": "proposed/faq_vi.docx",
+          "locator": "word/document.xml，正文段落32，K10",
+          "quote": "Không. Đường yêu cầu tiêu chuẩn chỉ áp dụng cho đơn mua trực tiếp theo tháng: đã thanh toán không quá 7 ngày theo lịch và đã dùng không quá 10 credits, bao gồm các mốc bằng giới hạn. Đủ điều kiện chỉ cho phép gửi yêu cầu xét duyệt hoàn tiền, không đồng nghĩa đã được phê duyệt hay bảo đảm hoàn ngay, hoàn toàn bộ, số tiền cụ thể hoặc thời điểm hoàn tất. Nếu không đáp ứng điều kiện tiêu chuẩn, cần liên hệ bộ phận thanh toán để đối chiếu. Đơn theo năm, qua đại lý hoặc kênh khác được xem xét theo hợp đồng hay kênh tương ứng; không được khẳng định tất cả đều được hoặc không được hoàn. Chưa có thông tin về thuế, phí kênh và kết quả phê duyệt, nên không thể tính số tiền từ credits hoặc điền số tiền hoàn đã xác nhận là 0."
+        },
+        {
+          "file": "proposed/faq_vi.md",
+          "locator": "K10，行63",
+          "quote": "Không. Đường yêu cầu tiêu chuẩn chỉ áp dụng cho đơn mua trực tiếp theo tháng: đã thanh toán không quá 7 ngày theo lịch và đã dùng không quá 10 credits, bao gồm các mốc bằng giới hạn. Đủ điều kiện chỉ cho phép gửi yêu cầu xét duyệt hoàn tiền, không đồng nghĩa đã được phê duyệt hay bảo đảm hoàn ngay, hoàn toàn bộ, số tiền cụ thể hoặc thời điểm hoàn tất. Nếu không đáp ứng điều kiện tiêu chuẩn, cần liên hệ bộ phận thanh toán để đối chiếu. Đơn theo năm, qua đại lý hoặc kênh khác được xem xét theo hợp đồng hay kênh tương ứng; không được khẳng định tất cả đều được hoặc không được hoàn. Chưa có thông tin về thuế, phí kênh và kết quả phê duyệt, nên không thể tính số tiền từ credits hoặc điền số tiền hoàn đã xác nhận là 0."
+        },
+        {
+          "file": "input/release_notes.md",
+          "locator": "F10，行47",
+          "quote": "标准申请路径只适用于直接购买的月付订单：付款后不超过7个自然日且已消耗不超过10 credits时，可提交退款审核，两项含边界。符合申请条件不等于已获退款，不保证即时、全额、金额或完成时间。未满足标准条件需联系账单团队核实；年付、转售商等其他渠道按相应合同或渠道审核，不据此断言一律可退或一律不退。税费、渠道费和实际批准结果未给，任何具体退款金额均未知，不能填0或擅自计算。"
+        },
+        {
+          "file": "input/release_notes.md",
+          "locator": "F12，行55",
+          "quote": "支持服务时间为周一至周五09:00-18:00，时区UTC+08:00；首次响应目标为2个工作日。这是目标，不是保证、SLA、问题解决时限或退款到账时限。未给节假日安排，不推断具体回复截止日；不要把自然日退款窗口与工作日响应目标混用。"
+        }
+      ]
+    },
+    {
+      "record_id": "K11",
+      "decision": "accept",
+      "observed_claims": [
+        "稳定版无自助跨区域迁移，Owner可申请人工评估，申请不等于批准实施。",
+        "不承诺保留工作空间ID、自动转附件或发布日期。",
+        "CSV导入导出仅文本和元数据，不等于完整迁移。",
+        "套餐行数上限用于每次导出，材料未单列导入行数限制。",
+        "EU SSO预览不自动授予迁移权，不声称已完成。"
+      ],
+      "supported_fact_ids": [
+        "F11",
+        "F03",
+        "F07",
+        "F08"
+      ],
+      "contradictions": [],
+      "missing_critical": [],
+      "terminology_issues": [],
+      "readability_issues": [],
+      "recommended_edits": [],
+      "rationale": "已知每次导出行数与未单列导入限制明确区分，未推导导入无上限；人工评估及ID/附件非承诺准确。",
+      "evidence": [
+        {
+          "file": "proposed/faq_vi.docx",
+          "locator": "word/document.xml，正文段落35，K11",
+          "quote": "Bản ổn định chưa có di chuyển liên khu vực tự phục vụ. Owner có thể gửi yêu cầu đánh giá thủ công, nhưng gửi yêu cầu không phải phê duyệt thực hiện. Chưa có cam kết giữ nguyên ID của không gian làm việc, tự động chuyển tệp đính kèm hoặc ngày phát hành. Xuất và nhập CSV chỉ bao gồm trường văn bản và siêu dữ liệu, không phải di chuyển toàn bộ. Giới hạn số dòng của gói được quy định cho mỗi lần xuất; tài liệu không nêu riêng giới hạn số dòng khi nhập. Quyền tham gia bản xem trước SSO tại EU cũng không tự động cấp quyền di chuyển; bản nháp trả lời không được nói rằng đã thực hiện xong."
+        },
+        {
+          "file": "proposed/faq_vi.md",
+          "locator": "K11，行69",
+          "quote": "Bản ổn định chưa có di chuyển liên khu vực tự phục vụ. Owner có thể gửi yêu cầu đánh giá thủ công, nhưng gửi yêu cầu không phải phê duyệt thực hiện. Chưa có cam kết giữ nguyên ID của không gian làm việc, tự động chuyển tệp đính kèm hoặc ngày phát hành. Xuất và nhập CSV chỉ bao gồm trường văn bản và siêu dữ liệu, không phải di chuyển toàn bộ. Giới hạn số dòng của gói được quy định cho mỗi lần xuất; tài liệu không nêu riêng giới hạn số dòng khi nhập. Quyền tham gia bản xem trước SSO tại EU cũng không tự động cấp quyền di chuyển; bản nháp trả lời không được nói rằng đã thực hiện xong."
+        },
+        {
+          "file": "input/release_notes.md",
+          "locator": "F11，行51",
+          "quote": "稳定版未提供自助跨区域迁移。Owner可提交人工评估请求，实际实施另需审核，不代表请求已经批准；没有承诺可保留工作空间ID或自动转移附件，也没有上线时间。CSV导出/导入只在F03范围内，不等于完整迁移。EU的SSO预览资格不会自动赋予迁移权限。"
+        },
+        {
+          "file": "input/release_notes.md",
+          "locator": "F03，行19",
+          "quote": "3.2.0已向Starter/Team/Enterprise分别提供每次500/10000/50000行的CSV导出，上限含边界。CSV只包含文本字段与元数据，不打包附件、二进制内容或完整工作空间。导出还受F07角色权限约束，不能把套餐行数足够当成已有导出权限，也不是无限行数。"
+        },
+        {
+          "file": "input/release_notes.md",
+          "locator": "F07，行35",
+          "quote": "角色标签为Owner、Editor、Viewer。Owner和Editor可在套餐上限内导出CSV，Viewer不能导出。SSO配置和跨区域迁移评估请求均须Owner办理；客服回复不能替用户改角色、授权或声称操作已经完成。角色条件与套餐、区域、渠道条件同时适用。"
+        },
+        {
+          "file": "input/release_notes.md",
+          "locator": "F08，行39",
+          "quote": "SSO仅适用于Enterprise套餐并由Owner配置。稳定版3.2.0目前仅在cn-sh、ap-sg开放；eu-fr尚未GA。eu-fr只能在Enterprise、Owner、macOS、3.2.1预览渠道、账号已获准加入预览这六项同时满足时试用。未获准加入可申请评估，不能回复成已启用；未给EU正式发布或其他平台预览的日期。"
+        }
+      ]
+    },
+    {
+      "record_id": "K12",
+      "decision": "accept",
+      "observed_claims": [
+        "服务时间周一至周五09:00–18:00 UTC+08:00。",
+        "2个工作日为首次响应目标，不是保证/SLA/问题解决/退款到账时限。",
+        "节假日未知，不推具体截止日；自然日退款与工作日响应不同。"
+      ],
+      "supported_fact_ids": [
+        "F12",
+        "F10"
+      ],
+      "contradictions": [],
+      "missing_critical": [],
+      "terminology_issues": [],
+      "readability_issues": [],
+      "recommended_edits": [],
+      "rationale": "目标与承诺、首次响应与解决/到账及两类日单位均分清；“ngày lịch”可接受地表达自然日。",
+      "evidence": [
+        {
+          "file": "proposed/faq_vi.docx",
+          "locator": "word/document.xml，正文段落38，K12",
+          "quote": "Giờ hỗ trợ là từ thứ Hai đến thứ Sáu, 09:00-18:00, theo UTC+08:00. Mục tiêu 2 ngày làm việc áp dụng cho phản hồi đầu tiên, không phải bảo đảm, SLA, hạn giải quyết sự cố hay hạn tiền hoàn về tài khoản. Chưa cung cấp lịch ngày nghỉ, nên không được suy ra hạn phản hồi cụ thể. Không được thay thế thời hạn yêu cầu hoàn tiền theo ngày lịch bằng mục tiêu phản hồi theo ngày làm việc."
+        },
+        {
+          "file": "proposed/faq_vi.md",
+          "locator": "K12，行75",
+          "quote": "Giờ hỗ trợ là từ thứ Hai đến thứ Sáu, 09:00-18:00, theo UTC+08:00. Mục tiêu 2 ngày làm việc áp dụng cho phản hồi đầu tiên, không phải bảo đảm, SLA, hạn giải quyết sự cố hay hạn tiền hoàn về tài khoản. Chưa cung cấp lịch ngày nghỉ, nên không được suy ra hạn phản hồi cụ thể. Không được thay thế thời hạn yêu cầu hoàn tiền theo ngày lịch bằng mục tiêu phản hồi theo ngày làm việc."
+        },
+        {
+          "file": "input/release_notes.md",
+          "locator": "F12，行55",
+          "quote": "支持服务时间为周一至周五09:00-18:00，时区UTC+08:00；首次响应目标为2个工作日。这是目标，不是保证、SLA、问题解决时限或退款到账时限。未给节假日安排，不推断具体回复截止日；不要把自然日退款窗口与工作日响应目标混用。"
+        },
+        {
+          "file": "input/release_notes.md",
+          "locator": "F10，行47",
+          "quote": "标准申请路径只适用于直接购买的月付订单：付款后不超过7个自然日且已消耗不超过10 credits时，可提交退款审核，两项含边界。符合申请条件不等于已获退款，不保证即时、全额、金额或完成时间。未满足标准条件需联系账单团队核实；年付、转售商等其他渠道按相应合同或渠道审核，不据此断言一律可退或一律不退。税费、渠道费和实际批准结果未给，任何具体退款金额均未知，不能填0或擅自计算。"
+        }
+      ]
+    },
+    {
+      "record_id": "C13",
+      "decision": "accept",
+      "observed_claims": [
+        "25.1 MiB超过每文件25 MiB，即使仅一文件也不能上传。",
+        "缩至≤25 MiB后仍须≤8文件且总量≤100 MiB；未换MB或声称已上传。"
+      ],
+      "supported_fact_ids": [
+        "F02"
+      ],
+      "contradictions": [],
+      "missing_critical": [],
+      "terminology_issues": [],
+      "readability_issues": [],
+      "recommended_edits": [],
+      "rationale": "结论与独立源判断一致。越南语小数逗号25,1与数值25.1等值。",
+      "evidence": [
+        {
+          "file": "proposed/replies_vi.csv",
+          "locator": "CSV行2，case_id=C13，reply",
+          "quote": "Tệp 25,1 MiB vượt giới hạn mỗi tệp 25 MiB, nên không đáp ứng điều kiện tải lên dù chỉ có một tệp. Cần giảm kích thước xuống không quá 25 MiB; mỗi đợt đồng thời phải không quá 8 tệp và tổng không quá 100 MiB. Đơn vị hiện hành là MiB, không phải MB, và bản nháp này chưa thực hiện tải lên."
+        },
+        {
+          "file": "input/support_cases.csv",
+          "locator": "case_id=C13，CSV行14，question",
+          "quote": "Tệp của tôi có kích thước 25,1 MiB. Tôi có thể tải một tệp này lên không?"
+        },
+        {
+          "file": "input/support_cases.csv",
+          "locator": "case_id=C13，context_json",
+          "quote": "{\"plan\":\"Team\",\"role\":\"Editor\",\"client_version\":\"3.2.0\",\"files_mib\":[25.1]}"
+        },
+        {
+          "file": "input/release_notes.md",
+          "locator": "F02，行15",
+          "quote": "3.2.0对所有套餐统一按每个文件不超过25 MiB、每批不超过8个文件、每批总量不超过100 MiB校验，三项须同时满足，边界值可取。MiB为2^20字节，不能改写为MB或把每文件上限当总量。3.1中的10 MB旧口径不再作为3.2.0的当前限制。"
+        }
+      ]
+    },
+    {
+      "record_id": "C14",
+      "decision": "accept",
+      "observed_claims": [
+        "稳定3.2.0及预览3.2.1均未发布OCR，不声称已启用或完成。",
+        "文本可提取PDF仍支持，可提供该版本或文字；上线日期无承诺。"
+      ],
+      "supported_fact_ids": [
+        "F04"
+      ],
+      "contradictions": [],
+      "missing_critical": [],
+      "terminology_issues": [],
+      "readability_issues": [
+        {
+          "quote": "nên không thể nói rằng đã bật ngay được",
+          "comment": "未启用的含义可理解，但句式略拗口。",
+          "severity": "optional_style",
+          "requires_revision": false,
+          "judgment_basis": "仅为模型语言自然度判断，非人工或母语专家验收。"
+        }
+      ],
+      "recommended_edits": [
+        "可选语言润色：简化“不能说已能立即启用”的句式。"
+      ],
+      "rationale": "正确否定预览已支持OCR的前提，保留文本PDF替代路径。",
+      "evidence": [
+        {
+          "file": "proposed/replies_vi.csv",
+          "locator": "CSV行3，case_id=C14，reply",
+          "quote": "OCR cho trang quét và PDF chỉ chứa ảnh chưa phát hành trong cả bản ổn định 3.2.0 lẫn bản xem trước 3.2.1, nên không thể nói rằng đã bật ngay được. PDF có văn bản trích xuất được vẫn được hỗ trợ; bạn có thể cung cấp phiên bản đó hoặc nội dung dạng chữ. Chưa có ngày phát hành OCR được cam kết và bản nháp này không phải xác nhận rằng OCR đã được thực hiện."
+        },
+        {
+          "file": "input/support_cases.csv",
+          "locator": "case_id=C14，CSV行15，question",
+          "quote": "Tôi có PDF chỉ chứa trang quét. Hãy bật OCR ngay; bản xem trước đã hỗ trợ rồi phải không?"
+        },
+        {
+          "file": "input/support_cases.csv",
+          "locator": "case_id=C14，context_json",
+          "quote": "{\"plan\":\"Team\",\"role\":\"Editor\",\"document_type\":\"scanned_pdf\",\"client_version\":\"3.2.0\"}"
+        },
+        {
+          "file": "input/release_notes.md",
+          "locator": "F04，行23",
+          "quote": "3.2.0支持可提取文本的PDF。扫描页、纯图片PDF需要OCR，该功能在稳定版及3.2.1预览中均未发布，也无承诺上线日期。可请用户提供可提取文本的版本或文字内容，但不能声称已为其完成OCR或启用了未发布功能。"
+        }
+      ]
+    },
+    {
+      "record_id": "C15",
+      "decision": "accept",
+      "observed_claims": [
+        "Team不符合SSO仅Enterprise的套餐条件。",
+        "Owner和cn-sh不能抵销套餐条件；回复未改套餐、授权或启用。"
+      ],
+      "supported_fact_ids": [
+        "F07",
+        "F08"
+      ],
+      "contradictions": [],
+      "missing_critical": [],
+      "terminology_issues": [],
+      "readability_issues": [],
+      "recommended_edits": [],
+      "rationale": "正确识别套餐失败条件，没有把Owner或合适地区当作充分授权。",
+      "evidence": [
+        {
+          "file": "proposed/replies_vi.csv",
+          "locator": "CSV行4，case_id=C15，reply",
+          "quote": "Bạn là Owner tại cn-sh nhưng đang dùng Team, trong khi SSO chỉ áp dụng cho Enterprise. Vì vậy tình huống hiện tại chưa đủ điều kiện để bật SSO ổn định; vai trò Owner và khu vực phù hợp không thay thế điều kiện gói. Có thể xem xét gói phù hợp theo quy trình của tổ chức, nhưng câu trả lời này không thay đổi gói, cấp quyền hay bật tính năng."
+        },
+        {
+          "file": "input/support_cases.csv",
+          "locator": "case_id=C15，CSV行16，question",
+          "quote": "Tôi là Owner của gói Team tại cn-sh. Tôi có thể bật SSO trong bản ổn định không?"
+        },
+        {
+          "file": "input/support_cases.csv",
+          "locator": "case_id=C15，context_json",
+          "quote": "{\"plan\":\"Team\",\"role\":\"Owner\",\"region\":\"cn-sh\",\"os\":\"macOS\",\"client_version\":\"3.2.0\",\"channel\":\"stable\",\"enrolled\":false}"
+        },
+        {
+          "file": "input/release_notes.md",
+          "locator": "F07，行35",
+          "quote": "角色标签为Owner、Editor、Viewer。Owner和Editor可在套餐上限内导出CSV，Viewer不能导出。SSO配置和跨区域迁移评估请求均须Owner办理；客服回复不能替用户改角色、授权或声称操作已经完成。角色条件与套餐、区域、渠道条件同时适用。"
+        },
+        {
+          "file": "input/release_notes.md",
+          "locator": "F08，行39",
+          "quote": "SSO仅适用于Enterprise套餐并由Owner配置。稳定版3.2.0目前仅在cn-sh、ap-sg开放；eu-fr尚未GA。eu-fr只能在Enterprise、Owner、macOS、3.2.1预览渠道、账号已获准加入预览这六项同时满足时试用。未获准加入可申请评估，不能回复成已启用；未给EU正式发布或其他平台预览的日期。"
+        }
+      ]
+    },
+    {
+      "record_id": "C16",
+      "decision": "accept",
+      "observed_claims": [
+        "2026-07-05与2026-10-04日历日期差91日，超Enterprise90自然日。",
+        "无自助恢复，不保证备份恢复或升级找回；不推所有备份不存在。"
+      ],
+      "supported_fact_ids": [
+        "F09",
+        "F06"
+      ],
+      "contradictions": [],
+      "missing_critical": [],
+      "terminology_issues": [],
+      "readability_issues": [],
+      "recommended_edits": [],
+      "rationale": "91日按日期差理解；未给生成时刻，不是小时级精确时长。具体时刻未知不改变超90日结论，恢复结果仍未知。",
+      "evidence": [
+        {
+          "file": "proposed/replies_vi.csv",
+          "locator": "CSV行5，case_id=C16，reply",
+          "quote": "Tại mốc 2026-10-04, bản ghi ngày 2026-07-05 đã được tạo 91 ngày theo lịch, vượt thời hạn 90 ngày của Enterprise. Sau thời hạn lưu không có chức năng khôi phục tự phục vụ, và không có cơ sở bảo đảm khôi phục từ bản sao lưu. Nâng cấp cũng không bảo đảm lấy lại bản ghi đã hết hạn; không được suy ra từ đây rằng mọi bản sao lưu đều không tồn tại."
+        },
+        {
+          "file": "input/support_cases.csv",
+          "locator": "case_id=C16，CSV行17，question",
+          "quote": "Tôi dùng Enterprise và cần bản ghi kiểm toán ngày 2026-07-05. Có thể bảo đảm khôi phục bản ghi này không?"
+        },
+        {
+          "file": "input/support_cases.csv",
+          "locator": "case_id=C16，context_json",
+          "quote": "{\"plan\":\"Enterprise\",\"role\":\"Owner\",\"event_on\":\"2026-07-05\"}"
+        },
+        {
+          "file": "input/release_notes.md",
+          "locator": "F09，行43",
+          "quote": "Starter/Team/Enterprise的审计记录分别保留7/30/90个自然日，按记录产生时间计算，边界当天可查询。超过保留期无自助恢复能力，不承诺备份找回；升级套餐不能保证恢复已过期记录。此保留期与F06离线访问窗口不同。"
+        },
+        {
+          "file": "input/release_notes.md",
+          "locator": "F06，行31",
+          "quote": "离线访问只适用于之前打开且已缓存的内容，须在最近一次在线身份验证后24小时以内（含24小时）。超过窗口应先联网重新验证，不表示内容在24小时后已删除。离线时不能新建工作空间、导出CSV、处理账单或更改SSO设置；不能保证永久离线使用。"
+        }
+      ]
+    },
+    {
+      "record_id": "C17",
+      "decision": "accept",
+      "observed_claims": [
+        "稳定版无自助迁移；Owner可请求人工评估，申请不等于批准或完成。",
+        "不承诺ID保留、自动转全部附件或日期。",
+        "CSV仅文本与元数据，非完整迁移。",
+        "套餐行数上限明确用于每次导出，材料未单列导入行数限制。",
+        "EU SSO预览不授予自动迁移权。"
+      ],
+      "supported_fact_ids": [
+        "F11",
+        "F03",
+        "F07",
+        "F08"
+      ],
+      "contradictions": [],
+      "missing_critical": [],
+      "terminology_issues": [],
+      "readability_issues": [],
+      "recommended_edits": [],
+      "rationale": "当前真实回复明确写出“Giới hạn số dòng của gói được quy định cho mỗi lần xuất; tài liệu không nêu riêng giới hạn số dòng khi nhập”，已消除导出/导入限制修饰范围歧义。未把导入未知改成无限制，迁移审批和ID/附件未知也保留。",
+      "evidence": [
+        {
+          "file": "proposed/replies_vi.csv",
+          "locator": "CSV行6，case_id=C17，reply",
+          "quote": "Bản ổn định chưa hỗ trợ di chuyển liên khu vực tự phục vụ. Với vai trò Owner, bạn có thể gửi yêu cầu đánh giá thủ công, nhưng chưa thể coi yêu cầu là phê duyệt hay thực hiện xong. Không có cam kết giữ nguyên ID của không gian làm việc, tự động chuyển toàn bộ tệp đính kèm hoặc ngày phát hành. Xuất/nhập CSV chỉ bao gồm văn bản và siêu dữ liệu, không thay thế di chuyển toàn bộ. Giới hạn số dòng của gói được quy định cho mỗi lần xuất; tài liệu không nêu riêng giới hạn số dòng khi nhập; quyền xem trước SSO tại EU cũng không cấp quyền di chuyển tự động."
+        },
+        {
+          "file": "input/support_cases.csv",
+          "locator": "case_id=C17，CSV行18，question",
+          "quote": "Tôi là Owner của Enterprise, muốn chuyển từ cn-sh sang eu-fr và giữ nguyên ID cùng mọi tệp đính kèm. Bạn đã có thể thực hiện tự động chưa?"
+        },
+        {
+          "file": "input/support_cases.csv",
+          "locator": "case_id=C17，context_json",
+          "quote": "{\"plan\":\"Enterprise\",\"role\":\"Owner\",\"region\":\"cn-sh\",\"target_region\":\"eu-fr\",\"action\":\"cross_region_migration\"}"
+        },
+        {
+          "file": "input/release_notes.md",
+          "locator": "F11，行51",
+          "quote": "稳定版未提供自助跨区域迁移。Owner可提交人工评估请求，实际实施另需审核，不代表请求已经批准；没有承诺可保留工作空间ID或自动转移附件，也没有上线时间。CSV导出/导入只在F03范围内，不等于完整迁移。EU的SSO预览资格不会自动赋予迁移权限。"
+        },
+        {
+          "file": "input/release_notes.md",
+          "locator": "F03，行19",
+          "quote": "3.2.0已向Starter/Team/Enterprise分别提供每次500/10000/50000行的CSV导出，上限含边界。CSV只包含文本字段与元数据，不打包附件、二进制内容或完整工作空间。导出还受F07角色权限约束，不能把套餐行数足够当成已有导出权限，也不是无限行数。"
+        },
+        {
+          "file": "input/release_notes.md",
+          "locator": "F07，行35",
+          "quote": "角色标签为Owner、Editor、Viewer。Owner和Editor可在套餐上限内导出CSV，Viewer不能导出。SSO配置和跨区域迁移评估请求均须Owner办理；客服回复不能替用户改角色、授权或声称操作已经完成。角色条件与套餐、区域、渠道条件同时适用。"
+        },
+        {
+          "file": "input/release_notes.md",
+          "locator": "F08，行39",
+          "quote": "SSO仅适用于Enterprise套餐并由Owner配置。稳定版3.2.0目前仅在cn-sh、ap-sg开放；eu-fr尚未GA。eu-fr只能在Enterprise、Owner、macOS、3.2.1预览渠道、账号已获准加入预览这六项同时满足时试用。未获准加入可申请评估，不能回复成已启用；未给EU正式发布或其他平台预览的日期。"
+        }
+      ]
+    },
+    {
+      "record_id": "C18",
+      "decision": "accept",
+      "observed_claims": [
+        "年付代理订单不适用直接月付标准路径，即使仅1日和0 credits。",
+        "需代理或账单团队按合同/渠道核实。",
+        "不承诺即时全额、金额或时间，也不一律拒绝代理订单。",
+        "credits不决定退款金额，审批未确认。"
+      ],
+      "supported_fact_ids": [
+        "F10",
+        "F12"
+      ],
+      "contradictions": [],
+      "missing_critical": [],
+      "terminology_issues": [],
+      "readability_issues": [],
+      "recommended_edits": [],
+      "rationale": "渠道、周期和实际审批边界正确；0 credits没有被当作全额退款或退款0的依据。",
+      "evidence": [
+        {
+          "file": "proposed/replies_vi.csv",
+          "locator": "CSV行7，case_id=C18，reply",
+          "quote": "Đơn theo năm mua qua đại lý không thuộc đường yêu cầu tiêu chuẩn dành cho đơn mua trực tiếp theo tháng, dù mới thanh toán 1 ngày và đã dùng 0 credits. Cần đề nghị đại lý hoặc bộ phận thanh toán đối chiếu hợp đồng và kênh bán tương ứng. Không có cơ sở cam kết hoàn toàn bộ tiền ngay, số tiền cụ thể hay thời điểm hoàn tất; cũng không được kết luận mọi đơn qua đại lý đều không thể được hoàn. Credits không xác định số tiền hoàn, và thông tin hiện có không xác nhận việc phê duyệt khoản hoàn tiền."
+        },
+        {
+          "file": "input/support_cases.csv",
+          "locator": "case_id=C18，CSV行19，question",
+          "quote": "Tôi mua gói năm qua đại lý hôm qua và chưa dùng credit nào. Bạn có thể cam kết hoàn toàn bộ tiền ngay không?"
+        },
+        {
+          "file": "input/support_cases.csv",
+          "locator": "case_id=C18，context_json",
+          "quote": "{\"paid_on\":\"2026-10-03\",\"billing_channel\":\"reseller_annual\",\"consumed_credits\":0}"
+        },
+        {
+          "file": "input/release_notes.md",
+          "locator": "F10，行47",
+          "quote": "标准申请路径只适用于直接购买的月付订单：付款后不超过7个自然日且已消耗不超过10 credits时，可提交退款审核，两项含边界。符合申请条件不等于已获退款，不保证即时、全额、金额或完成时间。未满足标准条件需联系账单团队核实；年付、转售商等其他渠道按相应合同或渠道审核，不据此断言一律可退或一律不退。税费、渠道费和实际批准结果未给，任何具体退款金额均未知，不能填0或擅自计算。"
+        },
+        {
+          "file": "input/release_notes.md",
+          "locator": "F12，行55",
+          "quote": "支持服务时间为周一至周五09:00-18:00，时区UTC+08:00；首次响应目标为2个工作日。这是目标，不是保证、SLA、问题解决时限或退款到账时限。未给节假日安排，不推断具体回复截止日；不要把自然日退款窗口与工作日响应目标混用。"
+        }
+      ]
+    }
+  ],
+  "overall_decision": "accept",
+  "decision_counts": {
+    "accept": 18,
+    "revise": 0,
+    "uncertain": 0
+  },
+  "unresolved_record_ids": [],
+  "overall_notes": [
+    "七项输入SHA均与本包清单一致；四源及冻结阅读记录与指定SHA一致，未修改原始记录。",
+    "实际重读DOCX的12FAQ与6条CSV回复后，18项均未发现必须修订的事实矛盾或关键遗漏。",
+    "C17现明确导出行数限制及未单列导入限制，上一轮局部语义不确定点已由当前真实文字消除。",
+    "K01、K03、K09、K10、C14仍有可选自然度建议，不影响当前accept；源材料未给的金额、审批、日期或备份结果仍保持未知或非承诺。",
+    "结论是独立模型复核，human_expert=false；非人工/母语专家验收、正式语义评分或真实评测成绩。"
+  ]
+}

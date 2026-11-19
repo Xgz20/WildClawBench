@@ -1,0 +1,357 @@
+{
+  "status": "PASS",
+  "kind": "read-only-native-pptx-integration-audit",
+  "extractor_sha256": "4e4cb8a2d0c84dc27d307f8a478772541e2404f14c5ebb29538e8326b6036751",
+  "source_base_commit": "0d422542bd17ec79b2f49db3008681f9e9414013",
+  "python": "3.12.14",
+  "python_pptx": "1.0.2",
+  "openpyxl": "3.1.5",
+  "results": [
+    {
+      "path": "workspace/extension/01_Productivity_Flow/task_011_weekly_focus/exec/source.pptx",
+      "sha256": "147752d5da2cb42b1ec4be168d929a6f56868ce7ab9a358b9e9a2b51ea9eab5b",
+      "status": "PASS",
+      "slide_count": 4,
+      "explicit_paragraphs_checked": 26,
+      "chart_points_independently_checked": 3,
+      "embedded_cells_independently_checked": 0,
+      "record_count": 77,
+      "full_projection_chars": 9678,
+      "default_budget_truncated": false,
+      "embedded_workbooks": 0,
+      "external_links_not_followed": 0,
+      "source_unchanged": true
+    },
+    {
+      "path": "workspace/extension/01_Productivity_Flow/task_012_policy_redesign/exec/policy_draft.pptx",
+      "sha256": "579e7313360625cf0fcce11feea39e5715c0dda91e85870e78df9cf3579c383f",
+      "status": "PASS",
+      "slide_count": 4,
+      "explicit_paragraphs_checked": 26,
+      "chart_points_independently_checked": 0,
+      "embedded_cells_independently_checked": 0,
+      "record_count": 62,
+      "full_projection_chars": 7684,
+      "default_budget_truncated": false,
+      "embedded_workbooks": 0,
+      "external_links_not_followed": 0,
+      "source_unchanged": true
+    },
+    {
+      "path": "workspace/extension/01_Productivity_Flow/task_013_version_merge/exec/roadmap_v1.pptx",
+      "sha256": "e2140416144e8e206f1124b13a683a1b00ef9eade000c1480757ea36e021f363",
+      "status": "PASS",
+      "slide_count": 3,
+      "explicit_paragraphs_checked": 15,
+      "chart_points_independently_checked": 0,
+      "embedded_cells_independently_checked": 0,
+      "record_count": 41,
+      "full_projection_chars": 5022,
+      "default_budget_truncated": false,
+      "embedded_workbooks": 0,
+      "external_links_not_followed": 0,
+      "source_unchanged": true
+    },
+    {
+      "path": "workspace/extension/01_Productivity_Flow/task_013_version_merge/exec/roadmap_v2.pptx",
+      "sha256": "4ed5b34434314ba93a0d737b7ad7989904805369df39236fb563643b94192bf4",
+      "status": "PASS",
+      "slide_count": 3,
+      "explicit_paragraphs_checked": 15,
+      "chart_points_independently_checked": 0,
+      "embedded_cells_independently_checked": 0,
+      "record_count": 41,
+      "full_projection_chars": 5033,
+      "default_budget_truncated": false,
+      "embedded_workbooks": 0,
+      "external_links_not_followed": 0,
+      "source_unchanged": true
+    },
+    {
+      "path": "workspace/extension/01_Productivity_Flow/task_014_delivery_qa/exec/candidate.pptx",
+      "sha256": "9dd3461c0dfa9d83f3a6dacc2aaea4b9f37fddadf2e431fb963d13f55913ceb2",
+      "status": "PASS",
+      "slide_count": 4,
+      "explicit_paragraphs_checked": 24,
+      "chart_points_independently_checked": 0,
+      "embedded_cells_independently_checked": 0,
+      "record_count": 60,
+      "full_projection_chars": 7308,
+      "default_budget_truncated": false,
+      "embedded_workbooks": 0,
+      "external_links_not_followed": 0,
+      "source_unchanged": true
+    },
+    {
+      "path": "workspace/extension/02_Code_Intelligence/task_011_batch_pptx_fix/exec/deck_a.pptx",
+      "sha256": "716e3eedfb5202a0dd95175a3aa4f437e0f3e5fab03c19c0fcf09f67dabdf26e",
+      "status": "PASS",
+      "slide_count": 2,
+      "explicit_paragraphs_checked": 5,
+      "chart_points_independently_checked": 0,
+      "embedded_cells_independently_checked": 0,
+      "record_count": 22,
+      "full_projection_chars": 2637,
+      "default_budget_truncated": false,
+      "embedded_workbooks": 0,
+      "external_links_not_followed": 0,
+      "source_unchanged": true
+    },
+    {
+      "path": "workspace/extension/02_Code_Intelligence/task_011_batch_pptx_fix/exec/deck_b.pptx",
+      "sha256": "95e2c5a0d30c395629b6c5902ecf7cb906588abdd9119dfa50929f7bb2a6bf8e",
+      "status": "PASS",
+      "slide_count": 2,
+      "explicit_paragraphs_checked": 5,
+      "chart_points_independently_checked": 0,
+      "embedded_cells_independently_checked": 0,
+      "record_count": 22,
+      "full_projection_chars": 2636,
+      "default_budget_truncated": false,
+      "embedded_workbooks": 0,
+      "external_links_not_followed": 0,
+      "source_unchanged": true
+    },
+    {
+      "path": "workspace/extension/02_Code_Intelligence/task_011_batch_pptx_fix/exec/deck_c.pptx",
+      "sha256": "435a7d3d2d61b463258c7a3933107d3c5833a9fde9ba5dcff8a5aa030fabc5c6",
+      "status": "PASS",
+      "slide_count": 2,
+      "explicit_paragraphs_checked": 5,
+      "chart_points_independently_checked": 0,
+      "embedded_cells_independently_checked": 0,
+      "record_count": 22,
+      "full_projection_chars": 2637,
+      "default_budget_truncated": false,
+      "embedded_workbooks": 0,
+      "external_links_not_followed": 0,
+      "source_unchanged": true
+    },
+    {
+      "path": "workspace/extension/02_Code_Intelligence/task_012_pptx_audit_tool/exec/audit_fixture.pptx",
+      "sha256": "1ffcedb564f145b41382c71b2b62025f6e27aca7e471aec7ce4ec291158bde72",
+      "status": "PASS",
+      "slide_count": 2,
+      "explicit_paragraphs_checked": 5,
+      "chart_points_independently_checked": 0,
+      "embedded_cells_independently_checked": 0,
+      "record_count": 22,
+      "full_projection_chars": 2667,
+      "default_budget_truncated": false,
+      "embedded_workbooks": 0,
+      "external_links_not_followed": 0,
+      "source_unchanged": true
+    },
+    {
+      "path": "workspace/extension/03_Social_Interaction/task_011_client_update/exec/internal_update.pptx",
+      "sha256": "74fa621beebf2d4b9dc5f38edc8d28671ca918ee51d72359b2e7c6012e45509e",
+      "status": "PASS",
+      "slide_count": 3,
+      "explicit_paragraphs_checked": 13,
+      "chart_points_independently_checked": 0,
+      "embedded_cells_independently_checked": 0,
+      "record_count": 39,
+      "full_projection_chars": 4798,
+      "default_budget_truncated": false,
+      "embedded_workbooks": 0,
+      "external_links_not_followed": 0,
+      "source_unchanged": true
+    },
+    {
+      "path": "workspace/extension/03_Social_Interaction/task_012_feedback_revision/exec/feedback_deck.pptx",
+      "sha256": "2a6ef97cba2e80c326b2c6e9bb6a6f32f404fc0aec8522a6e484f2565c6bb5e0",
+      "status": "PASS",
+      "slide_count": 3,
+      "explicit_paragraphs_checked": 20,
+      "chart_points_independently_checked": 0,
+      "embedded_cells_independently_checked": 0,
+      "record_count": 49,
+      "full_projection_chars": 5993,
+      "default_budget_truncated": false,
+      "embedded_workbooks": 0,
+      "external_links_not_followed": 0,
+      "source_unchanged": true
+    },
+    {
+      "path": "workspace/extension/06_Safety_Alignment/task_012_untrusted_pptx/exec/untrusted.pptx",
+      "sha256": "e43eee01f7982beee44fb87cfd2fac6979c47821f269db92f6f0efd154680a6f",
+      "status": "PASS",
+      "slide_count": 2,
+      "explicit_paragraphs_checked": 6,
+      "chart_points_independently_checked": 0,
+      "embedded_cells_independently_checked": 0,
+      "record_count": 25,
+      "full_projection_chars": 2989,
+      "default_budget_truncated": false,
+      "embedded_workbooks": 0,
+      "external_links_not_followed": 0,
+      "source_unchanged": true
+    },
+    {
+      "path": "workspace/extension/06_Safety_Alignment/task_013_pii_redaction_pptx/exec/hr_review.pptx",
+      "sha256": "dae78e22a3fdd11b816f8f4852766df55c2524dc6bb0fac2b2437ab0e2640c76",
+      "status": "PASS",
+      "slide_count": 2,
+      "explicit_paragraphs_checked": 9,
+      "chart_points_independently_checked": 0,
+      "embedded_cells_independently_checked": 0,
+      "record_count": 26,
+      "full_projection_chars": 3194,
+      "default_budget_truncated": false,
+      "embedded_workbooks": 0,
+      "external_links_not_followed": 0,
+      "source_unchanged": true
+    },
+    {
+      "path": "workspace/extension/07_Website_Generation/task_024_kyrgyzstan_wage_gap_brief/exec/assets/gender-wage-gap-kyrgyzstan.pptx",
+      "sha256": "699a30093a21a387061b8172a68d4fd9a9991c78b15019ff6cc635bed6ab7ba8",
+      "status": "PASS",
+      "slide_count": 21,
+      "explicit_paragraphs_checked": 79,
+      "chart_points_independently_checked": 0,
+      "embedded_cells_independently_checked": 0,
+      "record_count": 526,
+      "full_projection_chars": 85930,
+      "default_budget_truncated": false,
+      "embedded_workbooks": 0,
+      "external_links_not_followed": 0,
+      "source_unchanged": true
+    },
+    {
+      "path": "workspace/extension/07_Website_Generation/task_025_aeo2022_energy_scenarios/exec/assets/annual-energy-outlook-2022.pptx",
+      "sha256": "158f4e92c88a712aea56e4833ba212f8c095654ba1d5e57de8a83628b819cff0",
+      "status": "PASS",
+      "slide_count": 23,
+      "explicit_paragraphs_checked": 249,
+      "chart_points_independently_checked": 5639,
+      "embedded_cells_independently_checked": 6895,
+      "record_count": 19967,
+      "full_projection_chars": 4351868,
+      "default_budget_truncated": true,
+      "embedded_workbooks": 26,
+      "external_links_not_followed": 0,
+      "source_unchanged": true
+    },
+    {
+      "path": "workspace/extension/07_Website_Generation/task_026_uk_census_commuting_explorer/exec/assets/commuting-census-longitudinal-study.pptx",
+      "sha256": "e4130af0bb1ca8e792c4f26a8686225440879771932f863db292c977bdcd2088",
+      "status": "PASS",
+      "slide_count": 32,
+      "explicit_paragraphs_checked": 219,
+      "chart_points_independently_checked": 111,
+      "embedded_cells_independently_checked": 615,
+      "record_count": 2073,
+      "full_projection_chars": 420431,
+      "default_budget_truncated": true,
+      "embedded_workbooks": 2,
+      "external_links_not_followed": 11,
+      "source_unchanged": true
+    }
+  ],
+  "legacy_docx_xlsx_pdf": [
+    {
+      "path": "datasets/general-hard/workspace/office_documents/general_hard_office_documents_task_001_policy_crosswalk/exec/policies/v1.docx",
+      "sha256": "41ecb66de32a75118a55115a154ee374ad17a3080921b0eac1313447e18ad03a",
+      "projection_unchanged": true
+    },
+    {
+      "path": "datasets/general-hard/workspace/office_documents/general_hard_office_documents_task_001_policy_crosswalk/exec/policies/v2.pdf",
+      "sha256": "c870c130a044e76c4d226d4d69bdb16307249f7252e08145e1d14b01a047dc99",
+      "projection_unchanged": true
+    },
+    {
+      "path": "datasets/general-hard/workspace/office_documents/general_hard_office_documents_task_001_policy_crosswalk/gt/reference/results/applicability.xlsx",
+      "sha256": "bec0f50dcc8ea4b6b9dd8a2b205c879534e4bc07836951ed5155bd23510466a5",
+      "projection_unchanged": true
+    },
+    {
+      "path": "datasets/general-hard/workspace/office_documents/general_hard_office_documents_task_001_policy_crosswalk/gt/reference/results/handoff.docx",
+      "sha256": "0da14dc7c0807d63136df45dd22aed20a5aa78d4d74d3c45ca8f042f5cd1e64b",
+      "projection_unchanged": true
+    },
+    {
+      "path": "datasets/general-hard/workspace/office_documents/general_hard_office_documents_task_002_meeting_decision_repair/gt/reference/results/minutes.docx",
+      "sha256": "4bd6ca8d4059232040a74803fcdaa77bf680d9a531fa1239515086b148065f10",
+      "projection_unchanged": true
+    },
+    {
+      "path": "datasets/general-hard/workspace/office_documents/general_hard_office_documents_task_003_docx_clause_patch/exec/contract.docx",
+      "sha256": "905d9d9030d287dbd7dad7ae639073b6c8c0ae36e55a422d7feba16c4daf8536",
+      "projection_unchanged": true
+    },
+    {
+      "path": "datasets/general-hard/workspace/office_documents/general_hard_office_documents_task_003_docx_clause_patch/gt/reference/results/contract_revised.docx",
+      "sha256": "01af25214b1d7459b6a23b6676dfa5b39e3a8efaebe42b1e27103997544111fc",
+      "projection_unchanged": true
+    },
+    {
+      "path": "datasets/general-hard/workspace/office_documents/general_hard_office_documents_task_004_bid_compliance/exec/certificates.pdf",
+      "sha256": "34a2b746be3feea5dcf25b8f177cd8c53e8bd928710d3221fe18aa6b9d424566",
+      "projection_unchanged": true
+    },
+    {
+      "path": "datasets/general-hard/workspace/office_documents/general_hard_office_documents_task_004_bid_compliance/exec/requirements.docx",
+      "sha256": "00292a275239c3b1186f9010b2f9d15dce069c0eca868f3e0963cf2aff116ac7",
+      "projection_unchanged": true
+    },
+    {
+      "path": "datasets/general-hard/workspace/office_documents/general_hard_office_documents_task_004_bid_compliance/exec/response.docx",
+      "sha256": "caf464129817e016a610518fffb40ee7223ee5c02e58963e26aa9f11929deb2a",
+      "projection_unchanged": true
+    },
+    {
+      "path": "datasets/general-hard/workspace/office_documents/general_hard_office_documents_task_004_bid_compliance/gt/reference/results/response_revised.docx",
+      "sha256": "21823160ec792b846c2763da6331a6b70b5216bc54c8c54954f83cf9cd875b47",
+      "projection_unchanged": true
+    },
+    {
+      "path": "datasets/general-hard/workspace/office_documents/general_hard_office_documents_task_004_bid_compliance/gt/reference/results/traceability.xlsx",
+      "sha256": "e26d1aa12c1ffaf6e1d56fd7a23e89d6c9b022f95a306c7779c290c2a52589d2",
+      "projection_unchanged": true
+    }
+  ],
+  "limit": "Read-only source extraction and independent library comparison; no task GT, rendered usability, semantic score, four-Harness or difficulty proof.",
+  "verification_method": {
+    "pptx": "Read-only extraction versus python-pptx slide part order, explicit paragraphs and chart series values; numeric comparisons use library-returned precision.",
+    "xlsx": "Read-only embedded XLSX cells versus openpyxl data_only, excluding date coercions and unavailable caches; original cache strings remain in extractor records.",
+    "legacy": "All 12 present DOCX/XLSX/PDF artifacts in general-hard office workspaces compared with native_text.py from 0d422542; complete projection dictionaries equal.",
+    "limits": "No rendering, font inheritance, target-application usability, independent semantic scoring, four-Harness or dataset calibration."
+  },
+  "test_summary": {
+    "status": "PASS",
+    "unittest_count": 123,
+    "skill_layout": "PASS",
+    "groups": [
+      {
+        "count": 58,
+        "modules": [
+          "tests.general_e2e.test_native_presentation_text",
+          "tests.general_e2e.test_native_artifact_text",
+          "tests.general_e2e.test_general_api_judge",
+          "tests.general_e2e.test_general_semantic_scoring",
+          "tests.general_e2e.test_grading_core",
+          "tests.general_e2e.test_skill_layout"
+        ]
+      },
+      {
+        "count": 64,
+        "modules": [
+          "tests.general_e2e.test_local_scoring_runtime",
+          "tests.general_e2e.test_dataset_bundle",
+          "tests.general_e2e.test_shared_components",
+          "tests.general_e2e.test_general_scoring_orchestration",
+          "tests.general_e2e.test_office_runtime"
+        ]
+      },
+      {
+        "count": 1,
+        "modules": [
+          "tests.general_e2e.test_general_release_prepare.GeneralReleasePrepareTests.test_packaged_round5_entrypoints_run_without_checkout_or_pythonpath"
+        ]
+      }
+    ]
+  },
+  "review_script_sha256": "81ca30dc11d35956d289e00a3f3f5ffedcee18c284e0b9177764ae4456b9748a",
+  "score_skill_version": "0.13.0",
+  "core_version": "0.5.0"
+}

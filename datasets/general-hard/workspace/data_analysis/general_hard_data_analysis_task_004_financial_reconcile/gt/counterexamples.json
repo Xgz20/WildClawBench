@@ -1,0 +1,106 @@
+{
+  "schema_version": "h020-material-counterexamples/v1",
+  "status": "planned_controls_not_yet_business_grader_verified",
+  "cases": [
+    {
+      "id": "unit_thousandfold",
+      "group": "business",
+      "scenario": "Use1000x monetary scaling while artifacts exist."
+    },
+    {
+      "id": "disclosure_year",
+      "group": "business",
+      "scenario": "Use2024 disclosure as2024 report year."
+    },
+    {
+      "id": "consolidated_profit",
+      "group": "business",
+      "scenario": "Use total net profit instead of attributable profit."
+    },
+    {
+      "id": "total_equity",
+      "group": "business",
+      "scenario": "Use total equity instead of parent equity."
+    },
+    {
+      "id": "closing_equity_only",
+      "group": "business",
+      "scenario": "Divide ROE by closing equity only."
+    },
+    {
+      "id": "stale_restatement",
+      "group": "boundary",
+      "scenario": "Retain A2024 revenue144000 or B2023 profit4900."
+    },
+    {
+      "id": "stale_next_year_base",
+      "group": "boundary",
+      "scenario": "Apply146000 to A2024 but retain144000 for A2025 denominator."
+    },
+    {
+      "id": "missing_as_zero",
+      "group": "boundary",
+      "scenario": "Turn C2024 missing CFO into0 or A2022 missing base into0."
+    },
+    {
+      "id": "drop_valid_zero",
+      "group": "boundary",
+      "scenario": "Reject B2023 cash ratio0 or C2023 ROE0."
+    },
+    {
+      "id": "drop_negative_cash",
+      "group": "boundary",
+      "scenario": "Take abs of A2025 cash outflow or hide its negative ratio."
+    },
+    {
+      "id": "tie_ordinal",
+      "group": "boundary",
+      "scenario": "Rank B/C2025 ROE as2/3 instead of2/2."
+    },
+    {
+      "id": "wrong_cash_field",
+      "group": "business",
+      "scenario": "Use parent CFO or ending cash stock."
+    },
+    {
+      "id": "constant_formula",
+      "group": "boundary",
+      "scenario": "Save correct baseline using constant formulas; five changed-result probes must fail."
+    },
+    {
+      "id": "wrong_cache",
+      "group": "boundary",
+      "scenario": "Keep wrong formula behind correct stale cached values."
+    },
+    {
+      "id": "missing_source_row",
+      "group": "evidence",
+      "scenario": "Drop a missing-field row or a revision source link."
+    },
+    {
+      "id": "wrong_locator",
+      "group": "evidence",
+      "scenario": "Existing source filename but wrong actual field ID/amount."
+    },
+    {
+      "id": "missing_delivery",
+      "group": "delivery",
+      "scenario": "Omit or corrupt a required native artifact."
+    },
+    {
+      "id": "input_changed",
+      "group": "delivery",
+      "scenario": "Mutate any frozen input."
+    },
+    {
+      "id": "invented_conclusion",
+      "group": "semantic",
+      "scenario": "Numerical tables correct but say A is universally best or a cause/approval is established."
+    },
+    {
+      "id": "missing_GT_or_runtime",
+      "group": "infrastructure",
+      "scenario": "Missing/drifted private contracts/helper/runtime yields evaluation_error with null score."
+    }
+  ]
+}

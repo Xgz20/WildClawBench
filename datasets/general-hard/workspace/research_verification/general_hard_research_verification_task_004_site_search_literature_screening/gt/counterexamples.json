@@ -1,0 +1,32 @@
+{
+  "schema_version": "h030-counterexamples/v1",
+  "facts_free": true,
+  "scope": "Mechanism fixtures are synthetic, not native task reference or source acquisition proof.",
+  "mechanisms": [
+    "safe_xml_common_parent",
+    "xml_date_roles_preserved",
+    "xml_entity_no_network",
+    "pmid_bool_rejected",
+    "pointer_block_leaf_multitarget",
+    "unknown_and_range_uncertainty",
+    "fixed_24_content_floor",
+    "layout_chinese_reorder_split_transpose",
+    "xlsx_1900_1904_t_d",
+    "ordinary_hyperlinks",
+    "formula_cache_clear",
+    "missing_bundle_raises",
+    "bounded_CSS_same_actual_DOM_node",
+    "unsupported_CSS_typed_error",
+    "inside_parenthesis_spacing_equivalence_without_word_or_value_changes"
+  ],
+  "later_full_controls": [
+    "native_reference_with_real_bundle",
+    "candidate_mutations",
+    "verified_reuse_lineage",
+    "actual_formula_recalculation",
+    "final_managed_worker",
+    "semantic_Judge"
+  ],
+  "control_results_author_side_not_rule_facts": true,
+  "actual_Harness_and_semantic_Judge_not_run": true
+}

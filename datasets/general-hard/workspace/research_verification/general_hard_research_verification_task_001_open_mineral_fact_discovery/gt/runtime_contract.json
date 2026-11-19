@@ -1,0 +1,32 @@
+{
+  "schema_version": "h027-runtime-contract/v1",
+  "grading_type": "hybrid",
+  "semantic_judge_required": true,
+  "automatic_weight": 0.4,
+  "semantic_weight": 0.6,
+  "score_weights": {
+    "record_contract": 0.2,
+    "time_and_scope": 0.25,
+    "citation_resolution": 0.4,
+    "protected_delivery": 0.15
+  },
+  "candidate_contract": "artifact_contract.json",
+  "source_oracle": "expected.json",
+  "metadata_scope": "Version, first publication date, revision date, latest production year, explicit reserve-year unknown and REO unit are checked against independently source-reviewed metadata. Country facts, ranking and numerical source support remain semantic.",
+  "xlsx_layout_equivalence": "Sheet名、起始位置、行列顺序、分表合表、辅助列不限；各表用一行清楚语义表头，英文键或以下中文别名均接受；静态正确表或实际可重算公式均接受。不得隐藏核心结果。",
+  "unit_conversion": "数量统一为公吨REO当量（tonnes_REO或吨REO），也接受单位清楚的万/百万吨REO并正确换算。不要用金属矿石毛重或资源量代替储量。",
+  "formula_policy": "Static native values accepted. Any formula is recalculated with the bound managed Office engine after clearing caches on a disposable copy outside the candidate Workspace. No candidate cache fallback.",
+  "source_policy": "A separately acquired and runtime-locked research source bundle is mandatory. The rule checks manifest and four source files SHA, source/URL/citation bindings, source-text body SHA, actual locator and normalized verbatim quote. Valid sources outside the reference pool are accepted without URL or body allowlisting.",
+  "candidate_error_policy": "Missing, corrupt, malformed or incomplete candidate deliverables reduce appropriate rubric parts. Protected input mutation zeros protected_delivery.",
+  "evaluation_error_policy": "Missing/drifted private material, malformed independent source bundle, collector acquisition/extraction failures or unavailable/drifted managed Office context propagate errors, never fabricated zero.",
+  "semantic_boundary": [
+    "Substantive source-supported facts and rankings",
+    "Same-year restatement versus cross-year change and denominators/bounds",
+    "Evidence quality, independent sources, uncertainty and honest research account"
+  ],
+  "visibility_policy": "Required result headers and records must be visible native worksheets/cells. Structural visibility is bounded and does not replace a full visual judgement.",
+  "offline_rule": true,
+  "mutates_candidate_workspace": false,
+  "share_absolute_tolerance": 5e-05,
+  "share_rounding_equivalence": "Absolute ratio tolerance 5e-5 (0.005 percentage points) accepts normal two-decimal percentage rounding. Quantity/delta/cross-table identities use rel_tol=1e-7, abs_tol=1e-8 in their declared units."
+}

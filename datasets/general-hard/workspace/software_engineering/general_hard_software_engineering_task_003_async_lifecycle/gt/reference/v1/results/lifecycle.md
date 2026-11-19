@@ -1,0 +1,9 @@
+# 生命周期修复
+
+原实现正常路径能返回按输入排序的结果，但取消分支返回None且遗漏释放，发布错误绕过release，gather首错或deadline路径没有完整收口。
+
+每个任务在成功取得lease后进入唯一的finally回收路径；只发送一次终态提交，ack失败或取消不触发第二次提交。外部取消继续抛CancelledError，deadline抛TimeoutError。父批次遇错先取消并等待兄弟任务，deadline观察任务也会被等待。
+
+回收作为本批次持有的异步工作，重复取消只推迟异常传播直至同一次release结束，不能用重复release补救。内部状态与调度没有绑定测试名称或输入字符串。
+
+验证为离线内存fixture和实际Python执行；没有真实网络、真实服务、Harness、Judge或性能证明。

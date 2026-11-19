@@ -1,0 +1,475 @@
+{
+  "schema_version": "general-hard-research-source-runtime/v1",
+  "date_local": "2026-10-28",
+  "status": "SOURCE_COLLECTION_AND_PROTOCOL_ADAPTER_VERIFIED",
+  "repository_root": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard",
+  "branch": "feat/general-hard",
+  "parent_commit": "1e7cfb9e96c276a58e4216a3599423ef160a552a",
+  "score_skill_version": "0.24.0",
+  "grading_core_version": "0.15.2",
+  "capability": "Independent scoring-side public-source collection, immutable source bundle/lock, offline rule and semantic consumers, archival and rescore lineage",
+  "tests": {
+    "schema_version": "wildclawbench.h027-source-bundle-validation/v1",
+    "recorded_on": "2026-10-28",
+    "worktree": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard",
+    "branch": "feat/general-hard",
+    "scope": "仅记录已完成的子任务验证；本次未重跑测试、未修改仓库代码。",
+    "counting": {
+      "joint_test_count": 51,
+      "final_affected_source_test_count": 13,
+      "source_tests_overlap_joint_suite": true,
+      "distinct_test_count_claim": 51,
+      "note": "最终13项为联合51项中来源测试的重跑，不能加总为64个不同测试。"
+    },
+    "runs": [
+      {
+        "id": "joint-51",
+        "command": "TMPDIR=/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h027/qa/contract-review/test-tmp PYTHONDONTWRITEBYTECODE=1 /Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.venv/bin/python -m unittest tests.general_e2e.test_research_sources tests.general_e2e.test_dataset_bundle.GeneralDatasetCacheFilteringTests tests.general_e2e.test_local_scoring_runtime tests.general_e2e.test_general_semantic_scoring tests.general_e2e.test_general_api_judge tools.report.tests.test_wildclawbench_case_generator.RegisteredCaseGeneratorTest.test_research_requirement_is_private_boolean_metadata -v",
+        "cwd": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard",
+        "interpreter": {
+          "invocation": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.venv/bin/python",
+          "version": "3.11.14",
+          "version_evidence": "本次只读 --version 核对；工具 chunk 378053。"
+        },
+        "outcome": {
+          "exit_code": 0,
+          "test_count": 51,
+          "elapsed_seconds": 17.009,
+          "completion_excerpt": "Ran 51 tests in 17.009s\n\nOK"
+        },
+        "evidence": {
+          "source": "本会话 functions.exec 调用 tools.exec_command / tools.write_stdin 的真实工具输出",
+          "invocation_chunk_id": "314ce7",
+          "terminal_session_id": 4021,
+          "completion_chunk_id": "853798",
+          "persisted_full_log": null,
+          "note": "该轮完整输出仅存在本次工具终端结果，未落盘；没有据此伪造完整日志文件。"
+        },
+        "code_binding": {
+          "sha256_snapshot_at_run": null,
+          "note": "联合运行启动后仍有最后的 authority/端口硬化；未保存该轮源码摘要，不把最终源码SHA追溯冒充该轮输入锁。所有受影响13项随后对最终代码重跑。"
+        }
+      },
+      {
+        "id": "final-source-13",
+        "command": "TMPDIR=/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h027/qa/contract-review/test-tmp PYTHONDONTWRITEBYTECODE=1 python3 -m unittest tests.general_e2e.test_research_sources -v",
+        "cwd": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard",
+        "interpreter": {
+          "invocation": "python3",
+          "resolved_path": "/Users/gzx/.local/share/uv/python/cpython-3.11-macos-x86_64-none/bin/python3",
+          "version": "3.11.14",
+          "resolution_evidence": "执行期间已核对 command -v/python3 版本；本次只读复核工具 chunk 378053。"
+        },
+        "outcome": {
+          "exit_code": 0,
+          "test_count": 13,
+          "elapsed_seconds": 9.828,
+          "completion_excerpt": "Ran 13 tests in 9.828s\n\nOK"
+        },
+        "evidence": {
+          "source": "真实工具完成输出逐字保存；日志并非事后重跑生成",
+          "invocation_chunk_id": "2e9d6f",
+          "terminal_session_id": 1046,
+          "completion_chunk_id": "dd0983",
+          "persisted_log": {
+            "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h027/qa/contract-review/source-tests-final.log",
+            "sha256": "0f10e164b417e1797335b8f8af0c1484966d39d87a76b650976eea5d30de8116",
+            "creation_note": "完成结果从 functions store 中保存的 tools.write_stdin 返回值 output 逐字写入该文件。"
+          }
+        },
+        "code_binding": "最终代码，含 public authority 正规化、显式port=0拒绝；两个文件SHA见 final_code_sha256。"
+      }
+    ],
+    "final_code_sha256": [
+      {
+        "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/tools/report/skills/general-e2e/score-general-e2e/scripts/research_sources.py",
+        "sha256": "5074baabbe989b0f7fa59462fe04b226c17e90c95178b35939e3ef3c3852130d"
+      },
+      {
+        "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/tools/report/skills/general-e2e/score-general-e2e/scripts/score_general_e2e.py",
+        "sha256": "b1cebf4992b47994583a78468a75bb6965c1cdd6a77ff819a53c42c9186d57a7"
+      }
+    ],
+    "final_public_source_smoke": {
+      "output_directory": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h027/qa/contract-review/public-source-smoke-final",
+      "interpreter": "/Users/gzx/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+      "invocation_form": "工具 exec_command 内的 Python heredoc；导入 research_sources，调用 fetch(官方URL, body.pdf, 默认policy+timeout_seconds=30, /usr/bin/curl)，随后 project() 两次并比较；不是完整 H027评分。",
+      "requested_url": "https://pubs.usgs.gov/periodicals/mcs2026/mcs2026-rare-earths.pdf",
+      "fetcher": "/usr/bin/curl",
+      "invocation_chunk_id": "20c006",
+      "terminal_session_id": 13183,
+      "completion_chunk_id": "5249de",
+      "outcome": {
+        "status": "passed",
+        "http_status": 200,
+        "redirect_count": 0,
+        "pages": 2,
+        "text_chars": 6958,
+        "projection_replay_identical": true,
+        "pypdf_version": "6.10.0",
+        "public_address_policy": "global-unicast-dns-pinned-no-proxy/v1",
+        "collector_sha256": "5074baabbe989b0f7fa59462fe04b226c17e90c95178b35939e3ef3c3852130d"
+      },
+      "output_artifacts": [
+        {
+          "role": "结构化完成输出",
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h027/qa/contract-review/public-source-smoke-final/summary.json",
+          "sha256": "bd07bea5e3a1dc6df9a59275d7a147ce9ef35516cc62fcd39c9905b331598c18"
+        },
+        {
+          "role": "真实独立HTTP获取回执",
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h027/qa/contract-review/public-source-smoke-final/response.json",
+          "sha256": "94d9e074e0df52397a9b7c951fa6b46c615f72ccff5622a1e34e44ea18584e9b"
+        },
+        {
+          "role": "独立获取的原始PDF",
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h027/qa/contract-review/public-source-smoke-final/body.pdf",
+          "sha256": "0116a192336fec41c38d8e11dad553bb7703308c1fbd1f97dc14b75c7e7d9900"
+        }
+      ],
+      "output_hash_note": "summary.json的SHA是结构化输出文件字节摘要；没有把它声称为带终端额外换行的stdout原始字节摘要。",
+      "limit": "只证明生产公开获取及PDF提取重放，不证明历史发布身份、业务事实正确性或完整H027 Worker/Judge/回传验收。"
+    },
+    "final_read_only_hash_verification": {
+      "tool_chunk_id": "378053",
+      "status": "上述代码、日志、summary/response/body文件SHA均已只读重新核对。"
+    }
+  },
+  "parent_real_source_integration": {
+    "validation": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h027/qa/author-source-collection-1793176583464073000/validation.json",
+    "sources": 8,
+    "source_ids": [
+      "src-2025-chapter",
+      "src-2026-chapter",
+      "src-2025-history",
+      "src-2026-history",
+      "src-2025-metadata",
+      "src-2026-metadata",
+      "src-2025-appendix",
+      "src-2026-appendix"
+    ],
+    "body_sha256": {
+      "src-2025-chapter": "87e73bd28fd9d87b99a2ea58d104d6e41467e3488c181c61161e0abf22c6c7a1",
+      "src-2026-chapter": "0116a192336fec41c38d8e11dad553bb7703308c1fbd1f97dc14b75c7e7d9900",
+      "src-2025-history": "9876665d3af354a5da3fac78ac2025e5f28e3cae35c2000e19e59b1e3a1cf280",
+      "src-2026-history": "276d675d1d753697f611c385d0692c865f2c00b8a417c282ff2e8e1f84932e2e",
+      "src-2025-metadata": "4d66190cf5df188a4088cbba5c6272d1c10c9662cd2403c259b8c68091523d93",
+      "src-2026-metadata": "e9fbbd902dc2f824237e46a9a8de714d3de05f23e5414872aab7ff85d21ec9fc",
+      "src-2025-appendix": "9039f2195e217a24ea16d898d683cf214e8a4a8e56810f76b89da6048c373f16",
+      "src-2026-appendix": "39878d03df6dbdf59d90a4794bc408988a560fb9565a36863c608a9a9dd8811d"
+    },
+    "normal_archived_binding_equal": true,
+    "original_attempt_GT_candidate_unchanged": true,
+    "scope": "Declared author-only prepared source-collection fixture; not formal H027 rules, semantic grading, actual Harness or measured difficulty."
+  },
+  "snapshot": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h027/qa/runtime-adapter-snapshot-v1",
+  "files": [
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h027/qa/author-source-collection-1793176583464073000/fixture/attempts/batch-fixture__unit-fixture/task-fixture/score-attempt/attempt-manifest.json",
+      "sha256": "c07373611474e4b74ae6ac159f5b19f5b12c4e4f4671d7f45a7cffca20846346",
+      "size": 5373
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h027/qa/author-source-collection-1793176583464073000/fixture/attempts/batch-fixture__unit-fixture/task-fixture/score-attempt/private/research-sources/manifest.json",
+      "sha256": "c309b8cb74ff001e9844f6a86d951514b98828f7ece175c3bda69f93c6ff0e9e",
+      "size": 24545
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h027/qa/author-source-collection-1793176583464073000/fixture/attempts/batch-fixture__unit-fixture/task-fixture/score-attempt/private/research-sources/sources/source-0001/body.pdf",
+      "sha256": "87e73bd28fd9d87b99a2ea58d104d6e41467e3488c181c61161e0abf22c6c7a1",
+      "size": 726098
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h027/qa/author-source-collection-1793176583464073000/fixture/attempts/batch-fixture__unit-fixture/task-fixture/score-attempt/private/research-sources/sources/source-0001/response.json",
+      "sha256": "9876a7c2b2e64b1afe4af78c6b4243f2aa1f7d6e8a157888f3fa4d1702685be8",
+      "size": 1470
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h027/qa/author-source-collection-1793176583464073000/fixture/attempts/batch-fixture__unit-fixture/task-fixture/score-attempt/private/research-sources/sources/source-0001/text.json",
+      "sha256": "01aa6577c83ef1b8224ce94ca16f9e4c3785739fa49b9caa40b23ede59e3fa54",
+      "size": 7733
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h027/qa/author-source-collection-1793176583464073000/fixture/attempts/batch-fixture__unit-fixture/task-fixture/score-attempt/private/research-sources/sources/source-0001/text.txt",
+      "sha256": "4fad0c6b3f910dfa954ff5a12cbec6569d623ef5ddc5a4b9a72f3b59e11a4df1",
+      "size": 6663
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h027/qa/author-source-collection-1793176583464073000/fixture/attempts/batch-fixture__unit-fixture/task-fixture/score-attempt/private/research-sources/sources/source-0002/body.pdf",
+      "sha256": "0116a192336fec41c38d8e11dad553bb7703308c1fbd1f97dc14b75c7e7d9900",
+      "size": 639984
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h027/qa/author-source-collection-1793176583464073000/fixture/attempts/batch-fixture__unit-fixture/task-fixture/score-attempt/private/research-sources/sources/source-0002/response.json",
+      "sha256": "450e915cc20c3e83b26d722bbef46899d8f20e4f6fa29a934417b062589821a6",
+      "size": 1470
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h027/qa/author-source-collection-1793176583464073000/fixture/attempts/batch-fixture__unit-fixture/task-fixture/score-attempt/private/research-sources/sources/source-0002/text.json",
+      "sha256": "c48a89fd98f1d805560727d4938476b4bbe6530e1171f244ca9d83fead35b1cf",
+      "size": 8052
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h027/qa/author-source-collection-1793176583464073000/fixture/attempts/batch-fixture__unit-fixture/task-fixture/score-attempt/private/research-sources/sources/source-0002/text.txt",
+      "sha256": "bdd754b659ede01f116d93e3b15f9cf29da9dcea6194549cf1e09b937f757e52",
+      "size": 7015
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h027/qa/author-source-collection-1793176583464073000/fixture/attempts/batch-fixture__unit-fixture/task-fixture/score-attempt/private/research-sources/sources/source-0003/body.txt",
+      "sha256": "9876665d3af354a5da3fac78ac2025e5f28e3cae35c2000e19e59b1e3a1cf280",
+      "size": 2496
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h027/qa/author-source-collection-1793176583464073000/fixture/attempts/batch-fixture__unit-fixture/task-fixture/score-attempt/private/research-sources/sources/source-0003/response.json",
+      "sha256": "0522babf3b458deb48440abc9ce58f80bd4a73e4cf168fe60d97864b3547502c",
+      "size": 1401
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h027/qa/author-source-collection-1793176583464073000/fixture/attempts/batch-fixture__unit-fixture/task-fixture/score-attempt/private/research-sources/sources/source-0003/text.json",
+      "sha256": "633de9a1a05e70c1942fefd21a737879fcb4cd008dacf5aa0ab32ac8e961dde6",
+      "size": 2974
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h027/qa/author-source-collection-1793176583464073000/fixture/attempts/batch-fixture__unit-fixture/task-fixture/score-attempt/private/research-sources/sources/source-0003/text.txt",
+      "sha256": "da6912d64bbb131acaa035f4c34201bbd629afeee0d9aa926008927ea8452f93",
+      "size": 2477
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h027/qa/author-source-collection-1793176583464073000/fixture/attempts/batch-fixture__unit-fixture/task-fixture/score-attempt/private/research-sources/sources/source-0004/body.txt",
+      "sha256": "276d675d1d753697f611c385d0692c865f2c00b8a417c282ff2e8e1f84932e2e",
+      "size": 1914
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h027/qa/author-source-collection-1793176583464073000/fixture/attempts/batch-fixture__unit-fixture/task-fixture/score-attempt/private/research-sources/sources/source-0004/response.json",
+      "sha256": "94c7e4d43ab50ef435fb6c9fbca1c12836185181e4abab3f8ea5b5ca772dba77",
+      "size": 1401
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h027/qa/author-source-collection-1793176583464073000/fixture/attempts/batch-fixture__unit-fixture/task-fixture/score-attempt/private/research-sources/sources/source-0004/text.json",
+      "sha256": "bcbc05abd86e62cd44e6aff187dec2aa1a6cf2daf75a3a0be41bad1d425491fd",
+      "size": 2375
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h027/qa/author-source-collection-1793176583464073000/fixture/attempts/batch-fixture__unit-fixture/task-fixture/score-attempt/private/research-sources/sources/source-0004/text.txt",
+      "sha256": "75a97bc77108d947cbdee5ad14714ffadbc11d4d3d9197a87c0bec245fae468c",
+      "size": 1898
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h027/qa/author-source-collection-1793176583464073000/fixture/attempts/batch-fixture__unit-fixture/task-fixture/score-attempt/private/research-sources/sources/source-0005/body.html",
+      "sha256": "4d66190cf5df188a4088cbba5c6272d1c10c9662cd2403c259b8c68091523d93",
+      "size": 71082
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h027/qa/author-source-collection-1793176583464073000/fixture/attempts/batch-fixture__unit-fixture/task-fixture/score-attempt/private/research-sources/sources/source-0005/response.json",
+      "sha256": "cef7744788ec3672e02f991d01541328cf840df9c3eada07cc63d39ac04c128e",
+      "size": 1263
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h027/qa/author-source-collection-1793176583464073000/fixture/attempts/batch-fixture__unit-fixture/task-fixture/score-attempt/private/research-sources/sources/source-0005/text.json",
+      "sha256": "66f20ab594d8419ebac8a1cc358e000aba111cb4deb558705ab052075f6a3ec4",
+      "size": 20683
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h027/qa/author-source-collection-1793176583464073000/fixture/attempts/batch-fixture__unit-fixture/task-fixture/score-attempt/private/research-sources/sources/source-0005/text.txt",
+      "sha256": "eefbf408efaa7630c43cb031fbf39783a65f4fedd6ca99dc082b859fa301d1f4",
+      "size": 19375
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h027/qa/author-source-collection-1793176583464073000/fixture/attempts/batch-fixture__unit-fixture/task-fixture/score-attempt/private/research-sources/sources/source-0006/body.html",
+      "sha256": "e9fbbd902dc2f824237e46a9a8de714d3de05f23e5414872aab7ff85d21ec9fc",
+      "size": 59883
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h027/qa/author-source-collection-1793176583464073000/fixture/attempts/batch-fixture__unit-fixture/task-fixture/score-attempt/private/research-sources/sources/source-0006/response.json",
+      "sha256": "12638bcb8e04adadc96ea71e8b09c348a0c725fbf217c3c8366f18355d4b14d5",
+      "size": 1263
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h027/qa/author-source-collection-1793176583464073000/fixture/attempts/batch-fixture__unit-fixture/task-fixture/score-attempt/private/research-sources/sources/source-0006/text.json",
+      "sha256": "2e6be1e2ddea0416ec4cdc48264f8970fe29c078ff12a3ab75996f80289fe234",
+      "size": 20679
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h027/qa/author-source-collection-1793176583464073000/fixture/attempts/batch-fixture__unit-fixture/task-fixture/score-attempt/private/research-sources/sources/source-0006/text.txt",
+      "sha256": "475cfe05b54c87bd129b02edff118f0f65bd9820b5fbdef37a704d0ccb6f5305",
+      "size": 19371
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h027/qa/author-source-collection-1793176583464073000/fixture/attempts/batch-fixture__unit-fixture/task-fixture/score-attempt/private/research-sources/sources/source-0007/body.pdf",
+      "sha256": "9039f2195e217a24ea16d898d683cf214e8a4a8e56810f76b89da6048c373f16",
+      "size": 933026
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h027/qa/author-source-collection-1793176583464073000/fixture/attempts/batch-fixture__unit-fixture/task-fixture/score-attempt/private/research-sources/sources/source-0007/response.json",
+      "sha256": "26a21572f8333020b92ba269750945acfcf0dc14249cc077dd76daeb3379e101",
+      "size": 1467
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h027/qa/author-source-collection-1793176583464073000/fixture/attempts/batch-fixture__unit-fixture/task-fixture/score-attempt/private/research-sources/sources/source-0007/text.json",
+      "sha256": "22733064cc715d37db360c65e09787e6b90ab921f39f92f634f074affa0f0309",
+      "size": 30607
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h027/qa/author-source-collection-1793176583464073000/fixture/attempts/batch-fixture__unit-fixture/task-fixture/score-attempt/private/research-sources/sources/source-0007/text.txt",
+      "sha256": "f4922d22bdef16d4f8559a7ad41db2890d0215be68be0bda60dec9b28417568f",
+      "size": 28695
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h027/qa/author-source-collection-1793176583464073000/fixture/attempts/batch-fixture__unit-fixture/task-fixture/score-attempt/private/research-sources/sources/source-0008/body.pdf",
+      "sha256": "39878d03df6dbdf59d90a4794bc408988a560fb9565a36863c608a9a9dd8811d",
+      "size": 315412
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h027/qa/author-source-collection-1793176583464073000/fixture/attempts/batch-fixture__unit-fixture/task-fixture/score-attempt/private/research-sources/sources/source-0008/response.json",
+      "sha256": "dfc137c681b1ad9af761679aa350a7efba925b14edf6d11f27f3177ff4088969",
+      "size": 1467
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h027/qa/author-source-collection-1793176583464073000/fixture/attempts/batch-fixture__unit-fixture/task-fixture/score-attempt/private/research-sources/sources/source-0008/text.json",
+      "sha256": "41f5da10a20ea9d59d90b8719aee9ad94714084e5f2aed878ce3dd0ec8f6f2ed",
+      "size": 30611
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h027/qa/author-source-collection-1793176583464073000/fixture/attempts/batch-fixture__unit-fixture/task-fixture/score-attempt/private/research-sources/sources/source-0008/text.txt",
+      "sha256": "eddbcacad88c1c9ada6278c84110826d792ad733a67956317891a219b89d3543",
+      "size": 28794
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h027/qa/author-source-collection-1793176583464073000/fixture/attempts/batch-fixture__unit-fixture/task-fixture/score-attempt/research-sources.lock.json",
+      "sha256": "3f65dab2f70afe70eb30edc44fe096e4f99d71c202dff8930476ce8511929244",
+      "size": 6901
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h027/qa/author-source-collection-1793176583464073000/validation.json",
+      "sha256": "88fac4898633da935bc475bfd6c5512ed802727c7ea53bd6652e5b60b9a6e20e",
+      "size": 9709
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h027/qa/runtime-adapter-snapshot-v1/qa/H027评分取证契约审查.md",
+      "sha256": "443f80f994d4f2503ce0b61fe305db9f7cbc80d61308c6238bde1d38cd52a17b",
+      "size": 20894
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h027/qa/runtime-adapter-snapshot-v1/qa/public-source-smoke/body.pdf",
+      "sha256": "0116a192336fec41c38d8e11dad553bb7703308c1fbd1f97dc14b75c7e7d9900",
+      "size": 639984
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h027/qa/runtime-adapter-snapshot-v1/qa/public-source-smoke/response.json",
+      "sha256": "a00d15d5381cbf787b4bc40b78c7195b1e2fcd1c1c48d8235b97bc1794762dcc",
+      "size": 1380
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h027/qa/runtime-adapter-snapshot-v1/qa/public-source-smoke/summary.json",
+      "sha256": "d86c8737fc1dff465a8192d5dd5d0b69e2f6bf568ba976d8116e1e9e818f8c84",
+      "size": 633
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h027/qa/runtime-adapter-snapshot-v1/qa/public-source-smoke-final/body.pdf",
+      "sha256": "0116a192336fec41c38d8e11dad553bb7703308c1fbd1f97dc14b75c7e7d9900",
+      "size": 639984
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h027/qa/runtime-adapter-snapshot-v1/qa/public-source-smoke-final/response.json",
+      "sha256": "94d9e074e0df52397a9b7c951fa6b46c615f72ccff5622a1e34e44ea18584e9b",
+      "size": 1380
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h027/qa/runtime-adapter-snapshot-v1/qa/public-source-smoke-final/summary.json",
+      "sha256": "bd07bea5e3a1dc6df9a59275d7a147ce9ef35516cc62fcd39c9905b331598c18",
+      "size": 633
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h027/qa/runtime-adapter-snapshot-v1/qa/source-tests-final.log",
+      "sha256": "0f10e164b417e1797335b8f8af0c1484966d39d87a76b650976eea5d30de8116",
+      "size": 2788
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h027/qa/runtime-adapter-snapshot-v1/qa/validation.json",
+      "sha256": "f030a87befaa3357c0aa182799cc336c02d5b6abe3ef1a871039d400fb7561aa",
+      "size": 7459
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h027/qa/runtime-adapter-snapshot-v1/qa/评分侧来源包实施回执.md",
+      "sha256": "57086b3171c4822adf29560a9c7a58d999a05f8ef427e4b11c9d2ec563f35d00",
+      "size": 5535
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h027/qa/runtime-adapter-snapshot-v1/source/eval_general_e2e/datasets/bundle.py",
+      "sha256": "ee556d4e4b648318b7c203c894c9d68e3fc9d2112338a56368209c8e11237360",
+      "size": 39419
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h027/qa/runtime-adapter-snapshot-v1/source/eval_general_e2e/stages.py",
+      "sha256": "c8c1e02f8194cbf780954eba8c762c75f199214e684425aa7cb84b8548e0660d",
+      "size": 5181
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h027/qa/runtime-adapter-snapshot-v1/source/tests/general_e2e/test_dataset_bundle.py",
+      "sha256": "677f2fce02ee673833b16196eefdfa328767791a1d4d201d9a6da8240e604baa",
+      "size": 10210
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h027/qa/runtime-adapter-snapshot-v1/source/tests/general_e2e/test_research_sources.py",
+      "sha256": "e69a38abb949008034016f6002978e054634d31273a6358bf61e7c98176a5ab1",
+      "size": 20760
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h027/qa/runtime-adapter-snapshot-v1/source/tools/report/skills/general-e2e/score-general-e2e/SKILL.md",
+      "sha256": "acd54d5caaea6772110e9d594b21b94fe94575b7593b3d2d62920ed55fa1b687",
+      "size": 21387
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h027/qa/runtime-adapter-snapshot-v1/source/tools/report/skills/general-e2e/score-general-e2e/references/local-rule-runtime.md",
+      "sha256": "db255c0751810653c0dd8df0c3c2db168f862d5a1f741d5301399b9f14a4b972",
+      "size": 7718
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h027/qa/runtime-adapter-snapshot-v1/source/tools/report/skills/general-e2e/score-general-e2e/references/research-sources.md",
+      "sha256": "ccbc5cd2ef3d202874647cd07babd3bdcb52deac17604214339a7acd1a476ad2",
+      "size": 9700
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h027/qa/runtime-adapter-snapshot-v1/source/tools/report/skills/general-e2e/score-general-e2e/scripts/research_sources.py",
+      "sha256": "5074baabbe989b0f7fa59462fe04b226c17e90c95178b35939e3ef3c3852130d",
+      "size": 33886
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h027/qa/runtime-adapter-snapshot-v1/source/tools/report/skills/general-e2e/score-general-e2e/scripts/score_general_e2e.py",
+      "sha256": "b1cebf4992b47994583a78468a75bb6965c1cdd6a77ff819a53c42c9186d57a7",
+      "size": 292807
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h027/qa/runtime-adapter-snapshot-v1/source/tools/report/skills/general-e2e/score-general-e2e/skill-metadata.json",
+      "sha256": "e97e5175fec2f70ecbc2dfacda6fae8dde71c2b9da4d39d9aa20410353050829",
+      "size": 284
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h027/qa/runtime-adapter-snapshot-v1/source/tools/report/skills/validate-eval-dataset/scripts/validate_eval_dataset.py",
+      "sha256": "a595f599fd50e0dba834b3c4789a88b0088689ecca45fa0afdc038b6778185fb",
+      "size": 30875
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h027/qa/runtime-adapter-snapshot-v1/source/tools/report/skills/wildclawbench-case-generator/references/case-spec-schema.md",
+      "sha256": "aa550feaa1a1cf6da35fbaa537ca3ac552512add2c1cd45ca5a84512a4ef707e",
+      "size": 5811
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h027/qa/runtime-adapter-snapshot-v1/source/tools/report/skills/wildclawbench-case-generator/scripts/assemble_case.py",
+      "sha256": "d6fe79fc11dd7707787a98f091aaee2b8efd517327000f2136dcfa862931bd03",
+      "size": 52795
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h027/qa/runtime-adapter-snapshot-v1/source/tools/report/tests/test_wildclawbench_case_generator.py",
+      "sha256": "58873701cca7413f870a7d502d92ec63ff2f4fe73ecc150c9b0231663d6917d6",
+      "size": 23259
+    }
+  ],
+  "limits": [
+    "51 joint checks and13 final source checks overlap; they are not64 distinct tests.",
+    "Public collection is global-DNS-pinned, per-hop, TLS-verified and direct; proxy-only environments fail explicitly.",
+    "PDF extraction needs matching pypdf for normal verification; archived verification trusts the frozen extraction receipt while checking integrity/lineage.",
+    "Collector records current retrieval and does not infer historical publication identity or semantic claim support.",
+    "H027 task/rules/real Judge integration is separate; release stays building at28/60 until the task is registered."
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "schema_version": "h033-standalone-helper-provenance/v1",
+  "helpers": [
+    {
+      "private_name": "native_text.py",
+      "source": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/src/wildclawbench_grading_core/native_text.py",
+      "source_sha256": "c92f7367c026497bc1594fc58b7e46809d0b163f9a930064fbfb027dacd5eb79",
+      "private_sha256": "c92f7367c026497bc1594fc58b7e46809d0b163f9a930064fbfb027dacd5eb79",
+      "byte_identical": true
+    },
+    {
+      "private_name": "office_runtime.py",
+      "source": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/src/wildclawbench_grading_core/office_runtime.py",
+      "source_sha256": "a18c64c8ea7d267157e95d46a544471e7b47018ce1afad9c0da49537f0bf5cf3",
+      "private_sha256": "a18c64c8ea7d267157e95d46a544471e7b47018ce1afad9c0da49537f0bf5cf3",
+      "byte_identical": true
+    }
+  ],
+  "host_paths_are_provenance_only": true
+}

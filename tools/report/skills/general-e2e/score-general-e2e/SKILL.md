@@ -3,6 +3,8 @@ name: score-general-e2e
 description: 对一个冻结的 General E2E 任务运行自动规则与指定语义裁判，生成证据可追溯的标准评分；不负责批量调度、执行 Harness 或报告汇总。
 ---
 
+`0.29.1` 集成两条评分协议演进：保留主线独立业务/能力有效性、typed 诊断、原始证据预算、API Judge、版本化重评分和私有参考保护，同时纳入 Office/HTML 原生运行时、图片证据、独立公开来源及显式受信 HTTP CONNECT 传输。新协议按冻结 contract、runtime lock 与 attempt 标识启用；旧 attempt 继续按原冻结描述校验，不修改候选、题面、GT、权重或历史分数。
+
 `0.10.127` 为v6学习激活留存题精确注册独立业务表域Profile，唯一完整表与图表辅助区分离；原数字函数、缺口、分档和权重保持，Data011旧Profile字节不变。
 
 `0.10.126` 新总交期Profile v2仅增加明确Est. delivery incl. lead time表头，原总交期函数/金额/限分和60/40保持；v1原字节复验保持。
@@ -256,8 +258,50 @@ Info004按照原两个固定单元核对支持、反证与裁判侧不可核定�
 
 `0.10.10` 兼容新旧数据集。旧 Rubric 继续要求组内权重和为 1；新冻结契约以 `semantic_weight_scale` 显式声明分值预算，转换后仍乘原组权重，原 Rubric 不改写。新规则的 `rule_result_adapter` 仅分离声明的诊断对象，Worker 同时保存原始 `raw_result` 和适配后的 `result`。零规则权重的证据准备不产生候选能力分，缺证和运行环境失败继续返回评测异常。Office 第 1 题仅按其已声明的公共数字接口计算规则等权均值。依赖按更新后的 runtime lock 和带哈希 requirements 安装；旧已冻结轮次的运行时不自动替换。
 
+`0.28.0`新增显式受信loopback HTTP CONNECT传输：`collect-research-sources --trusted-http-connect-proxy http://127.0.0.1:7897`。仅支持private policy v1；不带开关的v1/v2仍走原直连实现，v2加开关明确拒绝。每跳校验全部DNS公网结果，以选定IP作为CONNECT目标，保留原URL hostname的Host/SNI及默认TLS校验；`proxy_peer`只表示本地代理，不能称为已观测到源站IP。新bundle/lock/receipt及collector身份与旧direct分离，旧v1封存来源按完整验证后可复用且原GET回执字节/时间不变。不得从系统/环境/候选ledger自动启用代理。见[独立公开来源取证](references/research-sources.md)。
 
-# 评分 General E2E 单题
+
+以下为合入分支的历史发行说明；当前默认依赖以 `0.29.0` 的冻结锁为准。
+
+`0.27.1`装配core `0.15.3`，规则依赖目录增加可选`pillow`/`PIL`，允许直接静态导入`from PIL import Image`。实际受管Worker的冻结锁仍须声明`PIL`与安装版本，并通过版本和导入探测；缺包、缺声明或版本不符均为评测异常，不计能力零分。默认安装Profile与requirements不增加Pillow，旧任务和冻结材料不自动改写。详见[本地受管规则运行时](references/local-rule-runtime.md)。
+
+`0.27.0`装配不变的core `0.15.2`。所有受管规则均获得独立的`GENERAL_E2E_RULE_EVIDENCE_DIR`；派生文件按路径、SHA和大小完整保管，进入verify及语义目录/查询，不能借Office/HTML声明才能保存普通规则证据。这份回执只证明保管事实，不证明业务成功。旧版无派生文件索引的普通审计和0.26 Office证据继续兼容，未索引文件、越界或符号链接会失败关闭。
+
+可信private policy v2继续保留DOCX/XLSX原件、part/节点或sheet/cell、公式文本和存储缓存。短引复用可在明确DOCX段落/表行/单元格或XLSX单元格范围内组合冻结原记录，不整文无界拼接。0.26 v2 collector以原字节静态封存，只用于验证其已知SHA绑定的历史来源；当前采集和复用资格使用新实现。v1 collector保持原字节，旧policy、GT和冻结来源包不改。不调用Office、不执行宏/外链、不重算来源公式；旧OLE、宏包、损坏/超限和类型欺骗明确报错。具体字段与边界见[独立公开来源取证](references/research-sources.md)。
+
+`0.25.0`新增显式可重复的`--reuse-sources-from`。仅按精确requested URL复用已完整验证的成功来源attempt；新receipt标明`verified_snapshot_reuse`，原GET时刻和原件/提取回执保持原字节。自包含来源证明胶囊保留旧输入、GT和来源锁，归档不依赖旧绝对路径；胶囊仅用于验证来源谱系，不进入新题语义事实目录。默认继续独立fresh GET，fresh/reuse计数分别输出。
+
+`0.24.0`装配core `0.15.2`，增加显式`scoring_runtime: {research_sources: true}`与`collect-research-sources`。prepare后由可信评分侧独立获取候选实际阅读/引用的公开URL，封存原件、文本投影、HTTP/提取回执和独立补充锁；不修改候选、GT或原attempt manifest。规则通过专用环境路径读同包，语义目录实际纳入来源，正常/归档与rescore保留同一来源链。缺独立供证、获取或提取失败不补零；历史发布身份和正文语义仍须单独核验，不以参考URL池排除合法来源。使用前读[独立公开来源取证](references/research-sources.md)。
+
+`0.23.2`装配core `0.15.2`，数值输入扰动兼容原生ISO日期单元格（OOXML `t=d`）。调用方按工作簿日期系统和业务口径给定新Excel序列值；变体保留样式，使用等价原生数值编码，回执保存原ISO词法值及新值。原文件、公式和其它部件不改；像日期的普通文本仍拒绝。旧冻结helper和历史回执不自动改写。
+
+`0.23.1`装配core `0.15.1`，修复HTML回执跨Python/系统MIME表复核：冻结请求继续绑定实际使用的content_type，源资源清单按路径、大小及SHA比较，不用回放机器的MIME推断改写历史HTTP上下文。实际3.12 Worker与3.11校验的Markdown资源可正常归档；文件增删/字节或请求上下文漂移仍拒绝。
+
+`0.23.0`装配core `0.15.0`，增加显式`scoring_runtime: {html_render: true}`和`bootstrap-html`。受管Worker可用锁定的Node、Playwright core及Chromium，对原HTML和有界公共素材作离线DOM、SVG、Canvas2D及像素观测。派生截图、请求、脚本、回执和运行时身份进入证据与正常/归档核验；旧任务不自动获得浏览器依赖。观测不直接给业务分；未覆盖的合法图形表达保留异常，不能判能力零分。详见[HTML运行时观测](references/html-observation.md)。
+
+`0.22.0`装配core `0.14.0`，增加独立的`prepare_xlsx_numeric_intervention()`/`verify_xlsx_numeric_intervention()`。它可在副本中对普通标量公式或数值中间量做声明式有限数值干预，保留原单元格公式、缓存、类型的完整记录，并纳入连续来源重放。只证明下游依赖，原值及业务角色须先独立核验。原普通字面数值接口和0/1标记接口保持各自限制；共享/数组/元数据形态仍明确报告不支持。详见[标量数值中间量干预](references/office-recalculation.md#标量数值中间量干预)。
+
+`0.21.0`增加扎根于冻结候选/私有GT的连续XLSX变体验证和独立二进制标记干预Profile。归档校验按依赖重放每一层，只有已核验变体可成为后续父源，制品索引顺序不影响合法链。`prepare_xlsx_marker_intervention()`在副本中干预声明的0/1中间标记，保留原公式、缓存与类型的完整单元格记录；原基线和允许干预的业务对象须由任务规则先行核验。普通数值输入API的非公式限制保持。共享/数组/元数据型标记明确报告暂不支持，不自动当作候选零分。详见[连续变体与标记干预](references/office-recalculation.md#连续变体与二进制标记干预)。
+
+`0.20.0`增加显式Word/PPTX双格式渲染锁：`bootstrap-office-render --document-format both`冻结v2锁，共享一个引擎和一份字体清单，两类PDF分别保留原格式的固定导出选项、来源和回执，并共同绑定完整v2锁SHA。新helper的`office_render_lock_formats()`给出实际授权格式；正常与归档核验逐份核对Word结构及PPTX页/内嵌表声明。默认仍为原PPTX v1锁，`docx`仍为原Word v1锁，不自动扩大旧锁或旧私有helper的能力。详见[双格式渲染](references/office-rendering.md#word与pptx共同渲染)。
+
+`0.19.0`增加可归档的XLSX数值输入扰动链：`prepare_xlsx_counterfactual()`只在一次性副本修改已存在的数值输入，保留公式和其余部件；随后由原锁定Office清缓存重算。回执记录冻结源、实际输入单元格/原值/新值、变体与重算产物。正常及归档核验重新对照源包，拒绝未声明的公式/缓存/其它部件变更；归档不要求Office仍存在。任务作者仍须独立计算扰动后的业务真值，不能把“有公式”或导出成功当成模型正确。详见[数值输入扰动](references/office-recalculation.md#数值输入扰动)。
+
+`0.18.0`增加独立DOCX可信渲染Profile：`bootstrap-office-render --document-format docx`冻结Word字体锁，`render_docx_pdf()`在受管Worker内对原字节副本执行Writer PDF导出。回执绑定原Word、声明结构摘要、PDF、引擎、字体和固定选项；正常与归档核验按冻结候选/私有参考重新检查来源。PPTX默认Profile及旧helper保持兼容；两种渲染锁不能混用。Word宏、嵌入对象、外部素材及主动字段超出此离线Profile，明确报错；环境和转换失败不补能力零分。详见[可信Office渲染](references/office-rendering.md)。
+
+`0.17.0`补齐DOCX结构证据：保留原段落/物理单元格定位，增加声明网格、合并区间、重复表头与正文/单元格到脚注和尾注的实际关系链。引用绑定部件SHA和内容定位，缺关系、缺部件、缺注释及外部关系分别标记；不访问外部资源。结构声明不能证明渲染、可编辑性或显示编号，嵌套表拓扑尚不展开。新DOCX引擎为`wildclawbench.docx-text/v1`，旧attempt继续使用冻结入口。详见[原生文件文本证据](references/native-text-evidence.md)。
+
+`0.16.0`增加冻结静态图片证据：完整解码PNG/JPEG/WebP/单帧GIF，保留原始字节与SHA，不做OCR、裁剪或重编码。Codex裁判用`query-evidence --mode image`取得核验后的实际图片路径，再用看图工具检查像素；catalog或路径元数据不能证明已看图。API配置可显式增加冻结`image_input`，三种transport发送带evidence ID的原字节内容块，图片预算与文本字符预算分开。缺图/省略不能充当视觉依据，缺依赖与来源漂移保留异常。归档复核附件原字节及保存的provider请求，不要求解码器存在。使用前读[冻结图片证据](references/image-evidence.md)。
+
+`0.15.0`增加PPTX内嵌XLSX的可归档重算链：提取回执绑定冻结PPTX、部件名及原始工作簿SHA，随后清缓存重算的输入可追溯到该部件；原始副本、派生文件与两层回执都保留。归档复核重新比对包内原字节，不要求引擎存在。规则依赖目录新增可选pdfplumber/pypdf，实际Worker锁必须声明并通过版本/导入探测；默认3.11安装Profile不因此自动包含它们。详见[内嵌表格重算](references/office-recalculation.md#内嵌表格重算)。
+
+`0.14.0`增加PPTX可信PDF渲染：任务声明`scoring_runtime: {office: true, office_render: true}`，通过`bootstrap-office-render`冻结独立的Office/字体锁，含明确字体文件及目录成员。Worker在一次性副本上运行固定PDF导出，保留源PPTX、PDF、字体清单与导出选项的绑定；语义证据和归档校验接收派生PDF及回执。缺锁、字体漂移或引擎失败保持评测异常；缺交付由原任务规则判断。PDF转换本身不证明字号、遮挡、图表语义或目标应用可编辑性。使用前读[可信PPTX渲染](references/office-rendering.md)。
+
+`0.13.0`增加PPTX原生文本证据：按presentation关系顺序读取幻灯片、分组文本、原生表格、独立标记的备注、图表存储缓存及嵌入XLSX单元格。图表缓存和嵌入表格保留各自值、定位和SHA，不假定二者一致；外部数据关系不跟随。独立裁判查询、API输入及legacy Workspace证据共用该离线提取器。显式字号只作为原始结构记录，不证明继承后的字号、文字溢出或可编辑应用行为。使用前读[原生文件文本证据](references/native-text-evidence.md)；PPTX版式及图像仍需单独渲染/视觉证据。
+
+`0.12.0`增加显式Office评分运行时：任务声明`scoring_runtime: {office: true}`时，先冻结可信LibreOffice的绝对路径、版本与可执行文件SHA，再由受管Worker重算一次性XLSX副本。所有公式缓存先清空，原件保持不变，派生文件与回执进入语义证据及归档核验。缺引擎、漂移或重算失败不补候选零分；漏交文件仍按任务契约计分。使用前读[可信Office重算](references/office-recalculation.md)。文本投影本身仍不计算公式。
+
+`0.11.0`增加DOCX、XLSX、文本PDF的冻结文本证据投影。`query-evidence --mode file`对这些文件按原生记录分页，保留段落、表格单元格、工作表地址或PDF页定位，并记录原文件SHA、投影SHA及提取边界；API Judge同样接收正文/单元格内容。该能力不解释图片/图表、不重算公式，也不证明原生应用可用性。PDF须在评分CLI解释器环境具备pypdf，缺依赖会显式阻断，不按候选零分处理。使用前读[原生文件文本证据](references/native-text-evidence.md)。历史attempt继续使用原冻结入口，不用新投影改写旧证据。
 
 `0.10.9` 随Skill分发[离线页面观察脚本与协议](references/offline-browser-validation.md)。新版编排在HTML候选评分前验证公共浏览器runtime并冻结judge-environment.json；独立裁判使用禁网字节观察及真实截图验证原Rubric，不依赖被URL策略拒绝的file导航，不绕过安全策略，不把环境故障变成候选能力分。评分core、Worker、原规则及证据政策未改变。
 
@@ -323,7 +367,7 @@ partial 执行证据必须显式列出缺失项，空列表不得按 standard �
 
 ## 已交付能力与边界
 
-需要开发、校验或接入评分 core 时，读取[评分 core 接口](references/grading-core.md)。当前四个公开 API 可用于确定性契约验证和受管 backend 接入；`run_rules()` 不会自行执行不可信规则，`evaluate_semantics()` 也不会自行调用模型。
+需要开发、校验或接入评分core时，读取[评分core接口](references/grading-core.md)。四个主要评分API及原生文本提取辅助API用于确定性契约验证和受管backend接入；`run_rules()`不会自行执行不可信规则，`evaluate_semantics()`也不会自行调用模型。
 
 需要准备、复核或执行本地规则时，读取[本地受管规则运行时](references/local-rule-runtime.md)，使用 `scripts/score_general_e2e.py`。该入口强制候选原件只读、一次性 runtime 副本、GT 后置、真实本机 workspace 路径、冻结 transcript、专用虚拟环境、环境白名单、超时、独立进程组和进程树清理；不得要求 Docker。规则 v2 逐项理由是确定性分值锚点解释，业务判定依据来自随项落盘的可复算证据，不得调用模型替自动规则补写或改判。
 

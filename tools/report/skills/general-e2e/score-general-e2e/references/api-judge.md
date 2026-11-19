@@ -55,6 +55,8 @@ python <skill-dir>/scripts/score_general_e2e.py run-api-score \
 
 ## 输入与输出契约
 
+0.16.0可通过冻结`image_input`显式开启静态图片内容块；默认配置保持文本行为。图片附件、预算、三种provider格式、原字节绑定及归档核验见[冻结图片证据](image-evidence.md)。图片不以base64字符挤占文本预算；省略或不可用图片不能作为已判定视觉依据，语义不充分继续`unresolved`。
+
 `semantic/api-input.json` 把 rubric、响应契约和冻结证据打包为 system/user prompt。候选文件和轨迹始终标记为证据而非指令；每项记录原始字符数、实际包含字符数、截断或省略状态。总字符和单项字符都受冻结预算限制，省略内容不能作为已判定 criterion 的引用。
 
 每个 criterion 必须按原顺序返回：`key`、`judged|unresolved`、原分值锚点或 `null`、中文理由、证据 ID，以及支持证据和反例检查声明。理由必须说明为何当前证据对应所选锚点；满分、零分、部分分和 `unresolved` 都不能省略。未知证据、未包含内容、改写 key、越界分数、非中文理由、缺失声明或多余字段都会失败关闭。`unresolved` 保持评测异常，不按零分处理。

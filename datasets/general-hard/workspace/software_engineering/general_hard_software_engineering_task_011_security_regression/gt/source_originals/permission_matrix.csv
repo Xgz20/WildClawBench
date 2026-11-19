@@ -1,0 +1,5 @@
+role,scope,download,preview,job_create,job_get,columns
+admin,tenant,1,1,1,1,id;owner_id;display_name;note;amount;account_ref
+auditor,tenant,1,1,1,1,id;display_name;note;amount
+member,own,1,1,1,1,id;display_name;note;amount
+guest,none,0,0,0,0,id

@@ -1,0 +1,17 @@
+{
+  "schema_version": "h011-counterexamples/v1",
+  "boundaries": [
+    "prior-period restatement and both comparison denominators",
+    "zero is valid",
+    "negative Q2 cash versus positive YTD cash",
+    "wan-yuan normalization",
+    "AR period-end snapshot instead of monthly sum",
+    "F01 numeric refresh and actual note anchor",
+    "actual editable chart workbook versus cached chart points",
+    "negative bar visible at a suitable value-axis minimum",
+    "scope and 82 unrelated raw facts preserved",
+    "constant formulas and stale-cache answers",
+    "full event impact and actual content binding"
+  ],
+  "independent_truth": "Actual native sources + Decimal and Fraction + actual source formula AST before reference."
+}

@@ -1,0 +1,39 @@
+{
+  "fixed_public_cases": [
+    "PUB-R01",
+    "PUB-R02",
+    "PUB-R03",
+    "PUB-R04",
+    "PUB-R05",
+    "PUB-R06",
+    "PUB-R07",
+    "PUB-R08",
+    "PUB-R09",
+    "PUB-R10",
+    "PUB-R11",
+    "PUB-R12"
+  ],
+  "fixed_requirements": [
+    "R01",
+    "R02",
+    "R03",
+    "R04",
+    "R05",
+    "R06",
+    "R07",
+    "R08",
+    "R09",
+    "R10",
+    "R11",
+    "R12"
+  ],
+  "padding_dilution": false,
+  "source_bindings": [
+    "project/api.py",
+    "project/service.py",
+    "project/repository.py",
+    "project/client.mjs"
+  ],
+  "self_report_not_execution": true,
+  "no_real_browser_or_Harness_claim": true
+}

@@ -1,0 +1,27 @@
+{
+  "deliverables": [
+    "results/staging/",
+    "results/extract_audit.json"
+  ],
+  "input_files": 7,
+  "top_zips": 6,
+  "source_raw_members": 74,
+  "reachable_audit_members": 72,
+  "extracted_regular_files": 40,
+  "equivalence": [
+    "NFC/NFD strings",
+    "JSON aliases/BOM/order",
+    "numeric-equivalent integers",
+    "hex case",
+    "typed unknown on actually damaged members when native reader throws"
+  ],
+  "fixed_target_contract": "policy root, top relative namespace, per-container member-index filename prefix and __nested__ roots",
+  "automatic_ownership": {
+    "business_correctness": "one reachable raw member opportunity: .60 allowed action/reason variant + .40 target mapping; absent/duplicate IDs consume that opportunity once",
+    "boundary_cases": "internal .60 actual allowed file/directory presence and raw bytes/no extra files + .30 declared/observed byte/depth/state/hash facts on delivered rows + .10 executed=false and exact unvisited-container set",
+    "delivery_integrity": "internal .60 original seven input SHA/member set + .20 native JSON parse + .20 no extra root/results outputs outside staging/audit",
+    "evidence_binding": "internal .80 raw member provenance/id/container hash/raw filename/decoded name binding + .20 original input hashes"
+  },
+  "unknown_boundary": "Two genuinely damaged member streams permit integrity+unknown with null actual bytes/hash; valid ordinary members cannot be rejected for generic tool incapability. Private alternatives are source-bound, not keyword allowances.",
+  "infrastructure": "Missing/drift GT/helper/trusted context raises, candidate omission or malformed output loses corresponding obligations, no generic exception-to-zero."
+}

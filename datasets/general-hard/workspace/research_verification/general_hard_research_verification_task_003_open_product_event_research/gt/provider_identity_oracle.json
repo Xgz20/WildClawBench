@@ -1,0 +1,89 @@
+{
+  "schema_version": "h029-provider-identity-source-oracle/v1",
+  "source_precedes_final_reference": true,
+  "candidate_answer_used_for_truth": false,
+  "facts": [
+    {
+      "subject": "Google Search and YouTube",
+      "provider": "Google LLC and its applicable affiliates",
+      "classification": "outside_mainland_china",
+      "basis": "Official Google privacy/terms overview identifies Search and YouTube as Google products; current Google service terms name Google LLC, organized in Delaware and operating in USA.",
+      "sources": [
+        "google-product-parent",
+        "google-provider-terms"
+      ],
+      "limit": "Google terms page is a Singapore country version obtained2026-10-28, not a claimed U.S. country version. Brand/provider-region classification does not prove product rollout geography or every local contracting entity."
+    },
+    {
+      "subject": "豆包搜索 Global API",
+      "provider": "火山引擎；北京火山引擎科技有限公司",
+      "classification": "mainland_china",
+      "basis": "Official product/API materials identify Volcano Engine service; official service agreement names Beijing entity; government record gives Beijing registered address and volcengine.com domain.",
+      "sources": [
+        "volcengine-provider-terms",
+        "volcengine-government-license",
+        "doubao-api-pdf"
+      ],
+      "limit": "Global is an edition name, not evidence of worldwide rollout. Current provider/legal identity materials do not establish a September feature-release day."
+    }
+  ],
+  "sources": [
+    {
+      "source_id": "google-provider-terms",
+      "url": "https://policies.google.com/terms/embedded?hl=en-US",
+      "final_url": "https://policies.google.com/terms/embedded?hl=en-US",
+      "retrieved_at": "2026-10-28T10:52:14.153276Z",
+      "body_sha256": "651a59b3624614567142edfc50cc0bca3751c9398b7afcbb907abc2b1c8a2c6f",
+      "body_size": 496558,
+      "media_type": "text/html",
+      "receipt": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h029/qa/provider-identity-preflight-1793184732929324000/google-provider-terms/receipt.json",
+      "receipt_sha256": "2edd7a6c43e83165bbdfd4f753468fb1895ff6df773f5014ddd6d0095cc603d5",
+      "projection_sha256": "8c1fd2a5c13897777d02d46ce2d778cc81d45bbca4dbde224058dfd5ce3eed83",
+      "reference_identity_only_not_URL_whitelist": true
+    },
+    {
+      "source_id": "volcengine-provider-terms",
+      "url": "https://docs.volcengine.com/docs/legal-agreements/products-and-services-agreement?lang=zh",
+      "final_url": "https://docs.volcengine.com/docs/legal-agreements/products-and-services-agreement?lang=zh",
+      "retrieved_at": "2026-10-28T10:52:14.101423Z",
+      "body_sha256": "479a807767d2dae3228f53d4359f89c18e0d96f4323ecc90cfe1e930676fea37",
+      "body_size": 221815,
+      "media_type": "text/html",
+      "receipt": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h029/qa/provider-identity-preflight-1793184732929324000/volcengine-provider-terms/receipt.json",
+      "receipt_sha256": "1e742acb1ea4a2e07690c3cee0d38d6fa7a39211f1f89a81d0cac5c6eef17a08",
+      "projection_sha256": "630a15c73887fc4021b9cd233e2d7eab1d231ec6b557b472b55abeb26c7ede7e",
+      "reference_identity_only_not_URL_whitelist": true
+    },
+    {
+      "source_id": "volcengine-government-license",
+      "url": "https://banshi.whlyj.beijing.gov.cn/publish/6897521451094312.pdf",
+      "final_url": "https://banshi.whlyj.beijing.gov.cn/publish/6897521451094312.pdf",
+      "retrieved_at": "2026-10-28T10:52:13.589814Z",
+      "body_sha256": "96b9a8f5948d9bfbb1750186e702e7926c6a428fd72ce64f08e1cb2bedf7f787",
+      "body_size": 178242,
+      "media_type": "application/pdf",
+      "receipt": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h029/qa/provider-identity-preflight-1793184732929324000/volcengine-government-license/receipt.json",
+      "receipt_sha256": "6d50728a903547fb15a89f55b8380e1c3847c8283ee15470bb0543238a8aeef8",
+      "projection_sha256": "c4b2d7657d93c4ec055bce9fd91ebd7067ca52de27d033e059d947171453e3ad",
+      "reference_identity_only_not_URL_whitelist": true
+    },
+    {
+      "source_id": "google-product-parent",
+      "url": "https://policies.google.com/",
+      "final_url": "https://policies.google.com/",
+      "retrieved_at": "2026-10-28T10:59:59.159075Z",
+      "body_sha256": "c58c54c4379d357097ae01bd1e0ccf76bcbf3dd33424a1fece6faa6dc0794378",
+      "body_size": 538001,
+      "media_type": "text/html",
+      "receipt": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h029/qa/provider-product-parent-target-1793185198159798000/receipt.json",
+      "receipt_sha256": "bf1e4e1586646489841d670dc6c40bc1e80138e4ea8989d9d5f11e524c1324b9",
+      "projection_sha256": "3a2d8212efbbfcc7a67c7b09a3ea15f66cf7c55728fdc3fe573c630b4a778dab",
+      "reference_identity_only_not_URL_whitelist": true
+    }
+  ],
+  "unavailable_alternatives": [
+    "Official YouTube terms PDF and UK HTML attempted but direct connections timed out; not read or used as positive evidence."
+  ],
+  "reviewer": "root model source review, not human expert",
+  "formal_semantic_score": null
+}

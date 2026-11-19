@@ -1,0 +1,207 @@
+{
+  "status": "passed",
+  "method": "Manually declared labels versus independent calendar/decimal decision model; no candidate or reference output used to construct labels.",
+  "case_count": 18,
+  "model_sha256": "6e712599d656411c8b4cca01916615ff74007e89c600f01400d9ffc524a28376",
+  "cases_sha256": "b42f863a50e7b6e77a95003a22ff96d4c7ee23ac326ec0525746d9753da6b702",
+  "comparisons": [
+    {
+      "case_id": "C01",
+      "decision": {
+        "rule_set": "未覆盖",
+        "status": "未覆盖",
+        "rate": null,
+        "cap_cny": null,
+        "grant_cny": null
+      },
+      "matches": true
+    },
+    {
+      "case_id": "C02",
+      "decision": {
+        "rule_set": "V1",
+        "status": "可资助",
+        "rate": 0.6,
+        "cap_cny": 3000,
+        "grant_cny": 3000.0
+      },
+      "matches": true
+    },
+    {
+      "case_id": "C03",
+      "decision": {
+        "rule_set": "V1",
+        "status": "不资助",
+        "rate": 0.6,
+        "cap_cny": 3000,
+        "grant_cny": 0
+      },
+      "matches": true
+    },
+    {
+      "case_id": "C04",
+      "decision": {
+        "rule_set": "V1",
+        "status": "可资助",
+        "rate": 0.6,
+        "cap_cny": 3000,
+        "grant_cny": 1200.0
+      },
+      "matches": true
+    },
+    {
+      "case_id": "C05",
+      "decision": {
+        "rule_set": "V2",
+        "status": "可资助",
+        "rate": 0.7,
+        "cap_cny": 4500,
+        "grant_cny": 4500.0
+      },
+      "matches": true
+    },
+    {
+      "case_id": "C06",
+      "decision": {
+        "rule_set": "V2-T02",
+        "status": "可资助",
+        "rate": 0.7,
+        "cap_cny": 4500,
+        "grant_cny": 2800.0
+      },
+      "matches": true
+    },
+    {
+      "case_id": "C07",
+      "decision": {
+        "rule_set": "V2",
+        "status": "不资助",
+        "rate": 0.7,
+        "cap_cny": 4500,
+        "grant_cny": 0
+      },
+      "matches": true
+    },
+    {
+      "case_id": "C08",
+      "decision": {
+        "rule_set": "V1-T01",
+        "status": "可资助",
+        "rate": 0.6,
+        "cap_cny": 3000,
+        "grant_cny": 3000.0
+      },
+      "matches": true
+    },
+    {
+      "case_id": "C09",
+      "decision": {
+        "rule_set": "V2",
+        "status": "不资助",
+        "rate": 0.7,
+        "cap_cny": 4500,
+        "grant_cny": 0
+      },
+      "matches": true
+    },
+    {
+      "case_id": "C10",
+      "decision": {
+        "rule_set": "V2",
+        "status": "不资助",
+        "rate": 0.7,
+        "cap_cny": 4500,
+        "grant_cny": 0
+      },
+      "matches": true
+    },
+    {
+      "case_id": "C11",
+      "decision": {
+        "rule_set": "V2-T02",
+        "status": "可资助",
+        "rate": 0.7,
+        "cap_cny": 4500,
+        "grant_cny": 0.0
+      },
+      "matches": true
+    },
+    {
+      "case_id": "C12",
+      "decision": {
+        "rule_set": "V2",
+        "status": "可资助",
+        "rate": 0.7,
+        "cap_cny": 4500,
+        "grant_cny": 1400.0
+      },
+      "matches": true
+    },
+    {
+      "case_id": "C13",
+      "decision": {
+        "rule_set": "V2",
+        "status": "待核实",
+        "rate": 0.7,
+        "cap_cny": 4500,
+        "grant_cny": null
+      },
+      "matches": true
+    },
+    {
+      "case_id": "C14",
+      "decision": {
+        "rule_set": "V2",
+        "status": "待补正",
+        "rate": 0.7,
+        "cap_cny": 4500,
+        "grant_cny": null
+      },
+      "matches": true
+    },
+    {
+      "case_id": "C15",
+      "decision": {
+        "rule_set": "V2",
+        "status": "不资助",
+        "rate": 0.7,
+        "cap_cny": 4500,
+        "grant_cny": 0
+      },
+      "matches": true
+    },
+    {
+      "case_id": "C16",
+      "decision": {
+        "rule_set": "V1",
+        "status": "不资助",
+        "rate": 0.6,
+        "cap_cny": 3000,
+        "grant_cny": 0
+      },
+      "matches": true
+    },
+    {
+      "case_id": "C17",
+      "decision": {
+        "rule_set": "V1",
+        "status": "待核实",
+        "rate": 0.6,
+        "cap_cny": 3000,
+        "grant_cny": null
+      },
+      "matches": true
+    },
+    {
+      "case_id": "C18",
+      "decision": {
+        "rule_set": "待核实",
+        "status": "待核实",
+        "rate": null,
+        "cap_cny": null,
+        "grant_cny": null
+      },
+      "matches": true
+    }
+  ]
+}

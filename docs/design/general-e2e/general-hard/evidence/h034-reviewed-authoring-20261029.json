@@ -1,0 +1,733 @@
+{
+  "schema_version": "general-hard-reviewed-authoring/v1",
+  "order": 34,
+  "registered_task_index": 37,
+  "task_id": "general_hard_research_verification_task_008_visual_paper_figures",
+  "registered": 37,
+  "remaining": 23,
+  "release": "building",
+  "source_first": {
+    "original_public_inputs": 6,
+    "current_public_inputs": 7,
+    "original_GT": 28,
+    "current_GT": 44,
+    "PNG_originals": 4,
+    "PNG_dimensions": [
+      1800,
+      1260
+    ],
+    "claims": 8,
+    "point_readings": 28,
+    "source_regions": 69,
+    "source_GT28_public6_reference2_unchanged": true,
+    "source_truth_sha256": "1b23329fd38d7e9e21a4f43c1907f0b7f5a01682303953ca4d22f38c8ede32b0"
+  },
+  "independent_review": {
+    "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h034/qa/reference-independent-v1/freeze_manifest.json",
+    "sha256": "35759990d04842e96ceba7ef5481cbd1e44940a4012351624e833ef48e7281b8",
+    "raw_pixel_record_sha256": "5cc09acea952fb5960e669515e4e8c13d03b8e730ad78437d0b3f1203da16fa2",
+    "sequence": "Actual4PNG+2public text -> independent frozen raw record -> native reference and private source annotation comparison",
+    "point_region_claim_agreement": [
+      28,
+      69,
+      8
+    ],
+    "actual_views": {
+      "source_PNG": 4,
+      "XLSX": 11,
+      "DOCX_pages": 9
+    },
+    "issue_count": 0,
+    "not_human_expert": true,
+    "later_rule_author_role_separate": true
+  },
+  "native_reference": {
+    "freeze": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h034/authoring/reference-proposed/v1/freeze_manifest.json",
+    "freeze_sha256": "7409c07317fe1cb9ac8cf9ba18bce2d1449bab7b8a3618f141f5b91441c98d48",
+    "reference_not_oracle_or_label_whitelist": true
+  },
+  "original_rule_author_handoff": {
+    "schema": "h034-rule-author-handoff/v1",
+    "status": "READY_FOR_ROOT_INDEPENDENT_REVIEW_NOT_REGISTERED",
+    "at_UTC": "2026-10-28T20:47:50.322120+00:00",
+    "model_review_not_human_expert": true,
+    "initial_independent_role_frozen_then_changed_to_nonblind_rule_author": true,
+    "task_id": "general_hard_research_verification_task_008_visual_paper_figures",
+    "exec_files": 7,
+    "original_exec6_unchanged": true,
+    "GT_files": 44,
+    "original_GT28_unchanged": true,
+    "reference_originals_unchanged": true,
+    "private_binding_count": 43,
+    "framework_HEAD": "b48f431bb7a62fca152d654a98bceb505e0640e5",
+    "score_skill_version": "0.26.0",
+    "grading_core_version": "0.15.2",
+    "automatic_weight": 0.75,
+    "semantic_weight": 0.25,
+    "checkpoint_weights": {
+      "business_correctness": 0.55,
+      "boundary_cases": 0.25,
+      "delivery_integrity": 0.15,
+      "evidence_binding": 0.05
+    },
+    "semantic_weights": {
+      "decision_grounding": 0.7,
+      "usable_handoff": 0.3
+    },
+    "case_spec_sha256": "92cfe094cb86da9ae6a72d0079f71363f9327842f79f01bfb7759b45065effbc",
+    "scoring_contract_sha256": "cb6b819752b623994ddebc56fc7f9ec1e2280df36c4f5a7cbd56ff627128fcdd",
+    "grader_sha256": "52b1e9059b1f5e5d6f77d7a2e8ecfca09ee5115595430ebd0591d11811d07a48",
+    "source_truth_sha256": "1b23329fd38d7e9e21a4f43c1907f0b7f5a01682303953ca4d22f38c8ede32b0",
+    "independent_initial_freeze_sha256": "35759990d04842e96ceba7ef5481cbd1e44940a4012351624e833ef48e7281b8",
+    "final_controls_path": "qa/author-controls-v1/controls-1793220308638158000/controls.json",
+    "final_controls_sha256": "28bf6a8dcdccbc7f02ee8a5991fc2a8881abf478732f8dadd843f05579b8a304",
+    "final_controls27_all_passed_expected": true,
+    "relocated_baseline_all1": true,
+    "actual_formula_cache_recomputation_verified": true,
+    "baseline_all1_automatic_only": true,
+    "dry_run": "DRY_RUN review_required=true; no task/workspace created",
+    "dry_run_receipt_sha256": "eec7cc5b73747b3089cf7e68fbfeed96a044c6257a5a7716446fd7991d772ec7",
+    "final_integrity_sha256": "dc5fb29fd1cd00a2c7effc2820481f5688adb4eeda10130e1a271dbdff1466a4",
+    "failures_preserved": true,
+    "limits": [
+      "Model review, not human expert acceptance.",
+      "Original image SHA/dimensions/geometry checks do not mechanically prove candidate actually looked or understood the image.",
+      "Bounded native/natural language parser; unhandled legal verdict/unit/legend/scope forms produce typed pending review without ability score.",
+      "Scientific reasoning, causal conclusions, arbitrary prose/geometry and full usable handoff require independent semantic review.",
+      "No Harness/Judge/finalize/network/install/formal assembly/registry/commit or formal release ZIP."
+    ],
+    "semantic_score": null,
+    "hybrid_score": null,
+    "root_next": [
+      "Independently audit rule source and control receipts, including prior failures.",
+      "Formally assemble/register only after root review.",
+      "Validate the real assembled task and prepare final distributable ZIP separately."
+    ]
+  },
+  "original27_controls": [
+    {
+      "name": "baseline-current",
+      "expect": "full",
+      "matched_expected_behavior": true,
+      "worker_ok": true,
+      "scores": {
+        "boundary_cases": 1.0,
+        "business_correctness": 1.0,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0,
+        "overall_score": 1.0
+      },
+      "error": null,
+      "managed_status": "PASS",
+      "summary": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h034/qa/author-controls-v1/controls-1793220308638158000/baseline-current/summary.json",
+      "summary_sha256": "4d7976c0ab4aaf7ed9c7c1a17fe0632683cd5e57fc7bec2f1dbfaa9a1bad8fd5"
+    },
+    {
+      "name": "equivalent-transpose-registry-normalized",
+      "expect": "full",
+      "matched_expected_behavior": true,
+      "worker_ok": true,
+      "scores": {
+        "boundary_cases": 1.0,
+        "business_correctness": 1.0,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0,
+        "overall_score": 1.0
+      },
+      "error": null,
+      "managed_status": "PASS",
+      "summary": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h034/qa/author-controls-v1/controls-1793220308638158000/equivalent-transpose-registry-normalized/summary.json",
+      "summary_sha256": "00c0bb6c636efbb202f87bcfa4d9578563df9833ed2c09f91a803774504cc14f"
+    },
+    {
+      "name": "equivalent-percent-number-format",
+      "expect": "full",
+      "matched_expected_behavior": true,
+      "worker_ok": true,
+      "scores": {
+        "boundary_cases": 1.0,
+        "business_correctness": 1.0,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0,
+        "overall_score": 1.0
+      },
+      "error": null,
+      "managed_status": "PASS",
+      "summary": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h034/qa/author-controls-v1/controls-1793220308638158000/equivalent-percent-number-format/summary.json",
+      "summary_sha256": "bdb5fe7c02d58f363c0805767089b2e149187f7efe85cd000cd000df4579353c"
+    },
+    {
+      "name": "public-tolerance-boundaries",
+      "expect": "full",
+      "matched_expected_behavior": true,
+      "worker_ok": true,
+      "scores": {
+        "boundary_cases": 1.0,
+        "business_correctness": 1.0,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0,
+        "overall_score": 1.0
+      },
+      "error": null,
+      "managed_status": "PASS",
+      "summary": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h034/qa/author-controls-v1/controls-1793220308638158000/public-tolerance-boundaries/summary.json",
+      "summary_sha256": "7b55b27255e7e6c4f08f93b8a904f143c491631608919e03ef334d9b8457e85d"
+    },
+    {
+      "name": "alternative-fact-proof-targets",
+      "expect": "full",
+      "matched_expected_behavior": true,
+      "worker_ok": true,
+      "scores": {
+        "boundary_cases": 1.0,
+        "business_correctness": 1.0,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0,
+        "overall_score": 1.0
+      },
+      "error": null,
+      "managed_status": "PASS",
+      "summary": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h034/qa/author-controls-v1/controls-1793220308638158000/alternative-fact-proof-targets/summary.json",
+      "summary_sha256": "b0956a2551bacdaf9e26c94d5d6ac9ca98ce8ac233058724932da7901285d4e8"
+    },
+    {
+      "name": "wide-fake-ranges",
+      "expect": "lower",
+      "matched_expected_behavior": true,
+      "worker_ok": true,
+      "scores": {
+        "boundary_cases": 1.0,
+        "business_correctness": 0.35,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0,
+        "overall_score": 0.6425
+      },
+      "error": null,
+      "managed_status": "PASS",
+      "summary": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h034/qa/author-controls-v1/controls-1793220308638158000/wide-fake-ranges/summary.json",
+      "summary_sha256": "970237f7c072e6e1d87af900bcb7271e16c3802976228f614cb5ec6866f428db"
+    },
+    {
+      "name": "false-scalar-with-correct-range",
+      "expect": "lower",
+      "matched_expected_behavior": true,
+      "worker_ok": true,
+      "scores": {
+        "boundary_cases": 1.0,
+        "business_correctness": 0.935,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0,
+        "overall_score": 0.96425
+      },
+      "error": null,
+      "managed_status": "PASS",
+      "summary": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h034/qa/author-controls-v1/controls-1793220308638158000/false-scalar-with-correct-range/summary.json",
+      "summary_sha256": "1ecc8a8dd82beb99b53aae1621944404488f624d48f741abdf099ebf7082938c"
+    },
+    {
+      "name": "wrong-elapsed-unit",
+      "expect": "lower",
+      "matched_expected_behavior": true,
+      "worker_ok": true,
+      "scores": {
+        "boundary_cases": 1.0,
+        "business_correctness": 0.7678571428571429,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0,
+        "overall_score": 0.8723214285714286
+      },
+      "error": null,
+      "managed_status": "PASS",
+      "summary": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h034/qa/author-controls-v1/controls-1793220308638158000/wrong-elapsed-unit/summary.json",
+      "summary_sha256": "ae06ef8fc860ba078be764d60ab86d8ef984c2bdaadb5543a6950f0289f459d1"
+    },
+    {
+      "name": "whole-image-substitutes",
+      "expect": "lower",
+      "matched_expected_behavior": true,
+      "worker_ok": true,
+      "scores": {
+        "boundary_cases": 1.0,
+        "business_correctness": 1.0,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 0.0,
+        "overall_score": 0.9500000000000001
+      },
+      "error": null,
+      "managed_status": "PASS",
+      "summary": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h034/qa/author-controls-v1/controls-1793220308638158000/whole-image-substitutes/summary.json",
+      "summary_sha256": "7276c74d40d6b9ab3a6b1679a497870abf9de933795da374862c3b26b29f7f0d"
+    },
+    {
+      "name": "one-figure-binding-omitted",
+      "expect": "lower",
+      "matched_expected_behavior": true,
+      "worker_ok": true,
+      "scores": {
+        "boundary_cases": 1.0,
+        "business_correctness": 1.0,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 0.75,
+        "overall_score": 0.9875
+      },
+      "error": null,
+      "managed_status": "PASS",
+      "summary": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h034/qa/author-controls-v1/controls-1793220308638158000/one-figure-binding-omitted/summary.json",
+      "summary_sha256": "4e90c7c645ef30451430951643cdeefc8c0a61bf3a6645995ead6b0f6045921d"
+    },
+    {
+      "name": "log-axis-equal-increment-trap",
+      "expect": "lower",
+      "matched_expected_behavior": true,
+      "worker_ok": true,
+      "scores": {
+        "boundary_cases": 0.7142857142857143,
+        "business_correctness": 1.0,
+        "delivery_integrity": 0.75,
+        "evidence_binding": 1.0,
+        "overall_score": 0.8910714285714286
+      },
+      "error": null,
+      "managed_status": "PASS",
+      "summary": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h034/qa/author-controls-v1/controls-1793220308638158000/log-axis-equal-increment-trap/summary.json",
+      "summary_sha256": "92c70b3f71998b6f3d4bf34769bb689df2333a9cc920502b262cc60163acf658"
+    },
+    {
+      "name": "overlap-proves-equality-trap",
+      "expect": "lower",
+      "matched_expected_behavior": true,
+      "worker_ok": true,
+      "scores": {
+        "boundary_cases": 0.7142857142857143,
+        "business_correctness": 1.0,
+        "delivery_integrity": 0.75,
+        "evidence_binding": 1.0,
+        "overall_score": 0.8910714285714286
+      },
+      "error": null,
+      "managed_status": "PASS",
+      "summary": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h034/qa/author-controls-v1/controls-1793220308638158000/overlap-proves-equality-trap/summary.json",
+      "summary_sha256": "086f5d24857726c89727835b9afccb9aba6f22d615b6f0aa9e1db47ec79642ce"
+    },
+    {
+      "name": "C07-generic-unknown-erases-counterevidence",
+      "expect": "lower",
+      "matched_expected_behavior": true,
+      "worker_ok": true,
+      "scores": {
+        "boundary_cases": 0.8571428571428571,
+        "business_correctness": 1.0,
+        "delivery_integrity": 0.75,
+        "evidence_binding": 1.0,
+        "overall_score": 0.9267857142857143
+      },
+      "error": null,
+      "managed_status": "PASS",
+      "summary": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h034/qa/author-controls-v1/controls-1793220308638158000/C07-generic-unknown-erases-counterevidence/summary.json",
+      "summary_sha256": "2f4e3f7dbce5cbb0a760f4c9505bdb3b5c5b095f061a8e6e45a9081ca5a2f804"
+    },
+    {
+      "name": "same-target-word-transfer-conflict",
+      "expect": "lower",
+      "matched_expected_behavior": true,
+      "worker_ok": true,
+      "scores": {
+        "boundary_cases": 1.0,
+        "business_correctness": 1.0,
+        "delivery_integrity": 0.75,
+        "evidence_binding": 1.0,
+        "overall_score": 0.9625
+      },
+      "error": null,
+      "managed_status": "PASS",
+      "summary": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h034/qa/author-controls-v1/controls-1793220308638158000/same-target-word-transfer-conflict/summary.json",
+      "summary_sha256": "d9a80c1d781b0be532cf3a191ae6d07f208222c9a208380813c277304b3e8e31"
+    },
+    {
+      "name": "missing-docx",
+      "expect": "lower",
+      "matched_expected_behavior": true,
+      "worker_ok": true,
+      "scores": {
+        "boundary_cases": 1.0,
+        "business_correctness": 1.0,
+        "delivery_integrity": 0.75,
+        "evidence_binding": 1.0,
+        "overall_score": 0.9625
+      },
+      "error": null,
+      "managed_status": "PASS",
+      "summary": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h034/qa/author-controls-v1/controls-1793220308638158000/missing-docx/summary.json",
+      "summary_sha256": "736807b345d468ff797a3d692d3f5d3683921a6bed9693bd4f98696b3c8f964b"
+    },
+    {
+      "name": "missing-private-source",
+      "expect": "error",
+      "matched_expected_behavior": true,
+      "worker_ok": false,
+      "scores": null,
+      "error": {
+        "message": "H034 private source/rule drift: source_originals/figures/F03_latency.png",
+        "traceback": "Traceback (most recent call last):\n  File \"/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/tools/report/skills/general-e2e/score-general-e2e/scripts/rule_worker.py\", line 75, in execute\n    raw = grade(transcript=transcript, workspace_path=str(workspace))\n          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"<general-e2e-automated-checks>\", line 4, in grade\n  File \"/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h034/qa/author-controls-v1/controls-1793220308638158000/missing-private-source/attempts/source-author-h034__missing-private-source/h034-nonblind-rule-author-control/author-control/runtime/workspace/gt/grader.py\", line 12, in grade\n    if not p.is_file() or p.is_symlink() or sha(p)!=digest:raise RuntimeError('H034 private source/rule drift: '+rel)\n                                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nRuntimeError: H034 private source/rule drift: source_originals/figures/F03_latency.png\n",
+        "type": "RuntimeError"
+      },
+      "managed_status": null,
+      "summary": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h034/qa/author-controls-v1/controls-1793220308638158000/missing-private-source/summary.json",
+      "summary_sha256": "37724879ce94b9460040ece05877c27f283c2b0ca2cf636d05541f3fa3d3f82d"
+    },
+    {
+      "name": "missing-required-image-decoder",
+      "expect": "error",
+      "matched_expected_behavior": true,
+      "worker_ok": false,
+      "scores": null,
+      "error": {
+        "message": "author-control: required original-image decoder unavailable",
+        "traceback": "Traceback (most recent call last):\n  File \"/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/tools/report/skills/general-e2e/score-general-e2e/scripts/rule_worker.py\", line 75, in execute\n    raw = grade(transcript=transcript, workspace_path=str(workspace))\n          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"<general-e2e-automated-checks>\", line 11, in grade\n  File \"/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h034/qa/author-controls-v1/controls-1793220308638158000/missing-required-image-decoder/attempts/source-author-h034__missing-required-image-decoder/h034-nonblind-rule-author-control/author-control/runtime/workspace/gt/grader.py\", line 22, in grade\n    from PIL import Image\n  File \"<general-e2e-automated-checks>\", line 5, in _h034_no_decoder\nImportError: author-control: required original-image decoder unavailable\n",
+        "type": "ImportError"
+      },
+      "managed_status": null,
+      "summary": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h034/qa/author-controls-v1/controls-1793220308638158000/missing-required-image-decoder/summary.json",
+      "summary_sha256": "7d22092e6ac4a40799ecca7fdb652c9411a4d49c5698012f1fa6f8110363d79d"
+    },
+    {
+      "name": "unhandled-legal-prose-pending",
+      "expect": "error",
+      "matched_expected_behavior": true,
+      "worker_ok": false,
+      "scores": null,
+      "error": {
+        "message": "H034 legal representation/assessment target requires independent review; see derived/rule-observations.json; no ability score emitted",
+        "traceback": "Traceback (most recent call last):\n  File \"/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/tools/report/skills/general-e2e/score-general-e2e/scripts/rule_worker.py\", line 75, in execute\n    raw = grade(transcript=transcript, workspace_path=str(workspace))\n          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"<general-e2e-automated-checks>\", line 4, in grade\n  File \"/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h034/qa/author-controls-v1/controls-1793220308638158000/unhandled-legal-prose-pending/attempts/source-author-h034__unhandled-legal-prose-pending/h034-nonblind-rule-author-control/author-control/runtime/workspace/gt/grader.py\", line 193, in grade\n    if pending:raise io['SemanticReviewRequired']('H034 legal representation/assessment target requires independent review; see derived/rule-observations.json; no ability score emitted')\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n<run_path>.SemanticReviewRequired: H034 legal representation/assessment target requires independent review; see derived/rule-observations.json; no ability score emitted\n",
+        "type": "SemanticReviewRequired"
+      },
+      "managed_status": null,
+      "summary": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h034/qa/author-controls-v1/controls-1793220308638158000/unhandled-legal-prose-pending/summary.json",
+      "summary_sha256": "b6ffd8eecbf3f78abb80bf7400bcdcc71a090e6fd87bd8bf0b298f71148bfe47"
+    },
+    {
+      "name": "formula-cache-cleared-recalculated",
+      "expect": "full",
+      "matched_expected_behavior": true,
+      "worker_ok": true,
+      "scores": {
+        "boundary_cases": 1.0,
+        "business_correctness": 1.0,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0,
+        "overall_score": 1.0
+      },
+      "error": null,
+      "managed_status": "PASS",
+      "summary": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h034/qa/author-controls-v1/controls-1793220308638158000/formula-cache-cleared-recalculated/summary.json",
+      "summary_sha256": "0dab05099e81af8a21894e9c13092881e95edf4744aab69280e07f0977721f81"
+    },
+    {
+      "name": "protected-input-drift",
+      "expect": "lower",
+      "matched_expected_behavior": true,
+      "worker_ok": true,
+      "scores": {
+        "boundary_cases": 0.0,
+        "business_correctness": 0.0,
+        "delivery_integrity": 0.0,
+        "evidence_binding": 0.0,
+        "overall_score": 0.0
+      },
+      "error": null,
+      "managed_status": "PASS",
+      "summary": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h034/qa/author-controls-v1/controls-1793220308638158000/protected-input-drift/summary.json",
+      "summary_sha256": "3df4ffdb58c09dca07d5312833d5f113f985da45a009f2db791933d6b2071156"
+    },
+    {
+      "name": "inline-only-no-point-table",
+      "expect": "full",
+      "matched_expected_behavior": true,
+      "worker_ok": true,
+      "scores": {
+        "boundary_cases": 1.0,
+        "business_correctness": 1.0,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0,
+        "overall_score": 1.0
+      },
+      "error": null,
+      "managed_status": "PASS",
+      "summary": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h034/qa/author-controls-v1/controls-1793220308638158000/inline-only-no-point-table/summary.json",
+      "summary_sha256": "3b6c4e0dcd24c5d7611a0a0489fda814944a20316c02ea345f72c4de2439f6e2"
+    },
+    {
+      "name": "explicit-inverted-ratio",
+      "expect": "lower",
+      "matched_expected_behavior": true,
+      "worker_ok": true,
+      "scores": {
+        "boundary_cases": 1.0,
+        "business_correctness": 0.9125,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0,
+        "overall_score": 0.951875
+      },
+      "error": null,
+      "managed_status": "PASS",
+      "summary": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h034/qa/author-controls-v1/controls-1793220308638158000/explicit-inverted-ratio/summary.json",
+      "summary_sha256": "8385a22e9f03a6b2a87e3a74738ad6b842d24717dff5515311a4e73a8c0d3fbf"
+    },
+    {
+      "name": "empty-results",
+      "expect": "lower",
+      "matched_expected_behavior": true,
+      "worker_ok": true,
+      "scores": {
+        "boundary_cases": 0.0,
+        "business_correctness": 0.0,
+        "delivery_integrity": 0.0,
+        "evidence_binding": 0.0,
+        "overall_score": 0.0
+      },
+      "error": null,
+      "managed_status": "PASS",
+      "summary": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h034/qa/author-controls-v1/controls-1793220308638158000/empty-results/summary.json",
+      "summary_sha256": "d79f7c1c358d31973cbd8d2beba160aca77727b1904b768862c49bbfa647a5c9"
+    },
+    {
+      "name": "source-envelope-tolerance-boundary",
+      "expect": "full",
+      "matched_expected_behavior": true,
+      "worker_ok": true,
+      "scores": {
+        "boundary_cases": 1.0,
+        "business_correctness": 1.0,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0,
+        "overall_score": 1.0
+      },
+      "error": null,
+      "managed_status": "PASS",
+      "summary": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h034/qa/author-controls-v1/controls-1793220308638158000/source-envelope-tolerance-boundary/summary.json",
+      "summary_sha256": "0c122cf29438bc3589b25992ee07d3f630e29b90970a1a32a40d8fe53b84d2d2"
+    },
+    {
+      "name": "implicit-percent-format-and-encoded-identity",
+      "expect": "full",
+      "matched_expected_behavior": true,
+      "worker_ok": true,
+      "scores": {
+        "boundary_cases": 1.0,
+        "business_correctness": 1.0,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0,
+        "overall_score": 1.0
+      },
+      "error": null,
+      "managed_status": "PASS",
+      "summary": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h034/qa/author-controls-v1/controls-1793220308638158000/implicit-percent-format-and-encoded-identity/summary.json",
+      "summary_sha256": "487f50fb52f8bc2fac9e68a76e1a6a941d832e9d0eed46c3bdc9292385b77df6"
+    },
+    {
+      "name": "unhandled-unit-prose-pending",
+      "expect": "error",
+      "matched_expected_behavior": true,
+      "worker_ok": false,
+      "scores": null,
+      "error": {
+        "message": "H034 legal representation/assessment target requires independent review; see derived/rule-observations.json; no ability score emitted",
+        "traceback": "Traceback (most recent call last):\n  File \"/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/tools/report/skills/general-e2e/score-general-e2e/scripts/rule_worker.py\", line 75, in execute\n    raw = grade(transcript=transcript, workspace_path=str(workspace))\n          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"<general-e2e-automated-checks>\", line 4, in grade\n  File \"/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h034/qa/author-controls-v1/controls-1793220308638158000/unhandled-unit-prose-pending/attempts/source-author-h034__unhandled-unit-prose-pending/h034-nonblind-rule-author-control/author-control/runtime/workspace/gt/grader.py\", line 193, in grade\n    if pending:raise io['SemanticReviewRequired']('H034 legal representation/assessment target requires independent review; see derived/rule-observations.json; no ability score emitted')\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n<run_path>.SemanticReviewRequired: H034 legal representation/assessment target requires independent review; see derived/rule-observations.json; no ability score emitted\n",
+        "type": "SemanticReviewRequired"
+      },
+      "managed_status": null,
+      "summary": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h034/qa/author-controls-v1/controls-1793220308638158000/unhandled-unit-prose-pending/summary.json",
+      "summary_sha256": "315edb2f9cf9ad63414f40c9648413d97f80f10cd98a6c9885deb24a3845793e"
+    },
+    {
+      "name": "unhandled-legend-prose-pending",
+      "expect": "error",
+      "matched_expected_behavior": true,
+      "worker_ok": false,
+      "scores": null,
+      "error": {
+        "message": "H034 legal representation/assessment target requires independent review; see derived/rule-observations.json; no ability score emitted",
+        "traceback": "Traceback (most recent call last):\n  File \"/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/tools/report/skills/general-e2e/score-general-e2e/scripts/rule_worker.py\", line 75, in execute\n    raw = grade(transcript=transcript, workspace_path=str(workspace))\n          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"<general-e2e-automated-checks>\", line 4, in grade\n  File \"/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h034/qa/author-controls-v1/controls-1793220308638158000/unhandled-legend-prose-pending/attempts/source-author-h034__unhandled-legend-prose-pending/h034-nonblind-rule-author-control/author-control/runtime/workspace/gt/grader.py\", line 193, in grade\n    if pending:raise io['SemanticReviewRequired']('H034 legal representation/assessment target requires independent review; see derived/rule-observations.json; no ability score emitted')\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n<run_path>.SemanticReviewRequired: H034 legal representation/assessment target requires independent review; see derived/rule-observations.json; no ability score emitted\n",
+        "type": "SemanticReviewRequired"
+      },
+      "managed_status": null,
+      "summary": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h034/qa/author-controls-v1/controls-1793220308638158000/unhandled-legend-prose-pending/summary.json",
+      "summary_sha256": "8116ec9a54d194b05ff414e3937cb63486e213c4bed1db6a869c4ebf3e6966c3"
+    }
+  ],
+  "current_control_interpretation": "26 unaffected logical controls retain old evidence; old input-drift global-zero expectation is superseded by targeted root control. Root additionally reran correct baseline and input-drift-only on current contract. Do not count all historical controls as new-contract runs.",
+  "root_scope_fix": {
+    "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h034/qa/root-protection-scope-v1/receipt.json",
+    "sha256": "3c8986e7a2dcb9f2e0025353322c181a13aa621549e96fb70dbf049dcf750c7d",
+    "current_contract_sha256": "46bd54eee980efb55569fe238f5467c95f6d1b6f22dfb9194234b63f227e46d4",
+    "receipt": {
+      "status": "PASS",
+      "root_cause": "Input preservation was charged globally although public contract assigns it to delivery and private originals still support independent scientific checks.",
+      "changed_GT_files": [
+        "grader.py",
+        "scoring_contract.json"
+      ],
+      "new_scoring_contract_sha256": "46bd54eee980efb55569fe238f5467c95f6d1b6f22dfb9194234b63f227e46d4",
+      "old_GT44_retained": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h034/qa/root-protection-scope-v1/before-GT44",
+      "source_GT28_public6_reference2_unchanged": true,
+      "source_protected_sha256": {
+        "exec/paper_excerpts.md": "ff890163fc46f1292a70279a1df8a21625c5e3cf5d0fa9c5fcad2e72010c7318",
+        "exec/reading_tolerance.json": "35d038372eb3dba02e7a146975adfc22659ccef46ff64f0b4f397975ff05271b",
+        "exec/figures/F04_grouping.png": "bf38edc61ed6fef6fb715802324b81f537f0f10a2a844840e377a8186245e745",
+        "exec/figures/F02_intervals.png": "ff305b0b1bb655f73c71c087bf82f52bb9d89ac098da9f46610a83a3d80965b8",
+        "exec/figures/F01_budget.png": "08451e387cda7a74c9ffac2b6f15c96b8ab37b8a14aa938f61b2cc14343a7c61",
+        "exec/figures/F03_latency.png": "b9603a7773845b082db4a19162134af68bd09445f80731ef153cdae6f20b3eeb",
+        "gt/reference_source_manifest.json": "f093bc2d886c1105c0130182e274751e5267d3dcc0ec4a7c79c1d38097f05f1f",
+        "gt/evidence_requirements.json": "754b57cdeab9bf190d3b689ba73fbf2fcf849c8554b3eb96020c6ec1fbc84187",
+        "gt/source_review_reconciliation.json": "afd362a484bf9cc5280698748a3b1ea4977d0155fd5f3c57e0ef274ac728da7d",
+        "gt/business_oracle.json": "d061bea14491d906f802f1578903909e9bae9cdbfea03b38ff5a20b10ee389a8",
+        "gt/protected_sha256.json": "6b1171a9a2d20cb8722f0116340a05d53167726baa76462c8085c25c2e440587",
+        "gt/expected.json": "d79b0b0b54bee4e64b89164bef69efba817d31aa6ef52a215a3d69f228b3e37f",
+        "gt/claim_evidence_oracle.json": "26832846a71f8aefe6bf739595de0da997107e1cd7b6b2cf774892de5cfe081a",
+        "gt/artifact_contract.json": "9030d1a8206a5d7aa6d523a823c800b69560acd73ab300687fa5ddf462a295bb",
+        "gt/source_truth.json": "1b23329fd38d7e9e21a4f43c1907f0b7f5a01682303953ca4d22f38c8ede32b0",
+        "gt/visual_regions.json": "42b44c6c651f92393d368b48ad153787a5d12fba8c1375aaf4ad6cf56392ecf3",
+        "gt/source_originals/figures/F04_grouping.png": "bf38edc61ed6fef6fb715802324b81f537f0f10a2a844840e377a8186245e745",
+        "gt/source_originals/figures/F02_intervals.png": "ff305b0b1bb655f73c71c087bf82f52bb9d89ac098da9f46610a83a3d80965b8",
+        "gt/source_originals/figures/F01_budget.png": "08451e387cda7a74c9ffac2b6f15c96b8ab37b8a14aa938f61b2cc14343a7c61",
+        "gt/source_originals/figures/F03_latency.png": "b9603a7773845b082db4a19162134af68bd09445f80731ef153cdae6f20b3eeb",
+        "gt/annotation_reviews/A/input_sha_before.json": "93cd2ba9db3cf64b8ec3b739723ce31a828081f71328a65dc63e0608b16fbef0",
+        "gt/annotation_reviews/A/claim_assessments.json": "3683eadff4b94d3d49617439c5d8e2feec62e7f118cad6b71ce39040d94b08da",
+        "gt/annotation_reviews/A/process_receipt.json": "c4bf648a3ae8d65b6791bb142b0802ad467e5ded32fc1e83e3a5e2fef1756e9f",
+        "gt/annotation_reviews/A/raw_visual_observations.json": "3e4d317172837332fe874c0566d4484d9dbc7fa6aa004a3fe20fb034657eeb92",
+        "gt/annotation_reviews/A/input_sha_after.json": "6e7dc3da3f1178af8c186ff0593f0738c29d8eb3d3ae4e568ef3af731f320aea",
+        "gt/annotation_reviews/A/regions.json": "15d9d8643e1fb4d44d63b5c44777fe385a7ca48216dde7ec79911d29c22db7d5",
+        "gt/annotation_reviews/A/review.md": "fcdd58085bdacf5ca03e62eb9518b0cdd62ed544a474dc2fc7dd311646cee76f",
+        "gt/annotation_reviews/A/freeze_manifest.json": "d59d74d6c6f402dc634f97980ce375d5278b9c058770c3e6fa2b45ceedfb2474",
+        "gt/annotation_reviews/B/claim_assessments.json": "50d93ba7ca797dbbfd56ab14c188cfad2c8b26df309a7883a4aa459ce893a034",
+        "gt/annotation_reviews/B/raw_visual_observations.json": "d01226e1fcd8940135a5c770802993881667dcd0caa6ff942ae43d15af7b70a8",
+        "gt/annotation_reviews/B/input_sha_receipt.json": "2490eeae4676aa23427cd002ec0e7bc9794083bb434aeb6169086d246d9fa898",
+        "gt/annotation_reviews/B/regions_and_uncertainties.json": "d0378dfd9d60815b0e8dcd64be356f97f8b1ae0d30a4a811631e44f995e7d029",
+        "gt/annotation_reviews/B/review.md": "814cb24d64f2566a8d57eae70707cf2dd65e6a4c557791865f84eacff36593db",
+        "gt/annotation_reviews/B/freeze.json": "f521a98d634d4540588ed41bd4245df6a54d76ed3938ca5f504ec4448f0ecf77",
+        "authoring/reference-proposed/v1/results/review_notes.docx": "547dc047ab12c0a072d43551c60971aff2631488a3ce48c1257ce7986e1e1d9e",
+        "authoring/reference-proposed/v1/results/figure_review.xlsx": "bec4b82dac5e8c9d07c530c52769965a09f43fb8af7977c9583e1b7b3d0b1edb"
+      },
+      "actual_managed_controls": [
+        {
+          "name": "baseline",
+          "scores": {
+            "business_correctness": 1.0,
+            "boundary_cases": 1.0,
+            "delivery_integrity": 1.0,
+            "evidence_binding": 1.0,
+            "overall_score": 1.0
+          },
+          "worker_PID": 31932,
+          "summary": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h034/qa/root-protection-scope-v1/baseline/summary.json"
+        },
+        {
+          "name": "protected-input-only",
+          "scores": {
+            "business_correctness": 1.0,
+            "boundary_cases": 1.0,
+            "delivery_integrity": 0.75,
+            "evidence_binding": 1.0,
+            "overall_score": 0.9625
+          },
+          "worker_PID": 31965,
+          "summary": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h034/qa/root-protection-scope-v1/protected-input-only/summary.json"
+        }
+      ],
+      "prior_controls_not_rewritten": true,
+      "old_protected_all_zero_expectation_superseded_only": true,
+      "Harness_or_Judge_or_hybrid": false
+    }
+  },
+  "formal_detached": {
+    "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h034/qa/formal-detached-1793221653531235000/validation.json",
+    "sha256": "19d2266347628d419fd8b6913a065de653c156994e515b6b6a4f38e357f7ab7f",
+    "A": 1.0,
+    "raw_scores": {
+      "boundary_cases": 1.0,
+      "business_correctness": 1.0,
+      "delivery_integrity": 1.0,
+      "evidence_binding": 1.0,
+      "overall_score": 1.0
+    },
+    "same_byte_nonruntime_archive_files": 73,
+    "derived_count": 2,
+    "normal_and_moved_verified": true,
+    "repository_sys_path_absent": true,
+    "skill_build": {
+      "archive": "score-general-e2e-skill-v0.26.0.zip",
+      "components": [
+        {
+          "content_hash_algorithm": "wildclawbench.component-content-sha256/v1",
+          "content_sha256": "9332b5351b55b1a11d706d19746502d1070d6321551ba87b15926a07083a2657",
+          "entrypoints": [
+            "workspace-integrity.mjs"
+          ],
+          "name": "workspace-integrity",
+          "source_revision": "3595625c36c85d48c9ea98dbc8187e71ca5559d8",
+          "source_root": "tools/report/e2e-shared/handoff",
+          "vendor_root": "vendor/e2e-shared/handoff",
+          "version": "1.0.0"
+        },
+        {
+          "content_hash_algorithm": "wildclawbench.component-content-sha256/v1",
+          "content_sha256": "c5d56c145923f0ab7f22a4548baf899bfeb33969b2862e7fbc0c3be2d9885e9d",
+          "entrypoints": [
+            "__init__.py",
+            "native_text.py",
+            "office_runtime.py",
+            "image_evidence.py",
+            "html_runtime.py",
+            "html_observer.mjs"
+          ],
+          "name": "grading-core",
+          "source_revision": "3595625c36c85d48c9ea98dbc8187e71ca5559d8",
+          "source_root": "src/wildclawbench_grading_core",
+          "vendor_root": "vendor/e2e-shared/wildclawbench_grading_core",
+          "version": "0.15.2"
+        }
+      ],
+      "content_hash_algorithm": "wildclawbench.skill-content-sha256/v1",
+      "content_sha256": "099ac6bb6dcbaf45132ebfb00c92919c507e1eb7e8eecd695ca40917aa3bf444",
+      "development_repository_references": [],
+      "file_count": 46,
+      "name": "score-general-e2e",
+      "scene": "general-e2e",
+      "source_revision": "3595625c36c85d48c9ea98dbc8187e71ca5559d8",
+      "version": "0.26.0",
+      "zip_hash_algorithm": "sha256",
+      "zip_sha256": "9c42ab11f22dd7d85a35df88a6d8a965c6c234a439d9719cbee014e238be6095"
+    },
+    "frozen0_26_ZIP_reused_without_building_moving_framework": true
+  },
+  "static": {
+    "single_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h034/qa/static-registered/20261028T211104Z_feb1a155bb/report.json",
+    "single_sha256": "1c238c2268a30f2fb5cae63470813b7ef6462f5913399bf69084bcc5316cb891",
+    "single": "PASS",
+    "building_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h034/qa/static-building/20261028T211110Z_e52e5fd960/report.json",
+    "building_sha256": "93c8c36436ba5fa489e70d5b3bbd8f0a6694f1b97ff56d4065102bf96cfddb35",
+    "registered": 37,
+    "missing_only": 23
+  },
+  "frozen_QA": {
+    "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h034/qa/registered-snapshot-v1/qa-sha256.json",
+    "sha256": "8c53a7735fc8888d41a28e6c648f25e9bef63b88447170f8001a8d8a85547ecd",
+    "bound_files": 6056
+  },
+  "limits": {
+    "difficulty": "L4 design estimate, not empirical certification",
+    "visual_dependency_required": true,
+    "final_visual_quota": 6,
+    "registered_visual_tasks": 5,
+    "actual_candidate_looking_not_proved_by_coordinates_or_SHA": true,
+    "model_review_not_human_expert": true,
+    "Harness": false,
+    "Judge": false,
+    "semantic_score": null,
+    "hybrid_score": null
+  },
+  "Git_preservation": {
+    "source_GT_helper_bytes_unchanged": true,
+    "path_scoped_whitespace_attribute": "native_base.py preserves existing bound EOF blank line; no normalization of trusted helper."
+  }
+}

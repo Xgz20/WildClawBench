@@ -1,0 +1,348 @@
+{
+  "schema_version": "general-hard-h007-material-authoring/v1",
+  "date_local": "2026-10-27",
+  "task_id": "general_hard_office_documents_task_007_visual_handoff",
+  "status": "author_materials_and_provisional_rules_pending_independent_annotations",
+  "canonical_task_registered": false,
+  "completed_dataset_task_count": 8,
+  "authoring_root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h007",
+  "input_sha256": {
+    "annotated_pages/page_01.png": "bc96cdb69201b0c0c3322e966c22c9f5f9407b58866056ce37d2deb62e9f3465",
+    "annotated_pages/page_02.png": "db80ec3f35de875cf0cc85430e11551bfab306a8d04800583777fb6640fcf954",
+    "annotated_pages/page_03.png": "b14f12865a2ba51078a768b57cba6cff1ebbf6773ddbf17e7924dcf75fef1f76",
+    "edit_scope.md": "34810b360ebd4e914907de349dab65b6447131e2294bd3445c3ddc3db3ebea51",
+    "handoff.docx": "80cef74cde39fd4ad8357b28823d25013c6cc38c254fb7a8074719a77e761d38"
+  },
+  "source_docx": {
+    "pages": 3,
+    "paragraphs_and_cells_verified": 35,
+    "source_bookmarks": 16
+  },
+  "annotated_images": [
+    {
+      "image": "page_01.png",
+      "width": 1600,
+      "height": 1300,
+      "sha256": "bc96cdb69201b0c0c3322e966c22c9f5f9407b58866056ce37d2deb62e9f3465",
+      "bytes": 232467
+    },
+    {
+      "image": "page_02.png",
+      "width": 1600,
+      "height": 1300,
+      "sha256": "db80ec3f35de875cf0cc85430e11551bfab306a8d04800583777fb6640fcf954",
+      "bytes": 191123
+    },
+    {
+      "image": "page_03.png",
+      "width": 1600,
+      "height": 1300,
+      "sha256": "b14f12865a2ba51078a768b57cba6cff1ebbf6773ddbf17e7924dcf75fef1f76",
+      "bytes": 128461
+    }
+  ],
+  "physical_image_validation": {
+    "status": "PASS",
+    "regions": 8,
+    "hidden_png_text_chunks_or_exif": false
+  },
+  "author_reference": {
+    "pages": 3,
+    "sha256": "ddef3aa560e84cba48d3aba9d6b9df8be8da177a7db7e2dce720ce2b7ef40e04",
+    "source_block_calculation_matches": true,
+    "note": "Author calculation before comparing reference output; not independent visual annotation."
+  },
+  "provisional_controls": {
+    "status": "AUTHOR_CONTROLS_PASS_REVIEW_PENDING",
+    "count": 36,
+    "scores": {
+      "author_reference": {
+        "business_correctness": 1.0,
+        "boundary_cases": 1.0,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0,
+        "overall_score": 1.0
+      },
+      "equivalent_normalized_regions_and_order": {
+        "business_correctness": 1.0,
+        "boundary_cases": 1.0,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0,
+        "overall_score": 1.0
+      },
+      "equivalent_xywh_and_polygon_regions": {
+        "business_correctness": 1.0,
+        "boundary_cases": 1.0,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0,
+        "overall_score": 1.0
+      },
+      "equivalent_native_without_source_bookmarks": {
+        "business_correctness": 1.0,
+        "boundary_cases": 1.0,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0,
+        "overall_score": 1.0
+      },
+      "equivalent_inline_warning": {
+        "business_correctness": 1.0,
+        "boundary_cases": 1.0,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0,
+        "overall_score": 1.0
+      },
+      "equivalent_native_automatic_numbering": {
+        "business_correctness": 1.0,
+        "boundary_cases": 1.0,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0,
+        "overall_score": 1.0
+      },
+      "equivalent_explicit_page_defaults": {
+        "business_correctness": 1.0,
+        "boundary_cases": 1.0,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0,
+        "overall_score": 1.0
+      },
+      "equivalent_null_for_deleted_text": {
+        "business_correctness": 1.0,
+        "boundary_cases": 1.0,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0,
+        "overall_score": 1.0
+      },
+      "ledger_correct_document_unchanged": {
+        "business_correctness": 0.484375,
+        "boundary_cases": 0.5,
+        "delivery_integrity": 0.8,
+        "evidence_binding": 1.0,
+        "overall_score": 0.5614062500000001
+      },
+      "global_window_replacement": {
+        "business_correctness": 1.0,
+        "boundary_cases": 0.9375,
+        "delivery_integrity": 0.8,
+        "evidence_binding": 1.0,
+        "overall_score": 0.9543750000000001
+      },
+      "backup_changed_with_primary": {
+        "business_correctness": 0.90625,
+        "boundary_cases": 0.875,
+        "delivery_integrity": 0.8,
+        "evidence_binding": 1.0,
+        "overall_score": 0.8871875000000001
+      },
+      "delete_whole_paragraph_not_selected_sentence": {
+        "business_correctness": 0.90625,
+        "boundary_cases": 0.875,
+        "delivery_integrity": 0.8,
+        "evidence_binding": 1.0,
+        "overall_score": 0.8871875000000001
+      },
+      "nearest_row_not_arrow_target": {
+        "business_correctness": 0.8125,
+        "boundary_cases": 0.8333333333333333,
+        "delivery_integrity": 0.8,
+        "evidence_binding": 1.0,
+        "overall_score": 0.8252083333333334
+      },
+      "cancelled_proposal_applied": {
+        "business_correctness": 0.90625,
+        "boundary_cases": 0.8958333333333334,
+        "delivery_integrity": 0.8,
+        "evidence_binding": 1.0,
+        "overall_score": 0.8923958333333334
+      },
+      "warning_added_to_similar_archive_note": {
+        "business_correctness": 0.90625,
+        "boundary_cases": 0.9375,
+        "delivery_integrity": 0.8,
+        "evidence_binding": 1.0,
+        "overall_score": 0.9028125000000001
+      },
+      "step_order_unchanged": {
+        "business_correctness": 0.953125,
+        "boundary_cases": 0.9375,
+        "delivery_integrity": 0.8,
+        "evidence_binding": 1.0,
+        "overall_score": 0.9285937500000001
+      },
+      "step_order_correct_numbers_stale": {
+        "business_correctness": 0.953125,
+        "boundary_cases": 0.9375,
+        "delivery_integrity": 0.8,
+        "evidence_binding": 1.0,
+        "overall_score": 0.9285937500000001
+      },
+      "outside_scope_deletion": {
+        "business_correctness": 0.90625,
+        "boundary_cases": 0.9583333333333334,
+        "delivery_integrity": 0.8,
+        "evidence_binding": 1.0,
+        "overall_score": 0.9080208333333334
+      },
+      "retained_document_but_false_delete_record": {
+        "business_correctness": 0.98125,
+        "boundary_cases": 0.9166666666666666,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0,
+        "overall_score": 0.9688541666666667
+      },
+      "wrong_source_image": {
+        "business_correctness": 1.0,
+        "boundary_cases": 1.0,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 0.875,
+        "overall_score": 0.99375
+      },
+      "wrong_source_sha": {
+        "business_correctness": 1.0,
+        "boundary_cases": 1.0,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 0.96875,
+        "overall_score": 0.9984375000000001
+      },
+      "whole_image_regions_not_target_evidence": {
+        "business_correctness": 1.0,
+        "boundary_cases": 1.0,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 0.5125,
+        "overall_score": 0.9756250000000001
+      },
+      "wrong_region_same_word_other_row": {
+        "business_correctness": 1.0,
+        "boundary_cases": 1.0,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 0.96875,
+        "overall_score": 0.9984375000000001
+      },
+      "wrong_move_destination": {
+        "business_correctness": 1.0,
+        "boundary_cases": 1.0,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 0.975,
+        "overall_score": 0.99875
+      },
+      "changed_table_value_font": {
+        "business_correctness": 1.0,
+        "boundary_cases": 1.0,
+        "delivery_integrity": 0.8,
+        "evidence_binding": 1.0,
+        "overall_score": 0.9700000000000001
+      },
+      "missing_explanations": {
+        "business_correctness": 1.0,
+        "boundary_cases": 1.0,
+        "delivery_integrity": 0.6,
+        "evidence_binding": 1.0,
+        "overall_score": 0.9400000000000001
+      },
+      "missing_deleted_after_field": {
+        "business_correctness": 0.99375,
+        "boundary_cases": 1.0,
+        "delivery_integrity": 0.8,
+        "evidence_binding": 1.0,
+        "overall_score": 0.9665625000000001
+      },
+      "missing_native_document": {
+        "business_correctness": 0.25,
+        "boundary_cases": 0.16666666666666666,
+        "delivery_integrity": 0.6,
+        "evidence_binding": 1.0,
+        "overall_score": 0.31916666666666665
+      },
+      "damaged_native_document": {
+        "business_correctness": 0.25,
+        "boundary_cases": 0.16666666666666666,
+        "delivery_integrity": 0.6,
+        "evidence_binding": 1.0,
+        "overall_score": 0.31916666666666665
+      },
+      "missing_ledger": {
+        "business_correctness": 0.75,
+        "boundary_cases": 0.8333333333333333,
+        "delivery_integrity": 0.6,
+        "evidence_binding": 0.0,
+        "overall_score": 0.7108333333333333
+      },
+      "all_outputs_missing": {
+        "business_correctness": 0.0,
+        "boundary_cases": 0.0,
+        "delivery_integrity": 0.0,
+        "evidence_binding": 0.0,
+        "overall_score": 0.0
+      },
+      "protected_input_changed": {
+        "business_correctness": 1.0,
+        "boundary_cases": 0.0,
+        "delivery_integrity": 0.0,
+        "evidence_binding": 0.0,
+        "overall_score": 0.55
+      },
+      "missing_private_contract": {
+        "error_type": "FileNotFoundError",
+        "expected": "evaluation error, not zero"
+      },
+      "missing_native_helper": {
+        "error_type": "FileNotFoundError",
+        "expected": "evaluation error, not zero"
+      },
+      "pending_review_gate": {
+        "expected": "evaluation error",
+        "error": "H007 independent annotation gate not satisfied"
+      },
+      "status_flag_without_review_records": {
+        "expected": "evaluation error",
+        "error": "H007 two distinct independent annotation records required"
+      }
+    },
+    "record_sha256": "9e5842659ff81e4d7ef9461f59eb989d3f6aaf54db95724d25fc077fc23d3781"
+  },
+  "production_gate_probe": {
+    "root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h007/qa/review-gate-worker-1793058315379493000",
+    "result": "expected_evaluation_error_no_score",
+    "error_code": "RULE_EXECUTION_FAILED",
+    "workspace_unchanged": true,
+    "record_sha256": "169439e5dc836b10ebcf2565d25d0c9bb01f1de0df21df59294f6c9733c689aa"
+  },
+  "independent_annotation": {
+    "required": 2,
+    "received": 0,
+    "request_status": "user_authorization_question_pending",
+    "delegation_authorized": false,
+    "packet_root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h007/independent-review/input",
+    "packet_input_sha256_matches_exec": true
+  },
+  "author_source_sha256": {
+    "authoring/build_annotated_pages.mjs": "d65e3542ecaaadf863f4776e1d90a9467b6e7f45e4efbd6a97d3fdd7a60cec99",
+    "authoring/build_evidence_index.py": "da196cdfd3015b4ae5440abc9110ca64d99f00906da88a2ea83c8acdcd16df49",
+    "authoring/build_reference.py": "785e9ba2037eba9c4197e2bbf3dbac9076da0e831a43b08df509ab95b02298aa",
+    "authoring/build_source_docx.py": "04a1f9ab0e99a785d42c65b8ffff779a23c2513714732f425f8460d6921b3098",
+    "authoring/compute_author_expected.py": "84a5bf1c361dba480ff11b46e4c5071ae49d6b5423c04e8aef6c247a14c591ae",
+    "authoring/design-draft.json": "8da1e536cc2dd41ded0be5bc03eac531d73e9ff65e926cd8b2b166457abaf163",
+    "authoring/prepare_contracts.py": "5e6708a1e7272dbe5abba7ef7f291448c5db1d9782e72e9a92ece0033aac83b9",
+    "authoring/prepare_materials.py": "b0a4fff8044806cb2e88847309b6780489be61420bace92899f7a3cbdd39dcf2",
+    "authoring/prepare_review_packet.py": "0e7254728d0d9ca222bd959c0b64ed49f5c9bb69f030dccb636569bbfb6ba416",
+    "authoring/source.json": "5cd9349ab80be6354c9f19f4704f06765e178b17485fd00573496c2b3f3645b5",
+    "authoring/verify_screenshots.py": "f449f44e9576a8dbf33a99d76720d994052abc1ea1890e4b1531b5c59e05fb79",
+    "authoring/verify_source_content.py": "f68d653aa801c59272e6dd364320917850bcd1f94665c4dfda99b81b2519fc2a",
+    "gt/annotation_status.json": "75552a5473756ff836192beb9edd45e5165ea3f8f0d455039e8a88f662c804c6",
+    "gt/artifact_contract.json": "e70b5e72d3fbf99502b26bf987fa2914514263608506ab6501325c0094149dec",
+    "gt/author_expected.json": "9aa0f9e6542904ed434b2fa3163992c0362871b00ef9c38c0f8412e27b52e386",
+    "gt/author_oracle.json": "ef9b45efd30cb8ad9aa120cb701fcbd640ad6781e6ebbfd8580ba3e8ecf333e4",
+    "gt/business_oracle.json": "7b5beded3b5458035f5a94bb1e62a2078ea966fb9be7d41793fdbcf8e963d73c",
+    "gt/constructed_regions.json": "8b7d7bbb81c7a76d88e5fe65d147c0af8f280c833d302979b31e0c3a091a737d",
+    "gt/counterexamples.json": "a6fab5950e401ef79cd419178ffdf6c149d2c25abfab2883df01b70ac17edea9",
+    "gt/declared_actions.json": "8d9add664822f0d12acb911c99a9aa0e8af190573499742c572291aac39488dc",
+    "gt/evidence_index.json": "9414297c2f9fbdee968160806a36f0c529a66237e2de3920f440aff3eac518cd",
+    "gt/evidence_requirements.json": "bb962116ab12bb78adca7a3bd94a7f44abbb2c2b1f024722ac39cf39cf49d7dc",
+    "gt/grader.py": "290f38584ab34a1bdd2efc97b6c6471a3a02f4f7fbbade7279a82861ab199cee",
+    "gt/native_docx.py": "78275920f883d1708529d2dc037c24ffb4b82afaf3c916d0ef03a7a12dc89e86",
+    "gt/protected_sha256.json": "942165650690d80066e374232eba7b3ce9355bb72085ccb868a206b4a31eb97b",
+    "gt/reference/results/visual_changes.json": "55dff64c0b3ccc938c9a9f0ffba5074e1a86ce5627c6f298dd4e9eb5ab68c1bd",
+    "gt/structured_io.py": "0bcabd5ba9d1d651b2c7e44fd305ae8a9af42a36cbd02d3363ee3663ed21f881",
+    "gt/validate_authoring.py": "aa30ad29f1a07d2ce18442a14278711f29b3abf2ae27035487d2c6da8979643c"
+  },
+  "limit": "Unapproved author oracle and rule prototype. No H007 task MD/canonical Workspace, approved visual GT, frozen manifest, actual Harness execution, independent semantic result or difficulty calibration."
+}

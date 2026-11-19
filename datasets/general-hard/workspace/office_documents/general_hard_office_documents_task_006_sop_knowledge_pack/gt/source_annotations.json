@@ -1,0 +1,782 @@
+{
+  "schema_version": "h006-source-annotations/v1",
+  "manuals": [
+    {
+      "file": "01_customer.docx",
+      "title": "客户支持受理手册",
+      "version": "2026-05-12",
+      "clauses": [
+        [
+          "CS01",
+          "入口与身份",
+          "统一入口为售后工单台。REG仅登记本次联系并核对订单身份，不代表新建第二个退款案。保存订单号、回访渠道和实际联系时间。"
+        ],
+        [
+          "CS02",
+          "首次响应",
+          "首次响应为4工作小时，从本次联系登记起算。补证、审批、检验或风险暂停均不能暂停此首次响应时钟。不得把内部处理时限作为首次响应承诺。"
+        ],
+        [
+          "CS03",
+          "资料核验",
+          "DOC核验订单、申请说明、金额、购买凭证和授权记录。资料不齐时REQUEST_DOCS由CS补证；缺证据不等于最终拒绝退款。不能为了快捷而代填不存在的资料。"
+        ],
+        [
+          "CS04",
+          "办理边界",
+          "操作员仅核对与交接，不能自行审批、换收款账户或划款。没有财务回执不得使用CLAIM_PAID表示已退款；不要把已转财务写成已付款。"
+        ],
+        [
+          "CS99",
+          "历史首次响应口径",
+          "早期坐席附录曾写首次响应为2工作日。是否仍适用必须按authority.yaml的控制项裁决，不能把它与CS02并列为可任选口径。"
+        ]
+      ]
+    },
+    {
+      "file": "02_warehouse.docx",
+      "title": "仓储接收与保管规程",
+      "version": "2026-04-16",
+      "clauses": [
+        [
+          "WH01",
+          "包裹接收",
+          "RECV指包裹签收登记与保管，入口为仓储收货队列，责任岗位WH。未收到实物时WAIT_RECEIPT，不虚构签收单。"
+        ],
+        [
+          "WH02",
+          "物流时限",
+          "签收入仓核对为24自然小时，限定物流接收事项，不能推成实物验收已通过，也不是财务付款时限。"
+        ],
+        [
+          "WH03",
+          "交接给质检",
+          "签收和实物验收是不同节点。INSPECT由QA完成；仅有签收不得满足财务实物验收门禁。安全风险存在时不得处置、销毁或自行放行。"
+        ],
+        [
+          "WH99",
+          "历史验收附录",
+          "旧仓储附录将实物验收写为24小时。最终质检时效由其职权域的有效条款决定，不按签收任务的名称或时限直接套用。"
+        ]
+      ]
+    },
+    {
+      "file": "03_quality.docx",
+      "title": "质检验收与安全异常规程",
+      "version": "2026-06-08",
+      "clauses": [
+        [
+          "QA01",
+          "实物验收",
+          "实物验收为2工作日，由QA负责，入口为质检验收队列。仓储签收不能代替验收，附录24小时不能覆盖本事项时限。"
+        ],
+        [
+          "QA02",
+          "安全冻结",
+          "发现安全风险先SAFE_HOLD，暂停资金和实物处置，再SAFE_REPORT报QA。安全解除确认必须来自QA，财务批准或OPS协调均不代替安全解除。"
+        ],
+        [
+          "QA03",
+          "报告与暂停",
+          "安全报告为1工作小时的内部升级事项，不替代客户首次响应4工作小时。原财务时钟已经开始时暂停，未开始仍不开始；解除后接续剩余处理额度，不RESET_CLOCK重新起算。"
+        ],
+        [
+          "QA04",
+          "未决状态",
+          "在当前材料只有风险标记、没有解除记录时，路径止于报告和风险交接，不假设已经检验通过或已解除。RELEASE_WITHOUT_CLEARANCE不允许。"
+        ]
+      ]
+    },
+    {
+      "file": "04_finance.docx",
+      "title": "退款审批与资金执行控制",
+      "version": "2026-05-20",
+      "clauses": [
+        [
+          "FI01",
+          "审批金额门槛",
+          "含税退款金额不足5000元由OPS审批；达到5000元（含）由FC审批。批准须书面且在实物验收之后形成，口头担保、角色不符或预审批均不能作为有效资金批准。"
+        ],
+        [
+          "FI02",
+          "审批与执行分离",
+          "资金执行岗位为FE。VERIFY_APPR核对有效批准，VERIFY_BANK核对当前收款账户，之后才HANDOFF_FIN转财务执行。OPS_PAY不允许。任何风险未解除、资料不齐、实物未验收或批准无效时，都不能PAY_BEFORE_GATE。"
+        ],
+        [
+          "FI03",
+          "资金处理时钟",
+          "资金处理额度为2工作日，从资料齐备、实物验收、有效书面批准三个门禁最后满足之时启动。账户异常、撤回请求、安全或隐私风险使已运行时钟暂停；首次响应不随之暂停。暂停解除后保留已有起算点与剩余额度，不能重置为新的2工作日。"
+        ],
+        [
+          "FI04",
+          "撤回核对",
+          "收到撤回请求时先PAUSE_PAYMENT，再WITHDRAW_REVIEW交FC确认和审批撤回，即使工单显示尚未划款也不能由CS直接关单。CLOSE_WITHOUT_FIN和删除审计不允许；不假设账务已冲回。"
+        ],
+        [
+          "FI05",
+          "账户变更",
+          "账户发生变更且当前账户未核验时，PAUSE_PAYMENT并BANK_REVIEW交FC。不得沿用旧账户验证，不得SWITCH_BANK_UNVERIFIED，也不能因紧急而先付。有效退款批准的金额权限不因账户核验流程变更。"
+        ]
+      ]
+    },
+    {
+      "file": "05_operations.docx",
+      "title": "运营协作与历史处理口径",
+      "version": "2026-09-10",
+      "clauses": [
+        [
+          "OP01",
+          "历史时效",
+          "运营早期说明将所有受理和内部流转默认写成3工作日。它不能不分事项地覆盖客户首次响应、实物验收和资金处理控制项。"
+        ],
+        [
+          "OP02",
+          "历史金额口径",
+          "历史运营说明写不超过5000元可由OPS批准，恰好5000元的边界与财务控制不同。采用何者取决于授权矩阵，不按文档日期较新自动覆盖。"
+        ],
+        [
+          "OP03",
+          "紧急参考口径",
+          "历史绿色通道曾建议紧急申请先付款后补单。紧急仅可升级内部协作，不改变审批、门禁、执行岗位及风险解除条件。"
+        ],
+        [
+          "OP04",
+          "联合异常协调",
+          "安全与隐私并发时，由OPS作JOINT_COORD协调。先完成两类暂停，再分别报告；两域报告顺序可交换，QA与PR分别确认解除。OPS不能代替任一域签字放行。"
+        ],
+        [
+          "OP05",
+          "重复申请",
+          "已有linked_case_id时，LINK关联原案，本次联系仍REG并响应。不得NEW_CASE新建独立退款流程，不得另起付款、重复补证或RESET_CLOCK；沿用原案时钟状态而非宣称已重启。"
+        ]
+      ]
+    },
+    {
+      "file": "06_compliance.docx",
+      "title": "合规隐私与审计治理说明",
+      "version": "2026-10-25",
+      "clauses": [
+        [
+          "CO01",
+          "隐私异常",
+          "发现隐私风险先PRIV_HOLD停止对外扩散，再PRIV_ISOLATE登记隔离请求并PRIV_REPORT报PR。内部报告额度为1工作小时。隐私解除由PR确认，不能由CS删数据或OPS、FC代替解除。"
+        ],
+        [
+          "CO02",
+          "权限域",
+          "本文件的强制权限域是隐私和审计，不拥有退款资金SLA、金额审批或质检验收控制项。不能因为本文件日期最新，就用其跨域建议覆盖财务或质检规则。"
+        ],
+        [
+          "CO03",
+          "审计保留",
+          "所有路线保留原案、资料、批准及异常轨迹，DELETE_AUDIT不允许。缺回执不得声称已付款，缺解除不得声称已恢复，规划手册本身不代表真实业务动作发生。"
+        ],
+        [
+          "CO99",
+          "跨域建议",
+          "最新合规FAQ曾建议正常退款1工作日结清，这属于无财务授权的建议。正式资金处理额度仍按财务职权域的有效控制项裁决。"
+        ]
+      ]
+    }
+  ],
+  "authority": {
+    "schema_version": "h006-authority/v1",
+    "organization": "澄川售后服务中心",
+    "scope": "仅合成内部退款规划，材料日期不代替权限域/控制项优先级",
+    "roles": {
+      "CS": "客户支持受理岗",
+      "WH": "仓储负责人",
+      "QA": "质检负责人",
+      "FC": "财务主管",
+      "FE": "财务执行岗",
+      "OPS": "运营主管",
+      "PR": "隐私专员"
+    },
+    "role_aliases": {
+      "支持台": "CS",
+      "客服": "CS",
+      "仓库": "WH",
+      "质控": "QA",
+      "财务复核岗": "FC",
+      "出纳": "FE",
+      "运营经理": "OPS",
+      "数据合规专员": "PR"
+    },
+    "step_aliases": {
+      "入仓": "RECV",
+      "包裹签收": "RECV",
+      "验收通过": "INSPECT",
+      "材料校验": "DOC",
+      "流转财务": "HANDOFF_FIN"
+    },
+    "FLOW": {
+      "dependencies": {
+        "ready_finance": [
+          [
+            "REG",
+            "DOC"
+          ],
+          [
+            "DOC",
+            "RECV"
+          ],
+          [
+            "RECV",
+            "INSPECT"
+          ],
+          [
+            "INSPECT",
+            "VERIFY_APPR"
+          ],
+          [
+            "VERIFY_APPR",
+            "VERIFY_BANK"
+          ],
+          [
+            "VERIFY_BANK",
+            "HANDOFF_FIN"
+          ]
+        ],
+        "request_approval": [
+          [
+            "REG",
+            "DOC"
+          ],
+          [
+            "DOC",
+            "RECV"
+          ],
+          [
+            "RECV",
+            "INSPECT"
+          ],
+          [
+            "INSPECT",
+            "REQUEST_APPROVAL"
+          ]
+        ],
+        "request_documents": [
+          [
+            "REG",
+            "DOC"
+          ],
+          [
+            "DOC",
+            "REQUEST_DOCS"
+          ]
+        ],
+        "await_receipt": [
+          [
+            "REG",
+            "DOC"
+          ],
+          [
+            "DOC",
+            "WAIT_RECEIPT"
+          ]
+        ],
+        "await_inspection": [
+          [
+            "REG",
+            "DOC"
+          ],
+          [
+            "DOC",
+            "RECV"
+          ],
+          [
+            "RECV",
+            "INSPECT"
+          ]
+        ],
+        "safety_hold": [
+          [
+            "REG",
+            "DOC"
+          ],
+          [
+            "DOC",
+            "SAFE_HOLD"
+          ],
+          [
+            "SAFE_HOLD",
+            "SAFE_REPORT"
+          ]
+        ],
+        "privacy_hold": [
+          [
+            "REG",
+            "DOC"
+          ],
+          [
+            "DOC",
+            "PRIV_HOLD"
+          ],
+          [
+            "PRIV_HOLD",
+            "PRIV_ISOLATE"
+          ],
+          [
+            "PRIV_ISOLATE",
+            "PRIV_REPORT"
+          ]
+        ],
+        "joint_hold": [
+          [
+            "REG",
+            "DOC"
+          ],
+          [
+            "DOC",
+            "SAFE_HOLD"
+          ],
+          [
+            "DOC",
+            "PRIV_HOLD"
+          ],
+          [
+            "PRIV_HOLD",
+            "PRIV_ISOLATE"
+          ],
+          [
+            "PRIV_ISOLATE",
+            "PRIV_REPORT"
+          ],
+          [
+            "SAFE_HOLD",
+            "SAFE_REPORT"
+          ],
+          [
+            "PRIV_HOLD",
+            "SAFE_REPORT"
+          ],
+          [
+            "SAFE_HOLD",
+            "PRIV_REPORT"
+          ],
+          [
+            "SAFE_REPORT",
+            "JOINT_COORD"
+          ],
+          [
+            "PRIV_REPORT",
+            "JOINT_COORD"
+          ]
+        ],
+        "link_existing": [
+          [
+            "REG",
+            "LINK"
+          ]
+        ],
+        "withdrawal_review": [
+          [
+            "REG",
+            "DOC"
+          ],
+          [
+            "DOC",
+            "PAUSE_PAYMENT"
+          ],
+          [
+            "PAUSE_PAYMENT",
+            "WITHDRAW_REVIEW"
+          ]
+        ],
+        "bank_review": [
+          [
+            "REG",
+            "DOC"
+          ],
+          [
+            "DOC",
+            "PAUSE_PAYMENT"
+          ],
+          [
+            "PAUSE_PAYMENT",
+            "VERIFY_APPR"
+          ],
+          [
+            "VERIFY_APPR",
+            "BANK_REVIEW"
+          ]
+        ]
+      },
+      "approval_placeholder": "REQUEST_APPROVAL按FI01替换为REQUEST_OPS_APPROVAL或REQUEST_FIN_APPROVAL",
+      "semantics": "逻辑路径只到当前安全终点；不是已执行记录。同一层无边的节点可任意拓扑排序。"
+    },
+    "steps": {
+      "REG": "登记本次联系",
+      "DOC": "核验资料",
+      "RECV": "签收登记",
+      "INSPECT": "实物验收",
+      "VERIFY_APPR": "核验批准",
+      "VERIFY_BANK": "核验当前账户",
+      "HANDOFF_FIN": "转财务执行",
+      "REQUEST_DOCS": "请求补证",
+      "WAIT_RECEIPT": "等待实物",
+      "REQUEST_OPS_APPROVAL": "请求运营审批",
+      "REQUEST_FIN_APPROVAL": "请求财务审批",
+      "SAFE_HOLD": "安全暂停",
+      "SAFE_REPORT": "报告质检",
+      "PRIV_HOLD": "停止外发",
+      "PRIV_ISOLATE": "登记隐私隔离请求",
+      "PRIV_REPORT": "报告隐私专员",
+      "JOINT_COORD": "联合协调",
+      "LINK": "关联原案",
+      "PAUSE_PAYMENT": "暂停资金办理",
+      "WITHDRAW_REVIEW": "撤回核对审批",
+      "BANK_REVIEW": "账户复核"
+    },
+    "forbidden_actions": {
+      "OPS_PAY": "运营自行划款",
+      "DELETE_AUDIT": "删除审计",
+      "CLAIM_PAID": "无回执声称已付款",
+      "PAY_BEFORE_GATE": "门禁不齐先付",
+      "REJECT_FOR_MISSING": "因缺资料直接最终拒绝",
+      "RELEASE_WITHOUT_CLEARANCE": "无解除确认放行",
+      "RESET_CLOCK": "重置已有时钟",
+      "NEW_CASE": "重复案另建独立退款流程",
+      "CLOSE_WITHOUT_FIN": "撤回未经财务确认关单",
+      "SWITCH_BANK_UNVERIFIED": "使用未核验新账户"
+    },
+    "controls": {
+      "AUTH-ACK": {
+        "domain_owner": "CS",
+        "winner": "CS02",
+        "overrides": [
+          "CS99",
+          "OP01"
+        ]
+      },
+      "AUTH-INSPECT": {
+        "domain_owner": "QA",
+        "winner": "QA01",
+        "overrides": [
+          "WH99"
+        ],
+        "distinct_event": "WH02只控制物流签收"
+      },
+      "AUTH-APPROVAL": {
+        "domain_owner": "FC",
+        "winner": "FI01",
+        "overrides": [
+          "OP02"
+        ]
+      },
+      "AUTH-EXECUTE": {
+        "domain_owner": "FC",
+        "winner": "FI02",
+        "overrides": [
+          "OP03"
+        ]
+      },
+      "AUTH-CLOCK": {
+        "domain_owner": "FC",
+        "winner": "FI03",
+        "overrides": [
+          "OP01",
+          "CO99"
+        ]
+      },
+      "AUTH-SAFETY": {
+        "domain_owner": "QA",
+        "winner": "QA02",
+        "support": [
+          "QA03",
+          "QA04"
+        ]
+      },
+      "AUTH-PRIVACY": {
+        "domain_owner": "PR",
+        "winner": "CO01",
+        "support": [
+          "CO02",
+          "CO03"
+        ]
+      },
+      "AUTH-JOINT": {
+        "domain_owner": "OPS",
+        "winner": "OP04",
+        "limited_to": "协调，不能替代QA或PR解除"
+      },
+      "AUTH-DUP": {
+        "domain_owner": "OPS",
+        "winner": "OP05"
+      },
+      "AUTH-WITHDRAW": {
+        "domain_owner": "FC",
+        "winner": "FI04"
+      },
+      "AUTH-BANK": {
+        "domain_owner": "FC",
+        "winner": "FI05"
+      }
+    },
+    "routing_priority": [
+      "joint_hold",
+      "safety_hold",
+      "privacy_hold",
+      "link_existing",
+      "withdrawal_review",
+      "request_documents",
+      "await_receipt",
+      "await_inspection",
+      "request_approval",
+      "bank_review",
+      "ready_finance"
+    ],
+    "priority_notes": "风险先处理，重复案仍须关联已有ID；本批并发案例为安全加隐私。路径仅至当前安全交接终点，不假设未来补证、批准、解除或已划款。",
+    "clock_states": {
+      "not_started": "三门禁尚未全部满足且未曾启动",
+      "running": "已启动且当前无需暂停",
+      "paused": "已经启动，现因异常暂停，不另起计时",
+      "reuse_existing": "仅关联原案时钟，本次不另起"
+    },
+    "route_labels": {
+      "joint_hold": "联合风险暂停",
+      "safety_hold": "安全暂停",
+      "privacy_hold": "隐私暂停",
+      "link_existing": "关联原案",
+      "withdrawal_review": "撤回核对",
+      "request_documents": "补证",
+      "await_receipt": "等待实物",
+      "await_inspection": "等待质检",
+      "request_approval": "请求有效审批",
+      "bank_review": "账户复核",
+      "ready_finance": "转财务执行"
+    },
+    "output_contract": {
+      "coverage_columns": [
+        "incident_id",
+        "route",
+        "next_owner",
+        "approval_owner",
+        "execution_owner",
+        "ack_hours",
+        "inspection_workdays",
+        "payment_workdays",
+        "clock_state",
+        "clearance_roles",
+        "steps",
+        "forbidden_steps",
+        "operator_ref",
+        "supervisor_ref",
+        "source_refs",
+        "explanation"
+      ],
+      "operator_table": [
+        "incident_id",
+        "route",
+        "next_owner",
+        "clock_state",
+        "operator_action"
+      ],
+      "supervisor_table": [
+        "incident_id",
+        "approval_owner",
+        "execution_owner",
+        "ack_hours",
+        "inspection_workdays",
+        "payment_workdays",
+        "clearance_roles",
+        "supervision_action"
+      ],
+      "references": "对应DOCX可见章节/锚点；可任意命名，须在其实际原生表内定位该情境字段。source_refs使用文件#条款或authority控制项，不能只有文件名。",
+      "paths": "steps用分号列代码，表达依赖顺序而非已执行事实。允许并行步骤的任何拓扑顺序，不重复执行已有记录。clearance_roles和forbidden_steps为无序集合，空集合用空白或N/A，但列必须存在。"
+    }
+  },
+  "incidents": [
+    {
+      "incident_id": "I01",
+      "amount_cny": 1200,
+      "documents_complete": true,
+      "received": true,
+      "inspected": true,
+      "approved_by": "OPS",
+      "approval_written": true,
+      "approval_after_inspection": true,
+      "clock_started": true,
+      "safety_risk": false,
+      "privacy_risk": false,
+      "linked_case_id": "",
+      "withdrawal_requested": false,
+      "account_changed": false,
+      "current_account_verified": true,
+      "urgent": false,
+      "description": "常规小额，资料、验收、书面批准和账户核验齐备，尚无付款回执。"
+    },
+    {
+      "incident_id": "I02",
+      "amount_cny": 5000,
+      "documents_complete": true,
+      "received": true,
+      "inspected": true,
+      "approved_by": "OPS",
+      "approval_written": true,
+      "approval_after_inspection": true,
+      "clock_started": false,
+      "safety_risk": false,
+      "privacy_risk": false,
+      "linked_case_id": "",
+      "withdrawal_requested": false,
+      "account_changed": false,
+      "current_account_verified": true,
+      "urgent": true,
+      "description": "金额恰好5000元，只有OPS书面批准，客户要求绿色先付。"
+    },
+    {
+      "incident_id": "I03",
+      "amount_cny": 1200,
+      "documents_complete": false,
+      "received": true,
+      "inspected": false,
+      "approved_by": "",
+      "approval_written": false,
+      "approval_after_inspection": false,
+      "clock_started": false,
+      "safety_risk": false,
+      "privacy_risk": false,
+      "linked_case_id": "",
+      "withdrawal_requested": false,
+      "account_changed": false,
+      "current_account_verified": true,
+      "urgent": false,
+      "description": "缺购买凭证，包裹已签收；不能将缺资料直接视为最终拒绝。"
+    },
+    {
+      "incident_id": "I04",
+      "amount_cny": 4500,
+      "documents_complete": true,
+      "received": true,
+      "inspected": false,
+      "approved_by": "OPS",
+      "approval_written": true,
+      "approval_after_inspection": false,
+      "clock_started": false,
+      "safety_risk": false,
+      "privacy_risk": false,
+      "linked_case_id": "",
+      "withdrawal_requested": false,
+      "account_changed": false,
+      "current_account_verified": true,
+      "urgent": false,
+      "description": "签收完成但未实物验收；运营预先签了批准，不得推成验收或有效资金门禁。"
+    },
+    {
+      "incident_id": "I05",
+      "amount_cny": 8000,
+      "documents_complete": true,
+      "received": true,
+      "inspected": true,
+      "approved_by": "FC",
+      "approval_written": true,
+      "approval_after_inspection": true,
+      "clock_started": true,
+      "safety_risk": true,
+      "privacy_risk": false,
+      "linked_case_id": "",
+      "withdrawal_requested": false,
+      "account_changed": false,
+      "current_account_verified": true,
+      "urgent": false,
+      "description": "原时钟已启动，后报安全风险；金额批准仍在，没有QA解除记录。"
+    },
+    {
+      "incident_id": "I06",
+      "amount_cny": 500,
+      "documents_complete": true,
+      "received": true,
+      "inspected": true,
+      "approved_by": "OPS",
+      "approval_written": true,
+      "approval_after_inspection": true,
+      "clock_started": true,
+      "safety_risk": false,
+      "privacy_risk": true,
+      "linked_case_id": "",
+      "withdrawal_requested": false,
+      "account_changed": false,
+      "current_account_verified": true,
+      "urgent": false,
+      "description": "原时钟已启动，工单疑含错误客户信息；无PR解除，不执行删除或外发。"
+    },
+    {
+      "incident_id": "I07",
+      "amount_cny": 7000,
+      "documents_complete": true,
+      "received": true,
+      "inspected": true,
+      "approved_by": "FC",
+      "approval_written": true,
+      "approval_after_inspection": true,
+      "clock_started": true,
+      "safety_risk": true,
+      "privacy_risk": true,
+      "linked_case_id": "",
+      "withdrawal_requested": false,
+      "account_changed": false,
+      "current_account_verified": true,
+      "urgent": true,
+      "description": "安全与隐私同时出现，OPS负责协调，但两域均无解除记录。"
+    },
+    {
+      "incident_id": "I08",
+      "amount_cny": 1200,
+      "documents_complete": false,
+      "received": true,
+      "inspected": false,
+      "approved_by": "OPS",
+      "approval_written": true,
+      "approval_after_inspection": true,
+      "clock_started": false,
+      "safety_risk": false,
+      "privacy_risk": false,
+      "linked_case_id": "RMA-240",
+      "withdrawal_requested": false,
+      "account_changed": false,
+      "current_account_verified": true,
+      "urgent": false,
+      "description": "同一申请已有原案，不另建退款流程或另起时钟，不重复索取全部资料。"
+    },
+    {
+      "incident_id": "I09",
+      "amount_cny": 1900,
+      "documents_complete": true,
+      "received": true,
+      "inspected": true,
+      "approved_by": "OPS",
+      "approval_written": true,
+      "approval_after_inspection": true,
+      "clock_started": true,
+      "safety_risk": false,
+      "privacy_risk": false,
+      "linked_case_id": "",
+      "withdrawal_requested": true,
+      "account_changed": false,
+      "current_account_verified": true,
+      "urgent": false,
+      "description": "时钟已启动，现请求撤回；工单显示未付款但尚无FC撤回批准，不直接关单。"
+    },
+    {
+      "incident_id": "I10",
+      "amount_cny": 5200,
+      "documents_complete": true,
+      "received": true,
+      "inspected": true,
+      "approved_by": "FC",
+      "approval_written": true,
+      "approval_after_inspection": true,
+      "clock_started": true,
+      "safety_risk": false,
+      "privacy_risk": false,
+      "linked_case_id": "",
+      "withdrawal_requested": false,
+      "account_changed": true,
+      "current_account_verified": false,
+      "urgent": true,
+      "description": "原批准有效、时钟已启动，新账户尚未核验；客户要求口头担保先付。"
+    }
+  ],
+  "seed": 2026102606
+}

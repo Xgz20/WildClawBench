@@ -1,0 +1,279 @@
+{
+  "schema_version": "h001-policy-crosswalk/v1",
+  "cases": [
+    {
+      "case_id": "C01",
+      "rule_set": "未覆盖",
+      "status": "未覆盖",
+      "rate": null,
+      "cap_cny": null,
+      "grant_cny": null,
+      "required_clauses": [
+        "V1-01",
+        "V2-01"
+      ],
+      "pending_inputs": "",
+      "next_action": "另核可适用依据，不据V1或V2追溯核定",
+      "evidence": "policies/v1.docx#V1-01; policies/v2.pdf#V2-01"
+    },
+    {
+      "case_id": "C02",
+      "rule_set": "V1",
+      "status": "可资助",
+      "rate": 0.6,
+      "cap_cny": 3000,
+      "grant_cny": 3000,
+      "required_clauses": [
+        "V1-01",
+        "V1-07"
+      ],
+      "pending_inputs": "",
+      "next_action": "按旧制办理3000元",
+      "evidence": "policies/v1.docx#V1-01; policies/v1.docx#V1-07"
+    },
+    {
+      "case_id": "C03",
+      "rule_set": "V1",
+      "status": "不资助",
+      "rate": 0.6,
+      "cap_cny": 3000,
+      "grant_cny": 0,
+      "required_clauses": [
+        "V1-03"
+      ],
+      "pending_inputs": "",
+      "next_action": "申请日未满6个月，本次不资助",
+      "evidence": "policies/v1.docx#V1-03"
+    },
+    {
+      "case_id": "C04",
+      "rule_set": "V1",
+      "status": "可资助",
+      "rate": 0.6,
+      "cap_cny": 3000,
+      "grant_cny": 1200,
+      "required_clauses": [
+        "V1-03",
+        "V1-07"
+      ],
+      "pending_inputs": "",
+      "next_action": "已满6个月，按旧制办理1200元",
+      "evidence": "policies/v1.docx#V1-03; policies/v1.docx#V1-07"
+    },
+    {
+      "case_id": "C05",
+      "rule_set": "V2",
+      "status": "可资助",
+      "rate": 0.7,
+      "cap_cny": 4500,
+      "grant_cny": 4500,
+      "required_clauses": [
+        "V2-01",
+        "V2-07"
+      ],
+      "pending_inputs": "",
+      "next_action": "按新制上限办理4500元",
+      "evidence": "policies/v2.pdf#V2-01; policies/v2.pdf#V2-07"
+    },
+    {
+      "case_id": "C06",
+      "rule_set": "V2-T02",
+      "status": "可资助",
+      "rate": 0.7,
+      "cap_cny": 4500,
+      "grant_cny": 2800,
+      "required_clauses": [
+        "V2-T02",
+        "V2-03",
+        "V2-07"
+      ],
+      "pending_inputs": "",
+      "next_action": "仅年限过渡，仍按70%办理2800元",
+      "evidence": "policies/v2.pdf#V2-T02; policies/v2.pdf#V2-03; policies/v2.pdf#V2-07"
+    },
+    {
+      "case_id": "C07",
+      "rule_set": "V2",
+      "status": "不资助",
+      "rate": 0.7,
+      "cap_cny": 4500,
+      "grant_cny": 0,
+      "required_clauses": [
+        "V2-T02",
+        "V2-03"
+      ],
+      "pending_inputs": "",
+      "next_action": "7月1日未满6个月，不能套用T02",
+      "evidence": "policies/v2.pdf#V2-T02; policies/v2.pdf#V2-03"
+    },
+    {
+      "case_id": "C08",
+      "rule_set": "V1-T01",
+      "status": "可资助",
+      "rate": 0.6,
+      "cap_cny": 3000,
+      "grant_cny": 3000,
+      "required_clauses": [
+        "V2-T01",
+        "V1-04",
+        "V1-05",
+        "V1-07"
+      ],
+      "pending_inputs": "",
+      "next_action": "T01优先，全套沿用旧制办理3000元",
+      "evidence": "policies/v2.pdf#V2-T01; policies/v1.docx#V1-04; policies/v1.docx#V1-05; policies/v1.docx#V1-07"
+    },
+    {
+      "case_id": "C09",
+      "rule_set": "V2",
+      "status": "不资助",
+      "rate": 0.7,
+      "cap_cny": 4500,
+      "grant_cny": 0,
+      "required_clauses": [
+        "V2-T01",
+        "V2-04",
+        "V2-05"
+      ],
+      "pending_inputs": "",
+      "next_action": "开始日为9月1日，执行新制课种及天数限制",
+      "evidence": "policies/v2.pdf#V2-T01; policies/v2.pdf#V2-04; policies/v2.pdf#V2-05"
+    },
+    {
+      "case_id": "C10",
+      "rule_set": "V2",
+      "status": "不资助",
+      "rate": 0.7,
+      "cap_cny": 4500,
+      "grant_cny": 0,
+      "required_clauses": [
+        "V2-T01",
+        "V2-05"
+      ],
+      "pending_inputs": "",
+      "next_action": "备案日为7月1日，21天超出新制上限",
+      "evidence": "policies/v2.pdf#V2-T01; policies/v2.pdf#V2-05"
+    },
+    {
+      "case_id": "C11",
+      "rule_set": "V2-T02",
+      "status": "可资助",
+      "rate": 0.7,
+      "cap_cny": 4500,
+      "grant_cny": 0,
+      "required_clauses": [
+        "V2-T02",
+        "V2-07"
+      ],
+      "pending_inputs": "",
+      "next_action": "过渡期末日仍适用T02，已知零费用核定0元",
+      "evidence": "policies/v2.pdf#V2-T02; policies/v2.pdf#V2-07"
+    },
+    {
+      "case_id": "C12",
+      "rule_set": "V2",
+      "status": "可资助",
+      "rate": 0.7,
+      "cap_cny": 4500,
+      "grant_cny": 1400,
+      "required_clauses": [
+        "V2-01",
+        "V2-03",
+        "V2-07"
+      ],
+      "pending_inputs": "",
+      "next_action": "T02已到期，但普通年限已满12个月",
+      "evidence": "policies/v2.pdf#V2-01; policies/v2.pdf#V2-03; policies/v2.pdf#V2-07"
+    },
+    {
+      "case_id": "C13",
+      "rule_set": "V2",
+      "status": "待核实",
+      "rate": 0.7,
+      "cap_cny": 4500,
+      "grant_cny": null,
+      "required_clauses": [
+        "V2-07",
+        "V2-08"
+      ],
+      "pending_inputs": "个人实付费用",
+      "next_action": "核实费用后计算，不按0填充",
+      "evidence": "policies/v2.pdf#V2-07; policies/v2.pdf#V2-08"
+    },
+    {
+      "case_id": "C14",
+      "rule_set": "V2",
+      "status": "待补正",
+      "rate": 0.7,
+      "cap_cny": 4500,
+      "grant_cny": null,
+      "required_clauses": [
+        "V2-06",
+        "V2-08"
+      ],
+      "pending_inputs": "个人付款发票",
+      "next_action": "补齐发票后核定金额",
+      "evidence": "policies/v2.pdf#V2-06; policies/v2.pdf#V2-08"
+    },
+    {
+      "case_id": "C15",
+      "rule_set": "V2",
+      "status": "不资助",
+      "rate": 0.7,
+      "cap_cny": 4500,
+      "grant_cny": 0,
+      "required_clauses": [
+        "V2-02",
+        "V2-08"
+      ],
+      "pending_inputs": "",
+      "next_action": "对象明确不符合，本次不进入补正流程",
+      "evidence": "policies/v2.pdf#V2-02; policies/v2.pdf#V2-08"
+    },
+    {
+      "case_id": "C16",
+      "rule_set": "V1",
+      "status": "不资助",
+      "rate": 0.6,
+      "cap_cny": 3000,
+      "grant_cny": 0,
+      "required_clauses": [
+        "V1-05",
+        "V1-08"
+      ],
+      "pending_inputs": "",
+      "next_action": "31天超过旧制上限，不以缺发票改判待办",
+      "evidence": "policies/v1.docx#V1-05; policies/v1.docx#V1-08"
+    },
+    {
+      "case_id": "C17",
+      "rule_set": "V1",
+      "status": "待核实",
+      "rate": 0.6,
+      "cap_cny": 3000,
+      "grant_cny": null,
+      "required_clauses": [
+        "V1-03",
+        "V1-08"
+      ],
+      "pending_inputs": "入职日期",
+      "next_action": "补充入职日期后核对满6个月条件",
+      "evidence": "policies/v1.docx#V1-03; policies/v1.docx#V1-08"
+    },
+    {
+      "case_id": "C18",
+      "rule_set": "待核实",
+      "status": "待核实",
+      "rate": null,
+      "cap_cny": null,
+      "grant_cny": null,
+      "required_clauses": [
+        "V1-01",
+        "V2-01"
+      ],
+      "pending_inputs": "申请提交日",
+      "next_action": "补充申请日后选择版本，金额暂空",
+      "evidence": "policies/v1.docx#V1-01; policies/v2.pdf#V2-01"
+    }
+  ]
+}

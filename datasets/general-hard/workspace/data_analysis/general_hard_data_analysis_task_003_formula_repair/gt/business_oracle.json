@@ -1,0 +1,10 @@
+{
+  "schema_version": "h019-business/v1",
+  "expected": "expected.json",
+  "records": 12,
+  "scenarios": 6,
+  "independence": "Native input verified using stdlib plus independent library; anniversary enumeration and month/day algorithms; Fraction and Decimal floors; not generated from reference output.",
+  "scoring": "baseline cells .65, retained target formulas .20, report verification rows .15; checkpoint weight .55",
+  "numeric_tolerance": 1e-09,
+  "blank_not_zero": true
+}

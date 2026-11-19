@@ -28,15 +28,26 @@ def canonical_script(repo: Path, scene: str, skill: str, script: str):
 
 def _general_catalog(repo: Path, dataset: str):
     from eval_general_e2e.datasets.bundle import DATASETS, compile_dataset, dataset_manifest_path, load_manifest_lock
-    if dataset not in DATASETS:
-        raise E2EError("GENERAL_DATASET_UNKNOWN")
-    manifest, members = compile_dataset(repo, definition=DATASETS[dataset])
-    if manifest != load_manifest_lock(dataset_manifest_path(dataset)):
+    if dataset in DATASETS:
+        manifest, members = compile_dataset(repo, definition=DATASETS[dataset])
+        locked = load_manifest_lock(dataset_manifest_path(dataset))
+    else:
+        from eval_general_e2e.datasets.catalog import load_registered_dataset
+        try:
+            registered = load_registered_dataset(repo, dataset)
+        except (OSError, ValueError) as exc:
+            raise E2EError("GENERAL_DATASET_UNKNOWN") from exc
+        if registered.status != "frozen":
+            raise E2EError("GENERAL_DATASET_NOT_FROZEN")
+        locked = load_manifest_lock(registered.manifest_path)
+        manifest, members = compile_dataset(repo, definition=registered.definition,
+                                            source_revision=locked["source"]["revision"])
+    if manifest != locked:
         raise E2EError("GENERAL_DATASET_SOURCE_DRIFT")
     tasks = []
     for task in manifest["tasks"]:
         tasks.append({**task, "scene": "general", "metric_profile": "general-e2e-contract-v1",
-                      "dataset": {"id": dataset, "digest": manifest["dataset_digest"]}})
+                      "dataset": {"id": manifest["dataset_id"], "digest": manifest["dataset_digest"]}})
     return tasks, {member.path.rstrip("/"): member for member in members}, manifest
 
 

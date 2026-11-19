@@ -11,6 +11,10 @@ __all__ = [
     "DEFAULT_DEFINITION",
     "DatasetDefinition",
     "build_default_bundle",
+    "build_registered_bundle",
+    "freeze_registered_manifest",
+    "load_registered_dataset",
+    "discover_frozen_tasks",
     "compile_dataset",
     "load_manifest_lock",
     "verify_dataset_bundle",
@@ -20,4 +24,5 @@ __all__ = [
 def __getattr__(name: str) -> Any:
     if name not in __all__:
         raise AttributeError(name)
-    return getattr(import_module(".bundle", __name__), name)
+    module = {"load_registered_dataset": ".catalog", "discover_frozen_tasks": ".discovery"}.get(name, ".bundle")
+    return getattr(import_module(module, __name__), name)

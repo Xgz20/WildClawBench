@@ -1,0 +1,80 @@
+{
+  "schema_version": "wildclawbench.authoring-validation/v1",
+  "task": "H042",
+  "status": "passed",
+  "case_count": 40,
+  "results": {
+    "reference": {
+      "business_correctness": 1.0,
+      "boundary_cases": 1.0,
+      "delivery_integrity": 1.0,
+      "evidence_binding": 1.0,
+      "overall_score": 1.0
+    },
+    "missing_gt": {
+      "status": "infrastructure_exception_preserved",
+      "exception": "FileNotFoundError"
+    },
+    "original_buggy": {
+      "business_correctness": 0.0625,
+      "boundary_cases": 0.34444444444444444,
+      "delivery_integrity": 1.0,
+      "evidence_binding": 1.0,
+      "overall_score": 0.3204861111111111
+    },
+    "skip_all": {
+      "business_correctness": 0.1875,
+      "boundary_cases": 0.0,
+      "delivery_integrity": 1.0,
+      "evidence_binding": 1.0,
+      "overall_score": 0.303125
+    },
+    "foreign_key_schema": {
+      "business_correctness": 0.0,
+      "boundary_cases": 0.0,
+      "delivery_integrity": 1.0,
+      "evidence_binding": 1.0,
+      "overall_score": 0.2
+    },
+    "spoof_fk_probe": {
+      "business_correctness": 0.0,
+      "boundary_cases": 0.0,
+      "delivery_integrity": 1.0,
+      "evidence_binding": 1.0,
+      "overall_score": 0.2
+    },
+    "caller_commit": {
+      "business_correctness": 0.875,
+      "boundary_cases": 1.0,
+      "delivery_integrity": 1.0,
+      "evidence_binding": 1.0,
+      "overall_score": 0.9312500000000001
+    },
+    "changed_public_test": {
+      "business_correctness": 1.0,
+      "boundary_cases": 0.0,
+      "delivery_integrity": 0.0,
+      "evidence_binding": 0.0,
+      "overall_score": 0.55
+    },
+    "missing_delivery": {
+      "business_correctness": 1.0,
+      "boundary_cases": 1.0,
+      "delivery_integrity": 0.0,
+      "evidence_binding": 0.0,
+      "overall_score": 0.8
+    },
+    "stale_evidence": {
+      "business_correctness": 1.0,
+      "boundary_cases": 1.0,
+      "delivery_integrity": 1.0,
+      "evidence_binding": 0.0,
+      "overall_score": 0.9500000000000001
+    }
+  },
+  "reference_sha256": "715600e4723929c8106d22c86fa4e0954702d65fe4ddd2116c98bd055e2d4ffe",
+  "oracle_sha256": "1cb50928275eabe9cefc06a6cd0f00442a401f4746030b387196c153d6921521",
+  "grader_sha256": "70da3cc722eaa0349a5ddb39134f7e8ff98952124701dd2066a68ad53ff39686",
+  "driver_sha256": "056d8f2dfb392d3b4933a1dffe47f729a878d3ac67b6286e8ed2cd274da45f3d",
+  "scope": "Local Python/SQLite author controls only; not four-Harness or Docker rule-worker execution, independent human review or empirical difficulty calibration."
+}

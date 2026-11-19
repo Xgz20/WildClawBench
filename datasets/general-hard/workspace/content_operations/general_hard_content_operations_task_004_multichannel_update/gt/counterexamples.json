@@ -1,0 +1,30 @@
+{
+  "schema": "h060.counterexamples/v1",
+  "business": [
+    "Onlywebsiteupdated while otherchannels stale or missing",
+    "Wrong version/price/unit/date/trial/member numeric value or ledgercompleteobject",
+    "Correct indexJSON but bodygeneric/hidden or JSON-only excerpts",
+    "Drop a required channel/fact location or one of3 eventreceipts"
+  ],
+  "boundary": [
+    "Englishautomatic-send negation removed, wrongcard/billing/OCR/exportscope/certification/currentrelease claim",
+    "Explicit current extra99/129 price, staleversion/date/trial not markedrevoked",
+    "Correct facts but unapproved benefit/global/unlimited assertion",
+    "Active/remote/formHTML or declaredsend/deploy"
+  ],
+  "positive_scope_controls": [
+    "Different naturalstructure and wording, optionaltaxestimate omitted",
+    "Explicit withdrawn99/129/1.0/2.0/oldrelease/trial context",
+    "Safe negative statement next to unapproved marketing phrase",
+    "Sourcefact values staytyped; JSONreorder/BOM and validparagraph/quote locations"
+  ],
+  "evidence": [
+    "Ownerwrong but finalvaluecorrect only evidence",
+    "Quote/paragraph sourceactual binding, no selfreport as actualrender proof"
+  ],
+  "infrastructure": [
+    "Missing expected/parser/claimchecker/Office/HTML context",
+    "Runtime dependency/asset drift or legal unsupportedlocator/native content typed no candidatescore"
+  ],
+  "semantic_boundary": "Known counterexamples are bounded automatic proof. Arbitrary novel unsupported promises and free-language equivalence require35percent Judge; model authorQA is not Judge or human expert."
+}

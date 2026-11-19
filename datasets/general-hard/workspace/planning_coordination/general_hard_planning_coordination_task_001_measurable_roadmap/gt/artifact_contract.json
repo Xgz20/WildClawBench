@@ -1,0 +1,150 @@
+{
+  "schema": "h053.artifact-contract/v1",
+  "required": [
+    "results/roadmap.xlsx",
+    "results/explanation.docx"
+  ],
+  "tables": {
+    "goals": {
+      "goal_id": [
+        "目标编号"
+      ],
+      "objective": [
+        "目标"
+      ],
+      "metric_id": [
+        "指标编号"
+      ],
+      "definition": [
+        "可测定义"
+      ],
+      "baseline_n": [
+        "基线分子"
+      ],
+      "baseline_d": [
+        "基线分母"
+      ],
+      "baseline_rate": [
+        "基线比率"
+      ],
+      "baseline_status": [
+        "基线状态"
+      ],
+      "target_n": [
+        "目标分子"
+      ],
+      "target_d": [
+        "目标分母"
+      ],
+      "target_rate": [
+        "目标比率"
+      ],
+      "target_kind": [
+        "目标类型"
+      ],
+      "owner": [
+        "责任角色"
+      ],
+      "due_period": [
+        "截止周期"
+      ],
+      "acceptance": [
+        "验收"
+      ],
+      "source_ref": [
+        "依据"
+      ]
+    },
+    "actions": {
+      "action_id": [
+        "动作编号"
+      ],
+      "outcome": [
+        "成果编号"
+      ],
+      "method": [
+        "方法"
+      ],
+      "goal_ids": [
+        "关联目标"
+      ],
+      "action": [
+        "动作"
+      ],
+      "owner": [
+        "责任角色"
+      ],
+      "start_period": [
+        "开始周期"
+      ],
+      "end_period": [
+        "结束周期"
+      ],
+      "depends_on": [
+        "前置依赖"
+      ],
+      "status": [
+        "状态"
+      ],
+      "acceptance": [
+        "验收"
+      ],
+      "source_ref": [
+        "依据"
+      ]
+    },
+    "loads": {
+      "action_id": [
+        "动作编号"
+      ],
+      "outcome": [
+        "成果编号"
+      ],
+      "period": [
+        "周期"
+      ],
+      "PM": [
+        "项目经理"
+      ],
+      "OPS": [
+        "运营"
+      ],
+      "ANALYST": [
+        "分析师"
+      ]
+    },
+    "decisions": {
+      "decision_id": [
+        "决策编号"
+      ],
+      "status": [
+        "状态"
+      ],
+      "owner": [
+        "责任角色"
+      ],
+      "review_period": [
+        "复核周期"
+      ],
+      "disposition": [
+        "处置"
+      ],
+      "source_ref": [
+        "依据"
+      ]
+    }
+  },
+  "equivalence": [
+    "arbitrary sheet names and column order",
+    "Chinese or English headers",
+    "multiple source-supported schedules and methods",
+    "split/merge using per-outcome rows",
+    "larger valid target samples",
+    "formula implementation flexible; trusted intervention on scalar intermediates",
+    "numeric strings/percent text normalized on native readback",
+    "Unicode NFKC",
+    "empty/unknown for missing M4 baseline"
+  ],
+  "semantic_boundary": "Nonempty natural-language fields are structural only; semantic usefulness and decision grounding require separate Judge",
+  "unsupported": "Legal array/shared-input intervention representations or Office features outside the trusted runtime raise H053_UNSUPPORTED_REPRESENTATION, never ability zero"
+}

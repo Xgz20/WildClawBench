@@ -1,0 +1,58 @@
+{
+  "first": {
+    "people": [
+      {
+        "id": "p1",
+        "name": " 小陈 "
+      }
+    ],
+    "rooms": [
+      {
+        "id": "r1",
+        "capacity": 4
+      }
+    ],
+    "bookings": [
+      {
+        "id": "b1",
+        "person_id": "p1",
+        "room_id": "r1",
+        "seats": 2
+      }
+    ]
+  },
+  "orphan": {
+    "people": [],
+    "rooms": [],
+    "bookings": [
+      {
+        "id": "orphan",
+        "person_id": "absent",
+        "room_id": "r1",
+        "seats": 4
+      }
+    ]
+  },
+  "injected": {
+    "people": [
+      {
+        "id": "p2",
+        "name": "乙"
+      }
+    ],
+    "rooms": [
+      {
+        "id": "r2",
+        "capacity": 3
+      }
+    ],
+    "bookings": [
+      {
+        "id": "b2",
+        "person_id": "p2",
+        "room_id": "r2",
+        "seats": 3
+      }
+    ]
+  }
+}

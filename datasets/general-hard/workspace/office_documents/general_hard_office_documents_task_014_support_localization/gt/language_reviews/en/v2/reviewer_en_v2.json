@@ -1,0 +1,865 @@
+{
+  "reviewer_identity": "h014_en_independent_model_reviewer",
+  "locale": "en",
+  "review_type": "independent_model_review",
+  "human_expert": false,
+  "input_sha256": {
+    "input/release_notes.md": "f1d6ce2d76230c3af6f6f41ea26dc495908b6d2f749a9dada190d6511a29482c",
+    "input/terms.csv": "701ca9d20e35d376326a88185bacc93f79ec3ce33c27725f263befc5d6885d21",
+    "input/support_cases.csv": "49bb3e68f7c8423b68e2e1dd16903efcd815dca7919e976e41bc176e5aaccf2c",
+    "input/faq_old/en.md": "aa0e7021a682cd94e9b8ba0f1b664b9c48b38929ef3cd50c471cfee5062a1765",
+    "proposed/faq_en.docx": "3570a29d2ff5ff1c5479f3946e559b6e6a197d74d0425bb5e2b1a3cd5b6808ec",
+    "proposed/faq_en.md": "0abddf00509d5ca9fa8c6e17a8d7b150818d0e4a161538a7332c9fc50c9473f5",
+    "proposed/replies_en.csv": "36728c9f85fdadcb607d48825c81aaa0909bab390c75d71b65d0cfa1e1951cb6"
+  },
+  "source_reading_sha256": "38f132734bbb4f740a88186cb67863c79571024ae94c9443496520fb158775a0",
+  "actual_docx_read": {
+    "file": "proposed/faq_en.docx",
+    "sha256": "3570a29d2ff5ff1c5479f3946e559b6e6a197d74d0425bb5e2b1a3cd5b6808ec",
+    "read": true,
+    "member": "word/document.xml",
+    "member_sha256": "3683d35bb9db7af620b462a21e0353b63ed1099487e2befb18ee22b718d9f94e",
+    "paragraph_count": 39,
+    "faq_bodies_match_markdown": true
+  },
+  "records": [
+    {
+      "record_id": "K01",
+      "decision": "accept",
+      "observed_claims": [
+        "3.2.0 is stable, released 2026-09-24.",
+        "3.2.1 was offered 2026-10-02 only to enrolled macOS preview accounts and is not an all-platform stable release.",
+        "Version alone does not establish enrollment; dates for other-platform patches and unreleased capabilities are not promised."
+      ],
+      "supported_fact_ids": [
+        "F01"
+      ],
+      "contradictions": [],
+      "missing_critical": [],
+      "terminology_issues": [],
+      "readability_issues": [],
+      "recommended_edits": [],
+      "evidence": [
+        {
+          "file": "proposed/faq_en.docx",
+          "locator": "word/document.xml paragraph 5; K01 body",
+          "quote": "The released stable version is 3.2.0, published on 2026-09-24. Version 3.2.1 became available on 2026-10-02 only to enrolled macOS preview accounts; it is not a stable release for every platform. A version number alone does not establish preview enrollment. No release date has been committed for other-platform patches or unreleased capabilities."
+        },
+        {
+          "file": "proposed/faq_en.md",
+          "locator": "K01 body",
+          "quote": "The released stable version is 3.2.0, published on 2026-09-24. Version 3.2.1 became available on 2026-10-02 only to enrolled macOS preview accounts; it is not a stable release for every platform. A version number alone does not establish preview enrollment. No release date has been committed for other-platform patches or unreleased capabilities."
+        },
+        {
+          "file": "input/release_notes.md",
+          "locator": "F01",
+          "quote": "截至2026-10-04 08:00 UTC+08:00，已发布稳定版为3.2.0，发布日期2026-09-24。3.2.1于2026-10-02仅向已获准加入预览的macOS账号提供，不是全平台稳定版。未给任何未发布功能或其他平台补丁的承诺日期。"
+        }
+      ],
+      "assessment_notes": "The current snapshot in the preamble supplies the time scope. Enrolled macOS preview accounts is an acceptable equivalent for approved participation; the explicit preview wording prevents stable-release confusion."
+    },
+    {
+      "record_id": "K02",
+      "decision": "accept",
+      "observed_claims": [
+        "Every 3.2.0 plan jointly applies inclusive limits of 25 MiB/file, 8 files/batch and 100 MiB total/batch.",
+        "MiB means 2^20 bytes and must not become MB.",
+        "The old 3.1 10 MB limit is explicitly rejected as current 3.2.0 policy."
+      ],
+      "supported_fact_ids": [
+        "F02"
+      ],
+      "contradictions": [],
+      "missing_critical": [],
+      "terminology_issues": [],
+      "readability_issues": [],
+      "recommended_edits": [],
+      "evidence": [
+        {
+          "file": "proposed/faq_en.docx",
+          "locator": "word/document.xml paragraph 8; K02 body",
+          "quote": "For every plan on 3.2.0, each file must be at most 25 MiB, a batch must contain at most 8 files, and its aggregate size must be at most 100 MiB. All three limits apply together and include their boundary values. MiB means 2^20 bytes and must not be replaced with MB. The old 3.1 limit of 10 MB is not the current 3.2.0 limit."
+        },
+        {
+          "file": "proposed/faq_en.md",
+          "locator": "K02 body",
+          "quote": "For every plan on 3.2.0, each file must be at most 25 MiB, a batch must contain at most 8 files, and its aggregate size must be at most 100 MiB. All three limits apply together and include their boundary values. MiB means 2^20 bytes and must not be replaced with MB. The old 3.1 limit of 10 MB is not the current 3.2.0 limit."
+        },
+        {
+          "file": "input/release_notes.md",
+          "locator": "F02",
+          "quote": "3.2.0对所有套餐统一按每个文件不超过25 MiB、每批不超过8个文件、每批总量不超过100 MiB校验，三项须同时满足，边界值可取。MiB为2^20字节，不能改写为MB或把每文件上限当总量。3.1中的10 MB旧口径不再作为3.2.0的当前限制。"
+        }
+      ],
+      "assessment_notes": "The occurrences of MB and the older 10 MB limit are explicit warnings/corrections, not affirmative current limits. All three constraints and inclusive boundaries remain intact."
+    },
+    {
+      "record_id": "K03",
+      "decision": "accept",
+      "observed_claims": [
+        "Inclusive per-export row limits are Starter 500, Team 10000 and Enterprise 50000.",
+        "Owner and Editor roles may export within the plan cap; Viewer cannot.",
+        "CSV covers only text and metadata, excluding attachments, binary content and a complete workspace.",
+        "Row allowance is distinct from permission and exports are not unlimited."
+      ],
+      "supported_fact_ids": [
+        "F03",
+        "F07"
+      ],
+      "contradictions": [],
+      "missing_critical": [],
+      "terminology_issues": [],
+      "readability_issues": [
+        {
+          "severity": "optional",
+          "text": "10000 for Team and 50000 for Enterprise",
+          "issue": "The unseparated values are unambiguous; English thousands separators would improve scanning."
+        }
+      ],
+      "recommended_edits": [
+        {
+          "required": false,
+          "instruction": "Optionally add thousands separators without changing row counts."
+        }
+      ],
+      "evidence": [
+        {
+          "file": "proposed/faq_en.docx",
+          "locator": "word/document.xml paragraph 11; K03 body",
+          "quote": "The per-export caps are 500 rows for Starter, 10000 for Team and 50000 for Enterprise, inclusive. Only Owner and Editor roles may export within the applicable plan cap; a Viewer cannot export. CSV contains text fields and metadata only, without attachments, binary content or a complete workspace. A sufficient row allowance does not grant permission, and no plan has an unlimited row cap."
+        },
+        {
+          "file": "proposed/faq_en.md",
+          "locator": "K03 body",
+          "quote": "The per-export caps are 500 rows for Starter, 10000 for Team and 50000 for Enterprise, inclusive. Only Owner and Editor roles may export within the applicable plan cap; a Viewer cannot export. CSV contains text fields and metadata only, without attachments, binary content or a complete workspace. A sufficient row allowance does not grant permission, and no plan has an unlimited row cap."
+        },
+        {
+          "file": "input/release_notes.md",
+          "locator": "F03",
+          "quote": "3.2.0已向Starter/Team/Enterprise分别提供每次500/10000/50000行的CSV导出，上限含边界。CSV只包含文本字段与元数据，不打包附件、二进制内容或完整工作空间。导出还受F07角色权限约束，不能把套餐行数足够当成已有导出权限，也不是无限行数。"
+        },
+        {
+          "file": "input/release_notes.md",
+          "locator": "F07",
+          "quote": "角色标签为Owner、Editor、Viewer。Owner和Editor可在套餐上限内导出CSV，Viewer不能导出。SSO配置和跨区域迁移评估请求均须Owner办理；客服回复不能替用户改角色、授权或声称操作已经完成。角色条件与套餐、区域、渠道条件同时适用。"
+        }
+      ],
+      "assessment_notes": "Role and plan gates are separately preserved. The complete-workspace and unlimited-cap statements are explicit exclusions; no prohibited promise is asserted."
+    },
+    {
+      "record_id": "K04",
+      "decision": "accept",
+      "observed_claims": [
+        "3.2.0 supports PDFs with extractable text.",
+        "Scanned or image-only PDFs require OCR, which is unreleased in stable and 3.2.1 preview, without a committed date.",
+        "Ask for extractable text; do not claim OCR enabled/performed or all PDFs unsupported."
+      ],
+      "supported_fact_ids": [
+        "F04",
+        "F01"
+      ],
+      "contradictions": [],
+      "missing_critical": [],
+      "terminology_issues": [],
+      "readability_issues": [],
+      "recommended_edits": [],
+      "evidence": [
+        {
+          "file": "proposed/faq_en.docx",
+          "locator": "word/document.xml paragraph 14; K04 body",
+          "quote": "Version 3.2.0 supports PDFs with extractable text. Scanned pages and image-only PDFs require OCR, which has not been released in either stable or the 3.2.1 preview. There is no committed OCR release date. Ask for an extractable-text version or the relevant text instead; do not claim that OCR has been enabled or performed, or that all PDFs are unsupported."
+        },
+        {
+          "file": "proposed/faq_en.md",
+          "locator": "K04 body",
+          "quote": "Version 3.2.0 supports PDFs with extractable text. Scanned pages and image-only PDFs require OCR, which has not been released in either stable or the 3.2.1 preview. There is no committed OCR release date. Ask for an extractable-text version or the relevant text instead; do not claim that OCR has been enabled or performed, or that all PDFs are unsupported."
+        },
+        {
+          "file": "input/release_notes.md",
+          "locator": "F04",
+          "quote": "3.2.0支持可提取文本的PDF。扫描页、纯图片PDF需要OCR，该功能在稳定版及3.2.1预览中均未发布，也无承诺上线日期。可请用户提供可提取文本的版本或文字内容，但不能声称已为其完成OCR或启用了未发布功能。"
+        },
+        {
+          "file": "input/release_notes.md",
+          "locator": "F01",
+          "quote": "截至2026-10-04 08:00 UTC+08:00，已发布稳定版为3.2.0，发布日期2026-09-24。3.2.1于2026-10-02仅向已获准加入预览的macOS账号提供，不是全平台稳定版。未给任何未发布功能或其他平台补丁的承诺日期。"
+        }
+      ],
+      "assessment_notes": "The do-not-claim wording negates OCR enablement/performance and blanket PDF rejection. Text-PDF support remains affirmative and scanned-PDF limitations remain explicit."
+    },
+    {
+      "record_id": "K05",
+      "decision": "accept",
+      "observed_claims": [
+        "Windows 3.2.0 duplicate-sync issue is known.",
+        "The workaround first preserves unsynced drafts separately, then closes/reopens the affected document, then retries once.",
+        "Do not delete caches/workspaces or overwrite unsynced content.",
+        "macOS-only 3.2.1 preview proves no Windows fix; no Windows patch date is promised."
+      ],
+      "supported_fact_ids": [
+        "F05",
+        "F01"
+      ],
+      "contradictions": [],
+      "missing_critical": [],
+      "terminology_issues": [],
+      "readability_issues": [],
+      "recommended_edits": [],
+      "evidence": [
+        {
+          "file": "proposed/faq_en.docx",
+          "locator": "word/document.xml paragraph 17; K05 body",
+          "quote": "The issue is known and the available steps are a workaround, not a released fix. First save a separate copy of unsynced drafts, then close and reopen the affected document, and retry sync once. Do not advise deleting caches or workspaces, or overwriting unsynced content. Version 3.2.1 is macOS preview only and does not prove a Windows fix has shipped. No Windows patch date is committed."
+        },
+        {
+          "file": "proposed/faq_en.md",
+          "locator": "K05 body",
+          "quote": "The issue is known and the available steps are a workaround, not a released fix. First save a separate copy of unsynced drafts, then close and reopen the affected document, and retry sync once. Do not advise deleting caches or workspaces, or overwriting unsynced content. Version 3.2.1 is macOS preview only and does not prove a Windows fix has shipped. No Windows patch date is committed."
+        },
+        {
+          "file": "input/release_notes.md",
+          "locator": "F05",
+          "quote": "Windows 3.2.0存在重复同步记录的已知问题。临时绕过步骤为先把未同步草稿另存副本，再关闭并重新打开受影响文档，最后重试同步一次；这不是已发布修复。不要让用户删除缓存、删除工作空间或覆盖未同步内容。3.2.1仅为macOS预览，不证明Windows已修复，也无Windows补丁承诺日期。"
+        },
+        {
+          "file": "input/release_notes.md",
+          "locator": "F01",
+          "quote": "截至2026-10-04 08:00 UTC+08:00，已发布稳定版为3.2.0，发布日期2026-09-24。3.2.1于2026-10-02仅向已获准加入预览的macOS账号提供，不是全平台稳定版。未给任何未发布功能或其他平台补丁的承诺日期。"
+        }
+      ],
+      "assessment_notes": "The exact safety-preserving workaround order and once-only retry are retained, without presenting the workaround or macOS preview as a shipped Windows fix."
+    },
+    {
+      "record_id": "K06",
+      "decision": "accept",
+      "observed_claims": [
+        "Offline access requires previously opened cached content and last online authentication within 24 hours inclusive.",
+        "After expiry, authenticate online again; expiry does not imply deletion and indefinite offline use is not guaranteed.",
+        "Workspace creation, CSV export, billing and SSO changes are unavailable offline.",
+        "Audit retention is separate."
+      ],
+      "supported_fact_ids": [
+        "F06",
+        "F09"
+      ],
+      "contradictions": [],
+      "missing_critical": [],
+      "terminology_issues": [],
+      "readability_issues": [],
+      "recommended_edits": [],
+      "evidence": [
+        {
+          "file": "proposed/faq_en.docx",
+          "locator": "word/document.xml paragraph 20; K06 body",
+          "quote": "No. Offline access is limited to content that was previously opened and cached, within 24 hours of the last online authentication, including the 24-hour boundary. After that window, authenticate online again; expiry does not mean the content has been deleted. Offline use cannot be guaranteed indefinitely. Creating a new workspace, exporting CSV, handling billing and changing SSO settings are unavailable offline. Audit retention is a separate calendar-day policy."
+        },
+        {
+          "file": "proposed/faq_en.md",
+          "locator": "K06 body",
+          "quote": "No. Offline access is limited to content that was previously opened and cached, within 24 hours of the last online authentication, including the 24-hour boundary. After that window, authenticate online again; expiry does not mean the content has been deleted. Offline use cannot be guaranteed indefinitely. Creating a new workspace, exporting CSV, handling billing and changing SSO settings are unavailable offline. Audit retention is a separate calendar-day policy."
+        },
+        {
+          "file": "input/release_notes.md",
+          "locator": "F06",
+          "quote": "离线访问只适用于之前打开且已缓存的内容，须在最近一次在线身份验证后24小时以内（含24小时）。超过窗口应先联网重新验证，不表示内容在24小时后已删除。离线时不能新建工作空间、导出CSV、处理账单或更改SSO设置；不能保证永久离线使用。"
+        },
+        {
+          "file": "input/release_notes.md",
+          "locator": "F09",
+          "quote": "Starter/Team/Enterprise的审计记录分别保留7/30/90个自然日，按记录产生时间计算，边界当天可查询。超过保留期无自助恢复能力，不承诺备份找回；升级套餐不能保证恢复已过期记录。此保留期与F06离线访问窗口不同。"
+        }
+      ],
+      "assessment_notes": "The 24-hour boundary is explicit and inclusive. Expiry is separated from deletion, all four offline-prohibited operations are listed, and permanent access is not promised."
+    },
+    {
+      "record_id": "K07",
+      "decision": "accept",
+      "observed_claims": [
+        "Owner/Editor may export within plan caps and Viewer may not.",
+        "SSO configuration and migration assessment requests require Owner.",
+        "SSO remains subject to its own plan, region, version and preview requirements.",
+        "Migration requests receive manual assessment and need separate implementation approval.",
+        "A reply must not claim a role change, authorization or completed configuration, and Owner status does not establish preview enrollment."
+      ],
+      "supported_fact_ids": [
+        "F07",
+        "F03",
+        "F08",
+        "F11"
+      ],
+      "contradictions": [],
+      "missing_critical": [],
+      "terminology_issues": [],
+      "readability_issues": [],
+      "recommended_edits": [],
+      "evidence": [
+        {
+          "file": "proposed/faq_en.docx",
+          "locator": "word/document.xml paragraph 23; K07 body",
+          "quote": "The Owner and Editor roles permit CSV export within the plan's cap; the Viewer role does not. SSO configuration and cross-region migration assessment requests require an Owner. SSO also remains subject to its applicable plan, region, version and preview conditions; a migration request enters manual assessment and still requires separate implementation approval. A support reply must not claim to have changed a role, granted permission or completed configuration. Being an Owner does not automatically enroll an account in every preview."
+        },
+        {
+          "file": "proposed/faq_en.md",
+          "locator": "K07 body",
+          "quote": "The Owner and Editor roles permit CSV export within the plan's cap; the Viewer role does not. SSO configuration and cross-region migration assessment requests require an Owner. SSO also remains subject to its applicable plan, region, version and preview conditions; a migration request enters manual assessment and still requires separate implementation approval. A support reply must not claim to have changed a role, granted permission or completed configuration. Being an Owner does not automatically enroll an account in every preview."
+        },
+        {
+          "file": "input/release_notes.md",
+          "locator": "F07",
+          "quote": "角色标签为Owner、Editor、Viewer。Owner和Editor可在套餐上限内导出CSV，Viewer不能导出。SSO配置和跨区域迁移评估请求均须Owner办理；客服回复不能替用户改角色、授权或声称操作已经完成。角色条件与套餐、区域、渠道条件同时适用。"
+        },
+        {
+          "file": "input/release_notes.md",
+          "locator": "F03",
+          "quote": "3.2.0已向Starter/Team/Enterprise分别提供每次500/10000/50000行的CSV导出，上限含边界。CSV只包含文本字段与元数据，不打包附件、二进制内容或完整工作空间。导出还受F07角色权限约束，不能把套餐行数足够当成已有导出权限，也不是无限行数。"
+        },
+        {
+          "file": "input/release_notes.md",
+          "locator": "F08",
+          "quote": "SSO仅适用于Enterprise套餐并由Owner配置。稳定版3.2.0目前仅在cn-sh、ap-sg开放；eu-fr尚未GA。eu-fr只能在Enterprise、Owner、macOS、3.2.1预览渠道、账号已获准加入预览这六项同时满足时试用。未获准加入可申请评估，不能回复成已启用；未给EU正式发布或其他平台预览的日期。"
+        },
+        {
+          "file": "input/release_notes.md",
+          "locator": "F11",
+          "quote": "稳定版未提供自助跨区域迁移。Owner可提交人工评估请求，实际实施另需审核，不代表请求已经批准；没有承诺可保留工作空间ID或自动转移附件，也没有上线时间。CSV导出/导入只在F03范围内，不等于完整迁移。EU的SSO预览资格不会自动赋予迁移权限。"
+        }
+      ],
+      "assessment_notes": "The revised wording assigns SSO conditions to SSO and separately states migration assessment/implementation approval. It does not turn SSO preview enrollment into migration permission or claim any action completed."
+    },
+    {
+      "record_id": "K08",
+      "decision": "accept",
+      "observed_claims": [
+        "SSO needs Enterprise and Owner.",
+        "Stable 3.2.0 SSO is available only in cn-sh/ap-sg; eu-fr is not GA.",
+        "eu-fr trial jointly requires Enterprise, Owner, macOS, 3.2.1, preview channel and approved enrollment.",
+        "Unenrolled accounts may request assessment without being described as enabled; EU GA and other-platform preview dates are not promised."
+      ],
+      "supported_fact_ids": [
+        "F08",
+        "F01",
+        "F07"
+      ],
+      "contradictions": [],
+      "missing_critical": [],
+      "terminology_issues": [],
+      "readability_issues": [],
+      "recommended_edits": [],
+      "evidence": [
+        {
+          "file": "proposed/faq_en.docx",
+          "locator": "word/document.xml paragraph 26; K08 body",
+          "quote": "SSO requires Enterprise and an Owner. In stable 3.2.0 it is currently available only in cn-sh and ap-sg; SSO in eu-fr is not generally available. Trial use in eu-fr requires Enterprise, Owner, macOS, client version 3.2.1, the preview channel and approved preview enrollment, all together. An unenrolled account may request assessment, but must not be described as enabled. No EU general-availability date or other-platform preview date is committed."
+        },
+        {
+          "file": "proposed/faq_en.md",
+          "locator": "K08 body",
+          "quote": "SSO requires Enterprise and an Owner. In stable 3.2.0 it is currently available only in cn-sh and ap-sg; SSO in eu-fr is not generally available. Trial use in eu-fr requires Enterprise, Owner, macOS, client version 3.2.1, the preview channel and approved preview enrollment, all together. An unenrolled account may request assessment, but must not be described as enabled. No EU general-availability date or other-platform preview date is committed."
+        },
+        {
+          "file": "input/release_notes.md",
+          "locator": "F08",
+          "quote": "SSO仅适用于Enterprise套餐并由Owner配置。稳定版3.2.0目前仅在cn-sh、ap-sg开放；eu-fr尚未GA。eu-fr只能在Enterprise、Owner、macOS、3.2.1预览渠道、账号已获准加入预览这六项同时满足时试用。未获准加入可申请评估，不能回复成已启用；未给EU正式发布或其他平台预览的日期。"
+        },
+        {
+          "file": "input/release_notes.md",
+          "locator": "F01",
+          "quote": "截至2026-10-04 08:00 UTC+08:00，已发布稳定版为3.2.0，发布日期2026-09-24。3.2.1于2026-10-02仅向已获准加入预览的macOS账号提供，不是全平台稳定版。未给任何未发布功能或其他平台补丁的承诺日期。"
+        },
+        {
+          "file": "input/release_notes.md",
+          "locator": "F07",
+          "quote": "角色标签为Owner、Editor、Viewer。Owner和Editor可在套餐上限内导出CSV，Viewer不能导出。SSO配置和跨区域迁移评估请求均须Owner办理；客服回复不能替用户改角色、授权或声称操作已经完成。角色条件与套餐、区域、渠道条件同时适用。"
+        }
+      ],
+      "assessment_notes": "The six eu-fr trial requirements remain conjunctive. Assessment is distinguished from enrollment and enablement; no GA or other-platform date is invented."
+    },
+    {
+      "record_id": "K09",
+      "decision": "accept",
+      "observed_claims": [
+        "Audit retention is 7/30/90 calendar days for Starter/Team/Enterprise, from record creation with boundary day included.",
+        "After retention there is no self-service recovery or guaranteed backup recovery, and upgrading cannot guarantee restoring expired records.",
+        "This differs from the offline window and does not prove every backup absent."
+      ],
+      "supported_fact_ids": [
+        "F09",
+        "F06"
+      ],
+      "contradictions": [],
+      "missing_critical": [],
+      "terminology_issues": [],
+      "readability_issues": [],
+      "recommended_edits": [],
+      "evidence": [
+        {
+          "file": "proposed/faq_en.docx",
+          "locator": "word/document.xml paragraph 29; K09 body",
+          "quote": "Audit retention is 7 calendar days for Starter, 30 for Team and 90 for Enterprise, measured from record creation and including the boundary day. There is no self-service recovery beyond retention, and backup recovery is not guaranteed. Upgrading does not guarantee restoration of already expired records. This is separate from the 24-hour offline access window; neither policy establishes that every backup is absent."
+        },
+        {
+          "file": "proposed/faq_en.md",
+          "locator": "K09 body",
+          "quote": "Audit retention is 7 calendar days for Starter, 30 for Team and 90 for Enterprise, measured from record creation and including the boundary day. There is no self-service recovery beyond retention, and backup recovery is not guaranteed. Upgrading does not guarantee restoration of already expired records. This is separate from the 24-hour offline access window; neither policy establishes that every backup is absent."
+        },
+        {
+          "file": "input/release_notes.md",
+          "locator": "F09",
+          "quote": "Starter/Team/Enterprise的审计记录分别保留7/30/90个自然日，按记录产生时间计算，边界当天可查询。超过保留期无自助恢复能力，不承诺备份找回；升级套餐不能保证恢复已过期记录。此保留期与F06离线访问窗口不同。"
+        },
+        {
+          "file": "input/release_notes.md",
+          "locator": "F06",
+          "quote": "离线访问只适用于之前打开且已缓存的内容，须在最近一次在线身份验证后24小时以内（含24小时）。超过窗口应先联网重新验证，不表示内容在24小时后已删除。离线时不能新建工作空间、导出CSV、处理账单或更改SSO设置；不能保证永久离线使用。"
+        }
+      ],
+      "assessment_notes": "Not guaranteed is not a claim that recovery is impossible or every backup absent. Retention calendar days and offline authentication hours remain distinct."
+    },
+    {
+      "record_id": "K10",
+      "decision": "accept",
+      "observed_claims": [
+        "The standard review-application route is direct monthly only, within inclusive limits of 7 calendar days and 10 credits.",
+        "Meeting limits is not approval or a guaranteed immediate/full refund, amount or completion time.",
+        "Nonstandard cases go to billing; annual/reseller/other orders follow their contracts/channels without universal refundability conclusions.",
+        "Taxes, fees and approval remain unknown; credits do not establish an amount or confirmed zero."
+      ],
+      "supported_fact_ids": [
+        "F10"
+      ],
+      "contradictions": [],
+      "missing_critical": [],
+      "terminology_issues": [],
+      "readability_issues": [
+        {
+          "severity": "optional",
+          "text": "a guarantee of immediacy",
+          "issue": "Understandable but abstract English; more direct wording about an immediate refund would read more naturally."
+        }
+      ],
+      "recommended_edits": [
+        {
+          "required": false,
+          "instruction": "Optionally simplify the wording while preserving every refund limitation."
+        }
+      ],
+      "evidence": [
+        {
+          "file": "proposed/faq_en.docx",
+          "locator": "word/document.xml paragraph 32; K10 body",
+          "quote": "No. The standard application route applies only to directly purchased monthly orders: payment must be no more than 7 calendar days old and consumption no more than 10 credits, both inclusive. Meeting those criteria permits a refund review, not an approval or a guarantee of immediacy, a full refund, any amount or completion time. If the standard criteria are not met, contact billing for assessment. Annual, reseller and other orders follow their contracts or channels; do not declare all such orders refundable or non-refundable. Taxes, channel fees and the approval result are unknown, so credits cannot establish an amount or a confirmed zero refund."
+        },
+        {
+          "file": "proposed/faq_en.md",
+          "locator": "K10 body",
+          "quote": "No. The standard application route applies only to directly purchased monthly orders: payment must be no more than 7 calendar days old and consumption no more than 10 credits, both inclusive. Meeting those criteria permits a refund review, not an approval or a guarantee of immediacy, a full refund, any amount or completion time. If the standard criteria are not met, contact billing for assessment. Annual, reseller and other orders follow their contracts or channels; do not declare all such orders refundable or non-refundable. Taxes, channel fees and the approval result are unknown, so credits cannot establish an amount or a confirmed zero refund."
+        },
+        {
+          "file": "input/release_notes.md",
+          "locator": "F10",
+          "quote": "标准申请路径只适用于直接购买的月付订单：付款后不超过7个自然日且已消耗不超过10 credits时，可提交退款审核，两项含边界。符合申请条件不等于已获退款，不保证即时、全额、金额或完成时间。未满足标准条件需联系账单团队核实；年付、转售商等其他渠道按相应合同或渠道审核，不据此断言一律可退或一律不退。税费、渠道费和实际批准结果未给，任何具体退款金额均未知，不能填0或擅自计算。"
+        }
+      ],
+      "assessment_notes": "Refund review is correctly separated from approval, and both numerical boundaries are inclusive. Confirmed zero is explicitly disallowed rather than asserted."
+    },
+    {
+      "record_id": "K11",
+      "decision": "accept",
+      "observed_claims": [
+        "Stable has no self-service cross-region migration.",
+        "Owner may request manual assessment but a request is not implementation approval.",
+        "ID preservation, automatic attachment transfer and a release date are not promised.",
+        "CSV import/export is limited to text and metadata and is not full migration.",
+        "The numeric plan row cap is stated per export; a separate import cap is unspecified.",
+        "EU SSO preview enrollment does not automatically grant migration permission and a draft cannot claim completed migration."
+      ],
+      "supported_fact_ids": [
+        "F11",
+        "F03",
+        "F07",
+        "F08"
+      ],
+      "contradictions": [],
+      "missing_critical": [],
+      "terminology_issues": [],
+      "readability_issues": [],
+      "recommended_edits": [],
+      "evidence": [
+        {
+          "file": "proposed/faq_en.docx",
+          "locator": "word/document.xml paragraph 35; K11 body",
+          "quote": "Stable has no self-service cross-region migration. An Owner may request manual assessment, but submitting a request is not implementation approval. Preservation of workspace IDs, automatic attachment transfer and a release date are not committed. CSV export and import cover only text fields and metadata rather than full migration. The plan's numeric row cap is stated per export; a separate import row cap is not specified. EU SSO preview enrollment does not automatically grant migration permission, and a draft reply must not claim that migration has been completed."
+        },
+        {
+          "file": "proposed/faq_en.md",
+          "locator": "K11 body",
+          "quote": "Stable has no self-service cross-region migration. An Owner may request manual assessment, but submitting a request is not implementation approval. Preservation of workspace IDs, automatic attachment transfer and a release date are not committed. CSV export and import cover only text fields and metadata rather than full migration. The plan's numeric row cap is stated per export; a separate import row cap is not specified. EU SSO preview enrollment does not automatically grant migration permission, and a draft reply must not claim that migration has been completed."
+        },
+        {
+          "file": "input/release_notes.md",
+          "locator": "F11",
+          "quote": "稳定版未提供自助跨区域迁移。Owner可提交人工评估请求，实际实施另需审核，不代表请求已经批准；没有承诺可保留工作空间ID或自动转移附件，也没有上线时间。CSV导出/导入只在F03范围内，不等于完整迁移。EU的SSO预览资格不会自动赋予迁移权限。"
+        },
+        {
+          "file": "input/release_notes.md",
+          "locator": "F03",
+          "quote": "3.2.0已向Starter/Team/Enterprise分别提供每次500/10000/50000行的CSV导出，上限含边界。CSV只包含文本字段与元数据，不打包附件、二进制内容或完整工作空间。导出还受F07角色权限约束，不能把套餐行数足够当成已有导出权限，也不是无限行数。"
+        },
+        {
+          "file": "input/release_notes.md",
+          "locator": "F07",
+          "quote": "角色标签为Owner、Editor、Viewer。Owner和Editor可在套餐上限内导出CSV，Viewer不能导出。SSO配置和跨区域迁移评估请求均须Owner办理；客服回复不能替用户改角色、授权或声称操作已经完成。角色条件与套餐、区域、渠道条件同时适用。"
+        },
+        {
+          "file": "input/release_notes.md",
+          "locator": "F08",
+          "quote": "SSO仅适用于Enterprise套餐并由Owner配置。稳定版3.2.0目前仅在cn-sh、ap-sg开放；eu-fr尚未GA。eu-fr只能在Enterprise、Owner、macOS、3.2.1预览渠道、账号已获准加入预览这六项同时满足时试用。未获准加入可申请评估，不能回复成已启用；未给EU正式发布或其他平台预览的日期。"
+        }
+      ],
+      "assessment_notes": "The actual revised DOCX states that the plan row cap is per export and a separate import cap is unspecified. This removes the prior modifier ambiguity without inventing an import limit or promising unlimited imports. Manual assessment, implementation approval, attachment/ID limits and SSO/migration separation remain correct."
+    },
+    {
+      "record_id": "K12",
+      "decision": "accept",
+      "observed_claims": [
+        "Support hours are Monday-Friday 09:00-18:00 UTC+08:00.",
+        "Two business days is a first-response target, not a guarantee, SLA, issue-resolution deadline or refund-settlement deadline.",
+        "No holiday schedule is given and no exact reply deadline may be inferred; response business days differ from refund calendar days."
+      ],
+      "supported_fact_ids": [
+        "F12",
+        "F10"
+      ],
+      "contradictions": [],
+      "missing_critical": [],
+      "terminology_issues": [],
+      "readability_issues": [],
+      "recommended_edits": [],
+      "evidence": [
+        {
+          "file": "proposed/faq_en.docx",
+          "locator": "word/document.xml paragraph 38; K12 body",
+          "quote": "Support hours are Monday-Friday, 09:00-18:00, UTC+08:00. The target is a first response within 2 business days; it is not a guarantee, SLA, issue-resolution deadline or refund-settlement deadline. No holiday schedule is supplied, so do not infer a specific reply deadline. The business-day response target must not be substituted for the calendar-day refund application window."
+        },
+        {
+          "file": "proposed/faq_en.md",
+          "locator": "K12 body",
+          "quote": "Support hours are Monday-Friday, 09:00-18:00, UTC+08:00. The target is a first response within 2 business days; it is not a guarantee, SLA, issue-resolution deadline or refund-settlement deadline. No holiday schedule is supplied, so do not infer a specific reply deadline. The business-day response target must not be substituted for the calendar-day refund application window."
+        },
+        {
+          "file": "input/release_notes.md",
+          "locator": "F12",
+          "quote": "支持服务时间为周一至周五09:00-18:00，时区UTC+08:00；首次响应目标为2个工作日。这是目标，不是保证、SLA、问题解决时限或退款到账时限。未给节假日安排，不推断具体回复截止日；不要把自然日退款窗口与工作日响应目标混用。"
+        },
+        {
+          "file": "input/release_notes.md",
+          "locator": "F10",
+          "quote": "标准申请路径只适用于直接购买的月付订单：付款后不超过7个自然日且已消耗不超过10 credits时，可提交退款审核，两项含边界。符合申请条件不等于已获退款，不保证即时、全额、金额或完成时间。未满足标准条件需联系账单团队核实；年付、转售商等其他渠道按相应合同或渠道审核，不据此断言一律可退或一律不退。税费、渠道费和实际批准结果未给，任何具体退款金额均未知，不能填0或擅自计算。"
+        }
+      ],
+      "assessment_notes": "Within 2 business days is acceptable as a first-response target because guarantees, SLA, issue resolution and refund settlement are explicitly excluded. No exact deadline is inferred."
+    },
+    {
+      "record_id": "C07",
+      "decision": "accept",
+      "observed_claims": [
+        "Nine 1 MiB files exceed the 8-file batch cap even though each file and the 9 MiB batch total meet their size caps.",
+        "8+1 batches meet the known three constraints.",
+        "No upload has been performed by the draft."
+      ],
+      "supported_fact_ids": [
+        "F02"
+      ],
+      "contradictions": [],
+      "missing_critical": [],
+      "terminology_issues": [],
+      "readability_issues": [],
+      "recommended_edits": [],
+      "evidence": [
+        {
+          "file": "proposed/replies_en.csv",
+          "locator": "CSV row 2; C07; reply",
+          "quote": "Nine files exceed the per-batch limit of 8, even though each 1 MiB file is below 25 MiB and their 9 MiB total is below 100 MiB. Split the selection into batches that each satisfy all three caps, such as 8 files and then 1. These units are MiB, not MB; no upload has been performed by this draft."
+        },
+        {
+          "file": "input/support_cases.csv",
+          "locator": "C07; question",
+          "quote": "Each of my nine files is 1 MiB. May I upload all nine in a single batch?"
+        },
+        {
+          "file": "input/support_cases.csv",
+          "locator": "C07; context_json",
+          "quote": "{\"plan\":\"Starter\",\"role\":\"Editor\",\"client_version\":\"3.2.0\",\"files_mib\":[1,1,1,1,1,1,1,1,1]}"
+        },
+        {
+          "file": "input/release_notes.md",
+          "locator": "F02",
+          "quote": "3.2.0对所有套餐统一按每个文件不超过25 MiB、每批不超过8个文件、每批总量不超过100 MiB校验，三项须同时满足，边界值可取。MiB为2^20字节，不能改写为MB或把每文件上限当总量。3.1中的10 MB旧口径不再作为3.2.0的当前限制。"
+        }
+      ],
+      "assessment_notes": "The independent file-count rejection and arithmetic match the source and known sizes. The suggested split does not assert a completed operation."
+    },
+    {
+      "record_id": "C08",
+      "decision": "accept",
+      "observed_claims": [
+        "Editor permission is satisfied but 800 exceeds Starter per-export cap 500.",
+        "Selecting no more than 500 rows satisfies the known row cap.",
+        "CSV covers text/metadata, not attachments; Starter is neither without export nor unlimited."
+      ],
+      "supported_fact_ids": [
+        "F03",
+        "F07"
+      ],
+      "contradictions": [],
+      "missing_critical": [],
+      "terminology_issues": [],
+      "readability_issues": [],
+      "recommended_edits": [],
+      "evidence": [
+        {
+          "file": "proposed/replies_en.csv",
+          "locator": "CSV row 3; C08; reply",
+          "quote": "Your Editor role permits CSV export, but 800 rows exceed Starter's per-export cap of 500. Reduce or filter the selected rows to 500 or fewer for an export within the current plan's cap. CSV covers text fields and metadata, not attachments; this does not mean Starter has no CSV export or an unlimited allowance."
+        },
+        {
+          "file": "input/support_cases.csv",
+          "locator": "C08; question",
+          "quote": "I am an Editor on Starter. Can I export 800 rows as a CSV?"
+        },
+        {
+          "file": "input/support_cases.csv",
+          "locator": "C08; context_json",
+          "quote": "{\"plan\":\"Starter\",\"role\":\"Editor\",\"export_rows\":800,\"client_version\":\"3.2.0\"}"
+        },
+        {
+          "file": "input/release_notes.md",
+          "locator": "F03",
+          "quote": "3.2.0已向Starter/Team/Enterprise分别提供每次500/10000/50000行的CSV导出，上限含边界。CSV只包含文本字段与元数据，不打包附件、二进制内容或完整工作空间。导出还受F07角色权限约束，不能把套餐行数足够当成已有导出权限，也不是无限行数。"
+        },
+        {
+          "file": "input/release_notes.md",
+          "locator": "F07",
+          "quote": "角色标签为Owner、Editor、Viewer。Owner和Editor可在套餐上限内导出CSV，Viewer不能导出。SSO配置和跨区域迁移评估请求均须Owner办理；客服回复不能替用户改角色、授权或声称操作已经完成。角色条件与套餐、区域、渠道条件同时适用。"
+        }
+      ],
+      "assessment_notes": "The reply separates valid role permission from invalid row count. Reduce/filter is general selection advice and does not claim an unprovided named product feature."
+    },
+    {
+      "record_id": "C09",
+      "decision": "accept",
+      "observed_claims": [
+        "Team Editor may export exactly 10000 rows at the inclusive cap.",
+        "Attachments and a full-workspace package are outside the permitted CSV scope."
+      ],
+      "supported_fact_ids": [
+        "F03",
+        "F07"
+      ],
+      "contradictions": [],
+      "missing_critical": [],
+      "terminology_issues": [],
+      "readability_issues": [
+        {
+          "severity": "optional",
+          "text": "exactly 10000 rows",
+          "issue": "The count is unambiguous; 10,000 would scan more naturally in English."
+        }
+      ],
+      "recommended_edits": [
+        {
+          "required": false,
+          "instruction": "Optionally use an English thousands separator for the unchanged count."
+        }
+      ],
+      "evidence": [
+        {
+          "file": "proposed/replies_en.csv",
+          "locator": "CSV row 4; C09; reply",
+          "quote": "A Team Editor may export exactly 10000 rows because the cap is inclusive. The permitted CSV scope is text fields and metadata only; attachments are not included. You can export the eligible text data within the cap, but the request cannot be fulfilled as a package containing all attachments or a full workspace."
+        },
+        {
+          "file": "input/support_cases.csv",
+          "locator": "C09; question",
+          "quote": "Can a Team Editor export exactly 10,000 rows, including all attachments?"
+        },
+        {
+          "file": "input/support_cases.csv",
+          "locator": "C09; context_json",
+          "quote": "{\"plan\":\"Team\",\"role\":\"Editor\",\"export_rows\":10000,\"client_version\":\"3.2.0\",\"requested_scope\":\"rows_and_attachments\"}"
+        },
+        {
+          "file": "input/release_notes.md",
+          "locator": "F03",
+          "quote": "3.2.0已向Starter/Team/Enterprise分别提供每次500/10000/50000行的CSV导出，上限含边界。CSV只包含文本字段与元数据，不打包附件、二进制内容或完整工作空间。导出还受F07角色权限约束，不能把套餐行数足够当成已有导出权限，也不是无限行数。"
+        },
+        {
+          "file": "input/release_notes.md",
+          "locator": "F07",
+          "quote": "角色标签为Owner、Editor、Viewer。Owner和Editor可在套餐上限内导出CSV，Viewer不能导出。SSO配置和跨区域迁移评估请求均须Owner办理；客服回复不能替用户改角色、授权或声称操作已经完成。角色条件与套餐、区域、渠道条件同时适用。"
+        }
+      ],
+      "assessment_notes": "The exact boundary is allowed for rows while the requested attachment scope is rejected. Full workspace is used only as an exclusion."
+    },
+    {
+      "record_id": "C10",
+      "decision": "accept",
+      "observed_claims": [
+        "Enterprise/Owner/macOS 3.2.1 preview alone does not establish eu-fr SSO enablement.",
+        "The stated lack of enrollment fails a necessary condition.",
+        "Preview assessment may be requested without promising approval, activation or GA date; stable cn-sh/ap-sg availability is separate."
+      ],
+      "supported_fact_ids": [
+        "F01",
+        "F07",
+        "F08"
+      ],
+      "contradictions": [],
+      "missing_critical": [],
+      "terminology_issues": [],
+      "readability_issues": [],
+      "recommended_edits": [],
+      "evidence": [
+        {
+          "file": "proposed/replies_en.csv",
+          "locator": "CSV row 5; C10; reply",
+          "quote": "SSO is not already enabled merely because you have Enterprise, Owner access and macOS 3.2.1 preview. In eu-fr, approved enrollment is also required; your unenrolled account does not yet meet every preview condition. You may request preview assessment, but approval, activation and an EU general-availability date cannot be promised. This preview is separate from stable SSO in cn-sh and ap-sg."
+        },
+        {
+          "file": "input/support_cases.csv",
+          "locator": "C10; question",
+          "quote": "We are an Enterprise Owner in eu-fr on macOS 3.2.1 preview, but have not been enrolled. Is SSO already enabled?"
+        },
+        {
+          "file": "input/support_cases.csv",
+          "locator": "C10; context_json",
+          "quote": "{\"plan\":\"Enterprise\",\"role\":\"Owner\",\"region\":\"eu-fr\",\"os\":\"macOS\",\"client_version\":\"3.2.1\",\"channel\":\"preview\",\"enrolled\":false}"
+        },
+        {
+          "file": "input/release_notes.md",
+          "locator": "F01",
+          "quote": "截至2026-10-04 08:00 UTC+08:00，已发布稳定版为3.2.0，发布日期2026-09-24。3.2.1于2026-10-02仅向已获准加入预览的macOS账号提供，不是全平台稳定版。未给任何未发布功能或其他平台补丁的承诺日期。"
+        },
+        {
+          "file": "input/release_notes.md",
+          "locator": "F07",
+          "quote": "角色标签为Owner、Editor、Viewer。Owner和Editor可在套餐上限内导出CSV，Viewer不能导出。SSO配置和跨区域迁移评估请求均须Owner办理；客服回复不能替用户改角色、授权或声称操作已经完成。角色条件与套餐、区域、渠道条件同时适用。"
+        },
+        {
+          "file": "input/release_notes.md",
+          "locator": "F08",
+          "quote": "SSO仅适用于Enterprise套餐并由Owner配置。稳定版3.2.0目前仅在cn-sh、ap-sg开放；eu-fr尚未GA。eu-fr只能在Enterprise、Owner、macOS、3.2.1预览渠道、账号已获准加入预览这六项同时满足时试用。未获准加入可申请评估，不能回复成已启用；未给EU正式发布或其他平台预览的日期。"
+        }
+      ],
+      "assessment_notes": "The reply does not silently equate preview version/channel with enrollment and does not claim support has enabled anything."
+    },
+    {
+      "record_id": "C11",
+      "decision": "accept",
+      "observed_claims": [
+        "At 2026-10-04 08:00 UTC+08:00, 26 hours have elapsed since 2026-10-03 06:00 online authentication.",
+        "The 24-hour inclusive offline window is exceeded; reauthenticate online before further reliance on offline access.",
+        "Offline content still must have been opened/cached, and expiry is not deletion or indefinite access."
+      ],
+      "supported_fact_ids": [
+        "F06",
+        "F01"
+      ],
+      "contradictions": [],
+      "missing_critical": [],
+      "terminology_issues": [],
+      "readability_issues": [],
+      "recommended_edits": [],
+      "evidence": [
+        {
+          "file": "proposed/replies_en.csv",
+          "locator": "CSV row 6; C11; reply",
+          "quote": "At the stated snapshot, 2026-10-04 08:00 UTC+08:00, it has been 26 hours since your 2026-10-03 06:00 online authentication. That exceeds the inclusive 24-hour offline window, so authenticate online again before relying on offline access to previously opened, cached content. The window does not grant indefinite offline use, and its expiry does not mean your content has been deleted."
+        },
+        {
+          "file": "input/support_cases.csv",
+          "locator": "C11; question",
+          "quote": "I authenticated online yesterday at 06:00 UTC+08:00. Can I keep opening my cached workspace offline indefinitely?"
+        },
+        {
+          "file": "input/support_cases.csv",
+          "locator": "C11; context_json",
+          "quote": "{\"last_auth_at\":\"2026-10-03T06:00:00+08:00\",\"cached_content\":true,\"action\":\"open_cached\"}"
+        },
+        {
+          "file": "input/release_notes.md",
+          "locator": "F06",
+          "quote": "离线访问只适用于之前打开且已缓存的内容，须在最近一次在线身份验证后24小时以内（含24小时）。超过窗口应先联网重新验证，不表示内容在24小时后已删除。离线时不能新建工作空间、导出CSV、处理账单或更改SSO设置；不能保证永久离线使用。"
+        },
+        {
+          "file": "input/release_notes.md",
+          "locator": "F01",
+          "quote": "截至2026-10-04 08:00 UTC+08:00，已发布稳定版为3.2.0，发布日期2026-09-24。3.2.1于2026-10-02仅向已获准加入预览的macOS账号提供，不是全平台稳定版。未给任何未发布功能或其他平台补丁的承诺日期。"
+        }
+      ],
+      "assessment_notes": "The elapsed 26 hours is independently consistent with the fixed snapshot and case timestamp. No deletion inference is introduced."
+    },
+    {
+      "record_id": "C12",
+      "decision": "accept",
+      "observed_claims": [
+        "A direct monthly order exactly 7 calendar days old and with exactly 10 credits used meets both inclusive standard review-application conditions.",
+        "It is not approval or confirmation of immediate/full refund.",
+        "Amount/time remain unknown, cannot be calculated from credits or filled with confirmed zero.",
+        "The two-business-day target concerns a first response, not settlement."
+      ],
+      "supported_fact_ids": [
+        "F10",
+        "F12"
+      ],
+      "contradictions": [],
+      "missing_critical": [],
+      "terminology_issues": [],
+      "readability_issues": [],
+      "recommended_edits": [],
+      "evidence": [
+        {
+          "file": "proposed/replies_en.csv",
+          "locator": "CSV row 7; C12; reply",
+          "quote": "Your directly purchased monthly order is exactly 7 calendar days old with exactly 10 credits consumed, so it meets both inclusive criteria to submit a refund review. This is not an approval and does not confirm an immediate or full refund. The approved amount and completion time are unknown; they cannot be calculated from credits or treated as a confirmed zero. The 2-business-day support target concerns a first response, not refund settlement."
+        },
+        {
+          "file": "input/support_cases.csv",
+          "locator": "C12; question",
+          "quote": "I paid directly for a monthly order seven calendar days ago and used exactly 10 credits. Please confirm an immediate full refund."
+        },
+        {
+          "file": "input/support_cases.csv",
+          "locator": "C12; context_json",
+          "quote": "{\"paid_on\":\"2026-09-27\",\"billing_channel\":\"direct_monthly\",\"consumed_credits\":10}"
+        },
+        {
+          "file": "input/release_notes.md",
+          "locator": "F10",
+          "quote": "标准申请路径只适用于直接购买的月付订单：付款后不超过7个自然日且已消耗不超过10 credits时，可提交退款审核，两项含边界。符合申请条件不等于已获退款，不保证即时、全额、金额或完成时间。未满足标准条件需联系账单团队核实；年付、转售商等其他渠道按相应合同或渠道审核，不据此断言一律可退或一律不退。税费、渠道费和实际批准结果未给，任何具体退款金额均未知，不能填0或擅自计算。"
+        },
+        {
+          "file": "input/release_notes.md",
+          "locator": "F12",
+          "quote": "支持服务时间为周一至周五09:00-18:00，时区UTC+08:00；首次响应目标为2个工作日。这是目标，不是保证、SLA、问题解决时限或退款到账时限。未给节假日安排，不推断具体回复截止日；不要把自然日退款窗口与工作日响应目标混用。"
+        }
+      ],
+      "assessment_notes": "Both exact inclusive boundaries are honored for application only; approval, amount and timing are not invented. Unknown amount is not treated as zero."
+    }
+  ],
+  "overall_decision": "accept",
+  "decision_counts": {
+    "accept": 18,
+    "revise": 0,
+    "uncertain": 0
+  },
+  "previous_review_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h014/independent-review/en/reviewer_en.json",
+  "revision_round": 2,
+  "overall_notes": [
+    "All 12 FAQ items and six replies were rechecked against the same hash-verified sources and unchanged frozen source-reading record.",
+    "The actual v2 DOCX resolves the prior K11 export/import cap scope ambiguity; no unresolved reviewer uncertainty, direct contradiction or critical omission was found.",
+    "Unspecified product facts remain unspecified in the draft, including refund amount/approval/time, future release dates and a separate import row cap. Acceptance does not establish those facts.",
+    "The remaining English readability suggestions are optional model judgments, not human or native-speaker acceptance.",
+    "This is independent_model_review, human_expert=false, and is not a formal semantic score or real evaluation result."
+  ]
+}

@@ -1,0 +1,1031 @@
+{
+  "status": "native_sources_verified_before_reference",
+  "task_id": "general_hard_office_documents_task_015_board_decision_pack",
+  "as_of": "2026-10-02",
+  "historical_metrics": {
+    "2025/ALL": {
+      "revenue_cny": "10000000",
+      "cogs_cny": "6600000",
+      "receipts_cny": "9500000",
+      "gross_profit_cny": "3400000",
+      "gross_margin": "0.34",
+      "receipts_revenue_ratio": "0.95"
+    },
+    "2025/dealer": {
+      "revenue_cny": "2000000",
+      "cogs_cny": "1500000",
+      "receipts_cny": "1900000",
+      "gross_profit_cny": "500000",
+      "gross_margin": "0.25",
+      "receipts_revenue_ratio": "0.95"
+    },
+    "2025/direct": {
+      "revenue_cny": "4000000",
+      "cogs_cny": "2400000",
+      "receipts_cny": "3750000",
+      "gross_profit_cny": "1600000",
+      "gross_margin": "0.4",
+      "receipts_revenue_ratio": "0.9375"
+    },
+    "2025/platform": {
+      "revenue_cny": "3000000",
+      "cogs_cny": "2400000",
+      "receipts_cny": "2850000",
+      "gross_profit_cny": "600000",
+      "gross_margin": "0.2",
+      "receipts_revenue_ratio": "0.95"
+    },
+    "2025/renewal": {
+      "revenue_cny": "1000000",
+      "cogs_cny": "300000",
+      "receipts_cny": "1000000",
+      "gross_profit_cny": "700000",
+      "gross_margin": "0.7",
+      "receipts_revenue_ratio": "1"
+    },
+    "2026/ALL": {
+      "revenue_cny": "11700000",
+      "cogs_cny": "8445000",
+      "receipts_cny": "8700000",
+      "gross_profit_cny": "3255000",
+      "gross_margin": "0.2782051282051282051282051282",
+      "receipts_revenue_ratio": "0.7435897435897435897435897436"
+    },
+    "2026/dealer": {
+      "revenue_cny": "1800000",
+      "cogs_cny": "1512000",
+      "receipts_cny": "1500000",
+      "gross_profit_cny": "288000",
+      "gross_margin": "0.16",
+      "receipts_revenue_ratio": "0.8333333333333333333333333333"
+    },
+    "2026/direct": {
+      "revenue_cny": "4200000",
+      "cogs_cny": "2688000",
+      "receipts_cny": "3150000",
+      "gross_profit_cny": "1512000",
+      "gross_margin": "0.36",
+      "receipts_revenue_ratio": "0.75"
+    },
+    "2026/platform": {
+      "revenue_cny": "4500000",
+      "cogs_cny": "3825000",
+      "receipts_cny": "3050000",
+      "gross_profit_cny": "675000",
+      "gross_margin": "0.15",
+      "receipts_revenue_ratio": "0.6777777777777777777777777778"
+    },
+    "2026/renewal": {
+      "revenue_cny": "1200000",
+      "cogs_cny": "420000",
+      "receipts_cny": "1000000",
+      "gross_profit_cny": "780000",
+      "gross_margin": "0.65",
+      "receipts_revenue_ratio": "0.8333333333333333333333333333"
+    }
+  },
+  "growth": {
+    "ALL": {
+      "revenue_cny": {
+        "delta": "1700000",
+        "rate": "0.17"
+      },
+      "gross_profit_cny": {
+        "delta": "-145000",
+        "rate": "-0.04264705882352941176470588235"
+      },
+      "receipts_cny": {
+        "delta": "-800000",
+        "rate": "-0.08421052631578947368421052632"
+      },
+      "gross_margin_change_pp": "-6.179487179487179487179487180"
+    },
+    "direct": {
+      "revenue_cny": {
+        "delta": "200000",
+        "rate": "0.05"
+      },
+      "gross_profit_cny": {
+        "delta": "-88000",
+        "rate": "-0.055"
+      },
+      "receipts_cny": {
+        "delta": "-600000",
+        "rate": "-0.16"
+      },
+      "gross_margin_change_pp": "-4.00"
+    },
+    "platform": {
+      "revenue_cny": {
+        "delta": "1500000",
+        "rate": "0.5"
+      },
+      "gross_profit_cny": {
+        "delta": "75000",
+        "rate": "0.125"
+      },
+      "receipts_cny": {
+        "delta": "200000",
+        "rate": "0.07017543859649122807017543860"
+      },
+      "gross_margin_change_pp": "-5.00"
+    },
+    "dealer": {
+      "revenue_cny": {
+        "delta": "-200000",
+        "rate": "-0.1"
+      },
+      "gross_profit_cny": {
+        "delta": "-212000",
+        "rate": "-0.424"
+      },
+      "receipts_cny": {
+        "delta": "-400000",
+        "rate": "-0.2105263157894736842105263158"
+      },
+      "gross_margin_change_pp": "-9.00"
+    },
+    "renewal": {
+      "revenue_cny": {
+        "delta": "200000",
+        "rate": "0.2"
+      },
+      "gross_profit_cny": {
+        "delta": "80000",
+        "rate": "0.1142857142857142857142857143"
+      },
+      "receipts_cny": {
+        "delta": "0",
+        "rate": "0"
+      },
+      "gross_margin_change_pp": "-5.00"
+    }
+  },
+  "loss_sample": {
+    "total_logged": 18,
+    "reason_recorded": 8,
+    "reason_missing": 10,
+    "price_mentions": 6,
+    "price_share_of_recorded": "0.75",
+    "coverage_ratio": "0.4444444444444444444444444444",
+    "recorded_price_mentions_share_of_logged": "0.3333333333333333333333333333",
+    "limit": "observed mentions only; missing is unknown; multi-select; not causal or a company-wide population estimate"
+  },
+  "cash": {
+    "initial_cny": 300000,
+    "floor_cny": 50000,
+    "base_events": [
+      {
+        "date": "2026-10-05",
+        "amount_cny": -90000,
+        "source_line": 49
+      },
+      {
+        "date": "2026-10-12",
+        "amount_cny": -70000,
+        "source_line": 50
+      },
+      {
+        "date": "2026-10-20",
+        "amount_cny": 60000,
+        "source_line": 51
+      },
+      {
+        "date": "2026-10-28",
+        "amount_cny": -40000,
+        "source_line": 52
+      },
+      {
+        "date": "2026-11-05",
+        "amount_cny": -80000,
+        "source_line": 53
+      },
+      {
+        "date": "2026-11-15",
+        "amount_cny": 120000,
+        "source_line": 54
+      },
+      {
+        "date": "2026-11-25",
+        "amount_cny": -35000,
+        "source_line": 55
+      },
+      {
+        "date": "2026-12-05",
+        "amount_cny": -80000,
+        "source_line": 56
+      },
+      {
+        "date": "2026-12-15",
+        "amount_cny": 100000,
+        "source_line": 57
+      },
+      {
+        "date": "2026-12-28",
+        "amount_cny": -40000,
+        "source_line": 58
+      }
+    ],
+    "payments": {
+      "BASE": [],
+      "A": [
+        {
+          "date": "2026-10-06",
+          "amount_cny": -25000,
+          "source_line": 64
+        },
+        {
+          "date": "2026-11-16",
+          "amount_cny": -35000,
+          "source_line": 65
+        }
+      ],
+      "B": [
+        {
+          "date": "2026-10-06",
+          "amount_cny": -95000,
+          "source_line": 66
+        },
+        {
+          "date": "2026-11-16",
+          "amount_cny": -45000,
+          "source_line": 67
+        }
+      ],
+      "C": [
+        {
+          "date": "2026-10-06",
+          "amount_cny": -20000,
+          "source_line": 68
+        }
+      ],
+      "A_phase1": [
+        {
+          "date": "2026-10-06",
+          "amount_cny": -25000,
+          "source_line": 64
+        }
+      ],
+      "A_deferred": [
+        {
+          "date": "2026-10-06",
+          "amount_cny": -25000,
+          "source_line": 64
+        },
+        {
+          "date": "2026-12-16",
+          "amount_cny": -35000,
+          "source_line": 65
+        }
+      ]
+    },
+    "timelines": {
+      "BASE": {
+        "rows": [
+          {
+            "date": "2026-10-01",
+            "base_change_cny": 0,
+            "option_change_cny": 0,
+            "balance_cny": 300000,
+            "floor_gap_cny": 0
+          },
+          {
+            "date": "2026-10-05",
+            "base_change_cny": -90000,
+            "option_change_cny": 0,
+            "balance_cny": 210000,
+            "floor_gap_cny": 0
+          },
+          {
+            "date": "2026-10-06",
+            "base_change_cny": 0,
+            "option_change_cny": 0,
+            "balance_cny": 210000,
+            "floor_gap_cny": 0
+          },
+          {
+            "date": "2026-10-12",
+            "base_change_cny": -70000,
+            "option_change_cny": 0,
+            "balance_cny": 140000,
+            "floor_gap_cny": 0
+          },
+          {
+            "date": "2026-10-20",
+            "base_change_cny": 60000,
+            "option_change_cny": 0,
+            "balance_cny": 200000,
+            "floor_gap_cny": 0
+          },
+          {
+            "date": "2026-10-28",
+            "base_change_cny": -40000,
+            "option_change_cny": 0,
+            "balance_cny": 160000,
+            "floor_gap_cny": 0
+          },
+          {
+            "date": "2026-11-05",
+            "base_change_cny": -80000,
+            "option_change_cny": 0,
+            "balance_cny": 80000,
+            "floor_gap_cny": 0
+          },
+          {
+            "date": "2026-11-15",
+            "base_change_cny": 120000,
+            "option_change_cny": 0,
+            "balance_cny": 200000,
+            "floor_gap_cny": 0
+          },
+          {
+            "date": "2026-11-16",
+            "base_change_cny": 0,
+            "option_change_cny": 0,
+            "balance_cny": 200000,
+            "floor_gap_cny": 0
+          },
+          {
+            "date": "2026-11-25",
+            "base_change_cny": -35000,
+            "option_change_cny": 0,
+            "balance_cny": 165000,
+            "floor_gap_cny": 0
+          },
+          {
+            "date": "2026-12-05",
+            "base_change_cny": -80000,
+            "option_change_cny": 0,
+            "balance_cny": 85000,
+            "floor_gap_cny": 0
+          },
+          {
+            "date": "2026-12-15",
+            "base_change_cny": 100000,
+            "option_change_cny": 0,
+            "balance_cny": 185000,
+            "floor_gap_cny": 0
+          },
+          {
+            "date": "2026-12-16",
+            "base_change_cny": 0,
+            "option_change_cny": 0,
+            "balance_cny": 185000,
+            "floor_gap_cny": 0
+          },
+          {
+            "date": "2026-12-28",
+            "base_change_cny": -40000,
+            "option_change_cny": 0,
+            "balance_cny": 145000,
+            "floor_gap_cny": 0
+          }
+        ],
+        "minimum_cny": 80000,
+        "minimum_dates": [
+          "2026-11-05"
+        ],
+        "end_cash_cny": 145000,
+        "first_violation": null,
+        "maximum_floor_gap_cny": 0,
+        "cash_feasible": true,
+        "limit": "planned special account, no unconfirmed receipts or assumed incremental benefit"
+      },
+      "A": {
+        "rows": [
+          {
+            "date": "2026-10-01",
+            "base_change_cny": 0,
+            "option_change_cny": 0,
+            "balance_cny": 300000,
+            "floor_gap_cny": 0
+          },
+          {
+            "date": "2026-10-05",
+            "base_change_cny": -90000,
+            "option_change_cny": 0,
+            "balance_cny": 210000,
+            "floor_gap_cny": 0
+          },
+          {
+            "date": "2026-10-06",
+            "base_change_cny": 0,
+            "option_change_cny": -25000,
+            "balance_cny": 185000,
+            "floor_gap_cny": 0
+          },
+          {
+            "date": "2026-10-12",
+            "base_change_cny": -70000,
+            "option_change_cny": 0,
+            "balance_cny": 115000,
+            "floor_gap_cny": 0
+          },
+          {
+            "date": "2026-10-20",
+            "base_change_cny": 60000,
+            "option_change_cny": 0,
+            "balance_cny": 175000,
+            "floor_gap_cny": 0
+          },
+          {
+            "date": "2026-10-28",
+            "base_change_cny": -40000,
+            "option_change_cny": 0,
+            "balance_cny": 135000,
+            "floor_gap_cny": 0
+          },
+          {
+            "date": "2026-11-05",
+            "base_change_cny": -80000,
+            "option_change_cny": 0,
+            "balance_cny": 55000,
+            "floor_gap_cny": 0
+          },
+          {
+            "date": "2026-11-15",
+            "base_change_cny": 120000,
+            "option_change_cny": 0,
+            "balance_cny": 175000,
+            "floor_gap_cny": 0
+          },
+          {
+            "date": "2026-11-16",
+            "base_change_cny": 0,
+            "option_change_cny": -35000,
+            "balance_cny": 140000,
+            "floor_gap_cny": 0
+          },
+          {
+            "date": "2026-11-25",
+            "base_change_cny": -35000,
+            "option_change_cny": 0,
+            "balance_cny": 105000,
+            "floor_gap_cny": 0
+          },
+          {
+            "date": "2026-12-05",
+            "base_change_cny": -80000,
+            "option_change_cny": 0,
+            "balance_cny": 25000,
+            "floor_gap_cny": 25000
+          },
+          {
+            "date": "2026-12-15",
+            "base_change_cny": 100000,
+            "option_change_cny": 0,
+            "balance_cny": 125000,
+            "floor_gap_cny": 0
+          },
+          {
+            "date": "2026-12-16",
+            "base_change_cny": 0,
+            "option_change_cny": 0,
+            "balance_cny": 125000,
+            "floor_gap_cny": 0
+          },
+          {
+            "date": "2026-12-28",
+            "base_change_cny": -40000,
+            "option_change_cny": 0,
+            "balance_cny": 85000,
+            "floor_gap_cny": 0
+          }
+        ],
+        "minimum_cny": 25000,
+        "minimum_dates": [
+          "2026-12-05"
+        ],
+        "end_cash_cny": 85000,
+        "first_violation": "2026-12-05",
+        "maximum_floor_gap_cny": 25000,
+        "cash_feasible": false,
+        "limit": "planned special account, no unconfirmed receipts or assumed incremental benefit"
+      },
+      "B": {
+        "rows": [
+          {
+            "date": "2026-10-01",
+            "base_change_cny": 0,
+            "option_change_cny": 0,
+            "balance_cny": 300000,
+            "floor_gap_cny": 0
+          },
+          {
+            "date": "2026-10-05",
+            "base_change_cny": -90000,
+            "option_change_cny": 0,
+            "balance_cny": 210000,
+            "floor_gap_cny": 0
+          },
+          {
+            "date": "2026-10-06",
+            "base_change_cny": 0,
+            "option_change_cny": -95000,
+            "balance_cny": 115000,
+            "floor_gap_cny": 0
+          },
+          {
+            "date": "2026-10-12",
+            "base_change_cny": -70000,
+            "option_change_cny": 0,
+            "balance_cny": 45000,
+            "floor_gap_cny": 5000
+          },
+          {
+            "date": "2026-10-20",
+            "base_change_cny": 60000,
+            "option_change_cny": 0,
+            "balance_cny": 105000,
+            "floor_gap_cny": 0
+          },
+          {
+            "date": "2026-10-28",
+            "base_change_cny": -40000,
+            "option_change_cny": 0,
+            "balance_cny": 65000,
+            "floor_gap_cny": 0
+          },
+          {
+            "date": "2026-11-05",
+            "base_change_cny": -80000,
+            "option_change_cny": 0,
+            "balance_cny": -15000,
+            "floor_gap_cny": 65000
+          },
+          {
+            "date": "2026-11-15",
+            "base_change_cny": 120000,
+            "option_change_cny": 0,
+            "balance_cny": 105000,
+            "floor_gap_cny": 0
+          },
+          {
+            "date": "2026-11-16",
+            "base_change_cny": 0,
+            "option_change_cny": -45000,
+            "balance_cny": 60000,
+            "floor_gap_cny": 0
+          },
+          {
+            "date": "2026-11-25",
+            "base_change_cny": -35000,
+            "option_change_cny": 0,
+            "balance_cny": 25000,
+            "floor_gap_cny": 25000
+          },
+          {
+            "date": "2026-12-05",
+            "base_change_cny": -80000,
+            "option_change_cny": 0,
+            "balance_cny": -55000,
+            "floor_gap_cny": 105000
+          },
+          {
+            "date": "2026-12-15",
+            "base_change_cny": 100000,
+            "option_change_cny": 0,
+            "balance_cny": 45000,
+            "floor_gap_cny": 5000
+          },
+          {
+            "date": "2026-12-16",
+            "base_change_cny": 0,
+            "option_change_cny": 0,
+            "balance_cny": 45000,
+            "floor_gap_cny": 5000
+          },
+          {
+            "date": "2026-12-28",
+            "base_change_cny": -40000,
+            "option_change_cny": 0,
+            "balance_cny": 5000,
+            "floor_gap_cny": 45000
+          }
+        ],
+        "minimum_cny": -55000,
+        "minimum_dates": [
+          "2026-12-05"
+        ],
+        "end_cash_cny": 5000,
+        "first_violation": "2026-10-12",
+        "maximum_floor_gap_cny": 105000,
+        "cash_feasible": false,
+        "limit": "planned special account, no unconfirmed receipts or assumed incremental benefit"
+      },
+      "C": {
+        "rows": [
+          {
+            "date": "2026-10-01",
+            "base_change_cny": 0,
+            "option_change_cny": 0,
+            "balance_cny": 300000,
+            "floor_gap_cny": 0
+          },
+          {
+            "date": "2026-10-05",
+            "base_change_cny": -90000,
+            "option_change_cny": 0,
+            "balance_cny": 210000,
+            "floor_gap_cny": 0
+          },
+          {
+            "date": "2026-10-06",
+            "base_change_cny": 0,
+            "option_change_cny": -20000,
+            "balance_cny": 190000,
+            "floor_gap_cny": 0
+          },
+          {
+            "date": "2026-10-12",
+            "base_change_cny": -70000,
+            "option_change_cny": 0,
+            "balance_cny": 120000,
+            "floor_gap_cny": 0
+          },
+          {
+            "date": "2026-10-20",
+            "base_change_cny": 60000,
+            "option_change_cny": 0,
+            "balance_cny": 180000,
+            "floor_gap_cny": 0
+          },
+          {
+            "date": "2026-10-28",
+            "base_change_cny": -40000,
+            "option_change_cny": 0,
+            "balance_cny": 140000,
+            "floor_gap_cny": 0
+          },
+          {
+            "date": "2026-11-05",
+            "base_change_cny": -80000,
+            "option_change_cny": 0,
+            "balance_cny": 60000,
+            "floor_gap_cny": 0
+          },
+          {
+            "date": "2026-11-15",
+            "base_change_cny": 120000,
+            "option_change_cny": 0,
+            "balance_cny": 180000,
+            "floor_gap_cny": 0
+          },
+          {
+            "date": "2026-11-16",
+            "base_change_cny": 0,
+            "option_change_cny": 0,
+            "balance_cny": 180000,
+            "floor_gap_cny": 0
+          },
+          {
+            "date": "2026-11-25",
+            "base_change_cny": -35000,
+            "option_change_cny": 0,
+            "balance_cny": 145000,
+            "floor_gap_cny": 0
+          },
+          {
+            "date": "2026-12-05",
+            "base_change_cny": -80000,
+            "option_change_cny": 0,
+            "balance_cny": 65000,
+            "floor_gap_cny": 0
+          },
+          {
+            "date": "2026-12-15",
+            "base_change_cny": 100000,
+            "option_change_cny": 0,
+            "balance_cny": 165000,
+            "floor_gap_cny": 0
+          },
+          {
+            "date": "2026-12-16",
+            "base_change_cny": 0,
+            "option_change_cny": 0,
+            "balance_cny": 165000,
+            "floor_gap_cny": 0
+          },
+          {
+            "date": "2026-12-28",
+            "base_change_cny": -40000,
+            "option_change_cny": 0,
+            "balance_cny": 125000,
+            "floor_gap_cny": 0
+          }
+        ],
+        "minimum_cny": 60000,
+        "minimum_dates": [
+          "2026-11-05"
+        ],
+        "end_cash_cny": 125000,
+        "first_violation": null,
+        "maximum_floor_gap_cny": 0,
+        "cash_feasible": true,
+        "limit": "planned special account, no unconfirmed receipts or assumed incremental benefit"
+      },
+      "A_phase1": {
+        "rows": [
+          {
+            "date": "2026-10-01",
+            "base_change_cny": 0,
+            "option_change_cny": 0,
+            "balance_cny": 300000,
+            "floor_gap_cny": 0
+          },
+          {
+            "date": "2026-10-05",
+            "base_change_cny": -90000,
+            "option_change_cny": 0,
+            "balance_cny": 210000,
+            "floor_gap_cny": 0
+          },
+          {
+            "date": "2026-10-06",
+            "base_change_cny": 0,
+            "option_change_cny": -25000,
+            "balance_cny": 185000,
+            "floor_gap_cny": 0
+          },
+          {
+            "date": "2026-10-12",
+            "base_change_cny": -70000,
+            "option_change_cny": 0,
+            "balance_cny": 115000,
+            "floor_gap_cny": 0
+          },
+          {
+            "date": "2026-10-20",
+            "base_change_cny": 60000,
+            "option_change_cny": 0,
+            "balance_cny": 175000,
+            "floor_gap_cny": 0
+          },
+          {
+            "date": "2026-10-28",
+            "base_change_cny": -40000,
+            "option_change_cny": 0,
+            "balance_cny": 135000,
+            "floor_gap_cny": 0
+          },
+          {
+            "date": "2026-11-05",
+            "base_change_cny": -80000,
+            "option_change_cny": 0,
+            "balance_cny": 55000,
+            "floor_gap_cny": 0
+          },
+          {
+            "date": "2026-11-15",
+            "base_change_cny": 120000,
+            "option_change_cny": 0,
+            "balance_cny": 175000,
+            "floor_gap_cny": 0
+          },
+          {
+            "date": "2026-11-16",
+            "base_change_cny": 0,
+            "option_change_cny": 0,
+            "balance_cny": 175000,
+            "floor_gap_cny": 0
+          },
+          {
+            "date": "2026-11-25",
+            "base_change_cny": -35000,
+            "option_change_cny": 0,
+            "balance_cny": 140000,
+            "floor_gap_cny": 0
+          },
+          {
+            "date": "2026-12-05",
+            "base_change_cny": -80000,
+            "option_change_cny": 0,
+            "balance_cny": 60000,
+            "floor_gap_cny": 0
+          },
+          {
+            "date": "2026-12-15",
+            "base_change_cny": 100000,
+            "option_change_cny": 0,
+            "balance_cny": 160000,
+            "floor_gap_cny": 0
+          },
+          {
+            "date": "2026-12-16",
+            "base_change_cny": 0,
+            "option_change_cny": 0,
+            "balance_cny": 160000,
+            "floor_gap_cny": 0
+          },
+          {
+            "date": "2026-12-28",
+            "base_change_cny": -40000,
+            "option_change_cny": 0,
+            "balance_cny": 120000,
+            "floor_gap_cny": 0
+          }
+        ],
+        "minimum_cny": 55000,
+        "minimum_dates": [
+          "2026-11-05"
+        ],
+        "end_cash_cny": 120000,
+        "first_violation": null,
+        "maximum_floor_gap_cny": 0,
+        "cash_feasible": true,
+        "limit": "planned special account, no unconfirmed receipts or assumed incremental benefit"
+      },
+      "A_deferred": {
+        "rows": [
+          {
+            "date": "2026-10-01",
+            "base_change_cny": 0,
+            "option_change_cny": 0,
+            "balance_cny": 300000,
+            "floor_gap_cny": 0
+          },
+          {
+            "date": "2026-10-05",
+            "base_change_cny": -90000,
+            "option_change_cny": 0,
+            "balance_cny": 210000,
+            "floor_gap_cny": 0
+          },
+          {
+            "date": "2026-10-06",
+            "base_change_cny": 0,
+            "option_change_cny": -25000,
+            "balance_cny": 185000,
+            "floor_gap_cny": 0
+          },
+          {
+            "date": "2026-10-12",
+            "base_change_cny": -70000,
+            "option_change_cny": 0,
+            "balance_cny": 115000,
+            "floor_gap_cny": 0
+          },
+          {
+            "date": "2026-10-20",
+            "base_change_cny": 60000,
+            "option_change_cny": 0,
+            "balance_cny": 175000,
+            "floor_gap_cny": 0
+          },
+          {
+            "date": "2026-10-28",
+            "base_change_cny": -40000,
+            "option_change_cny": 0,
+            "balance_cny": 135000,
+            "floor_gap_cny": 0
+          },
+          {
+            "date": "2026-11-05",
+            "base_change_cny": -80000,
+            "option_change_cny": 0,
+            "balance_cny": 55000,
+            "floor_gap_cny": 0
+          },
+          {
+            "date": "2026-11-15",
+            "base_change_cny": 120000,
+            "option_change_cny": 0,
+            "balance_cny": 175000,
+            "floor_gap_cny": 0
+          },
+          {
+            "date": "2026-11-16",
+            "base_change_cny": 0,
+            "option_change_cny": 0,
+            "balance_cny": 175000,
+            "floor_gap_cny": 0
+          },
+          {
+            "date": "2026-11-25",
+            "base_change_cny": -35000,
+            "option_change_cny": 0,
+            "balance_cny": 140000,
+            "floor_gap_cny": 0
+          },
+          {
+            "date": "2026-12-05",
+            "base_change_cny": -80000,
+            "option_change_cny": 0,
+            "balance_cny": 60000,
+            "floor_gap_cny": 0
+          },
+          {
+            "date": "2026-12-15",
+            "base_change_cny": 100000,
+            "option_change_cny": 0,
+            "balance_cny": 160000,
+            "floor_gap_cny": 0
+          },
+          {
+            "date": "2026-12-16",
+            "base_change_cny": 0,
+            "option_change_cny": -35000,
+            "balance_cny": 125000,
+            "floor_gap_cny": 0
+          },
+          {
+            "date": "2026-12-28",
+            "base_change_cny": -40000,
+            "option_change_cny": 0,
+            "balance_cny": 85000,
+            "floor_gap_cny": 0
+          }
+        ],
+        "minimum_cny": 55000,
+        "minimum_dates": [
+          "2026-11-05"
+        ],
+        "end_cash_cny": 85000,
+        "first_violation": null,
+        "maximum_floor_gap_cny": 0,
+        "cash_feasible": true,
+        "limit": "planned special account, no unconfirmed receipts or assumed incremental benefit"
+      }
+    },
+    "admissible_recommendations": [
+      "C",
+      "A_phase1",
+      "A_deferred"
+    ],
+    "unique_roi_optimum": null,
+    "deferred_stage2_conditions": [
+      "2026-12-15 planned receipt actually received",
+      "recheck all remaining cash nodes",
+      "stage2 approval obtained"
+    ]
+  },
+  "source_locations": {
+    "operations": "Operations!A5:H29",
+    "losses": "LostDeals!A5:D23",
+    "definitions": "Definitions!A5:C8",
+    "interviews": {
+      "I01": {
+        "role": "销售负责人",
+        "quote": "本季度所有渠道都增长了，经销渠道也一样。",
+        "paragraph_number": 4
+      },
+      "I02": {
+        "role": "渠道经理",
+        "quote": "经销渠道同比下降，不能用公司总收入增长代表每个渠道都在增长。",
+        "paragraph_number": 6
+      },
+      "I03": {
+        "role": "平台投放负责人",
+        "quote": "平台毛利率至少30%，整体毛利率也在提升，可以沿用去年利润率估算。",
+        "paragraph_number": 9
+      },
+      "I04": {
+        "role": "财务分析员",
+        "quote": "按季度收入减销售成本，平台毛利率是15%，公司整体毛利额比去年同期少。",
+        "paragraph_number": 11
+      },
+      "I05": {
+        "role": "项目发起人",
+        "quote": "客户说预计10月10日会来12万元，这笔钱肯定到账，可以先用来覆盖平台扩投。",
+        "paragraph_number": 16
+      },
+      "I06": {
+        "role": "财务经理",
+        "quote": "这12万元尚未对账、没有付款承诺。专项账户只把给定已确认排期作为基线，到账和批准情况需另核。",
+        "paragraph_number": 18
+      },
+      "I07": {
+        "role": "客户经理",
+        "quote": "8条有原因记录里6条提到价格，6除以8是75%，所以全部流失的75%由价格造成。",
+        "paragraph_number": 21
+      },
+      "I08": {
+        "role": "数据分析员",
+        "quote": "这份窗口日志共18条，10条没填原因，原因允许多选。6除以8的算术没错，但外推全部失单及因果不成立。",
+        "paragraph_number": 23
+      },
+      "I09": {
+        "role": "市场拓展负责人",
+        "quote": "10家中8家愿意试用就是80%的大盘会购买，下一季我们市场份额至少增加10个百分点。",
+        "paragraph_number": 28
+      },
+      "I10": {
+        "role": "研究员",
+        "quote": "这10家主动报名且只回答试用兴趣，没有真实订单和市场总体分母，不能推大盘购买率或份额增长。",
+        "paragraph_number": 30
+      },
+      "I11": {
+        "role": "业务总监",
+        "quote": "只要每个月月末余额高于5万元就够。平台扩投的合同付款日我们可以自己后移。",
+        "paragraph_number": 33
+      },
+      "I12": {
+        "role": "风控负责人",
+        "quote": "约束要求检查每个给定事件节点。平台扩投是固定合同日期，材料没有书面变更授权。",
+        "paragraph_number": 35
+      }
+    },
+    "market_pdf_pages": 1
+  },
+  "limit": "author constructed and verified source arithmetic via two independent paths; no independent semantic judge, expert review, Harness execution or measured difficulty"
+}

@@ -1,0 +1,371 @@
+{
+  "schema_version": "h015-artifact-contract/v1",
+  "files": {
+    "word": "results/memo.docx",
+    "workbook": "results/options.xlsx",
+    "deck": "results/deck.pptx",
+    "evidence": "results/evidence.json"
+  },
+  "field_aliases": {
+    "year": [
+      "year",
+      "年份",
+      "年度",
+      "期间",
+      "period"
+    ],
+    "channel": [
+      "channel",
+      "渠道"
+    ],
+    "case_id": [
+      "case_id",
+      "方案",
+      "安排",
+      "情境",
+      "case",
+      "scenario",
+      "option_id",
+      "方案ID"
+    ],
+    "object": [
+      "object",
+      "指标",
+      "对象",
+      "metric_id"
+    ],
+    "field": [
+      "field",
+      "metric",
+      "字段",
+      "指标名称",
+      "参数"
+    ],
+    "value": [
+      "value",
+      "数值",
+      "值"
+    ],
+    "unit": [
+      "unit",
+      "单位"
+    ],
+    "date": [
+      "date",
+      "日期",
+      "事件日期",
+      "节点日期"
+    ],
+    "revenue_cny": [
+      "revenue_cny",
+      "收入",
+      "营业收入",
+      "收入金额"
+    ],
+    "cogs_cny": [
+      "cogs_cny",
+      "销售成本",
+      "营业成本"
+    ],
+    "gross_profit_cny": [
+      "gross_profit_cny",
+      "gp_cny",
+      "毛利",
+      "毛利额"
+    ],
+    "gross_margin": [
+      "gross_margin",
+      "加权毛利率",
+      "毛利率"
+    ],
+    "receipts_cny": [
+      "receipts_cny",
+      "期间收款",
+      "现金收款",
+      "收款",
+      "收款金额"
+    ],
+    "receipts_revenue_ratio": [
+      "receipts_revenue_ratio",
+      "收款收入比",
+      "收款与同期收入金额比",
+      "收款与收入金额比",
+      "收款/收入",
+      "收款收入金额比"
+    ],
+    "minimum_cny": [
+      "minimum_cny",
+      "最低余额",
+      "最低现金",
+      "最低",
+      "最低现金余额"
+    ],
+    "minimum_date": [
+      "minimum_date",
+      "首次最低日期",
+      "最低日期",
+      "最低余额日期"
+    ],
+    "end_cash_cny": [
+      "end_cash_cny",
+      "期末",
+      "期末余额",
+      "期末现金",
+      "期末现金余额"
+    ],
+    "first_violation": [
+      "first_violation",
+      "首次违规",
+      "首个违规日期",
+      "首次低于底线日期",
+      "首次违规日期"
+    ],
+    "maximum_floor_gap_cny": [
+      "max_floor_gap_cny",
+      "maximum_floor_gap_cny",
+      "最大底线缺口",
+      "最大资金缺口",
+      "底线最大缺口"
+    ],
+    "cash_feasible": [
+      "cash_status",
+      "cash_feasible",
+      "现金状态",
+      "当前计划",
+      "是否可行",
+      "现金可行性",
+      "可行状态"
+    ],
+    "balance_cny": [
+      "closing_cny",
+      "balance_cny",
+      "closing_balance",
+      "余额",
+      "期末节点余额",
+      "现金余额",
+      "节点余额"
+    ],
+    "base_change_cny": [
+      "base_change_cny",
+      "基线变动",
+      "基线现金变动"
+    ],
+    "option_change_cny": [
+      "option_change_cny",
+      "方案变动",
+      "方案现金变动"
+    ],
+    "initial_cash_cny": [
+      "initial_cash_cny",
+      "initial_cny",
+      "期初现金",
+      "期初专项现金",
+      "期初专项可用现金",
+      "期初余额"
+    ],
+    "floor_cny": [
+      "floor_cny",
+      "现金底线",
+      "底线",
+      "最低允许余额",
+      "最低现金约束"
+    ]
+  },
+  "required_original_cases": [
+    "A",
+    "B",
+    "C"
+  ],
+  "historical_required": {
+    "2025/ALL": [
+      "revenue_cny",
+      "gross_profit_cny",
+      "gross_margin",
+      "receipts_cny",
+      "receipts_revenue_ratio"
+    ],
+    "2026/ALL": [
+      "revenue_cny",
+      "gross_profit_cny",
+      "gross_margin",
+      "receipts_cny",
+      "receipts_revenue_ratio"
+    ],
+    "2026/direct": [
+      "revenue_cny",
+      "gross_profit_cny",
+      "gross_margin"
+    ],
+    "2026/platform": [
+      "revenue_cny",
+      "gross_profit_cny",
+      "gross_margin"
+    ],
+    "2026/dealer": [
+      "revenue_cny",
+      "gross_profit_cny",
+      "gross_margin"
+    ],
+    "2026/renewal": [
+      "revenue_cny",
+      "gross_profit_cny",
+      "gross_margin"
+    ]
+  },
+  "required_cash_summary": [
+    "minimum_cny",
+    "minimum_date",
+    "end_cash_cny",
+    "first_violation",
+    "maximum_floor_gap_cny",
+    "cash_feasible"
+  ],
+  "word_cash_summary": [
+    "minimum_cny",
+    "minimum_date",
+    "end_cash_cny",
+    "maximum_floor_gap_cny"
+  ],
+  "deck_cash_summary": [
+    "minimum_cny",
+    "end_cash_cny",
+    "first_violation"
+  ],
+  "cash_summary_locations": "native tables or explicitly labeled text, not author sheet names or coordinates",
+  "cash_nodes_requirement": "each actual original-plan base/payment event, including initial balance; optional zero-change dates not required",
+  "money_tolerance_cny": ".02",
+  "ratio_tolerance": ".000051",
+  "none_date_aliases": [
+    "none",
+    "无",
+    "无违规",
+    "无违规日期",
+    "未违规",
+    "不适用",
+    "not_applicable",
+    "n/a"
+  ],
+  "case_aliases": {
+    "BASE": [
+      "BASE",
+      "基线",
+      "无新方案基线",
+      "无新方案",
+      "不实施新方案"
+    ],
+    "A": [
+      "A",
+      "A原排期",
+      "方案A",
+      "A原计划",
+      "Aoriginal"
+    ],
+    "B": [
+      "B",
+      "B原排期",
+      "方案B",
+      "B原计划",
+      "Boriginal"
+    ],
+    "C": [
+      "C",
+      "方案C",
+      "C原排期",
+      "C原计划"
+    ],
+    "A_phase1": [
+      "A_phase1",
+      "A仅首阶段",
+      "A仅第一阶段",
+      "A首阶段",
+      "A阶段1",
+      "Aphase1"
+    ],
+    "A_deferred": [
+      "A_deferred",
+      "A第二阶段延期",
+      "A延期版",
+      "A延期",
+      "A延期第二阶段",
+      "Adeferred"
+    ]
+  },
+  "channel_aliases": {
+    "ALL": [
+      "ALL",
+      "公司",
+      "公司合计",
+      "总体",
+      "合计",
+      "全公司",
+      "total"
+    ],
+    "direct": [
+      "direct",
+      "直销"
+    ],
+    "platform": [
+      "platform",
+      "平台"
+    ],
+    "dealer": [
+      "dealer",
+      "经销"
+    ],
+    "renewal": [
+      "renewal",
+      "续费"
+    ]
+  },
+  "cash_state_aliases": {
+    "true": [
+      "within_floor",
+      "feasible",
+      "true",
+      "是",
+      "可行",
+      "底线内",
+      "满足底线",
+      "附后续条件",
+      "附条件",
+      "有条件可行"
+    ],
+    "false": [
+      "infeasible",
+      "false",
+      "否",
+      "不可行",
+      "低于底线",
+      "不满足底线"
+    ]
+  },
+  "response_inputs": [
+    "initial_cash_cny",
+    "floor_cny"
+  ],
+  "response_specs": [
+    {
+      "name": "initial_cash_plus_5000",
+      "parameter": "initial_cash_cny",
+      "value": 305000
+    },
+    {
+      "name": "floor_equal_C_minimum",
+      "parameter": "floor_cny",
+      "value": 60000
+    },
+    {
+      "name": "floor_above_C_minimum",
+      "parameter": "floor_cny",
+      "value": 60001
+    }
+  ],
+  "checkpoint_weights": {
+    "business_correctness": 0.55,
+    "boundary_cases": 0.25,
+    "delivery_integrity": 0.15,
+    "evidence_binding": 0.05
+  },
+  "native_deck_slide_count": 6,
+  "limit": "bounded native observations and real cash input response only; independent Judge evaluates complete support/refutation/unknown claims, permission, causality, proposal conditions and actual visual usability"
+}

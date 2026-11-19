@@ -1,0 +1,201 @@
+{
+  "schema": "h060.source-oracle/v1",
+  "facts": {
+    "F01": {
+      "zh": "青禾工单",
+      "en": "Qinghe Desk"
+    },
+    "F02": {
+      "version": "2.1"
+    },
+    "F03": {
+      "plan": "Team"
+    },
+    "F04": {
+      "amount": 149,
+      "currency": "CNY",
+      "unit": "workspace_month",
+      "tax_inclusive": false
+    },
+    "F05": {
+      "vat_rate": "0.06"
+    },
+    "F06": {
+      "status": "scheduled",
+      "date": "2026-11-18",
+      "time": "09:00",
+      "timezone": "Asia/Shanghai"
+    },
+    "F07": {
+      "trial_days": 14,
+      "payment_card_required": false,
+      "automatic_charge": false
+    },
+    "F08": {
+      "member_limit": 10,
+      "scope": "workspace"
+    },
+    "F09": {
+      "automatic_send": false,
+      "manual_confirmation_required": true
+    },
+    "F10": {
+      "export_format": "CSV",
+      "allowed_role": "workspace_admin",
+      "scope": "own_workspace"
+    },
+    "F11": {
+      "service_region": "mainland_China",
+      "security_certification": "not_claimed"
+    },
+    "F12": {
+      "searchable_text_pdf": true,
+      "scanned_pdf_ocr": false
+    }
+  },
+  "owners": {
+    "F01": {
+      "kind": "baseline",
+      "approval_id": "BASE-20261020",
+      "pointer": "/facts/F01"
+    },
+    "F02": {
+      "kind": "change",
+      "change_id": "CHG-002",
+      "seq": 2,
+      "pointer": "/changes/F02"
+    },
+    "F03": {
+      "kind": "baseline",
+      "approval_id": "BASE-20261020",
+      "pointer": "/facts/F03"
+    },
+    "F04": {
+      "kind": "change",
+      "change_id": "CHG-003",
+      "seq": 3,
+      "pointer": "/changes/F04"
+    },
+    "F05": {
+      "kind": "baseline",
+      "approval_id": "BASE-20261020",
+      "pointer": "/facts/F05"
+    },
+    "F06": {
+      "kind": "change",
+      "change_id": "CHG-002",
+      "seq": 2,
+      "pointer": "/changes/F06"
+    },
+    "F07": {
+      "kind": "change",
+      "change_id": "CHG-003",
+      "seq": 3,
+      "pointer": "/changes/F07"
+    },
+    "F08": {
+      "kind": "baseline",
+      "approval_id": "BASE-20261020",
+      "pointer": "/facts/F08"
+    },
+    "F09": {
+      "kind": "change",
+      "change_id": "CHG-002",
+      "seq": 2,
+      "pointer": "/changes/F09"
+    },
+    "F10": {
+      "kind": "baseline",
+      "approval_id": "BASE-20261020",
+      "pointer": "/facts/F10"
+    },
+    "F11": {
+      "kind": "baseline",
+      "approval_id": "BASE-20261020",
+      "pointer": "/facts/F11"
+    },
+    "F12": {
+      "kind": "change",
+      "change_id": "CHG-003",
+      "seq": 3,
+      "pointer": "/changes/F12"
+    }
+  },
+  "source_sha256": {
+    "approved_facts.json": "03005aee5c822abca5815b46a5d87f7dbc29f72520a7d000a75bd2836ec59728",
+    "changes.jsonl": "3d0512cf58b5e93fca5c444e03cc75d24facf2b1bcb4dcbbab02eb9aa3be793f",
+    "channel_drafts/email_en.md": "262154f145c98e4c0a9ff02cd30ac7de5436db7f819d094deab21eb456401f1c",
+    "channel_drafts/social.md": "81210aa014b34381c7045b22533cce6fa89285c072c7823981c5fbb1c1908887",
+    "channel_drafts/website.html": "bdd5f1ee98e5c2bb1852665616798dbbea90f3e8092a359abcc90380f56442a9",
+    "source_article.md": "e64554804b584aff257629fe9129ab94a560c02afd3838a95a613c75afff7c5f",
+    "update_brief.md": "a75ad45bc1676a9f58f9fdcf189af10e3162d475c9c565926de15927e7693d7f"
+  },
+  "events": [
+    {
+      "change_id": "CHG-002",
+      "seq": 2,
+      "approved": true,
+      "approved_at": "2026-10-22T14:00:00+08:00",
+      "changes": {
+        "F02": {
+          "version": "2.1"
+        },
+        "F06": {
+          "status": "scheduled",
+          "date": "2026-11-18",
+          "time": "09:00",
+          "timezone": "Asia/Shanghai"
+        },
+        "F09": {
+          "automatic_send": false,
+          "manual_confirmation_required": true
+        }
+      },
+      "reason": "发布延期且保持尚未发布；取消自动发送，所有外发需人工确认。英文不能丢否定或将未来计划说成已上线。"
+    },
+    {
+      "change_id": "CHG-001",
+      "seq": 1,
+      "approved": true,
+      "approved_at": "2026-10-21T10:00:00+08:00",
+      "changes": {
+        "F02": {
+          "version": "2.0"
+        },
+        "F04": {
+          "amount": 129,
+          "currency": "CNY",
+          "unit": "workspace_month",
+          "tax_inclusive": false
+        }
+      },
+      "reason": "更新版本与报价口径；6%题设税率不变，按工作区每月，不能改成人均或年价。"
+    },
+    {
+      "change_id": "CHG-003",
+      "seq": 3,
+      "approved": true,
+      "approved_at": "2026-10-23T11:00:00+08:00",
+      "changes": {
+        "F04": {
+          "amount": 149,
+          "currency": "CNY",
+          "unit": "workspace_month",
+          "tax_inclusive": false
+        },
+        "F07": {
+          "trial_days": 14,
+          "payment_card_required": false,
+          "automatic_charge": false
+        },
+        "F12": {
+          "searchable_text_pdf": true,
+          "scanned_pdf_ocr": false
+        }
+      },
+      "reason": "最终报价再次更正，试用改14天且仍无绑卡/自动扣款；明确扫描PDF不支持OCR。"
+    }
+  ],
+  "optional_gross_price": "157.94",
+  "semantic_truth_not_inferred_from_candidate": true
+}

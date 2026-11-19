@@ -1,0 +1,96 @@
+{
+  "schema_version": "h003-independent-author-validation/v1",
+  "status": "PASS",
+  "records": [
+    {
+      "document": "source",
+      "docx_sha256": "905d9d9030d287dbd7dad7ae639073b6c8c0ae36e55a422d7feba16c4daf8536",
+      "headings": [
+        "第1条 项目与主体",
+        "第2条 服务范围",
+        "第3条 交付安排",
+        "第4条 费用与付款",
+        "第5条 验收",
+        "第6条 保密",
+        "第7条 服务支持",
+        "第8条 现场培训",
+        "第9条 违约与责任",
+        "第10条 终止",
+        "第11条 通知与送达",
+        "第12条 生效与附件"
+      ],
+      "table_shapes": [
+        [
+          4,
+          4
+        ],
+        [
+          6,
+          4
+        ]
+      ],
+      "reference_caches": [
+        "5",
+        "6",
+        "5",
+        "5",
+        "9",
+        "8",
+        "6",
+        "9"
+      ],
+      "hyperlink_targets": [
+        "mailto:billing@beiling.example",
+        "mailto:notice@beiling.example"
+      ],
+      "rendered_pages": 5,
+      "all_pages_visually_reviewed": true
+    },
+    {
+      "document": "reference",
+      "docx_sha256": "01af25214b1d7459b6a23b6676dfa5b39e3a8efaebe42b1e27103997544111fc",
+      "headings": [
+        "第1条 项目与主体",
+        "第2条 服务范围",
+        "第3条 交付安排",
+        "第4条 交付确认",
+        "第5条 费用与付款",
+        "第6条 验收",
+        "第7条 保密",
+        "第8条 服务支持",
+        "第9条 违约与责任",
+        "第10条 终止",
+        "第11条 通知与送达",
+        "第12条 生效与附件"
+      ],
+      "table_shapes": [
+        [
+          4,
+          4
+        ],
+        [
+          6,
+          4
+        ]
+      ],
+      "reference_caches": [
+        "4",
+        "6",
+        "7",
+        "6",
+        "6",
+        "6",
+        "9",
+        "7",
+        "9"
+      ],
+      "hyperlink_targets": [
+        "mailto:billing@beiling.example",
+        "mailto:legal-notice@beiling.example"
+      ],
+      "rendered_pages": 5,
+      "all_pages_visually_reviewed": true
+    }
+  ],
+  "scope": "Separate python-docx/pypdf extraction against manually stated cache vectors, native tables/relationships and reviewed PNGs; no independent legal human reviewer or Harness result."
+}

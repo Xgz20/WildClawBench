@@ -1,0 +1,23 @@
+{
+  "status": "pass",
+  "source_files": {
+    "finance.xlsx": "44e27d60008527713a5583f89f0467d620e744f680dfeae8ad1088da0a040de0",
+    "report.docx": "969cc2e04268abe96c234c33620358181f4caf936c91d3db19d4697d36e8d1b6",
+    "deck.pptx": "cedb9aeba407834be2c716c6adc0812a9417cfd0df1b90b87c9156c0c79f1639",
+    "corrections.csv": "007709b0a5ed1c049ea2a6baaa197496292085b305b6b4d160108c03c4ed8cf5"
+  },
+  "source_cells": 90,
+  "formula_nodes": 100,
+  "artifact_numeric_nodes": 92,
+  "approved_changes": 8,
+  "affected_nodes": 137,
+  "value_changed_nodes": 137,
+  "protected_raw_nodes": 82,
+  "native_charts": 4,
+  "embedded_workbooks": 4,
+  "native_word_footnotes": 2,
+  "real_source_formula_caches_cleared": 100,
+  "reference_exists": false,
+  "source_unchanged": true,
+  "limit": "Independent arithmetic/native source checks, not a second human expert, candidate run or semantic score."
+}

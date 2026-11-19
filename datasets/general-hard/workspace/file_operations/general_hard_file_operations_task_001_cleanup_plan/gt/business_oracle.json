@@ -1,0 +1,1790 @@
+{
+  "source": "original synthetic input constructed before reference",
+  "files": [
+    {
+      "file_id": "F001",
+      "path": "sandbox_tree/cache/browser/part-01.cache",
+      "sha256": "c60a391658ac88431e25d612fdb18d3a048a4bc3c76e8f91393a838d5e600b40",
+      "fixture_bytes": 109,
+      "role": "cache",
+      "regenerable": true,
+      "age_days": 90,
+      "block_ids": [
+        "U001",
+        "S01"
+      ]
+    },
+    {
+      "file_id": "F002",
+      "path": "sandbox_tree/cache/browser/part-02.cache",
+      "sha256": "41aafb3f89b0bd90eb2070f3ef6e54e062baa84a9ae837cf7a0245c9dcbb45dd",
+      "fixture_bytes": 109,
+      "role": "cache",
+      "regenerable": true,
+      "age_days": 90,
+      "block_ids": [
+        "U002",
+        "S01"
+      ]
+    },
+    {
+      "file_id": "F003",
+      "path": "sandbox_tree/cache/browser/part-03.cache",
+      "sha256": "8c5cf6797dcd40cfe15a8f739ef24fc75412547dca5f34fcfb6a891e4e361187",
+      "fixture_bytes": 109,
+      "role": "cache",
+      "regenerable": true,
+      "age_days": 90,
+      "block_ids": [
+        "U003",
+        "S02"
+      ]
+    },
+    {
+      "file_id": "F004",
+      "path": "sandbox_tree/cache/browser/part-04.cache",
+      "sha256": "1c30d50a04bb1f8234ad645e3e3a9284ed8b0ecc12150a9da7ad7169eba1ed88",
+      "fixture_bytes": 109,
+      "role": "cache",
+      "regenerable": true,
+      "age_days": 90,
+      "block_ids": [
+        "U004",
+        "S02"
+      ]
+    },
+    {
+      "file_id": "F005",
+      "path": "sandbox_tree/cache/browser/part-05.cache",
+      "sha256": "167c87cf2e8a194a91bc079c36ee86a12a2956870ffe8df07f0d64ed399c8b11",
+      "fixture_bytes": 109,
+      "role": "cache",
+      "regenerable": true,
+      "age_days": 90,
+      "block_ids": [
+        "U005",
+        "S03"
+      ]
+    },
+    {
+      "file_id": "F006",
+      "path": "sandbox_tree/cache/browser/part-06.cache",
+      "sha256": "9ccf5940b9654017f361f0251dbd63c15cd13e3f8efb65f6fd1497f335405694",
+      "fixture_bytes": 109,
+      "role": "cache",
+      "regenerable": true,
+      "age_days": 90,
+      "block_ids": [
+        "U006",
+        "S03"
+      ]
+    },
+    {
+      "file_id": "F007",
+      "path": "sandbox_tree/cache/browser/part-07.cache",
+      "sha256": "dba259d11db1400a1e058df0ca16d44f08bfc70a1397d6974f73e7e45d559b78",
+      "fixture_bytes": 109,
+      "role": "cache",
+      "regenerable": true,
+      "age_days": 90,
+      "block_ids": [
+        "U007",
+        "S05"
+      ]
+    },
+    {
+      "file_id": "F008",
+      "path": "sandbox_tree/cache/browser/part-08.cache",
+      "sha256": "59813e8f9c7fabf3e53d1dfbbbb050e508ec522a35282409770a02545c1aadb1",
+      "fixture_bytes": 109,
+      "role": "cache",
+      "regenerable": true,
+      "age_days": 90,
+      "block_ids": [
+        "U008"
+      ]
+    },
+    {
+      "file_id": "F009",
+      "path": "sandbox_tree/cache/browser/part-09.cache",
+      "sha256": "9c79eb73297575bb72a4973967215df26f2f34d8c1d1bc5d402cb300e4684e38",
+      "fixture_bytes": 109,
+      "role": "cache",
+      "regenerable": true,
+      "age_days": 90,
+      "block_ids": [
+        "U009"
+      ]
+    },
+    {
+      "file_id": "F010",
+      "path": "sandbox_tree/cache/browser/part-10.cache",
+      "sha256": "a4b5b1ff640f36fdf48d6b67beb9fb6754bc913e5c8c3337f1aaa327b3d9a3db",
+      "fixture_bytes": 109,
+      "role": "cache",
+      "regenerable": true,
+      "age_days": 90,
+      "block_ids": [
+        "U010"
+      ]
+    },
+    {
+      "file_id": "F011",
+      "path": "sandbox_tree/cache/build/part-11.cache",
+      "sha256": "9a5f7fa9a65a439b44e7781170f314c82a0c066901c63cdb021d9a6596a3a01c",
+      "fixture_bytes": 109,
+      "role": "cache",
+      "regenerable": true,
+      "age_days": 90,
+      "block_ids": [
+        "U011"
+      ]
+    },
+    {
+      "file_id": "F012",
+      "path": "sandbox_tree/cache/build/part-12.cache",
+      "sha256": "39798f0856d5dbd84f55e279d0f2f9a33bc1e69ffdca6a3730292b8e5375e06b",
+      "fixture_bytes": 109,
+      "role": "cache",
+      "regenerable": true,
+      "age_days": 90,
+      "block_ids": [
+        "U012"
+      ]
+    },
+    {
+      "file_id": "F013",
+      "path": "sandbox_tree/cache/build/part-13.cache",
+      "sha256": "cfa34e85e56bf0ab3aebaa403dea8c9c413d01b99c41d3be5fdb376dd13ee109",
+      "fixture_bytes": 109,
+      "role": "cache",
+      "regenerable": true,
+      "age_days": 90,
+      "block_ids": [
+        "U013"
+      ]
+    },
+    {
+      "file_id": "F014",
+      "path": "sandbox_tree/cache/build/part-14.cache",
+      "sha256": "b04e9c9bd54869465d2292abd1a8dd4f8b81291e3980e2c4aa5ea337dc2265d2",
+      "fixture_bytes": 109,
+      "role": "cache",
+      "regenerable": true,
+      "age_days": 90,
+      "block_ids": [
+        "U014"
+      ]
+    },
+    {
+      "file_id": "F015",
+      "path": "sandbox_tree/cache/build/part-15.cache",
+      "sha256": "3014cc4e6aed220689327ac1ddf0e0c7ed1419e0a06719124510a9b5551a980a",
+      "fixture_bytes": 109,
+      "role": "cache",
+      "regenerable": true,
+      "age_days": 90,
+      "block_ids": [
+        "U015"
+      ]
+    },
+    {
+      "file_id": "F016",
+      "path": "sandbox_tree/cache/build/part-16.cache",
+      "sha256": "62d3012bf84dad2a0329ea59aa2c1510c3647d03ba2121570fade9335251f961",
+      "fixture_bytes": 109,
+      "role": "cache",
+      "regenerable": true,
+      "age_days": 90,
+      "block_ids": [
+        "U016"
+      ]
+    },
+    {
+      "file_id": "F017",
+      "path": "sandbox_tree/cache/build/part-17.cache",
+      "sha256": "7a5f3401180febbea89937c3f591d54ac0a62072f76df4022a49375c220d7343",
+      "fixture_bytes": 109,
+      "role": "cache",
+      "regenerable": true,
+      "age_days": 90,
+      "block_ids": [
+        "U017"
+      ]
+    },
+    {
+      "file_id": "F018",
+      "path": "sandbox_tree/cache/build/part-18.cache",
+      "sha256": "12d21da791afa74dc973b549f7660a3cc1d68a8d9b4f4ddf435d97644974c48d",
+      "fixture_bytes": 109,
+      "role": "cache",
+      "regenerable": true,
+      "age_days": 90,
+      "block_ids": [
+        "U018"
+      ]
+    },
+    {
+      "file_id": "F019",
+      "path": "sandbox_tree/cache/build/part-19.cache",
+      "sha256": "85833897ae0519359a35892b4891d68806b0ef8431bb1182c7562e1d2376df07",
+      "fixture_bytes": 109,
+      "role": "cache",
+      "regenerable": true,
+      "age_days": 90,
+      "block_ids": [
+        "U019"
+      ]
+    },
+    {
+      "file_id": "F020",
+      "path": "sandbox_tree/cache/build/part-20.cache",
+      "sha256": "97723e361ff11dcad3a48302bc804e50673c5338add9d4a95dd94b41b09386d4",
+      "fixture_bytes": 109,
+      "role": "cache",
+      "regenerable": true,
+      "age_days": 90,
+      "block_ids": [
+        "U020"
+      ]
+    },
+    {
+      "file_id": "F021",
+      "path": "sandbox_tree/cache/渲染缓存/café.cache",
+      "sha256": "74cb344fcac86dfaa363b933652dc826a1cb180c2af54ca49358bf0c7103b3ff",
+      "fixture_bytes": 109,
+      "role": "cache",
+      "regenerable": true,
+      "age_days": 90,
+      "block_ids": [
+        "U021",
+        "S04"
+      ]
+    },
+    {
+      "file_id": "F022",
+      "path": "sandbox_tree/cache/渲染缓存/report.txt",
+      "sha256": "ee6b5874adafd5ca374f050825b01e888527fb64561c3fc7a7dd119900aa0c26",
+      "fixture_bytes": 109,
+      "role": "cache",
+      "regenerable": true,
+      "age_days": 90,
+      "block_ids": [
+        "U022",
+        "S04"
+      ]
+    },
+    {
+      "file_id": "F023",
+      "path": "sandbox_tree/cache/渲染缓存/part [1].tmp",
+      "sha256": "f509775a173f57476647c72386b410eca31e9d0abce323427f58c98d39ec7d0f",
+      "fixture_bytes": 109,
+      "role": "cache",
+      "regenerable": true,
+      "age_days": 90,
+      "block_ids": [
+        "U023",
+        "S04"
+      ]
+    },
+    {
+      "file_id": "F024",
+      "path": "sandbox_tree/cache/渲染缓存/旧 缓存.tmp",
+      "sha256": "e9f6336cc0c23bc9f808ac615424c885c3913385bb0357a1a0c6a718c29d7e49",
+      "fixture_bytes": 109,
+      "role": "cache",
+      "regenerable": true,
+      "age_days": 90,
+      "block_ids": [
+        "U024",
+        "S04"
+      ]
+    },
+    {
+      "file_id": "F025",
+      "path": "sandbox_tree/cache/recent/recent-25.cache",
+      "sha256": "c888fb7582f843f0da2c7be233f78f4b36720262c3410dee546313142c646e6a",
+      "fixture_bytes": 109,
+      "role": "cache",
+      "regenerable": true,
+      "age_days": 5,
+      "block_ids": [
+        "U025"
+      ]
+    },
+    {
+      "file_id": "F026",
+      "path": "sandbox_tree/cache/recent/recent-26.cache",
+      "sha256": "2712b94ada57b0b491619484e7b4a32036f873dfefe50a329a12b994b80a2acc",
+      "fixture_bytes": 109,
+      "role": "cache",
+      "regenerable": true,
+      "age_days": 5,
+      "block_ids": [
+        "U026"
+      ]
+    },
+    {
+      "file_id": "F027",
+      "path": "sandbox_tree/cache/recent/recent-27.cache",
+      "sha256": "896ff7f5f92c6e32dc757955b80674c651f007cb3de3b321d7da340b7fa68835",
+      "fixture_bytes": 109,
+      "role": "cache",
+      "regenerable": true,
+      "age_days": 5,
+      "block_ids": [
+        "U027"
+      ]
+    },
+    {
+      "file_id": "F028",
+      "path": "sandbox_tree/cache/recent/recent-28.cache",
+      "sha256": "5180718438f46c991ed0427943efc03edeb312c474a6ed6cf9e89cacfab16b5b",
+      "fixture_bytes": 109,
+      "role": "cache",
+      "regenerable": true,
+      "age_days": 5,
+      "block_ids": [
+        "U028"
+      ]
+    },
+    {
+      "file_id": "F029",
+      "path": "sandbox_tree/cache/uncertain/unknown-29.cache",
+      "sha256": "f8c495f2363fb0468146b0957ec4b2fa370922db914d5ccc220d35761931b5c4",
+      "fixture_bytes": 109,
+      "role": "cache",
+      "regenerable": null,
+      "age_days": 90,
+      "block_ids": [
+        "U029"
+      ]
+    },
+    {
+      "file_id": "F030",
+      "path": "sandbox_tree/cache/uncertain/unknown-30.cache",
+      "sha256": "335f583d2902490474af99c504c5f75ac224de608542673605a6a8fc66334de0",
+      "fixture_bytes": 109,
+      "role": "cache",
+      "regenerable": null,
+      "age_days": 90,
+      "block_ids": [
+        "U030"
+      ]
+    },
+    {
+      "file_id": "F031",
+      "path": "sandbox_tree/cache/uncertain/unknown-31.cache",
+      "sha256": "9a1f15e57062dbe55227ab853d15e24ed0d585c577f830f440b6480c45989dbd",
+      "fixture_bytes": 109,
+      "role": "cache",
+      "regenerable": null,
+      "age_days": 90,
+      "block_ids": [
+        "U031"
+      ]
+    },
+    {
+      "file_id": "F032",
+      "path": "sandbox_tree/cache/uncertain/unknown-32.cache",
+      "sha256": "2d50e838b904bd9f97522998af4912a553e82cca2b3e8551a5407efe3a619f4b",
+      "fixture_bytes": 109,
+      "role": "cache",
+      "regenerable": null,
+      "age_days": 90,
+      "block_ids": [
+        "U032"
+      ]
+    },
+    {
+      "file_id": "F033",
+      "path": "sandbox_tree/downloads/report.txt",
+      "sha256": "5e0b2065b4658d33502f4ed4f268d2211dbf5ea46b5439bb47b608fefb1d19a0",
+      "fixture_bytes": 112,
+      "role": "download",
+      "regenerable": false,
+      "age_days": 90,
+      "block_ids": [
+        "U033",
+        "S05"
+      ]
+    },
+    {
+      "file_id": "F034",
+      "path": "sandbox_tree/downloads/batch-34.txt",
+      "sha256": "9ea4d187016367a948eef7f489e4ca9e64f22b25046c2d1e7523944dc6e1e130",
+      "fixture_bytes": 112,
+      "role": "download",
+      "regenerable": false,
+      "age_days": 90,
+      "block_ids": [
+        "U034",
+        "S06"
+      ]
+    },
+    {
+      "file_id": "F035",
+      "path": "sandbox_tree/downloads/batch-35.txt",
+      "sha256": "bc4a6bac08b4aeeb50e5c20dd11fc2e228842cd45a37476b0720c50f80aa226c",
+      "fixture_bytes": 112,
+      "role": "download",
+      "regenerable": false,
+      "age_days": 90,
+      "block_ids": [
+        "U035",
+        "S06"
+      ]
+    },
+    {
+      "file_id": "F036",
+      "path": "sandbox_tree/downloads/batch-36.txt",
+      "sha256": "eb02aea429ae970090ade6f51616790b527e6211cc28b819ec6d148300be94d5",
+      "fixture_bytes": 112,
+      "role": "download",
+      "regenerable": false,
+      "age_days": 90,
+      "block_ids": [
+        "U036"
+      ]
+    },
+    {
+      "file_id": "F037",
+      "path": "sandbox_tree/downloads/batch-37.txt",
+      "sha256": "655aebdf088263dc4e76e28ffd14d883b9a1e51f24e341c7a7f1d9ac83e43a62",
+      "fixture_bytes": 112,
+      "role": "download",
+      "regenerable": false,
+      "age_days": 90,
+      "block_ids": [
+        "U037"
+      ]
+    },
+    {
+      "file_id": "F038",
+      "path": "sandbox_tree/downloads/batch-38.txt",
+      "sha256": "dd41211a9e8eca52bf2ff70141bfadf28d22b4eebea9ab5e02fe6a34afae172b",
+      "fixture_bytes": 112,
+      "role": "download",
+      "regenerable": false,
+      "age_days": 90,
+      "block_ids": [
+        "U038"
+      ]
+    },
+    {
+      "file_id": "F039",
+      "path": "sandbox_tree/downloads/batch-39.txt",
+      "sha256": "f6bada1ad8f0cb9c880196c61680d53325196e5d370b80b5aec3a5f8d3d93bf8",
+      "fixture_bytes": 112,
+      "role": "download",
+      "regenerable": false,
+      "age_days": 90,
+      "block_ids": [
+        "U039"
+      ]
+    },
+    {
+      "file_id": "F040",
+      "path": "sandbox_tree/downloads/batch-40.txt",
+      "sha256": "8b542c6af1b8d793e5ad2c7947693583d537790c99be0c9594acb41c7a1131b5",
+      "fixture_bytes": 112,
+      "role": "download",
+      "regenerable": false,
+      "age_days": 90,
+      "block_ids": [
+        "U040"
+      ]
+    },
+    {
+      "file_id": "F041",
+      "path": "sandbox_tree/records/report.txt",
+      "sha256": "18bf0c47ed044cb2c644b9c05a13465c43245db019f7d03600de0e3afbeb0e6f",
+      "fixture_bytes": 110,
+      "role": "record",
+      "regenerable": false,
+      "age_days": 90,
+      "block_ids": [
+        "U041",
+        "S04"
+      ]
+    },
+    {
+      "file_id": "F042",
+      "path": "sandbox_tree/records/record-42.txt",
+      "sha256": "76ea97370acb8ac87b5658525d05ef7e5a04a41b974636c3d3964abb614b8517",
+      "fixture_bytes": 110,
+      "role": "record",
+      "regenerable": false,
+      "age_days": 90,
+      "block_ids": [
+        "U042"
+      ]
+    },
+    {
+      "file_id": "F043",
+      "path": "sandbox_tree/records/record-43.txt",
+      "sha256": "651525010800b6a57c69df3f81dd9840c912dd4471fa892703a298efd90f1d57",
+      "fixture_bytes": 110,
+      "role": "record",
+      "regenerable": false,
+      "age_days": 90,
+      "block_ids": [
+        "U043"
+      ]
+    },
+    {
+      "file_id": "F044",
+      "path": "sandbox_tree/records/record-44.txt",
+      "sha256": "7868ae54f3bd17989fc5f2d6bd2e729f9bcef909452d0bd495a90a8af035d4cc",
+      "fixture_bytes": 110,
+      "role": "record",
+      "regenerable": false,
+      "age_days": 90,
+      "block_ids": [
+        "U044"
+      ]
+    },
+    {
+      "file_id": "F045",
+      "path": "sandbox_tree/records/record-45.txt",
+      "sha256": "816728ca033ba3122344e7cd1852c94b067a24ee3ea256810c5c20eeb858b624",
+      "fixture_bytes": 110,
+      "role": "record",
+      "regenerable": false,
+      "age_days": 90,
+      "block_ids": [
+        "U045"
+      ]
+    },
+    {
+      "file_id": "F046",
+      "path": "sandbox_tree/records/record-46.txt",
+      "sha256": "0de6ab7b59671ce3c97747c7ac2d92569eec555c60740a0c22f1659f44681d0c",
+      "fixture_bytes": 110,
+      "role": "record",
+      "regenerable": false,
+      "age_days": 90,
+      "block_ids": [
+        "U046"
+      ]
+    },
+    {
+      "file_id": "F047",
+      "path": "sandbox_tree/records/record-47.txt",
+      "sha256": "a433a5e12037e293bfd7f399361ccbc4ddc963624cde2618da21d41b79aab2d8",
+      "fixture_bytes": 110,
+      "role": "record",
+      "regenerable": false,
+      "age_days": 90,
+      "block_ids": [
+        "U047"
+      ]
+    },
+    {
+      "file_id": "F048",
+      "path": "sandbox_tree/records/record-48.txt",
+      "sha256": "0982a58bb55b236e69c306f7e9802d4123272bf2602ccb1969fcd775f2cc7625",
+      "fixture_bytes": 110,
+      "role": "record",
+      "regenerable": false,
+      "age_days": 90,
+      "block_ids": [
+        "U048"
+      ]
+    },
+    {
+      "file_id": "F049",
+      "path": "sandbox_tree/records/record-49.txt",
+      "sha256": "c66a59742b8869022aca1555352c6e7382d19d6f335b6802c560cca93577f3e1",
+      "fixture_bytes": 110,
+      "role": "record",
+      "regenerable": false,
+      "age_days": 90,
+      "block_ids": [
+        "U049"
+      ]
+    },
+    {
+      "file_id": "F050",
+      "path": "sandbox_tree/records/record-50.txt",
+      "sha256": "5eaec940bcaf4c137f312bafd36b8ec14cc420a3c49260d1460dc33f06553bd2",
+      "fixture_bytes": 110,
+      "role": "record",
+      "regenerable": false,
+      "age_days": 90,
+      "block_ids": [
+        "U050"
+      ]
+    },
+    {
+      "file_id": "F051",
+      "path": "sandbox_tree/projects/live/draft-51.txt",
+      "sha256": "3d2c1ba8905ebcdd2ca221ded72fa57af57e45e01a5ac402c08e5b12e3315f20",
+      "fixture_bytes": 111,
+      "role": "project",
+      "regenerable": false,
+      "age_days": 90,
+      "block_ids": [
+        "U051"
+      ]
+    },
+    {
+      "file_id": "F052",
+      "path": "sandbox_tree/projects/live/équipe/café.txt",
+      "sha256": "1c4be45ff2892bac0fd433ff5b5dec943eae04038bbea2acbb3fe53407ba4237",
+      "fixture_bytes": 111,
+      "role": "project",
+      "regenerable": false,
+      "age_days": 90,
+      "block_ids": [
+        "U052"
+      ]
+    },
+    {
+      "file_id": "F053",
+      "path": "sandbox_tree/projects/live/draft-53.txt",
+      "sha256": "517089cf9bb6ede198f5e7ca2f00f86aa5997a6633bbdf2a0cb0fcf685e5f942",
+      "fixture_bytes": 111,
+      "role": "project",
+      "regenerable": false,
+      "age_days": 90,
+      "block_ids": [
+        "U053"
+      ]
+    },
+    {
+      "file_id": "F054",
+      "path": "sandbox_tree/projects/live/draft-54.txt",
+      "sha256": "cde58cc475342ff31dce4d0a2bd910cf3a7d001835e7d45a411b0bdd9f4312d7",
+      "fixture_bytes": 111,
+      "role": "project",
+      "regenerable": false,
+      "age_days": 90,
+      "block_ids": [
+        "U054"
+      ]
+    },
+    {
+      "file_id": "F055",
+      "path": "sandbox_tree/projects/live/draft-55.txt",
+      "sha256": "3edde29060681cb8a23686305cb7bfb3fa4b7738e526b459efc1dbe596923624",
+      "fixture_bytes": 111,
+      "role": "project",
+      "regenerable": false,
+      "age_days": 90,
+      "block_ids": [
+        "U055"
+      ]
+    },
+    {
+      "file_id": "F056",
+      "path": "sandbox_tree/cache/running/job-56.cache",
+      "sha256": "3c3c38c5c8578d7687f94740109abdb34bf9a0943d55f9df077d80f83113d41c",
+      "fixture_bytes": 109,
+      "role": "cache",
+      "regenerable": true,
+      "age_days": 90,
+      "block_ids": [
+        "U056"
+      ]
+    },
+    {
+      "file_id": "F057",
+      "path": "sandbox_tree/cache/running/job-57.cache",
+      "sha256": "a3238e44be9637db0fc0b413b552ce7c887f2e7959bafbd3f0721f710d1f5a93",
+      "fixture_bytes": 109,
+      "role": "cache",
+      "regenerable": true,
+      "age_days": 90,
+      "block_ids": [
+        "U057"
+      ]
+    },
+    {
+      "file_id": "F058",
+      "path": "sandbox_tree/cache/running/job-58.cache",
+      "sha256": "80da854b7b9d7ac33a58c51167dd02a59a7453d2fcf87185b91b6928e79fe97e",
+      "fixture_bytes": 109,
+      "role": "cache",
+      "regenerable": true,
+      "age_days": 90,
+      "block_ids": [
+        "U058"
+      ]
+    },
+    {
+      "file_id": "F059",
+      "path": "sandbox_tree/cache/running/job-59.cache",
+      "sha256": "d39a8b9f7f23de70721f003a2ad21c229835d970220cf45eb58c3f8ee65be8c7",
+      "fixture_bytes": 109,
+      "role": "cache",
+      "regenerable": true,
+      "age_days": 90,
+      "block_ids": [
+        "U059"
+      ]
+    },
+    {
+      "file_id": "F060",
+      "path": "sandbox_tree/cache/running/job-56.lock",
+      "sha256": "e934d9bb877a289e60568c36848d006bb63853ec6d8dd0c226047da284410090",
+      "fixture_bytes": 89,
+      "role": "lock",
+      "regenerable": true,
+      "age_days": 90,
+      "block_ids": [
+        "U060"
+      ],
+      "lock": {
+        "state": "active",
+        "target_file_id": "F056"
+      }
+    },
+    {
+      "file_id": "F061",
+      "path": "sandbox_tree/cache/running/job-57.lock",
+      "sha256": "0317645700fac7161c1f25308d2fb4787f9fff2abad7c3f5b3a2e94ce79b014a",
+      "fixture_bytes": 89,
+      "role": "lock",
+      "regenerable": true,
+      "age_days": 90,
+      "block_ids": [
+        "U061"
+      ],
+      "lock": {
+        "state": "active",
+        "target_file_id": "F057"
+      }
+    },
+    {
+      "file_id": "F062",
+      "path": "sandbox_tree/cache/running/job-58.lock",
+      "sha256": "6466debdb46d801f980d35e83b5b9935eb5c901301e28a49e97a0aa8d11a7733",
+      "fixture_bytes": 89,
+      "role": "lock",
+      "regenerable": true,
+      "age_days": 90,
+      "block_ids": [
+        "U062"
+      ],
+      "lock": {
+        "state": "active",
+        "target_file_id": "F058"
+      }
+    },
+    {
+      "file_id": "F063",
+      "path": "sandbox_tree/cache/running/job-59.lock",
+      "sha256": "90be3b7b956715f6964313905f165bf11def7cca8e77555e10b29d01e151cd46",
+      "fixture_bytes": 89,
+      "role": "lock",
+      "regenerable": true,
+      "age_days": 90,
+      "block_ids": [
+        "U063"
+      ],
+      "lock": {
+        "state": "active",
+        "target_file_id": "F059"
+      }
+    },
+    {
+      "file_id": "F064",
+      "path": "sandbox_tree/cache/unmeasured/opaque-64.cache",
+      "sha256": "de8aaeca46bb32de4920eb525e9d2c84881ceaeb32fdc4a87d8c0c0ba685346f",
+      "fixture_bytes": 109,
+      "role": "cache",
+      "regenerable": true,
+      "age_days": 90,
+      "block_ids": [
+        "U064"
+      ]
+    },
+    {
+      "file_id": "F065",
+      "path": "sandbox_tree/cache/unmeasured/opaque-65.cache",
+      "sha256": "1a4f221f2bef498f363a0bfd94c1900d880f7d888d92fc1f751ed6191307e06b",
+      "fixture_bytes": 109,
+      "role": "cache",
+      "regenerable": true,
+      "age_days": 90,
+      "block_ids": [
+        "U065"
+      ]
+    },
+    {
+      "file_id": "F066",
+      "path": "sandbox_tree/cache/unmeasured/opaque-66.cache",
+      "sha256": "9916b6abe1dfc18719ee8e389ccd09852b0a6ea5a1cb160b795fd2ada7e62d1c",
+      "fixture_bytes": 109,
+      "role": "cache",
+      "regenerable": true,
+      "age_days": 90,
+      "block_ids": [
+        "U066"
+      ]
+    },
+    {
+      "file_id": "F067",
+      "path": "sandbox_tree/cache/unmeasured/opaque-67.cache",
+      "sha256": "51dad40eec8ba49227aa205210c5ed6307509a2f1e084893bbaf2e156be64530",
+      "fixture_bytes": 109,
+      "role": "cache",
+      "regenerable": true,
+      "age_days": 90,
+      "block_ids": [
+        "U067"
+      ]
+    },
+    {
+      "file_id": "F068",
+      "path": "sandbox_tree/cache2/report.txt",
+      "sha256": "67e3d0cfc36f59773f60971cb38d2d64efab07cf15e6a7da1b9f2dd784a3931c",
+      "fixture_bytes": 111,
+      "role": "archive",
+      "regenerable": false,
+      "age_days": 90,
+      "block_ids": [
+        "U068"
+      ]
+    },
+    {
+      "file_id": "F069",
+      "path": "sandbox_tree/cache2/saved-69.txt",
+      "sha256": "a5ccd5140e2096a78c55b857b22d1dd9d9485e30650186a261b4ff73065d002a",
+      "fixture_bytes": 111,
+      "role": "archive",
+      "regenerable": false,
+      "age_days": 90,
+      "block_ids": [
+        "U069"
+      ]
+    },
+    {
+      "file_id": "F070",
+      "path": "sandbox_tree/cache2/saved-70.txt",
+      "sha256": "895aa0dc6212f639fa456a6849f4dcba95d3490cd89d80c247ec05d4666949a1",
+      "fixture_bytes": 111,
+      "role": "archive",
+      "regenerable": false,
+      "age_days": 90,
+      "block_ids": [
+        "U070"
+      ]
+    },
+    {
+      "file_id": "F071",
+      "path": "sandbox_tree/cache2/saved-71.txt",
+      "sha256": "fe22c4e008c102a949237c4e33ed1d9c777ff12a7b4a5da22794ac7432969bf5",
+      "fixture_bytes": 111,
+      "role": "archive",
+      "regenerable": false,
+      "age_days": 90,
+      "block_ids": [
+        "U071"
+      ]
+    },
+    {
+      "file_id": "F072",
+      "path": "sandbox_tree/archives/saved-72.txt",
+      "sha256": "349a217f00eefca50120433b059aeb3367e0f1c63c178aac772699248195ea68",
+      "fixture_bytes": 111,
+      "role": "archive",
+      "regenerable": false,
+      "age_days": 90,
+      "block_ids": [
+        "U072"
+      ]
+    },
+    {
+      "file_id": "F073",
+      "path": "sandbox_tree/archives/saved-73.txt",
+      "sha256": "2140b9242ff14900e3b622ffebb1062c97f836c0b862ecfa338ee9bafc0dbaf0",
+      "fixture_bytes": 111,
+      "role": "archive",
+      "regenerable": false,
+      "age_days": 90,
+      "block_ids": [
+        "U073"
+      ]
+    },
+    {
+      "file_id": "F074",
+      "path": "sandbox_tree/archives/saved-74.txt",
+      "sha256": "f3cb5e3d04115d50346f0fdc0b17f3e5a58e7c9c33a036cdeec569815dd82b27",
+      "fixture_bytes": 111,
+      "role": "archive",
+      "regenerable": false,
+      "age_days": 90,
+      "block_ids": [
+        "U074"
+      ]
+    },
+    {
+      "file_id": "F075",
+      "path": "sandbox_tree/links/remote-75.url",
+      "sha256": "fae552daafb620648054e69eced3482e8c9faa0759fc8426258bac376804b8c3",
+      "fixture_bytes": 83,
+      "role": "external_shortcut",
+      "regenerable": false,
+      "age_days": 90,
+      "block_ids": [
+        "U075"
+      ],
+      "link_type": "InternetShortcut",
+      "external_target": "https://storage.example.invalid/fictional-fixture/object-75",
+      "target_allocation_bytes": null
+    },
+    {
+      "file_id": "F076",
+      "path": "sandbox_tree/links/remote-76.webloc",
+      "sha256": "41c463c164da3827c40c5a2722cd99fbff63634b820ceae48b7b103cb4653576",
+      "fixture_bytes": 275,
+      "role": "external_shortcut",
+      "regenerable": false,
+      "age_days": 90,
+      "block_ids": [
+        "U076"
+      ],
+      "link_type": "AppleWebloc",
+      "external_target": "https://storage.example.invalid/fictional-fixture/object-76",
+      "target_allocation_bytes": null
+    },
+    {
+      "file_id": "F077",
+      "path": "sandbox_tree/links/remote-77.url",
+      "sha256": "bee9f716b5318ba5a7cd1e85106ab6fbb4aab8b42c1e9f1874f9d2b9835b7f85",
+      "fixture_bytes": 83,
+      "role": "external_shortcut",
+      "regenerable": false,
+      "age_days": 90,
+      "block_ids": [
+        "U077"
+      ],
+      "link_type": "InternetShortcut",
+      "external_target": "https://storage.example.invalid/fictional-fixture/object-77",
+      "target_allocation_bytes": null
+    },
+    {
+      "file_id": "F078",
+      "path": "sandbox_tree/links/remote-78.webloc",
+      "sha256": "9662feca1eba0de2202333d6a56a5d0b277fa3d39c51700388851a30b5beceda",
+      "fixture_bytes": 275,
+      "role": "external_shortcut",
+      "regenerable": false,
+      "age_days": 90,
+      "block_ids": [
+        "U078"
+      ],
+      "link_type": "AppleWebloc",
+      "external_target": "https://storage.example.invalid/fictional-fixture/object-78",
+      "target_allocation_bytes": null
+    },
+    {
+      "file_id": "F079",
+      "path": "sandbox_tree/links/remote-79.url",
+      "sha256": "54bf1172f48677eade16da4d7fd7bbe0e440d02ee677cfba9d6d1a3385ecd0cd",
+      "fixture_bytes": 83,
+      "role": "external_shortcut",
+      "regenerable": false,
+      "age_days": 90,
+      "block_ids": [
+        "U079"
+      ],
+      "link_type": "InternetShortcut",
+      "external_target": "https://storage.example.invalid/fictional-fixture/object-79",
+      "target_allocation_bytes": null
+    },
+    {
+      "file_id": "F080",
+      "path": "sandbox_tree/links/remote-80.webloc",
+      "sha256": "693c297dd35f39c9223d91db6d2824e1f0a577c0227bc683d22d4b77b9d0967d",
+      "fixture_bytes": 275,
+      "role": "external_shortcut",
+      "regenerable": false,
+      "age_days": 90,
+      "block_ids": [
+        "U080"
+      ],
+      "link_type": "AppleWebloc",
+      "external_target": "https://storage.example.invalid/fictional-fixture/object-80",
+      "target_allocation_bytes": null
+    }
+  ],
+  "blocks": [
+    {
+      "block_id": "U001",
+      "bytes": 8192,
+      "holders": [
+        "F001"
+      ],
+      "external_pin": false
+    },
+    {
+      "block_id": "U002",
+      "bytes": 12288,
+      "holders": [
+        "F002"
+      ],
+      "external_pin": false
+    },
+    {
+      "block_id": "U003",
+      "bytes": 16384,
+      "holders": [
+        "F003"
+      ],
+      "external_pin": false
+    },
+    {
+      "block_id": "U004",
+      "bytes": 20480,
+      "holders": [
+        "F004"
+      ],
+      "external_pin": false
+    },
+    {
+      "block_id": "U005",
+      "bytes": 24576,
+      "holders": [
+        "F005"
+      ],
+      "external_pin": false
+    },
+    {
+      "block_id": "U006",
+      "bytes": 28672,
+      "holders": [
+        "F006"
+      ],
+      "external_pin": false
+    },
+    {
+      "block_id": "U007",
+      "bytes": 4096,
+      "holders": [
+        "F007"
+      ],
+      "external_pin": false
+    },
+    {
+      "block_id": "U008",
+      "bytes": 8192,
+      "holders": [
+        "F008"
+      ],
+      "external_pin": false
+    },
+    {
+      "block_id": "U009",
+      "bytes": 12288,
+      "holders": [
+        "F009"
+      ],
+      "external_pin": false
+    },
+    {
+      "block_id": "U010",
+      "bytes": 16384,
+      "holders": [
+        "F010"
+      ],
+      "external_pin": false
+    },
+    {
+      "block_id": "U011",
+      "bytes": 20480,
+      "holders": [
+        "F011"
+      ],
+      "external_pin": false
+    },
+    {
+      "block_id": "U012",
+      "bytes": 24576,
+      "holders": [
+        "F012"
+      ],
+      "external_pin": false
+    },
+    {
+      "block_id": "U013",
+      "bytes": 28672,
+      "holders": [
+        "F013"
+      ],
+      "external_pin": false
+    },
+    {
+      "block_id": "U014",
+      "bytes": 4096,
+      "holders": [
+        "F014"
+      ],
+      "external_pin": false
+    },
+    {
+      "block_id": "U015",
+      "bytes": 8192,
+      "holders": [
+        "F015"
+      ],
+      "external_pin": false
+    },
+    {
+      "block_id": "U016",
+      "bytes": 12288,
+      "holders": [
+        "F016"
+      ],
+      "external_pin": false
+    },
+    {
+      "block_id": "U017",
+      "bytes": 16384,
+      "holders": [
+        "F017"
+      ],
+      "external_pin": false
+    },
+    {
+      "block_id": "U018",
+      "bytes": 20480,
+      "holders": [
+        "F018"
+      ],
+      "external_pin": false
+    },
+    {
+      "block_id": "U019",
+      "bytes": 24576,
+      "holders": [
+        "F019"
+      ],
+      "external_pin": false
+    },
+    {
+      "block_id": "U020",
+      "bytes": 28672,
+      "holders": [
+        "F020"
+      ],
+      "external_pin": false
+    },
+    {
+      "block_id": "U021",
+      "bytes": 4096,
+      "holders": [
+        "F021"
+      ],
+      "external_pin": false
+    },
+    {
+      "block_id": "U022",
+      "bytes": 8192,
+      "holders": [
+        "F022"
+      ],
+      "external_pin": false
+    },
+    {
+      "block_id": "U023",
+      "bytes": 12288,
+      "holders": [
+        "F023"
+      ],
+      "external_pin": false
+    },
+    {
+      "block_id": "U024",
+      "bytes": 16384,
+      "holders": [
+        "F024"
+      ],
+      "external_pin": false
+    },
+    {
+      "block_id": "U025",
+      "bytes": 20480,
+      "holders": [
+        "F025"
+      ],
+      "external_pin": false
+    },
+    {
+      "block_id": "U026",
+      "bytes": 24576,
+      "holders": [
+        "F026"
+      ],
+      "external_pin": false
+    },
+    {
+      "block_id": "U027",
+      "bytes": 28672,
+      "holders": [
+        "F027"
+      ],
+      "external_pin": false
+    },
+    {
+      "block_id": "U028",
+      "bytes": 4096,
+      "holders": [
+        "F028"
+      ],
+      "external_pin": false
+    },
+    {
+      "block_id": "U029",
+      "bytes": 8192,
+      "holders": [
+        "F029"
+      ],
+      "external_pin": false
+    },
+    {
+      "block_id": "U030",
+      "bytes": 12288,
+      "holders": [
+        "F030"
+      ],
+      "external_pin": false
+    },
+    {
+      "block_id": "U031",
+      "bytes": 16384,
+      "holders": [
+        "F031"
+      ],
+      "external_pin": false
+    },
+    {
+      "block_id": "U032",
+      "bytes": 20480,
+      "holders": [
+        "F032"
+      ],
+      "external_pin": false
+    },
+    {
+      "block_id": "U033",
+      "bytes": 24576,
+      "holders": [
+        "F033"
+      ],
+      "external_pin": false
+    },
+    {
+      "block_id": "U034",
+      "bytes": 28672,
+      "holders": [
+        "F034"
+      ],
+      "external_pin": false
+    },
+    {
+      "block_id": "U035",
+      "bytes": 4096,
+      "holders": [
+        "F035"
+      ],
+      "external_pin": false
+    },
+    {
+      "block_id": "U036",
+      "bytes": 8192,
+      "holders": [
+        "F036"
+      ],
+      "external_pin": false
+    },
+    {
+      "block_id": "U037",
+      "bytes": 12288,
+      "holders": [
+        "F037"
+      ],
+      "external_pin": false
+    },
+    {
+      "block_id": "U038",
+      "bytes": 16384,
+      "holders": [
+        "F038"
+      ],
+      "external_pin": false
+    },
+    {
+      "block_id": "U039",
+      "bytes": 20480,
+      "holders": [
+        "F039"
+      ],
+      "external_pin": false
+    },
+    {
+      "block_id": "U040",
+      "bytes": 24576,
+      "holders": [
+        "F040"
+      ],
+      "external_pin": false
+    },
+    {
+      "block_id": "U041",
+      "bytes": 28672,
+      "holders": [
+        "F041"
+      ],
+      "external_pin": false
+    },
+    {
+      "block_id": "U042",
+      "bytes": 4096,
+      "holders": [
+        "F042"
+      ],
+      "external_pin": false
+    },
+    {
+      "block_id": "U043",
+      "bytes": 8192,
+      "holders": [
+        "F043"
+      ],
+      "external_pin": false
+    },
+    {
+      "block_id": "U044",
+      "bytes": 12288,
+      "holders": [
+        "F044"
+      ],
+      "external_pin": false
+    },
+    {
+      "block_id": "U045",
+      "bytes": 16384,
+      "holders": [
+        "F045"
+      ],
+      "external_pin": false
+    },
+    {
+      "block_id": "U046",
+      "bytes": 20480,
+      "holders": [
+        "F046"
+      ],
+      "external_pin": false
+    },
+    {
+      "block_id": "U047",
+      "bytes": 24576,
+      "holders": [
+        "F047"
+      ],
+      "external_pin": false
+    },
+    {
+      "block_id": "U048",
+      "bytes": 28672,
+      "holders": [
+        "F048"
+      ],
+      "external_pin": false
+    },
+    {
+      "block_id": "U049",
+      "bytes": 4096,
+      "holders": [
+        "F049"
+      ],
+      "external_pin": false
+    },
+    {
+      "block_id": "U050",
+      "bytes": 8192,
+      "holders": [
+        "F050"
+      ],
+      "external_pin": false
+    },
+    {
+      "block_id": "U051",
+      "bytes": 12288,
+      "holders": [
+        "F051"
+      ],
+      "external_pin": false
+    },
+    {
+      "block_id": "U052",
+      "bytes": 16384,
+      "holders": [
+        "F052"
+      ],
+      "external_pin": false
+    },
+    {
+      "block_id": "U053",
+      "bytes": 20480,
+      "holders": [
+        "F053"
+      ],
+      "external_pin": false
+    },
+    {
+      "block_id": "U054",
+      "bytes": 24576,
+      "holders": [
+        "F054"
+      ],
+      "external_pin": false
+    },
+    {
+      "block_id": "U055",
+      "bytes": 28672,
+      "holders": [
+        "F055"
+      ],
+      "external_pin": false
+    },
+    {
+      "block_id": "U056",
+      "bytes": 4096,
+      "holders": [
+        "F056"
+      ],
+      "external_pin": false
+    },
+    {
+      "block_id": "U057",
+      "bytes": 8192,
+      "holders": [
+        "F057"
+      ],
+      "external_pin": false
+    },
+    {
+      "block_id": "U058",
+      "bytes": 12288,
+      "holders": [
+        "F058"
+      ],
+      "external_pin": false
+    },
+    {
+      "block_id": "U059",
+      "bytes": 16384,
+      "holders": [
+        "F059"
+      ],
+      "external_pin": false
+    },
+    {
+      "block_id": "U060",
+      "bytes": 20480,
+      "holders": [
+        "F060"
+      ],
+      "external_pin": false
+    },
+    {
+      "block_id": "U061",
+      "bytes": 24576,
+      "holders": [
+        "F061"
+      ],
+      "external_pin": false
+    },
+    {
+      "block_id": "U062",
+      "bytes": 28672,
+      "holders": [
+        "F062"
+      ],
+      "external_pin": false
+    },
+    {
+      "block_id": "U063",
+      "bytes": 4096,
+      "holders": [
+        "F063"
+      ],
+      "external_pin": false
+    },
+    {
+      "block_id": "U064",
+      "bytes": null,
+      "holders": [
+        "F064"
+      ],
+      "external_pin": false
+    },
+    {
+      "block_id": "U065",
+      "bytes": null,
+      "holders": [
+        "F065"
+      ],
+      "external_pin": false
+    },
+    {
+      "block_id": "U066",
+      "bytes": null,
+      "holders": [
+        "F066"
+      ],
+      "external_pin": false
+    },
+    {
+      "block_id": "U067",
+      "bytes": null,
+      "holders": [
+        "F067"
+      ],
+      "external_pin": false
+    },
+    {
+      "block_id": "U068",
+      "bytes": 24576,
+      "holders": [
+        "F068"
+      ],
+      "external_pin": false
+    },
+    {
+      "block_id": "U069",
+      "bytes": 28672,
+      "holders": [
+        "F069"
+      ],
+      "external_pin": false
+    },
+    {
+      "block_id": "U070",
+      "bytes": 4096,
+      "holders": [
+        "F070"
+      ],
+      "external_pin": false
+    },
+    {
+      "block_id": "U071",
+      "bytes": 8192,
+      "holders": [
+        "F071"
+      ],
+      "external_pin": false
+    },
+    {
+      "block_id": "U072",
+      "bytes": 12288,
+      "holders": [
+        "F072"
+      ],
+      "external_pin": false
+    },
+    {
+      "block_id": "U073",
+      "bytes": 16384,
+      "holders": [
+        "F073"
+      ],
+      "external_pin": false
+    },
+    {
+      "block_id": "U074",
+      "bytes": 20480,
+      "holders": [
+        "F074"
+      ],
+      "external_pin": false
+    },
+    {
+      "block_id": "U075",
+      "bytes": 24576,
+      "holders": [
+        "F075"
+      ],
+      "external_pin": false
+    },
+    {
+      "block_id": "U076",
+      "bytes": 28672,
+      "holders": [
+        "F076"
+      ],
+      "external_pin": false
+    },
+    {
+      "block_id": "U077",
+      "bytes": 4096,
+      "holders": [
+        "F077"
+      ],
+      "external_pin": false
+    },
+    {
+      "block_id": "U078",
+      "bytes": 8192,
+      "holders": [
+        "F078"
+      ],
+      "external_pin": false
+    },
+    {
+      "block_id": "U079",
+      "bytes": 12288,
+      "holders": [
+        "F079"
+      ],
+      "external_pin": false
+    },
+    {
+      "block_id": "U080",
+      "bytes": 16384,
+      "holders": [
+        "F080"
+      ],
+      "external_pin": false
+    },
+    {
+      "block_id": "S01",
+      "bytes": 8388608,
+      "holders": [
+        "F001",
+        "F002"
+      ],
+      "external_pin": false
+    },
+    {
+      "block_id": "S02",
+      "bytes": 12582912,
+      "holders": [
+        "F003",
+        "F004"
+      ],
+      "external_pin": false
+    },
+    {
+      "block_id": "S03",
+      "bytes": 5242880,
+      "holders": [
+        "F005",
+        "F006"
+      ],
+      "external_pin": true
+    },
+    {
+      "block_id": "S04",
+      "bytes": 16777216,
+      "holders": [
+        "F021",
+        "F022",
+        "F023",
+        "F024",
+        "F041"
+      ],
+      "external_pin": false
+    },
+    {
+      "block_id": "S05",
+      "bytes": 2097152,
+      "holders": [
+        "F007",
+        "F033"
+      ],
+      "external_pin": false
+    },
+    {
+      "block_id": "S06",
+      "bytes": 3145728,
+      "holders": [
+        "F034",
+        "F035"
+      ],
+      "external_pin": false
+    }
+  ],
+  "rules": {
+    "schema": "h035.protection/v1",
+    "scan_root": "sandbox_tree",
+    "snapshot_id": "H035-USAGE-20261026T080000Z",
+    "cleanup_roots": [
+      "sandbox_tree/cache",
+      "sandbox_tree/downloads"
+    ],
+    "rules": [
+      {
+        "rule_id": "R01",
+        "priority": 1,
+        "condition": "external_shortcut",
+        "decision": "must_keep",
+        "reason": "快捷方式只盘点其文件本身，目标不在扫描边界，禁止打开、联网或跟随。"
+      },
+      {
+        "rule_id": "R02",
+        "priority": 2,
+        "condition": "component_prefix",
+        "prefixes": [
+          "sandbox_tree/records",
+          "sandbox_tree/projects/live"
+        ],
+        "decision": "must_keep",
+        "reason": "受保护业务路径，包括其子目录。"
+      },
+      {
+        "rule_id": "R03",
+        "priority": 3,
+        "condition": "active_lock_or_target",
+        "decision": "must_keep",
+        "reason": "快照中的active锁文件及其target_file_id均保留；不按进程名或当前机器状态猜测。"
+      },
+      {
+        "rule_id": "R04",
+        "priority": 4,
+        "condition": "outside_cleanup_roots",
+        "decision": "must_keep",
+        "reason": "在扫描根内但不在允许清理根内；按路径组件判断，cache2不是cache。"
+      },
+      {
+        "rule_id": "R05",
+        "priority": 5,
+        "condition": "incomplete_allocation",
+        "decision": "needs_confirmation",
+        "reason": "块bytes=null，未知不是0，先补齐占用证据。"
+      },
+      {
+        "rule_id": "R06",
+        "priority": 6,
+        "condition": "cache_regenerable_true_age_at_least_30",
+        "decision": "cleanable",
+        "reason": "允许根cache内，可再生且age_days>=30；只是候选，仍需用户选择和确认。"
+      },
+      {
+        "rule_id": "R07",
+        "priority": 7,
+        "condition": "otherwise",
+        "decision": "needs_confirmation",
+        "reason": "近期缓存、可再生性未知或下载文件需用户核对。"
+      }
+    ],
+    "execution_policy": {
+      "confirmation": "pending",
+      "executed": false,
+      "selected_file_ids": [],
+      "delete_or_move": false
+    },
+    "allocation_policy": "快照为固定合成业务占用，非本机stat/du事实。块按block_id去重。仅当已知块全部holders都在给定集合且external_pin=false时，该块可由该集合释放；未知块保留unknown，不计0。快捷方式目标占用未知，不进入本地块汇总。"
+  },
+  "classification_counts": {
+    "cleanable": 24,
+    "needs_confirmation": 20,
+    "must_keep": 36
+  },
+  "singleton_cleanable_sum": 380928
+}

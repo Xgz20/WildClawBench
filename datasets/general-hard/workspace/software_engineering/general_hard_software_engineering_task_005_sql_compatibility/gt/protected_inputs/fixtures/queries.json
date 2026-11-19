@@ -1,0 +1,245 @@
+{
+  "schema": "h045-public-queries/v1",
+  "cases": [
+    {
+      "id": "B01_plain",
+      "spec": {
+        "table": "customer",
+        "columns": [
+          "id",
+          "name"
+        ],
+        "where": null,
+        "order_by": []
+      }
+    },
+    {
+      "id": "B02_reserved_table",
+      "spec": {
+        "table": "order",
+        "columns": [
+          "id",
+          "group",
+          "amount"
+        ],
+        "where": null,
+        "order_by": [
+          {
+            "column": "id",
+            "direction": "asc"
+          }
+        ]
+      }
+    },
+    {
+      "id": "B04_two_bind_order",
+      "spec": {
+        "table": "customer",
+        "columns": [
+          "id",
+          "name"
+        ],
+        "where": {
+          "all": [
+            {
+              "column": "region",
+              "op": "eq",
+              "value": "north"
+            },
+            {
+              "column": "credit",
+              "op": "gte",
+              "value": 0
+            }
+          ]
+        },
+        "order_by": [
+          {
+            "column": "id",
+            "direction": "asc"
+          }
+        ]
+      }
+    },
+    {
+      "id": "B05_date_window",
+      "spec": {
+        "table": "order",
+        "columns": [
+          "id",
+          "created_at"
+        ],
+        "where": {
+          "all": [
+            {
+              "column": "created_at",
+              "op": "gte",
+              "value": "2026-02-01"
+            },
+            {
+              "column": "created_at",
+              "op": "lt",
+              "value": "2026-03-01"
+            }
+          ]
+        },
+        "order_by": [
+          {
+            "column": "id",
+            "direction": "asc"
+          }
+        ]
+      }
+    },
+    {
+      "id": "B06_nested_precedence",
+      "spec": {
+        "table": "order",
+        "columns": [
+          "id"
+        ],
+        "where": {
+          "all": [
+            {
+              "any": [
+                {
+                  "column": "amount",
+                  "op": "eq",
+                  "value": 0
+                },
+                {
+                  "column": "amount",
+                  "op": "eq",
+                  "value": 10
+                }
+              ]
+            },
+            {
+              "column": "group",
+              "op": "eq",
+              "value": "beta"
+            }
+          ]
+        },
+        "order_by": [
+          {
+            "column": "id",
+            "direction": "asc"
+          }
+        ]
+      }
+    },
+    {
+      "id": "N01_empty_in",
+      "spec": {
+        "table": "customer",
+        "columns": [
+          "id"
+        ],
+        "where": {
+          "column": "region",
+          "op": "in",
+          "value": []
+        },
+        "order_by": [
+          {
+            "column": "id",
+            "direction": "asc"
+          }
+        ]
+      }
+    },
+    {
+      "id": "N02_empty_not_in",
+      "spec": {
+        "table": "customer",
+        "columns": [
+          "id"
+        ],
+        "where": {
+          "column": "region",
+          "op": "not_in",
+          "value": []
+        },
+        "order_by": [
+          {
+            "column": "id",
+            "direction": "asc"
+          }
+        ]
+      }
+    },
+    {
+      "id": "N03_equal_null",
+      "spec": {
+        "table": "order",
+        "columns": [
+          "id"
+        ],
+        "where": {
+          "column": "group",
+          "op": "eq",
+          "value": null
+        },
+        "order_by": [
+          {
+            "column": "id",
+            "direction": "asc"
+          }
+        ]
+      }
+    },
+    {
+      "id": "N05_mixed_in",
+      "spec": {
+        "table": "customer",
+        "columns": [
+          "id"
+        ],
+        "where": {
+          "column": "region",
+          "op": "in",
+          "value": [
+            null,
+            "north"
+          ]
+        },
+        "order_by": [
+          {
+            "column": "id",
+            "direction": "asc"
+          }
+        ]
+      }
+    },
+    {
+      "id": "N15_quote_binding",
+      "spec": {
+        "table": "order",
+        "columns": [
+          "id"
+        ],
+        "where": {
+          "column": "note",
+          "op": "eq",
+          "value": "x' OR 1=1 --"
+        },
+        "order_by": [
+          {
+            "column": "id",
+            "direction": "asc"
+          }
+        ]
+      }
+    },
+    {
+      "id": "V01_invalid",
+      "spec": {
+        "table": "order; DROP TABLE customer",
+        "columns": [
+          "id"
+        ]
+      }
+    }
+  ]
+}

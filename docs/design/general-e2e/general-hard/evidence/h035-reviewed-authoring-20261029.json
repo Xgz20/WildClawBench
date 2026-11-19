@@ -1,0 +1,475 @@
+{
+  "schema_version": "general-hard-reviewed-authoring/v1",
+  "task_id": "general_hard_file_operations_task_001_cleanup_plan",
+  "order": 35,
+  "registered_task_index": 33,
+  "release_status": "building",
+  "remaining": 27,
+  "public_input_count": 82,
+  "sandbox_file_count": 80,
+  "private_GT_count": 9,
+  "source_first_oracle": {
+    "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h035/authoring/source-truth-freeze.json",
+    "sha256": "a253dd2016f4b1bda3329c07b4da0dce088dcdf4aff918799cfdb163b891c271"
+  },
+  "independent_public_input_recomputation": {
+    "node": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h035/authoring/node-independent-oracle.json",
+    "root_review": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h035/qa/root-review-v1/review.json",
+    "root_review_sha256": "477424ce7711a775fa5cbbff7ee3281bd12b76138c60f84d315a5b11b0f9e164"
+  },
+  "classification_counts": {
+    "cleanable": 24,
+    "needs_confirmation": 20,
+    "must_keep": 36
+  },
+  "allocation": {
+    "known_union_bytes": 49475584,
+    "unknown_blocks": 4,
+    "hypothetical_cleanable_set_freeable_bytes": 21352448,
+    "selected_file_ids": [],
+    "confirmation": "pending",
+    "executed": false
+  },
+  "author_controls": [
+    {
+      "name": "canonical_positive",
+      "status": "PASS",
+      "A": 1.0,
+      "criteria": {
+        "boundary_cases": 0.9999999999999999,
+        "business_correctness": 1.0,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 0.9999999999999999
+      },
+      "exception": null
+    },
+    {
+      "name": "bom_chinese_reordered_numeric_equivalent",
+      "status": "PASS",
+      "A": 1.0,
+      "criteria": {
+        "boundary_cases": 0.9999999999999999,
+        "business_correctness": 1.0,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 0.9999999999999999
+      },
+      "exception": null
+    },
+    {
+      "name": "normal_archive_roundtrip",
+      "status": "PASS",
+      "A": 1.0,
+      "criteria": {
+        "boundary_cases": 0.9999999999999999,
+        "business_correctness": 1.0,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 0.9999999999999999
+      },
+      "exception": null
+    },
+    {
+      "name": "detached_moved_archive_old_paths_absent",
+      "status": "PASS",
+      "A": 1.0,
+      "criteria": {
+        "boundary_cases": 0.9999999999999999,
+        "business_correctness": 1.0,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 0.9999999999999999
+      },
+      "exception": null
+    },
+    {
+      "name": "shared_blocks_directory_size_trap",
+      "status": "PASS",
+      "A": 0.9687500000000001,
+      "criteria": {
+        "boundary_cases": 0.8749999999999999,
+        "business_correctness": 1.0,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 0.9999999999999999
+      },
+      "exception": null
+    },
+    {
+      "name": "unknown_not_zero",
+      "status": "PASS",
+      "A": 0.9993750000000001,
+      "criteria": {
+        "boundary_cases": 0.9974999999999999,
+        "business_correctness": 1.0,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 0.9999999999999999
+      },
+      "exception": null
+    },
+    {
+      "name": "protected_path_misclassified",
+      "status": "PASS",
+      "A": 0.9969062500000001,
+      "criteria": {
+        "boundary_cases": 0.9999999999999999,
+        "business_correctness": 0.994375,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 0.9999999999999999
+      },
+      "exception": null
+    },
+    {
+      "name": "active_lock_ignored",
+      "status": "PASS",
+      "A": 0.9969062500000001,
+      "criteria": {
+        "boundary_cases": 0.9999999999999999,
+        "business_correctness": 0.994375,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 0.9999999999999999
+      },
+      "exception": null
+    },
+    {
+      "name": "component_cache2_misclassified",
+      "status": "PASS",
+      "A": 0.9969062500000001,
+      "criteria": {
+        "boundary_cases": 0.9999999999999999,
+        "business_correctness": 0.994375,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 0.9999999999999999
+      },
+      "exception": null
+    },
+    {
+      "name": "same_basename_merged",
+      "status": "PASS",
+      "A": 0.9931250000000001,
+      "criteria": {
+        "boundary_cases": 0.9999999999999999,
+        "business_correctness": 0.9875,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 0.9999999999999999
+      },
+      "exception": null
+    },
+    {
+      "name": "identity_wrong_hash",
+      "status": "PASS",
+      "A": 0.9931250000000001,
+      "criteria": {
+        "boundary_cases": 0.9999999999999999,
+        "business_correctness": 0.9875,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 0.9999999999999999
+      },
+      "exception": null
+    },
+    {
+      "name": "malformed_decision_is_candidate_error",
+      "status": "PASS",
+      "A": 0.9969062500000001,
+      "criteria": {
+        "boundary_cases": 0.9999999999999999,
+        "business_correctness": 0.994375,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 0.9999999999999999
+      },
+      "exception": null
+    },
+    {
+      "name": "external_target_follow_claim",
+      "status": "PASS",
+      "A": 0.9958333333333335,
+      "criteria": {
+        "boundary_cases": 0.9833333333333333,
+        "business_correctness": 1.0,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 0.9999999999999999
+      },
+      "exception": null
+    },
+    {
+      "name": "external_target_unknown_as_zero",
+      "status": "PASS",
+      "A": 0.9958333333333335,
+      "criteria": {
+        "boundary_cases": 0.9833333333333333,
+        "business_correctness": 1.0,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 0.9999999999999999
+      },
+      "exception": null
+    },
+    {
+      "name": "fake_execution",
+      "status": "PASS",
+      "A": 0.9900000000000001,
+      "criteria": {
+        "boundary_cases": 0.96,
+        "business_correctness": 1.0,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 0.9999999999999999
+      },
+      "exception": null
+    },
+    {
+      "name": "missing_confirmation",
+      "status": "PASS",
+      "A": 0.9900000000000001,
+      "criteria": {
+        "boundary_cases": 0.96,
+        "business_correctness": 1.0,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 0.9999999999999999
+      },
+      "exception": null
+    },
+    {
+      "name": "preselected_without_user",
+      "status": "PASS",
+      "A": 0.9900000000000001,
+      "criteria": {
+        "boundary_cases": 0.96,
+        "business_correctness": 1.0,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 0.9999999999999999
+      },
+      "exception": null
+    },
+    {
+      "name": "wrong_evidence_locator",
+      "status": "PASS",
+      "A": 0.9995625000000001,
+      "criteria": {
+        "boundary_cases": 0.9999999999999999,
+        "business_correctness": 1.0,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 0.9912500000000001
+      },
+      "exception": null
+    },
+    {
+      "name": "input_changed",
+      "status": "PASS",
+      "A": 0.925,
+      "criteria": {
+        "boundary_cases": 0.9999999999999999,
+        "business_correctness": 1.0,
+        "delivery_integrity": 0.5,
+        "evidence_binding": 0.9999999999999999
+      },
+      "exception": null
+    },
+    {
+      "name": "input_deleted",
+      "status": "PASS",
+      "A": 0.925,
+      "criteria": {
+        "boundary_cases": 0.9999999999999999,
+        "business_correctness": 1.0,
+        "delivery_integrity": 0.5,
+        "evidence_binding": 0.9999999999999999
+      },
+      "exception": null
+    },
+    {
+      "name": "plan_missing",
+      "status": "PASS",
+      "A": 0.12,
+      "criteria": {
+        "boundary_cases": 0.0,
+        "business_correctness": 0.0,
+        "delivery_integrity": 0.8,
+        "evidence_binding": 0.0
+      },
+      "exception": null
+    },
+    {
+      "name": "report_missing",
+      "status": "PASS",
+      "A": 0.9550000000000001,
+      "criteria": {
+        "boundary_cases": 0.9999999999999999,
+        "business_correctness": 1.0,
+        "delivery_integrity": 0.7,
+        "evidence_binding": 0.9999999999999999
+      },
+      "exception": null
+    },
+    {
+      "name": "plan_invalid_json",
+      "status": "PASS",
+      "A": 0.12,
+      "criteria": {
+        "boundary_cases": 0.0,
+        "business_correctness": 0.0,
+        "delivery_integrity": 0.8,
+        "evidence_binding": 0.0
+      },
+      "exception": null
+    },
+    {
+      "name": "missing_gt_infrastructure",
+      "status": "PASS",
+      "A": null,
+      "criteria": null,
+      "exception": {
+        "type": "ScoringRuntimeError",
+        "message": "RULE_WORKER_FAILED: {'code': 'RULE_WORKER_FAILED', 'detail': 'H035_TRUSTED_CONTEXT_MISSING_OR_DRIFT: business_oracle.json'}"
+      }
+    },
+    {
+      "name": "missing_expected_infrastructure",
+      "status": "PASS",
+      "A": null,
+      "criteria": null,
+      "exception": {
+        "type": "ScoringRuntimeError",
+        "message": "RULE_WORKER_FAILED: {'code': 'RULE_WORKER_FAILED', 'detail': 'H035_TRUSTED_CONTEXT_MISSING_OR_DRIFT: expected.json'}"
+      }
+    },
+    {
+      "name": "missing_helper_infrastructure",
+      "status": "PASS",
+      "A": null,
+      "criteria": null,
+      "exception": {
+        "type": "ScoringRuntimeError",
+        "message": "RULE_WORKER_FAILED: {'code': 'RULE_WORKER_FAILED', 'detail': 'H035_TRUSTED_CONTEXT_MISSING_OR_DRIFT: native_io.py'}"
+      }
+    },
+    {
+      "name": "missing_trusted_manifest_infrastructure",
+      "status": "PASS",
+      "A": null,
+      "criteria": null,
+      "exception": {
+        "type": "ScoringRuntimeError",
+        "message": "RULE_WORKER_FAILED: {'code': 'RULE_WORKER_FAILED', 'detail': 'H035_TRUSTED_RULE_MISSING_OR_DRIFT: trusted_files.json'}"
+      }
+    },
+    {
+      "name": "missing_dependency_infrastructure",
+      "status": "PASS",
+      "A": null,
+      "criteria": null,
+      "exception": {
+        "type": "ScoringRuntimeError",
+        "message": "RUNTIME_DEPENDENCY_MISMATCH: {'code': 'RUNTIME_DEPENDENCY_MISMATCH', 'detail': \"pypdf='6.10.0'\"}"
+      }
+    }
+  ],
+  "controls_receipt": {
+    "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h035/qa/authoring-validation/controls-1793217810628762000/summary.json",
+    "sha256": "6d889d15411393b4cfc370000300944141e051a68fda0b6312c443f21feb9587"
+  },
+  "author_freeze": {
+    "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h035/qa/freeze-v1/manifest.json",
+    "sha256": "b2d56ebb68bc67cb4ca8d31ce1e5791ebc4bbfeb6ef9c6896c1f69fd8c0a6877"
+  },
+  "formal_detached": {
+    "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h035/qa/formal-detached-1793218656554845000/validation.json",
+    "sha256": "0778dc85dc26db87c46ccaba6affb84037e55d2c704b54d9af09a06ba7b86b38",
+    "raw_auto_scores": {
+      "boundary_cases": 0.9999999999999999,
+      "business_correctness": 1.0,
+      "delivery_integrity": 1.0,
+      "evidence_binding": 0.9999999999999999,
+      "overall_score": 1.0
+    },
+    "automatic_component_A": 1.0,
+    "acceptance_tolerance": 1e-12,
+    "same_byte_nonruntime_archive_files": 111,
+    "normal_and_moved_verify": true,
+    "repository_sys_path_absent": true,
+    "skill_version": "0.26.0",
+    "framework_source_revision": "67904ecb383a6b8b1f3d713ab8920502456a908e"
+  },
+  "static": {
+    "single_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h035/qa/static-registered-by-path/20261028T202048Z_8cdbc18967/report.json",
+    "single_sha256": "fb014399a94b94d385ca53f0f533b757006b37d55456b05f941eacc3837645c9",
+    "single_status": "PASS",
+    "building_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h035/qa/static-building/20261028T201928Z_05bf3edb22/report.json",
+    "building_sha256": "6d532ce2859e222e3aa5e8a388284646d3fa9f26f8f490e15f900ecbf46fe97f",
+    "building_registered": 33,
+    "building_remaining_TASK_ID_NOT_FOUND": 27
+  },
+  "registered_snapshot": {
+    "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h035/qa/registered-snapshot-v1/qa-sha256.json",
+    "sha256": "ff1c27115b5a4e8abf94a83aa8284f9fd39dbf2156eda784750ebba643d35191",
+    "bound_files": 8954
+  },
+  "history": {
+    "author_history_preserved": [
+      {
+        "path": "qa/authoring-validation/controls-1793217483857601000",
+        "status": "FAIL",
+        "summary_sha256": "5580a9af0e59b36d9681d9bf51d87ec0d61bf898402e4ebf3070ec6b1b13d10d",
+        "authoritative": false
+      },
+      {
+        "path": "qa/authoring-validation/controls-1793217493234307000",
+        "status": "PASS",
+        "summary_sha256": "87928ea1543a9114bc8ac5ea9c98eb3da4ce3e4af82262dea6188e478e5fbd55",
+        "authoritative": false
+      },
+      {
+        "path": "qa/authoring-validation/controls-1793217529778382000",
+        "status": "FAIL",
+        "summary_sha256": "73e630ba4f0fee58434a72d2e4cc69fd179bd4f8812589642c322ad2a24665cf",
+        "authoritative": false
+      },
+      {
+        "path": "qa/authoring-validation/controls-1793217541179607000",
+        "status": "PASS",
+        "summary_sha256": "523cdd80b34d3cc4fb32ed2b5455fdacfe1bd8541ca154d8e31296b16e0043d8",
+        "authoritative": false
+      },
+      {
+        "path": "qa/authoring-validation/controls-1793217585241971000",
+        "status": "PASS",
+        "summary_sha256": "9591b20c537ed67352a1ee05ad460fe21a58747c666f00853f9aedafdef0794e",
+        "authoritative": false
+      },
+      {
+        "path": "qa/authoring-validation/controls-1793217635403854000",
+        "status": "FAIL",
+        "summary_sha256": "87c5a465ff4ba374a6818df71b01659d6d6d42f00fba0a02a94b8569df3637c9",
+        "authoritative": false
+      },
+      {
+        "path": "qa/authoring-validation/controls-1793217694274826000",
+        "status": "INCOMPLETE_AUTHOR_FIXTURE_RUN",
+        "authoritative": false
+      },
+      {
+        "path": "qa/authoring-validation/controls-1793217724636213000",
+        "status": "PASS",
+        "summary_sha256": "f25ad820b01ccb698b2839ef22aca817df10e36b9809a9e2a57a599d229bba40",
+        "authoritative": false
+      },
+      {
+        "path": "qa/authoring-validation/controls-1793217810628762000",
+        "status": "PASS",
+        "summary_sha256": "6d889d15411393b4cfc370000300944141e051a68fda0b6312c443f21feb9587",
+        "authoritative": true
+      }
+    ],
+    "root_packaging_failures": [
+      "First host used grading_criteria as an object; frozen task contract stores Markdown string. Corrected only author script to reviewed spec key names.",
+      "Second prepare rejected pretty-printed JSON as JSONL. Corrected only author trace serialization to one line; no source/GT/rule changes."
+    ],
+    "root_static_failure": "Unscoped --task-id searches legacy tasks. Dataset-wide scan found H035; explicit --task-path passed. Failed report preserved.",
+    "root_recomputation_failure": "Initial ad hoc check misread nested lock.state; corrected root check to actual public input, no GT changes."
+  },
+  "limits": {
+    "model_review_not_human_expert": true,
+    "real_Harness": false,
+    "semantic_Judge": false,
+    "semantic_score": null,
+    "hybrid_score": null,
+    "difficulty": "L2 design estimate, uncalibrated",
+    "actual_transient_actions_require_trace": true,
+    "external_shortcut_is_not_symlink": true,
+    "no_source_or_GT_change_during_root_acceptance": true
+  }
+}

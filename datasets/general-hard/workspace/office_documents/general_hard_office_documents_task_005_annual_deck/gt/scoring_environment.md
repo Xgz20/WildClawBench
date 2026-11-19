@@ -1,0 +1,13 @@
+# H005评分环境
+
+本题规则读取实际PDF字形以检查字号和定位，需要pdfplumber与pypdf。允许目录不等于已安装：Worker锁须声明实际版本/import roots，并通过框架的Python、虚拟环境、导入和版本probe。缺环境属于评测异常，不补能力零分。
+
+作者实测Python3.12专用虚拟环境，共享现有Codex受管Python库；未改写受管安装或仓库.venv，未安装替代作者依赖。scoring_dependencies.json记录实测的9个包。该现成环境快照只绑定版本/导入，不是默认3.11 bootstrap Profile，也不逐文件锁定全部库源代码。正式批次应统一可信安装制品，准备匹配解释器后冻结真实runtime锁；不能给默认bootstrap一份不同requirements摘要而宣称已能重建。
+
+规则另需可信Office锁和独立字体锁：按score-general-e2e的bootstrap-office/ bootstrap-office-render流程，将Office与office_render_runtime并入冻结的Python/runtime锁。本题保留原字节PPTX、实际PDF、内嵌XLSX副本及可信重算文件/回执，派生文件只写Worker证据目录。
+
+允许正确的等价公式；不能仅凭图表或单元格缓存判正确。内嵌来源须绑定冻结PPTX和实际部件，归档复核保留完整来源链。若本机缺少所需引擎、字体或PDF库，应先补齐并probe，不能把环境故障当作候选零分。
+
+verify_oracle.py仅供作者独立复算源表oracle，需要openpyxl；它不参与正式候选规则评分，也不以参考解或候选输出构造期望值。完整字段、数据范围、权重和等价规则见其余私有JSON及题面。
+
+作者规则控制不等于独立语义/专家复核、四端实测或难度校准。图例/类目/颜色、完整遮挡、原生应用交互和经营解释仍由独立Judge按题面Rubric核验。

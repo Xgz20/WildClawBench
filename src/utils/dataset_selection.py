@@ -8,21 +8,33 @@ def require_dataset_output_scope(output_root: Path, manifest):
     scope=output_root/'evaluation_scope.json'
     if not scope.exists():return
     data=json.loads(scope.read_text(encoding='utf-8'))
+    if not isinstance(data, dict):
+        raise ValueError('CLI_DATASET_OUTPUT_SCOPE_CONFLICT: scope必须是JSON对象')
     identity={'id':manifest['dataset_id'],'digest':manifest['dataset_digest']}
-    if any(row.get('dataset')!=identity for row in data.get('tasks',[])):
+    def normalized(row):
+        value = row.get('dataset') or {}
+        return {'id': value.get('id', value.get('release_id')),
+                'digest': value.get('digest', value.get('dataset_digest'))}
+    rows = data.get('planned_tasks') if 'planned_tasks' in data else data.get('tasks')
+    if (not isinstance(rows, list) or any(not isinstance(row, dict) for row in rows)
+            or 'planned_tasks' in data and 'planned_task_count' in data and data['planned_task_count'] != len(rows)
+            or any(not isinstance(row.get('dataset'), dict) or normalized(row) != identity for row in rows)):
         raise ValueError('CLI_DATASET_OUTPUT_SCOPE_CONFLICT: 请使用独立输出目录，不能覆盖或混用历史评测结果')
 
 
-def dataset_task_paths(repo: Path, dataset_id: str):
+def dataset_task_paths(repo: Path, dataset_id: str, *, materialize_root: Path | None = None):
     from eval_general_e2e.datasets.bundle import (DATASETS, compile_dataset,
         dataset_manifest_path, load_manifest_lock)
     from eval_general_e2e.datasets.source_history import dataset_task_path
     if dataset_id not in {'general-custom70-v2', 'general-custom70-v3', 'general-custom70-v4', 'general-custom70-v5'}:
         raise ValueError("UNSUPPORTED_CLI_DATASET")
     definition = DATASETS[dataset_id]
-    manifest, _ = compile_dataset(repo, definition=definition)
+    manifest, members = compile_dataset(repo, definition=definition)
     if manifest != load_manifest_lock(dataset_manifest_path(dataset_id)):
         raise ValueError("CLI_DATASET_SOURCE_DRIFT: rebuild a reviewed dataset version before dispatch")
+    if materialize_root is not None:
+        from eval_general_e2e.datasets.workspaces import materialize_verified_workspaces
+        materialize_verified_workspaces(manifest, members, materialize_root)
     grouped = {}
     for task in manifest['tasks']:
         grouped.setdefault(task['category'], []).append(dataset_task_path(

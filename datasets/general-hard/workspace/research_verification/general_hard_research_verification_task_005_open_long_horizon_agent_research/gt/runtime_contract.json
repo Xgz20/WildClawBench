@@ -1,0 +1,139 @@
+{
+  "schema_version": "h031-runtime-contract/v1",
+  "grading_type": "hybrid",
+  "semantic_judge_required": true,
+  "automatic_weight": 0.4,
+  "semantic_weight": 0.6,
+  "checkpoint_weights": {
+    "record_contract": 0.2,
+    "time_and_scope": 0.25,
+    "citation_resolution": 0.4,
+    "protected_delivery": 0.15
+  },
+  "semantic_weights": {
+    "factual_support": 0.5,
+    "coverage_and_independence": 0.3,
+    "bounded_conclusions": 0.2
+  },
+  "source_runtime_minimum": "score-general-e2e 0.28.0; core 0.15.3",
+  "formal_entry_sha256": "145320a5ec4b939031b3088d9aa883537f9e5fc9294e264cb969403f15019464",
+  "source_collector_sha256": "4fcb5239474bf5d3749f817abdccd02054ba86e2d766458f78f70d2da8c8968a",
+  "offline_rule": true,
+  "network_or_model_calls": false,
+  "mutates_candidate_or_GT_or_sourcebundle": false,
+  "denominators": {
+    "NE": "max(5,全部entities行数)，畸形/重复也不先过滤",
+    "NP": "max(5,全部publications行数)",
+    "NC": "max(12,全部claims行数)，多于12是公开契约错误，仍审全部",
+    "DCAP": "5*NE，最低25",
+    "DMETA": "2*NE+3*NP，最低25；实体身份/时点及研究工作身份/报告日期/所读版本",
+    "DDATE": "NE+2*NP，最低15；实体as_of、研究报告日期及所读版本日期，不随unknown缩减",
+    "NPR": "max(1,全部priorities行数)",
+    "unknown": "保留每格机会，不制造引用。明确unknown不主张事实时只核声明形态，标记unasserted_unknown而不是伪造provenance；日期unknown不填最低已支持时点数量。",
+    "padding": "每逻辑字段只有一个机会，全部实际引用all通过才通过；孤立/多余错引用进入固定完整性槽，不按引用条数平均。"
+  },
+  "checkpoint_design": {
+    "record_contract": {
+      "formula": ".15*root_shape + .25*item_shapes + .20*id_graph + .25*native_matrix + .15*native_report",
+      "item_shapes": ".30*entity_shape/NE + .25*publication_shape/NP + .35*claim_shape/NC + .10*coverage_priority_shape",
+      "id_graph": "ID只在各自数组命名空间唯一；CID全账本唯一。claim引用存在且两类关联不同时空；priority.claim_ids实际存在；没有隐藏镜像或反向闭包。",
+      "native_matrix": ".45*身份/版本/日期及选择理由逻辑视图 + .55*五维可见可编辑表达/证据层级关联；自由文本意义由Judge。",
+      "native_report": "原生可读可编辑与明确实际可解析的镜像矛盾；不要求固定模板、ID重复或关键词证明完整科学内容。"
+    },
+    "time_and_scope": {
+      "formula": ".40*metadata_trace + .25*calendar_consistency + .20*scope_arithmetic + .15*priority_budget_DAG",
+      "metadata_trace": "DMETA固定机会；已知日期必须连接独立实际字段并同一位置字面日历一致，角色/身份真值交Judge。未知版本不新增CID要求，可沿用记录核查说明。",
+      "calendar_consistency": "年份/月/日区间和真实aware timestamp保留精度，按Asia/Shanghai截止；无H030的2021下界；unknown/跨界不填已支持时点最低数。",
+      "scope_arithmetic": "声明数及12结论/五维topics覆盖、最多60source、1至3priority；真实合格身份/完整正文/去重另由Judge。；read_full的实际来源连接仅核声明，不证明完整正文或实读。",
+      "priority_budget_DAG": "有限非负lower/upper且upper>=lower，总upper<=60；数字或明确人日文本；rank非重复正序且最小1，不加未公开间隔罚分；引用本priority或明确外部前提，不能循环。"
+    },
+    "citation_resolution": {
+      "formula": ".20*pointer_graph + .20*E(provenance) + .40*E(literal) + .20*epistemic_numeric_shape",
+      "E": ".45*能力格/DCAP + .25*结论/NC + .30*身份日期/DMETA",
+      "pointer_graph": ".75*E(graph)+.25*固定账本完整性检查",
+      "linkage": "RFC6901 token前缀关系，块/叶/多目标/重排及~0/~1；unknown/inference可沿已有记录/显式关联核查语境，无强制引用副本。已给引用全部审，不能凭语义关系标签判支持成立。",
+      "originals": "H030通用DOM XPath/CSS/括号/安全XML/PDF物理页和实际Office重算；另加通用JSON字段与严格content API base64/Git blob/decoded行bytes lineage，无代码执行。",
+      "numeric": "递归核已有对象中的实际metric/value记录，不把日期/ID/rank/schema计数当实验结果，不强制定量quota或numeric_results新容器。"
+    },
+    "protected_delivery": {
+      "formula": ".50*三输入SHA + .25*四交付存在 + .25*四交付可解析/原生可见可编辑",
+      "boundary": "原生外部数据连接/宏不接受，普通来源超链接接受；公式只接受真实可信重算，环境缺失是异常而非错误缓存回退。"
+    }
+  },
+  "automatic_overall_score": "A only; final=.4A+.6S only after actual independent Judge",
+  "outer_runtime_gate": "Formal case-spec/outer contract must declare office=true and research_sources=true; frozen private artifact_contract is not this gate.",
+  "source_projection": "Frozen H030 generic DOM/XPath/CSS/metadata/parenthesis/safe XML/PDF plus strict JSON and base64 content API Git blob/file/line/byte lineage. No source-provided code is executed.; explicit neutral HTML inert-JSON string-array source-line decoding with exact original-script and deterministic reconstructed-byte lineage.",
+  "source_reuse": "Current fixed0.28 verifier validates direct-v1 or explicit trusted HTTP CONNECT-v1 origin capsules. Original GET bytes/time/transport and collector remain unchanged; current reuse wrapper has the exact schema mapped from the current bundle.",
+  "office": "Static values accepted. Formula caches are never truth: actual locked Office clears/recalculates a separate derivative; no missing-runtime fallback.",
+  "unsupported": "Unknown safe locator or legitimate unhandled representation raises typed TrustedEvidenceError, never silent candidate zero.",
+  "semantic_boundary": {
+    "factual_support": {
+      "weight": 0.5,
+      "scope": "Actual original support/refute/qualify, numbers/conditions and metadata/version roles; same standard for pool-external sources."
+    },
+    "coverage_and_independence": {
+      "weight": 0.3,
+      "scope": "Qualified identity/time/full research-body coverage, actual discovery/reading, representativeness and same-work/version dedup."
+    },
+    "bounded_conclusions": {
+      "weight": 0.2,
+      "scope": "Comparability, evidence nature, uncertainty, justified cost/dependency priorities and falsifiable counterexamples; no static-to-runtime guarantee."
+    }
+  },
+  "no_answer_whitelist": true,
+  "scientific_truth_files_hash_only": [
+    "reference_source_manifest.json",
+    "source_review_reconciliation.json",
+    "business_oracle.json",
+    "expected.json"
+  ],
+  "readiness": "Synthetic mechanism candidate only; H031 production source bundle/native reference/Office/Harness/Judge not accepted by this phase.",
+  "HTML_embedded_JSON_source_lines": {
+    "script": "Explicit unique actual inert JSON script XPath, exact raw HTML byte span and SHA; no script execution or global fallback",
+    "data": "Strict JSON with duplicate/nonfinite rejection; arbitrary RFC6901 string-array pointer, no field/domain/title/CID whitelist",
+    "bytes": "Explicit LF/CRLF and terminal-newline reconstruction, actual SHA256 and optional Git blob SHA; source-byte equivalence needs independent equality evidence",
+    "lineage": "Actual script node/JSON pointer,0-based array indices,1-based closed source line range, selected decoded byte span, original HTML/script SHA",
+    "identity": "Generic same-script JSON bindings compare actual source fields to declared ref/path/flags without source-specific keys",
+    "unsupported": "Missing/ambiguous script, JSON field, unknown encoding or unsupported representation is typed evaluator review; no JavaScript, code or HTML entity second decode",
+    "readiness": "Synthetic mechanisms only; waiting for v3 independent source bundle; no reference/Office/Judge acceptance"
+  },
+  "portable_XPath_conjunction": "Quote/nesting-aware same-node literal attribute/normalize-space conjunctions; no positional boolean rewrite, unknown or remains typed unsupported.",
+  "source_acquisition_protocols": {
+    "wildclawbench.research-source-bundle/v1": {
+      "collector_sha256": "4fcb5239474bf5d3749f817abdccd02054ba86e2d766458f78f70d2da8c8968a",
+      "reuse_receipt_schema": "wildclawbench.research-source-reuse-receipt/v1",
+      "GET_receipt_schema": null,
+      "public_address_policy": "global-unicast-dns-pinned-no-proxy/v1",
+      "transport_kind": "direct"
+    },
+    "wildclawbench.research-source-bundle/trusted-http-connect-v1": {
+      "collector_sha256": "c1cacab04cd7603f67ae48275e565f877b16df8e56b3a2d45e55781f0cd6b2e0",
+      "reuse_receipt_schema": "wildclawbench.research-source-reuse-receipt/trusted-http-connect-v1",
+      "GET_receipt_schema": "wildclawbench.research-source-http-connect-receipt/v1",
+      "public_address_policy": "validated-public-ip-connect-target-trusted-local-http-proxy/v1",
+      "transport_kind": "trusted-local-http-connect"
+    }
+  },
+  "legacy_collector_field_note": "source_collector_sha256 retains the frozen direct-v1 historical identity only; current admission is the exact source_acquisition_protocols schema/SHA map.",
+  "JSON_pointer_locator_alias": {
+    "canonical": "json_pointer",
+    "alias": "JSONPointer",
+    "representation": "RFC6901 string including the empty root pointer",
+    "same_aliases": "Canonical parsed tokens must agree, including JSON scalar token types",
+    "conflicting_or_invalid_aliases": "Typed TrustedEvidenceError; no whole-source fallback",
+    "scope": "Explicit JSON source location only; does not change PDF section/heading or quote matching"
+  },
+  "PDF_physical_page_locator": {
+    "profile": "physical-page-unique-literal/v1",
+    "required": "Explicit positive1-based physical page plus unique actual original quote in that page or an explicitly narrowed paragraph/line/table",
+    "section_role": "Descriptive context, not an imposed literal heading template",
+    "safety": "No other-page/global fallback; false quote fails; repeated occurrence requires disambiguation or typed pending",
+    "evidence": "Original PDF/frozen projection SHA, physical page, actual raw matching text, normalized match and original selected-text character span",
+    "normalization": "NFKC/Unicode whitespace/parenthesis/discretionary soft hyphen/retained ASCII line-wrap hyphen; no lexical word or number/punctuation deletion"
+  },
+  "unknown_version_date_representation": {
+    "accepted": "Legacy None; explicit status:unknown with explanation and absent/null value; or explicit value:null plus nonempty explanation, always without conflicting known status/timestamp",
+    "boundary": "Unknown is not a fabricated date; fixed DMETA/DDATE opportunities remain; it does not increase supported entity/report-date minimum counts",
+    "source_links": "May use existing publication scope context; no invented extra version-date CID required"
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "status": "material_phase_contract_not_candidate_scoring",
+  "required_files": [
+    "results/repaired.docx",
+    "results/repair_log.json",
+    "results/readme.md"
+  ],
+  "native_semantics": [
+    "26 heading roles and continuous multilevel hierarchy",
+    "separate decimal procedure list 1..5",
+    "native updateable TOC with 26 semantically correct internal links",
+    "six continuous Table sequence captions",
+    "three correct body REF targets",
+    "comment bodies and exact anchor character ranges"
+  ],
+  "equivalence": "style/numbering/internal bookmark numeric IDs/comment numeric IDs may change; retain public paragraph bookmark names/table IDs, meaning, relationships and original text/data/order. Native complex and simple SEQ/REF/PAGEREF fields accepted when equivalent. Output pagination may differ if all content/order and usable layout remain.",
+  "log_equivalence": "own IDs and reasonable grouping permitted; not required to guess twelve private D IDs or use exactly twelve rows",
+  "limits": "material and reference checks only; business grader, candidate controls and actual task MD Worker still unimplemented"
+}

@@ -1,0 +1,993 @@
+{
+  "schema_version": "h013-native-source-evidence/v1",
+  "status": "read_from_actual_native_inputs",
+  "records": {
+    "customer_requirements.docx#S1/roof_type": {
+      "file": "customer_requirements.docx",
+      "source_sha256": "0a4dc8a33c42eab345bdad0690830bd3005fb0e6c9adb7d0e44f4a18be3bf05a",
+      "locator": "S1/roof_type",
+      "physical_locator": "table:1/row:2/cell:3",
+      "site_id": "S1",
+      "field": "roof_type",
+      "value": "metal",
+      "unit": "enum"
+    },
+    "customer_requirements.docx#S1/usable_area_m2": {
+      "file": "customer_requirements.docx",
+      "source_sha256": "0a4dc8a33c42eab345bdad0690830bd3005fb0e6c9adb7d0e44f4a18be3bf05a",
+      "locator": "S1/usable_area_m2",
+      "physical_locator": "table:1/row:3/cell:3",
+      "site_id": "S1",
+      "field": "usable_area_m2",
+      "value": "460",
+      "unit": "m2"
+    },
+    "customer_requirements.docx#S1/verified_load_kg_m2": {
+      "file": "customer_requirements.docx",
+      "source_sha256": "0a4dc8a33c42eab345bdad0690830bd3005fb0e6c9adb7d0e44f4a18be3bf05a",
+      "locator": "S1/verified_load_kg_m2",
+      "physical_locator": "table:1/row:4/cell:3",
+      "site_id": "S1",
+      "field": "verified_load_kg_m2",
+      "value": "20",
+      "unit": "kg/m2"
+    },
+    "customer_requirements.docx#S1/load_status": {
+      "file": "customer_requirements.docx",
+      "source_sha256": "0a4dc8a33c42eab345bdad0690830bd3005fb0e6c9adb7d0e44f4a18be3bf05a",
+      "locator": "S1/load_status",
+      "physical_locator": "table:1/row:5/cell:3",
+      "site_id": "S1",
+      "field": "load_status",
+      "value": "verified",
+      "unit": "enum"
+    },
+    "customer_requirements.docx#S1/max_dc_kwp": {
+      "file": "customer_requirements.docx",
+      "source_sha256": "0a4dc8a33c42eab345bdad0690830bd3005fb0e6c9adb7d0e44f4a18be3bf05a",
+      "locator": "S1/max_dc_kwp",
+      "physical_locator": "table:1/row:6/cell:3",
+      "site_id": "S1",
+      "field": "max_dc_kwp",
+      "value": "75",
+      "unit": "kWp"
+    },
+    "customer_requirements.docx#S1/annual_target_kwh": {
+      "file": "customer_requirements.docx",
+      "source_sha256": "0a4dc8a33c42eab345bdad0690830bd3005fb0e6c9adb7d0e44f4a18be3bf05a",
+      "locator": "S1/annual_target_kwh",
+      "physical_locator": "table:1/row:7/cell:3",
+      "site_id": "S1",
+      "field": "annual_target_kwh",
+      "value": "62000",
+      "unit": "kWh/year"
+    },
+    "customer_requirements.docx#S1/yield_kwh_kwp": {
+      "file": "customer_requirements.docx",
+      "source_sha256": "0a4dc8a33c42eab345bdad0690830bd3005fb0e6c9adb7d0e44f4a18be3bf05a",
+      "locator": "S1/yield_kwh_kwp",
+      "physical_locator": "table:1/row:8/cell:3",
+      "site_id": "S1",
+      "field": "yield_kwh_kwp",
+      "value": "1050",
+      "unit": "kWh/kWp/year"
+    },
+    "customer_requirements.docx#S1/shading_factor": {
+      "file": "customer_requirements.docx",
+      "source_sha256": "0a4dc8a33c42eab345bdad0690830bd3005fb0e6c9adb7d0e44f4a18be3bf05a",
+      "locator": "S1/shading_factor",
+      "physical_locator": "table:1/row:9/cell:3",
+      "site_id": "S1",
+      "field": "shading_factor",
+      "value": "1",
+      "unit": "ratio"
+    },
+    "customer_requirements.docx#S1/budget_gross_cny": {
+      "file": "customer_requirements.docx",
+      "source_sha256": "0a4dc8a33c42eab345bdad0690830bd3005fb0e6c9adb7d0e44f4a18be3bf05a",
+      "locator": "S1/budget_gross_cny",
+      "physical_locator": "table:1/row:10/cell:3",
+      "site_id": "S1",
+      "field": "budget_gross_cny",
+      "value": "315000",
+      "unit": "CNY incl VAT"
+    },
+    "customer_requirements.docx#S1/replacement_allowed": {
+      "file": "customer_requirements.docx",
+      "source_sha256": "0a4dc8a33c42eab345bdad0690830bd3005fb0e6c9adb7d0e44f4a18be3bf05a",
+      "locator": "S1/replacement_allowed",
+      "physical_locator": "table:2/row:2/cell:3",
+      "site_id": "S1",
+      "field": "replacement_allowed",
+      "value": false,
+      "unit": "boolean"
+    },
+    "customer_requirements.docx#S1/adhesion_evidence": {
+      "file": "customer_requirements.docx",
+      "source_sha256": "0a4dc8a33c42eab345bdad0690830bd3005fb0e6c9adb7d0e44f4a18be3bf05a",
+      "locator": "S1/adhesion_evidence",
+      "physical_locator": "table:2/row:3/cell:3",
+      "site_id": "S1",
+      "field": "adhesion_evidence",
+      "value": "verified",
+      "unit": "enum"
+    },
+    "customer_requirements.docx#S1/corrosion_evidence": {
+      "file": "customer_requirements.docx",
+      "source_sha256": "0a4dc8a33c42eab345bdad0690830bd3005fb0e6c9adb7d0e44f4a18be3bf05a",
+      "locator": "S1/corrosion_evidence",
+      "physical_locator": "table:2/row:4/cell:3",
+      "site_id": "S1",
+      "field": "corrosion_evidence",
+      "value": "not_required",
+      "unit": "enum"
+    },
+    "customer_requirements.docx#S1/roof_repair_cost": {
+      "file": "customer_requirements.docx",
+      "source_sha256": "0a4dc8a33c42eab345bdad0690830bd3005fb0e6c9adb7d0e44f4a18be3bf05a",
+      "locator": "S1/roof_repair_cost",
+      "physical_locator": "table:2/row:5/cell:3",
+      "site_id": "S1",
+      "field": "roof_repair_cost",
+      "value": "not_required",
+      "unit": "CNY or unknown"
+    },
+    "customer_requirements.docx#S2/roof_type": {
+      "file": "customer_requirements.docx",
+      "source_sha256": "0a4dc8a33c42eab345bdad0690830bd3005fb0e6c9adb7d0e44f4a18be3bf05a",
+      "locator": "S2/roof_type",
+      "physical_locator": "table:1/row:2/cell:4",
+      "site_id": "S2",
+      "field": "roof_type",
+      "value": "flat",
+      "unit": "enum"
+    },
+    "customer_requirements.docx#S2/usable_area_m2": {
+      "file": "customer_requirements.docx",
+      "source_sha256": "0a4dc8a33c42eab345bdad0690830bd3005fb0e6c9adb7d0e44f4a18be3bf05a",
+      "locator": "S2/usable_area_m2",
+      "physical_locator": "table:1/row:3/cell:4",
+      "site_id": "S2",
+      "field": "usable_area_m2",
+      "value": "250",
+      "unit": "m2"
+    },
+    "customer_requirements.docx#S2/verified_load_kg_m2": {
+      "file": "customer_requirements.docx",
+      "source_sha256": "0a4dc8a33c42eab345bdad0690830bd3005fb0e6c9adb7d0e44f4a18be3bf05a",
+      "locator": "S2/verified_load_kg_m2",
+      "physical_locator": "table:1/row:4/cell:4",
+      "site_id": "S2",
+      "field": "verified_load_kg_m2",
+      "value": "25",
+      "unit": "kg/m2"
+    },
+    "customer_requirements.docx#S2/load_status": {
+      "file": "customer_requirements.docx",
+      "source_sha256": "0a4dc8a33c42eab345bdad0690830bd3005fb0e6c9adb7d0e44f4a18be3bf05a",
+      "locator": "S2/load_status",
+      "physical_locator": "table:1/row:5/cell:4",
+      "site_id": "S2",
+      "field": "load_status",
+      "value": "verified",
+      "unit": "enum"
+    },
+    "customer_requirements.docx#S2/max_dc_kwp": {
+      "file": "customer_requirements.docx",
+      "source_sha256": "0a4dc8a33c42eab345bdad0690830bd3005fb0e6c9adb7d0e44f4a18be3bf05a",
+      "locator": "S2/max_dc_kwp",
+      "physical_locator": "table:1/row:6/cell:4",
+      "site_id": "S2",
+      "field": "max_dc_kwp",
+      "value": "50",
+      "unit": "kWp"
+    },
+    "customer_requirements.docx#S2/annual_target_kwh": {
+      "file": "customer_requirements.docx",
+      "source_sha256": "0a4dc8a33c42eab345bdad0690830bd3005fb0e6c9adb7d0e44f4a18be3bf05a",
+      "locator": "S2/annual_target_kwh",
+      "physical_locator": "table:1/row:7/cell:4",
+      "site_id": "S2",
+      "field": "annual_target_kwh",
+      "value": "48000",
+      "unit": "kWh/year"
+    },
+    "customer_requirements.docx#S2/yield_kwh_kwp": {
+      "file": "customer_requirements.docx",
+      "source_sha256": "0a4dc8a33c42eab345bdad0690830bd3005fb0e6c9adb7d0e44f4a18be3bf05a",
+      "locator": "S2/yield_kwh_kwp",
+      "physical_locator": "table:1/row:8/cell:4",
+      "site_id": "S2",
+      "field": "yield_kwh_kwp",
+      "value": "1100",
+      "unit": "kWh/kWp/year"
+    },
+    "customer_requirements.docx#S2/shading_factor": {
+      "file": "customer_requirements.docx",
+      "source_sha256": "0a4dc8a33c42eab345bdad0690830bd3005fb0e6c9adb7d0e44f4a18be3bf05a",
+      "locator": "S2/shading_factor",
+      "physical_locator": "table:1/row:9/cell:4",
+      "site_id": "S2",
+      "field": "shading_factor",
+      "value": "1",
+      "unit": "ratio"
+    },
+    "customer_requirements.docx#S2/budget_gross_cny": {
+      "file": "customer_requirements.docx",
+      "source_sha256": "0a4dc8a33c42eab345bdad0690830bd3005fb0e6c9adb7d0e44f4a18be3bf05a",
+      "locator": "S2/budget_gross_cny",
+      "physical_locator": "table:1/row:10/cell:4",
+      "site_id": "S2",
+      "field": "budget_gross_cny",
+      "value": "315000",
+      "unit": "CNY incl VAT"
+    },
+    "customer_requirements.docx#S2/replacement_allowed": {
+      "file": "customer_requirements.docx",
+      "source_sha256": "0a4dc8a33c42eab345bdad0690830bd3005fb0e6c9adb7d0e44f4a18be3bf05a",
+      "locator": "S2/replacement_allowed",
+      "physical_locator": "table:2/row:2/cell:4",
+      "site_id": "S2",
+      "field": "replacement_allowed",
+      "value": true,
+      "unit": "boolean"
+    },
+    "customer_requirements.docx#S2/adhesion_evidence": {
+      "file": "customer_requirements.docx",
+      "source_sha256": "0a4dc8a33c42eab345bdad0690830bd3005fb0e6c9adb7d0e44f4a18be3bf05a",
+      "locator": "S2/adhesion_evidence",
+      "physical_locator": "table:2/row:3/cell:4",
+      "site_id": "S2",
+      "field": "adhesion_evidence",
+      "value": "verified",
+      "unit": "enum"
+    },
+    "customer_requirements.docx#S2/corrosion_evidence": {
+      "file": "customer_requirements.docx",
+      "source_sha256": "0a4dc8a33c42eab345bdad0690830bd3005fb0e6c9adb7d0e44f4a18be3bf05a",
+      "locator": "S2/corrosion_evidence",
+      "physical_locator": "table:2/row:4/cell:4",
+      "site_id": "S2",
+      "field": "corrosion_evidence",
+      "value": "not_required",
+      "unit": "enum"
+    },
+    "customer_requirements.docx#S2/roof_repair_cost": {
+      "file": "customer_requirements.docx",
+      "source_sha256": "0a4dc8a33c42eab345bdad0690830bd3005fb0e6c9adb7d0e44f4a18be3bf05a",
+      "locator": "S2/roof_repair_cost",
+      "physical_locator": "table:2/row:5/cell:4",
+      "site_id": "S2",
+      "field": "roof_repair_cost",
+      "value": "not_required",
+      "unit": "CNY or unknown"
+    },
+    "customer_requirements.docx#S3/roof_type": {
+      "file": "customer_requirements.docx",
+      "source_sha256": "0a4dc8a33c42eab345bdad0690830bd3005fb0e6c9adb7d0e44f4a18be3bf05a",
+      "locator": "S3/roof_type",
+      "physical_locator": "table:1/row:2/cell:5",
+      "site_id": "S3",
+      "field": "roof_type",
+      "value": "metal",
+      "unit": "enum"
+    },
+    "customer_requirements.docx#S3/usable_area_m2": {
+      "file": "customer_requirements.docx",
+      "source_sha256": "0a4dc8a33c42eab345bdad0690830bd3005fb0e6c9adb7d0e44f4a18be3bf05a",
+      "locator": "S3/usable_area_m2",
+      "physical_locator": "table:1/row:3/cell:5",
+      "site_id": "S3",
+      "field": "usable_area_m2",
+      "value": "320",
+      "unit": "m2"
+    },
+    "customer_requirements.docx#S3/verified_load_kg_m2": {
+      "file": "customer_requirements.docx",
+      "source_sha256": "0a4dc8a33c42eab345bdad0690830bd3005fb0e6c9adb7d0e44f4a18be3bf05a",
+      "locator": "S3/verified_load_kg_m2",
+      "physical_locator": "table:1/row:4/cell:5",
+      "site_id": "S3",
+      "field": "verified_load_kg_m2",
+      "value": null,
+      "unit": "kg/m2"
+    },
+    "customer_requirements.docx#S3/load_status": {
+      "file": "customer_requirements.docx",
+      "source_sha256": "0a4dc8a33c42eab345bdad0690830bd3005fb0e6c9adb7d0e44f4a18be3bf05a",
+      "locator": "S3/load_status",
+      "physical_locator": "table:1/row:5/cell:5",
+      "site_id": "S3",
+      "field": "load_status",
+      "value": "unverified",
+      "unit": "enum"
+    },
+    "customer_requirements.docx#S3/max_dc_kwp": {
+      "file": "customer_requirements.docx",
+      "source_sha256": "0a4dc8a33c42eab345bdad0690830bd3005fb0e6c9adb7d0e44f4a18be3bf05a",
+      "locator": "S3/max_dc_kwp",
+      "physical_locator": "table:1/row:6/cell:5",
+      "site_id": "S3",
+      "field": "max_dc_kwp",
+      "value": "40",
+      "unit": "kWp"
+    },
+    "customer_requirements.docx#S3/annual_target_kwh": {
+      "file": "customer_requirements.docx",
+      "source_sha256": "0a4dc8a33c42eab345bdad0690830bd3005fb0e6c9adb7d0e44f4a18be3bf05a",
+      "locator": "S3/annual_target_kwh",
+      "physical_locator": "table:1/row:7/cell:5",
+      "site_id": "S3",
+      "field": "annual_target_kwh",
+      "value": "30000",
+      "unit": "kWh/year"
+    },
+    "customer_requirements.docx#S3/yield_kwh_kwp": {
+      "file": "customer_requirements.docx",
+      "source_sha256": "0a4dc8a33c42eab345bdad0690830bd3005fb0e6c9adb7d0e44f4a18be3bf05a",
+      "locator": "S3/yield_kwh_kwp",
+      "physical_locator": "table:1/row:8/cell:5",
+      "site_id": "S3",
+      "field": "yield_kwh_kwp",
+      "value": "1000",
+      "unit": "kWh/kWp/year"
+    },
+    "customer_requirements.docx#S3/shading_factor": {
+      "file": "customer_requirements.docx",
+      "source_sha256": "0a4dc8a33c42eab345bdad0690830bd3005fb0e6c9adb7d0e44f4a18be3bf05a",
+      "locator": "S3/shading_factor",
+      "physical_locator": "table:1/row:9/cell:5",
+      "site_id": "S3",
+      "field": "shading_factor",
+      "value": "0.9",
+      "unit": "ratio"
+    },
+    "customer_requirements.docx#S3/budget_gross_cny": {
+      "file": "customer_requirements.docx",
+      "source_sha256": "0a4dc8a33c42eab345bdad0690830bd3005fb0e6c9adb7d0e44f4a18be3bf05a",
+      "locator": "S3/budget_gross_cny",
+      "physical_locator": "table:1/row:10/cell:5",
+      "site_id": "S3",
+      "field": "budget_gross_cny",
+      "value": "215000",
+      "unit": "CNY incl VAT"
+    },
+    "customer_requirements.docx#S3/replacement_allowed": {
+      "file": "customer_requirements.docx",
+      "source_sha256": "0a4dc8a33c42eab345bdad0690830bd3005fb0e6c9adb7d0e44f4a18be3bf05a",
+      "locator": "S3/replacement_allowed",
+      "physical_locator": "table:2/row:2/cell:5",
+      "site_id": "S3",
+      "field": "replacement_allowed",
+      "value": false,
+      "unit": "boolean"
+    },
+    "customer_requirements.docx#S3/adhesion_evidence": {
+      "file": "customer_requirements.docx",
+      "source_sha256": "0a4dc8a33c42eab345bdad0690830bd3005fb0e6c9adb7d0e44f4a18be3bf05a",
+      "locator": "S3/adhesion_evidence",
+      "physical_locator": "table:2/row:3/cell:5",
+      "site_id": "S3",
+      "field": "adhesion_evidence",
+      "value": "unverified",
+      "unit": "enum"
+    },
+    "customer_requirements.docx#S3/corrosion_evidence": {
+      "file": "customer_requirements.docx",
+      "source_sha256": "0a4dc8a33c42eab345bdad0690830bd3005fb0e6c9adb7d0e44f4a18be3bf05a",
+      "locator": "S3/corrosion_evidence",
+      "physical_locator": "table:2/row:4/cell:5",
+      "site_id": "S3",
+      "field": "corrosion_evidence",
+      "value": "unverified",
+      "unit": "enum"
+    },
+    "customer_requirements.docx#S3/roof_repair_cost": {
+      "file": "customer_requirements.docx",
+      "source_sha256": "0a4dc8a33c42eab345bdad0690830bd3005fb0e6c9adb7d0e44f4a18be3bf05a",
+      "locator": "S3/roof_repair_cost",
+      "physical_locator": "table:2/row:5/cell:5",
+      "site_id": "S3",
+      "field": "roof_repair_cost",
+      "value": null,
+      "unit": "CNY or unknown"
+    },
+    "options.csv#A/name": {
+      "file": "options.csv",
+      "source_sha256": "35bd4e9b0cfd3c121ef4cd11cf9b7cda5ea47a38c7e429b552e1fd58d8a9d236",
+      "locator": "A/name",
+      "physical_locator": "row:2/field:name",
+      "option_id": "A",
+      "field": "name",
+      "value": "刚性组件夹具系统"
+    },
+    "options.csv#A/module_kwp": {
+      "file": "options.csv",
+      "source_sha256": "35bd4e9b0cfd3c121ef4cd11cf9b7cda5ea47a38c7e429b552e1fd58d8a9d236",
+      "locator": "A/module_kwp",
+      "physical_locator": "row:2/field:module_kwp",
+      "option_id": "A",
+      "field": "module_kwp",
+      "value": "0.55"
+    },
+    "options.csv#A/module_area_m2": {
+      "file": "options.csv",
+      "source_sha256": "35bd4e9b0cfd3c121ef4cd11cf9b7cda5ea47a38c7e429b552e1fd58d8a9d236",
+      "locator": "A/module_area_m2",
+      "physical_locator": "row:2/field:module_area_m2",
+      "option_id": "A",
+      "field": "module_area_m2",
+      "value": "2.5"
+    },
+    "options.csv#A/performance_factor": {
+      "file": "options.csv",
+      "source_sha256": "35bd4e9b0cfd3c121ef4cd11cf9b7cda5ea47a38c7e429b552e1fd58d8a9d236",
+      "locator": "A/performance_factor",
+      "physical_locator": "row:2/field:performance_factor",
+      "option_id": "A",
+      "field": "performance_factor",
+      "value": "0.96"
+    },
+    "options.csv#A/load_metal_kg_m2": {
+      "file": "options.csv",
+      "source_sha256": "35bd4e9b0cfd3c121ef4cd11cf9b7cda5ea47a38c7e429b552e1fd58d8a9d236",
+      "locator": "A/load_metal_kg_m2",
+      "physical_locator": "row:2/field:load_metal_kg_m2",
+      "option_id": "A",
+      "field": "load_metal_kg_m2",
+      "value": "14"
+    },
+    "options.csv#A/load_flat_kg_m2": {
+      "file": "options.csv",
+      "source_sha256": "35bd4e9b0cfd3c121ef4cd11cf9b7cda5ea47a38c7e429b552e1fd58d8a9d236",
+      "locator": "A/load_flat_kg_m2",
+      "physical_locator": "row:2/field:load_flat_kg_m2",
+      "option_id": "A",
+      "field": "load_flat_kg_m2",
+      "value": "30"
+    },
+    "options.csv#A/requires_replacement": {
+      "file": "options.csv",
+      "source_sha256": "35bd4e9b0cfd3c121ef4cd11cf9b7cda5ea47a38c7e429b552e1fd58d8a9d236",
+      "locator": "A/requires_replacement",
+      "physical_locator": "row:2/field:requires_replacement",
+      "option_id": "A",
+      "field": "requires_replacement",
+      "value": false
+    },
+    "options.csv#A/module_price_ex_vat": {
+      "file": "options.csv",
+      "source_sha256": "35bd4e9b0cfd3c121ef4cd11cf9b7cda5ea47a38c7e429b552e1fd58d8a9d236",
+      "locator": "A/module_price_ex_vat",
+      "physical_locator": "row:2/field:module_price_ex_vat",
+      "option_id": "A",
+      "field": "module_price_ex_vat",
+      "value": "900"
+    },
+    "options.csv#A/mount_metal_cny_m2": {
+      "file": "options.csv",
+      "source_sha256": "35bd4e9b0cfd3c121ef4cd11cf9b7cda5ea47a38c7e429b552e1fd58d8a9d236",
+      "locator": "A/mount_metal_cny_m2",
+      "physical_locator": "row:2/field:mount_metal_cny_m2",
+      "option_id": "A",
+      "field": "mount_metal_cny_m2",
+      "value": "85"
+    },
+    "options.csv#A/mount_flat_cny_m2": {
+      "file": "options.csv",
+      "source_sha256": "35bd4e9b0cfd3c121ef4cd11cf9b7cda5ea47a38c7e429b552e1fd58d8a9d236",
+      "locator": "A/mount_flat_cny_m2",
+      "physical_locator": "row:2/field:mount_flat_cny_m2",
+      "option_id": "A",
+      "field": "mount_flat_cny_m2",
+      "value": "110"
+    },
+    "options.csv#A/installation_cny_kwp": {
+      "file": "options.csv",
+      "source_sha256": "35bd4e9b0cfd3c121ef4cd11cf9b7cda5ea47a38c7e429b552e1fd58d8a9d236",
+      "locator": "A/installation_cny_kwp",
+      "physical_locator": "row:2/field:installation_cny_kwp",
+      "option_id": "A",
+      "field": "installation_cny_kwp",
+      "value": "650"
+    },
+    "options.csv#A/adhesion_required": {
+      "file": "options.csv",
+      "source_sha256": "35bd4e9b0cfd3c121ef4cd11cf9b7cda5ea47a38c7e429b552e1fd58d8a9d236",
+      "locator": "A/adhesion_required",
+      "physical_locator": "row:2/field:adhesion_required",
+      "option_id": "A",
+      "field": "adhesion_required",
+      "value": false
+    },
+    "options.csv#B/name": {
+      "file": "options.csv",
+      "source_sha256": "35bd4e9b0cfd3c121ef4cd11cf9b7cda5ea47a38c7e429b552e1fd58d8a9d236",
+      "locator": "B/name",
+      "physical_locator": "row:3/field:name",
+      "option_id": "B",
+      "field": "name",
+      "value": "装配式替换屋面系统"
+    },
+    "options.csv#B/module_kwp": {
+      "file": "options.csv",
+      "source_sha256": "35bd4e9b0cfd3c121ef4cd11cf9b7cda5ea47a38c7e429b552e1fd58d8a9d236",
+      "locator": "B/module_kwp",
+      "physical_locator": "row:3/field:module_kwp",
+      "option_id": "B",
+      "field": "module_kwp",
+      "value": "0.4"
+    },
+    "options.csv#B/module_area_m2": {
+      "file": "options.csv",
+      "source_sha256": "35bd4e9b0cfd3c121ef4cd11cf9b7cda5ea47a38c7e429b552e1fd58d8a9d236",
+      "locator": "B/module_area_m2",
+      "physical_locator": "row:3/field:module_area_m2",
+      "option_id": "B",
+      "field": "module_area_m2",
+      "value": "2"
+    },
+    "options.csv#B/performance_factor": {
+      "file": "options.csv",
+      "source_sha256": "35bd4e9b0cfd3c121ef4cd11cf9b7cda5ea47a38c7e429b552e1fd58d8a9d236",
+      "locator": "B/performance_factor",
+      "physical_locator": "row:3/field:performance_factor",
+      "option_id": "B",
+      "field": "performance_factor",
+      "value": "0.97"
+    },
+    "options.csv#B/load_metal_kg_m2": {
+      "file": "options.csv",
+      "source_sha256": "35bd4e9b0cfd3c121ef4cd11cf9b7cda5ea47a38c7e429b552e1fd58d8a9d236",
+      "locator": "B/load_metal_kg_m2",
+      "physical_locator": "row:3/field:load_metal_kg_m2",
+      "option_id": "B",
+      "field": "load_metal_kg_m2",
+      "value": "18"
+    },
+    "options.csv#B/load_flat_kg_m2": {
+      "file": "options.csv",
+      "source_sha256": "35bd4e9b0cfd3c121ef4cd11cf9b7cda5ea47a38c7e429b552e1fd58d8a9d236",
+      "locator": "B/load_flat_kg_m2",
+      "physical_locator": "row:3/field:load_flat_kg_m2",
+      "option_id": "B",
+      "field": "load_flat_kg_m2",
+      "value": "20"
+    },
+    "options.csv#B/requires_replacement": {
+      "file": "options.csv",
+      "source_sha256": "35bd4e9b0cfd3c121ef4cd11cf9b7cda5ea47a38c7e429b552e1fd58d8a9d236",
+      "locator": "B/requires_replacement",
+      "physical_locator": "row:3/field:requires_replacement",
+      "option_id": "B",
+      "field": "requires_replacement",
+      "value": true
+    },
+    "options.csv#B/module_price_ex_vat": {
+      "file": "options.csv",
+      "source_sha256": "35bd4e9b0cfd3c121ef4cd11cf9b7cda5ea47a38c7e429b552e1fd58d8a9d236",
+      "locator": "B/module_price_ex_vat",
+      "physical_locator": "row:3/field:module_price_ex_vat",
+      "option_id": "B",
+      "field": "module_price_ex_vat",
+      "value": "820"
+    },
+    "options.csv#B/mount_metal_cny_m2": {
+      "file": "options.csv",
+      "source_sha256": "35bd4e9b0cfd3c121ef4cd11cf9b7cda5ea47a38c7e429b552e1fd58d8a9d236",
+      "locator": "B/mount_metal_cny_m2",
+      "physical_locator": "row:3/field:mount_metal_cny_m2",
+      "option_id": "B",
+      "field": "mount_metal_cny_m2",
+      "value": "95"
+    },
+    "options.csv#B/mount_flat_cny_m2": {
+      "file": "options.csv",
+      "source_sha256": "35bd4e9b0cfd3c121ef4cd11cf9b7cda5ea47a38c7e429b552e1fd58d8a9d236",
+      "locator": "B/mount_flat_cny_m2",
+      "physical_locator": "row:3/field:mount_flat_cny_m2",
+      "option_id": "B",
+      "field": "mount_flat_cny_m2",
+      "value": "95"
+    },
+    "options.csv#B/installation_cny_kwp": {
+      "file": "options.csv",
+      "source_sha256": "35bd4e9b0cfd3c121ef4cd11cf9b7cda5ea47a38c7e429b552e1fd58d8a9d236",
+      "locator": "B/installation_cny_kwp",
+      "physical_locator": "row:3/field:installation_cny_kwp",
+      "option_id": "B",
+      "field": "installation_cny_kwp",
+      "value": "700"
+    },
+    "options.csv#B/adhesion_required": {
+      "file": "options.csv",
+      "source_sha256": "35bd4e9b0cfd3c121ef4cd11cf9b7cda5ea47a38c7e429b552e1fd58d8a9d236",
+      "locator": "B/adhesion_required",
+      "physical_locator": "row:3/field:adhesion_required",
+      "option_id": "B",
+      "field": "adhesion_required",
+      "value": false
+    },
+    "options.csv#C/name": {
+      "file": "options.csv",
+      "source_sha256": "35bd4e9b0cfd3c121ef4cd11cf9b7cda5ea47a38c7e429b552e1fd58d8a9d236",
+      "locator": "C/name",
+      "physical_locator": "row:4/field:name",
+      "option_id": "C",
+      "field": "name",
+      "value": "轻质粘接组件系统"
+    },
+    "options.csv#C/module_kwp": {
+      "file": "options.csv",
+      "source_sha256": "35bd4e9b0cfd3c121ef4cd11cf9b7cda5ea47a38c7e429b552e1fd58d8a9d236",
+      "locator": "C/module_kwp",
+      "physical_locator": "row:4/field:module_kwp",
+      "option_id": "C",
+      "field": "module_kwp",
+      "value": "0.3"
+    },
+    "options.csv#C/module_area_m2": {
+      "file": "options.csv",
+      "source_sha256": "35bd4e9b0cfd3c121ef4cd11cf9b7cda5ea47a38c7e429b552e1fd58d8a9d236",
+      "locator": "C/module_area_m2",
+      "physical_locator": "row:4/field:module_area_m2",
+      "option_id": "C",
+      "field": "module_area_m2",
+      "value": "2"
+    },
+    "options.csv#C/performance_factor": {
+      "file": "options.csv",
+      "source_sha256": "35bd4e9b0cfd3c121ef4cd11cf9b7cda5ea47a38c7e429b552e1fd58d8a9d236",
+      "locator": "C/performance_factor",
+      "physical_locator": "row:4/field:performance_factor",
+      "option_id": "C",
+      "field": "performance_factor",
+      "value": "0.9"
+    },
+    "options.csv#C/load_metal_kg_m2": {
+      "file": "options.csv",
+      "source_sha256": "35bd4e9b0cfd3c121ef4cd11cf9b7cda5ea47a38c7e429b552e1fd58d8a9d236",
+      "locator": "C/load_metal_kg_m2",
+      "physical_locator": "row:4/field:load_metal_kg_m2",
+      "option_id": "C",
+      "field": "load_metal_kg_m2",
+      "value": "4.5"
+    },
+    "options.csv#C/load_flat_kg_m2": {
+      "file": "options.csv",
+      "source_sha256": "35bd4e9b0cfd3c121ef4cd11cf9b7cda5ea47a38c7e429b552e1fd58d8a9d236",
+      "locator": "C/load_flat_kg_m2",
+      "physical_locator": "row:4/field:load_flat_kg_m2",
+      "option_id": "C",
+      "field": "load_flat_kg_m2",
+      "value": "4.5"
+    },
+    "options.csv#C/requires_replacement": {
+      "file": "options.csv",
+      "source_sha256": "35bd4e9b0cfd3c121ef4cd11cf9b7cda5ea47a38c7e429b552e1fd58d8a9d236",
+      "locator": "C/requires_replacement",
+      "physical_locator": "row:4/field:requires_replacement",
+      "option_id": "C",
+      "field": "requires_replacement",
+      "value": false
+    },
+    "options.csv#C/module_price_ex_vat": {
+      "file": "options.csv",
+      "source_sha256": "35bd4e9b0cfd3c121ef4cd11cf9b7cda5ea47a38c7e429b552e1fd58d8a9d236",
+      "locator": "C/module_price_ex_vat",
+      "physical_locator": "row:4/field:module_price_ex_vat",
+      "option_id": "C",
+      "field": "module_price_ex_vat",
+      "value": "500"
+    },
+    "options.csv#C/mount_metal_cny_m2": {
+      "file": "options.csv",
+      "source_sha256": "35bd4e9b0cfd3c121ef4cd11cf9b7cda5ea47a38c7e429b552e1fd58d8a9d236",
+      "locator": "C/mount_metal_cny_m2",
+      "physical_locator": "row:4/field:mount_metal_cny_m2",
+      "option_id": "C",
+      "field": "mount_metal_cny_m2",
+      "value": "55"
+    },
+    "options.csv#C/mount_flat_cny_m2": {
+      "file": "options.csv",
+      "source_sha256": "35bd4e9b0cfd3c121ef4cd11cf9b7cda5ea47a38c7e429b552e1fd58d8a9d236",
+      "locator": "C/mount_flat_cny_m2",
+      "physical_locator": "row:4/field:mount_flat_cny_m2",
+      "option_id": "C",
+      "field": "mount_flat_cny_m2",
+      "value": "55"
+    },
+    "options.csv#C/installation_cny_kwp": {
+      "file": "options.csv",
+      "source_sha256": "35bd4e9b0cfd3c121ef4cd11cf9b7cda5ea47a38c7e429b552e1fd58d8a9d236",
+      "locator": "C/installation_cny_kwp",
+      "physical_locator": "row:4/field:installation_cny_kwp",
+      "option_id": "C",
+      "field": "installation_cny_kwp",
+      "value": "900"
+    },
+    "options.csv#C/adhesion_required": {
+      "file": "options.csv",
+      "source_sha256": "35bd4e9b0cfd3c121ef4cd11cf9b7cda5ea47a38c7e429b552e1fd58d8a9d236",
+      "locator": "C/adhesion_required",
+      "physical_locator": "row:4/field:adhesion_required",
+      "option_id": "C",
+      "field": "adhesion_required",
+      "value": true
+    },
+    "technical_notes.pdf#parameter:inverter_block_kwp": {
+      "file": "technical_notes.pdf",
+      "source_sha256": "ebfb69ac93be4180aebf7239d58a5de045548a0ff1dcf99b04288b1e3044e87b",
+      "locator": "parameter:inverter_block_kwp",
+      "page": 1,
+      "field": "inverter_block_kwp",
+      "value": "15"
+    },
+    "technical_notes.pdf#parameter:inverter_unit_ex_vat": {
+      "file": "technical_notes.pdf",
+      "source_sha256": "ebfb69ac93be4180aebf7239d58a5de045548a0ff1dcf99b04288b1e3044e87b",
+      "locator": "parameter:inverter_unit_ex_vat",
+      "page": 1,
+      "field": "inverter_unit_ex_vat",
+      "value": "10500"
+    },
+    "technical_notes.pdf#parameter:cable_per_module_ex_vat": {
+      "file": "technical_notes.pdf",
+      "source_sha256": "ebfb69ac93be4180aebf7239d58a5de045548a0ff1dcf99b04288b1e3044e87b",
+      "locator": "parameter:cable_per_module_ex_vat",
+      "page": 1,
+      "field": "cable_per_module_ex_vat",
+      "value": "65"
+    },
+    "technical_notes.pdf#parameter:isolation_per_site_ex_vat": {
+      "file": "technical_notes.pdf",
+      "source_sha256": "ebfb69ac93be4180aebf7239d58a5de045548a0ff1dcf99b04288b1e3044e87b",
+      "locator": "parameter:isolation_per_site_ex_vat",
+      "page": 1,
+      "field": "isolation_per_site_ex_vat",
+      "value": "14500"
+    },
+    "technical_notes.pdf#parameter:design_per_site_ex_vat": {
+      "file": "technical_notes.pdf",
+      "source_sha256": "ebfb69ac93be4180aebf7239d58a5de045548a0ff1dcf99b04288b1e3044e87b",
+      "locator": "parameter:design_per_site_ex_vat",
+      "page": 1,
+      "field": "design_per_site_ex_vat",
+      "value": "6000"
+    },
+    "technical_notes.pdf#parameter:inspection_per_site_ex_vat": {
+      "file": "technical_notes.pdf",
+      "source_sha256": "ebfb69ac93be4180aebf7239d58a5de045548a0ff1dcf99b04288b1e3044e87b",
+      "locator": "parameter:inspection_per_site_ex_vat",
+      "page": 1,
+      "field": "inspection_per_site_ex_vat",
+      "value": "6000"
+    },
+    "technical_notes.pdf#parameter:adhesion_acceptance_ex_vat": {
+      "file": "technical_notes.pdf",
+      "source_sha256": "ebfb69ac93be4180aebf7239d58a5de045548a0ff1dcf99b04288b1e3044e87b",
+      "locator": "parameter:adhesion_acceptance_ex_vat",
+      "page": 1,
+      "field": "adhesion_acceptance_ex_vat",
+      "value": "7500"
+    },
+    "technical_notes.pdf#parameter:corrosion_review_ex_vat": {
+      "file": "technical_notes.pdf",
+      "source_sha256": "ebfb69ac93be4180aebf7239d58a5de045548a0ff1dcf99b04288b1e3044e87b",
+      "locator": "parameter:corrosion_review_ex_vat",
+      "page": 1,
+      "field": "corrosion_review_ex_vat",
+      "value": "4800"
+    },
+    "technical_notes.pdf#parameter:replacement_roof_cny_m2": {
+      "file": "technical_notes.pdf",
+      "source_sha256": "ebfb69ac93be4180aebf7239d58a5de045548a0ff1dcf99b04288b1e3044e87b",
+      "locator": "parameter:replacement_roof_cny_m2",
+      "page": 1,
+      "field": "replacement_roof_cny_m2",
+      "value": "180"
+    },
+    "technical_notes.pdf#parameter:drainage_cny_m2": {
+      "file": "technical_notes.pdf",
+      "source_sha256": "ebfb69ac93be4180aebf7239d58a5de045548a0ff1dcf99b04288b1e3044e87b",
+      "locator": "parameter:drainage_cny_m2",
+      "page": 1,
+      "field": "drainage_cny_m2",
+      "value": "30"
+    },
+    "technical_notes.pdf#parameter:vat_goods": {
+      "file": "technical_notes.pdf",
+      "source_sha256": "ebfb69ac93be4180aebf7239d58a5de045548a0ff1dcf99b04288b1e3044e87b",
+      "locator": "parameter:vat_goods",
+      "page": 1,
+      "field": "vat_goods",
+      "value": "0.13"
+    },
+    "technical_notes.pdf#parameter:vat_construction": {
+      "file": "technical_notes.pdf",
+      "source_sha256": "ebfb69ac93be4180aebf7239d58a5de045548a0ff1dcf99b04288b1e3044e87b",
+      "locator": "parameter:vat_construction",
+      "page": 1,
+      "field": "vat_construction",
+      "value": "0.09"
+    },
+    "technical_notes.pdf#parameter:vat_services": {
+      "file": "technical_notes.pdf",
+      "source_sha256": "ebfb69ac93be4180aebf7239d58a5de045548a0ff1dcf99b04288b1e3044e87b",
+      "locator": "parameter:vat_services",
+      "page": 1,
+      "field": "vat_services",
+      "value": "0.06"
+    },
+    "technical_notes.pdf#T01": {
+      "file": "technical_notes.pdf",
+      "page": 2,
+      "anchor": "T01",
+      "text": "module_count = ROUNDUP(annual_target_kwh / (module_kwp * yield_kwh_kwp * performance_factor * shading_factor), 0)。dc_kwp = module_count * module_kwp；area_m2 = module_count * module_area_m2；annual_energy_kwh = dc_kwp * yield_kwh_kwp * performance_factor * shading_factor。所有比率均为小数，因子相乘一次，kWp和kWh不可互换。此为本题纸面年量模型，不是发电保证。",
+      "source_sha256": "ebfb69ac93be4180aebf7239d58a5de045548a0ff1dcf99b04288b1e3044e87b",
+      "locator": "T01"
+    },
+    "technical_notes.pdf#T02": {
+      "file": "technical_notes.pdf",
+      "page": 2,
+      "anchor": "T02",
+      "text": "A/B/C在本题均可用于metal和平屋面flat。inverter_count = ROUNDUP(dc_kwp / inverter_block_kwp, 0)，按额定块向上取整；本题DC接入上限直接与dc_kwp比较，不作AC/DC折算。",
+      "source_sha256": "ebfb69ac93be4180aebf7239d58a5de045548a0ff1dcf99b04288b1e3044e87b",
+      "locator": "T02"
+    },
+    "technical_notes.pdf#T03": {
+      "file": "technical_notes.pdf",
+      "page": 2,
+      "anchor": "T03",
+      "text": "area_m2不可超过场地可用面积；设计新增荷载取options.csv对应屋面类型列，不按总屋面面积平均摊薄。verified_load_kg_m2只有load_status=verified时可作上限。S3荷载未核验，缺值不是0也不是无限大。",
+      "source_sha256": "ebfb69ac93be4180aebf7239d58a5de045548a0ff1dcf99b04288b1e3044e87b",
+      "locator": "T03"
+    },
+    "technical_notes.pdf#T04": {
+      "file": "technical_notes.pdf",
+      "page": 2,
+      "anchor": "T04",
+      "text": "B必须获replacement_allowed=true，并对整个usable_area_m2计屋面更换和排水配套，不按area_m2计这两项；即使权限不允许也需展示该方案的条件性基础报价用于比较，但不可推荐实施。A/C这两项为0。",
+      "source_sha256": "ebfb69ac93be4180aebf7239d58a5de045548a0ff1dcf99b04288b1e3044e87b",
+      "locator": "T04"
+    },
+    "technical_notes.pdf#T05": {
+      "file": "technical_notes.pdf",
+      "page": 3,
+      "anchor": "T05",
+      "text": "供货未税额 = module_count * module_price_ex_vat + inverter_count * inverter_unit_ex_vat + module_count * cable_per_module_ex_vat + isolation_per_site_ex_vat。所有四项必需，隔离防护14500元对每个场地方案组合只计一次，不能漏逆变器、电缆或保护件。",
+      "source_sha256": "ebfb69ac93be4180aebf7239d58a5de045548a0ff1dcf99b04288b1e3044e87b",
+      "locator": "T05"
+    },
+    "technical_notes.pdf#T06": {
+      "file": "technical_notes.pdf",
+      "page": 3,
+      "anchor": "T06",
+      "text": "施工未税额 = area_m2 * 当前屋面类型的mount价格 + dc_kwp * installation_cny_kwp + replacement_area_m2 * replacement_roof_cny_m2 + replacement_area_m2 * drainage_cny_m2。replacement_area_m2对B取场地usable_area_m2，对A/C取0。",
+      "source_sha256": "ebfb69ac93be4180aebf7239d58a5de045548a0ff1dcf99b04288b1e3044e87b",
+      "locator": "T06"
+    },
+    "technical_notes.pdf#T07": {
+      "file": "technical_notes.pdf",
+      "page": 3,
+      "anchor": "T07",
+      "text": "技术服务未税额包含每场地设计和独立检验各6000元。C另加施工粘接验收7500元，即使前置兼容性材料已验证也不能漏这笔施工检验费用。S3三个方案均加腐蚀专项核验4800元；报价包含核验工作不等于报告已经取得或通过。",
+      "source_sha256": "ebfb69ac93be4180aebf7239d58a5de045548a0ff1dcf99b04288b1e3044e87b",
+      "locator": "T07"
+    },
+    "technical_notes.pdf#T08": {
+      "file": "technical_notes.pdf",
+      "page": 3,
+      "anchor": "T08",
+      "text": "供货按vat_goods=0.13，施工按vat_construction=0.09，技术服务按vat_services=0.06；三个税额分别按ROUND(未税额*税率,2)四舍五入到分，再与三个未税额相加得gross_total。预算余量=budget_gross_cny-gross_total。不合并税率，不重复加税，不减未知补贴。",
+      "source_sha256": "ebfb69ac93be4180aebf7239d58a5de045548a0ff1dcf99b04288b1e3044e87b",
+      "locator": "T08"
+    },
+    "technical_notes.pdf#T09": {
+      "file": "technical_notes.pdf",
+      "page": 4,
+      "anchor": "T09",
+      "text": "逐项判定AREA、LOAD、GRID、REPLACEMENT、BUDGET、ADHESION、CORROSION、REPAIR_SCOPE。可读硬约束失败优先为infeasible；否则任一需要核实的条件为conditional；全部满足为feasible。ADHESION仅对C检查前置兼容材料，CORROSION与REPAIR_SCOPE仅对S3检查。LOAD未核验、材料未核实或修复费未知均是条件，不能写成已经满足。",
+      "source_sha256": "ebfb69ac93be4180aebf7239d58a5de045548a0ff1dcf99b04288b1e3044e87b",
+      "locator": "T09"
+    },
+    "technical_notes.pdf#T10": {
+      "file": "technical_notes.pdf",
+      "page": 4,
+      "anchor": "T10",
+      "text": "exceptions.csv逐条列出所有硬约束失败或待核实条件，包含site_id、option_id、rule_id、status、observed、limit、source_file、source_locator、next_action。rule_id用T09八个检查名。硬失败status=fail，条件status=unknown；即使某组合已不可行，也保留其他尚待核实项。来源用实际输入及其可见S/Q/T/option_id定位，不能引用私有oracle。",
+      "source_sha256": "ebfb69ac93be4180aebf7239d58a5de045548a0ff1dcf99b04288b1e3044e87b",
+      "locator": "T10"
+    },
+    "technical_notes.pdf#T11": {
+      "file": "technical_notes.pdf",
+      "page": 4,
+      "anchor": "T11",
+      "text": "每场地先排除infeasible，再对feasible/conditional各自按已知基础含税总额排序；存在feasible则优先feasible；仅有conditional时可给有条件的最低已知基础总额方案，但保留荷载、证据与未知修复费等全部条件。没有可选项时不推荐，不能擅改目标、预算或权限。",
+      "source_sha256": "ebfb69ac93be4180aebf7239d58a5de045548a0ff1dcf99b04288b1e3044e87b",
+      "locator": "T11"
+    },
+    "technical_notes.pdf#T12": {
+      "file": "technical_notes.pdf",
+      "page": 4,
+      "anchor": "T12",
+      "text": "所有价格均为合成固定未税参数，报价有效时点2026-09-30，仅用于纸面比较。S3未知修复费和全部未知补贴不作数值假定，需另行确认，不构成工程报价承诺、正式发电保证或实施批准。客户沟通稿仅保存草稿，不发送。",
+      "source_sha256": "ebfb69ac93be4180aebf7239d58a5de045548a0ff1dcf99b04288b1e3044e87b",
+      "locator": "T12"
+    },
+    "customer_requirements.docx#Q01": {
+      "file": "customer_requirements.docx",
+      "source_sha256": "0a4dc8a33c42eab345bdad0690830bd3005fb0e6c9adb7d0e44f4a18be3bf05a",
+      "locator": "Q01",
+      "text": "三个方案均按本题固定参数比较；全部市场价、补贴、税收优惠及工程实测结论不另行推测。"
+    },
+    "customer_requirements.docx#Q02": {
+      "file": "customer_requirements.docx",
+      "source_sha256": "0a4dc8a33c42eab345bdad0690830bd3005fb0e6c9adb7d0e44f4a18be3bf05a",
+      "locator": "Q02",
+      "text": "逐一响应S1的年度目标、屋面面积、荷载、DC容量、换屋面权限及含税预算。"
+    },
+    "customer_requirements.docx#Q03": {
+      "file": "customer_requirements.docx",
+      "source_sha256": "0a4dc8a33c42eab345bdad0690830bd3005fb0e6c9adb7d0e44f4a18be3bf05a",
+      "locator": "Q03",
+      "text": "逐一响应S2的年度目标、屋面面积、荷载、DC容量、换屋面权限及含税预算。"
+    },
+    "customer_requirements.docx#Q04": {
+      "file": "customer_requirements.docx",
+      "source_sha256": "0a4dc8a33c42eab345bdad0690830bd3005fb0e6c9adb7d0e44f4a18be3bf05a",
+      "locator": "Q04",
+      "text": "逐一响应S3；无核验荷载上限、无腐蚀报告，修复费未知，不得把unknown替成0或直接批准实施。"
+    },
+    "customer_requirements.docx#Q05": {
+      "file": "customer_requirements.docx",
+      "source_sha256": "0a4dc8a33c42eab345bdad0690830bd3005fb0e6c9adb7d0e44f4a18be3bf05a",
+      "locator": "Q05",
+      "text": "按T01求达到目标的最小整片组件数量，不能向下取整、用裸组件效率代替系统因子或漏遮阴因子。"
+    },
+    "customer_requirements.docx#Q06": {
+      "file": "customer_requirements.docx",
+      "source_sha256": "0a4dc8a33c42eab345bdad0690830bd3005fb0e6c9adb7d0e44f4a18be3bf05a",
+      "locator": "Q06",
+      "text": "面积按组件总占用计算，荷载按屋面类型选择；任一明确硬约束不满足即不可行，不用低价格补偿。"
+    },
+    "customer_requirements.docx#Q07": {
+      "file": "customer_requirements.docx",
+      "source_sha256": "0a4dc8a33c42eab345bdad0690830bd3005fb0e6c9adb7d0e44f4a18be3bf05a",
+      "locator": "Q07",
+      "text": "B必须更换整个可用屋面范围；未允许换屋面视为硬约束失败，不能只按组件覆盖面积报价。"
+    },
+    "customer_requirements.docx#Q08": {
+      "file": "customer_requirements.docx",
+      "source_sha256": "0a4dc8a33c42eab345bdad0690830bd3005fb0e6c9adb7d0e44f4a18be3bf05a",
+      "locator": "Q08",
+      "text": "对九个场地方案组合报价，列全必要部件、施工、设计、检验和对应增值税，保留真实可重算公式。"
+    },
+    "customer_requirements.docx#Q09": {
+      "file": "customer_requirements.docx",
+      "source_sha256": "0a4dc8a33c42eab345bdad0690830bd3005fb0e6c9adb7d0e44f4a18be3bf05a",
+      "locator": "Q09",
+      "text": "预算比较以含税已知基础总额为准；S3仍是附条件估算，不代表包含未知修复费后的最终不超支。"
+    },
+    "customer_requirements.docx#Q10": {
+      "file": "customer_requirements.docx",
+      "source_sha256": "0a4dc8a33c42eab345bdad0690830bd3005fb0e6c9adb7d0e44f4a18be3bf05a",
+      "locator": "Q10",
+      "text": "补贴金额未知，不得编造补贴或在报价中抵减未知收入；未知费用不可伪装成已确认免费。"
+    },
+    "customer_requirements.docx#Q11": {
+      "file": "customer_requirements.docx",
+      "source_sha256": "0a4dc8a33c42eab345bdad0690830bd3005fb0e6c9adb7d0e44f4a18be3bf05a",
+      "locator": "Q11",
+      "text": "每个场地给推荐或明确不推荐，先排除不可行，再在其余中按已知基础总额最低选择；只有附条件方案时必须保留全部条件。"
+    },
+    "customer_requirements.docx#Q12": {
+      "file": "customer_requirements.docx",
+      "source_sha256": "0a4dc8a33c42eab345bdad0690830bd3005fb0e6c9adb7d0e44f4a18be3bf05a",
+      "locator": "Q12",
+      "text": "提交Word、可重算报价、沟通草稿和逐项例外清单；不得发送邮件、下单、付款或声称审批/工程核验已完成。"
+    }
+  },
+  "limit": "Public business IDs and actual source values, not private IDs required from candidates; equivalent physical locations may be resolved to these records."
+}

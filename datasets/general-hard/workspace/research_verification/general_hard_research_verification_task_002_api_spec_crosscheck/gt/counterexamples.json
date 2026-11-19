@@ -1,0 +1,47 @@
+{
+  "schema_version": "h028-author-controls/v1",
+  "positive_controls": [
+    "static_values",
+    "formula_values",
+    "chinese_shifted_reordered",
+    "unit_conversions_mixed_unknowns",
+    "subcolumns_and_subrows",
+    "ten_topic_objects",
+    "unordered_record_sets",
+    "extra_search_only_source",
+    "logical_table_quote"
+  ],
+  "candidate_loss_controls": {
+    "signature_hmac_sha256": "business_correctness decreases; independently fixed vector results required",
+    "signature_hmac_hex_base64": "business_correctness decreases; encoding the hexadecimal HMAC text is wrong",
+    "signature_urlsafe_and_double_encoded": "business_correctness decreases; raw Base64 and one percent encoding are different",
+    "protocol_appId_case": "business_correctness decreases; appid is a protocol token",
+    "end_text_and_integer_true": "business_correctness decreases; binary framing and JSON boolean are distinct facts",
+    "invented_clock_window_and_numeric_defaults": "boundary_cases decreases; 0 is never an unknown",
+    "recommendation_as_hard_limit": "boundary_cases decreases",
+    "fabricated_quote": "evidence_binding decreases",
+    "wrong_source": "evidence_binding decreases without an input-drift error",
+    "missing_main_citation": "evidence_binding decreases without an input-drift error",
+    "missing_workbook": "candidate delivery loss, no evaluation error",
+    "corrupt_workbook": "candidate delivery loss, no evaluation error",
+    "malformed_ledger": "candidate delivery/evidence loss, no evaluation error",
+    "malformed_ledger_structure": "source_id list/dict, status list/dict and malformed citation locator/quote are candidate loss; no unhashable TypeError",
+    "protected_input_mutated": "delivery_integrity=0; identical factual oracle scores",
+    "hidden_core_results": "delivery_integrity decreases"
+  },
+  "evaluation_error_controls": {
+    "missing_source_bundle_context": "managed independent research bundle context missing",
+    "trusted_source_body_drift": "research body SHA drift",
+    "trusted_projection_drift": "research projection SHA drift",
+    "designated_article_content_drift": "designated main article content drift",
+    "missing_office_context": "managed Office/evidence runtime context missing",
+    "office_lock_invalid": "OFFICE_LOCK_INVALID",
+    "private_oracle_drift": "private material drift: expected.json"
+  },
+  "semantic_boundary_control": {
+    "structurally_complete_wrong_prose": "Keep exact typed workbook/identifiers/citations; replace correction prose with contradicted claims. Automatic score may be 1; record NEEDS_INDEPENDENT_JUDGE, never invent a semantic score."
+  },
+  "scope": "Disposable author controls only. No formal semantic score, human-expert certification, measured difficulty or live service acceptance.",
+  "source_before_reference": true,
+  "candidate_used_for_truth": false
+}

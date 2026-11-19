@@ -1,0 +1,22 @@
+{
+  "schema_version": "h043-evidence-requirements/v1",
+  "independent_execution_receipt": [
+    "candidate_source_sha256",
+    "trusted_test_sha256",
+    "command",
+    "returncode",
+    "stdout_sha256",
+    "stderr_sha256",
+    "actual per-opportunity observations",
+    "candidate copy unchanged"
+  ],
+  "candidate_record": "Readable tests.txt with final source SHA256. Independent execution is grading-side verification, not a claim that candidate ran that command.",
+  "failure_ownership": {
+    "missing_trusted_GT_or_helper_or_stdlib": "typed evaluator error, no fabricated zero",
+    "candidate_import_exception_or_assertion_failure": "candidate implementation defect with actual command/returncode",
+    "candidate_report_missing_or_stale": "only corresponding delivery/binding obligations",
+    "protected_input_drift": "only protection obligation; tests run with trusted originals"
+  },
+  "semantic_Judge": false,
+  "source_or_patch_string_oracle": false
+}

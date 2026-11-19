@@ -1,0 +1,58 @@
+{
+  "schema": "h045-expected/v1",
+  "task_id": "general_hard_software_engineering_task_005_sql_compatibility",
+  "weights": {
+    "business_correctness": 0.55,
+    "boundary_cases": 0.25,
+    "delivery_integrity": 0.15,
+    "evidence_binding": 0.05
+  },
+  "case_ids": {
+    "business": [
+      "B01_plain",
+      "B02_reserved_table",
+      "B03_reserved_projection",
+      "B04_two_bind_order",
+      "B05_date_window",
+      "B06_nested_precedence",
+      "B07_numeric_negative",
+      "B08_unicode",
+      "B09_repeated_values",
+      "B10_multi_sort",
+      "B11_duplicate_projection",
+      "B12_distinct_forbidden"
+    ],
+    "boundary": [
+      "N01_empty_in",
+      "N02_empty_not_in",
+      "N03_equal_null",
+      "N04_not_equal_null",
+      "N05_mixed_in",
+      "N06_mixed_not_in",
+      "N07_not_in_keep_null",
+      "N08_ne_keep_null",
+      "N09_only_null_in",
+      "N10_only_null_not_in",
+      "N11_empty_all",
+      "N12_empty_any",
+      "N13_unary_null",
+      "N14_null_comparison",
+      "N15_quote_binding",
+      "N16_named_rebind",
+      "N17_apostrophe_binding",
+      "N18_like_text_literal",
+      "V01_invalid",
+      "V02_invalid",
+      "V03_invalid",
+      "V04_invalid",
+      "V05_invalid",
+      "V06_invalid",
+      "V07_invalid",
+      "V08_invalid",
+      "V09_invalid",
+      "V10_invalid"
+    ]
+  },
+  "fixed_denominators": true,
+  "source_first": true
+}

@@ -1,0 +1,5523 @@
+{
+  "schema_version": "h033.source-ledger/v1",
+  "research_context": {
+    "task_id": "general_hard_research_verification_task_007_directed_notice_timeline",
+    "publication_window": {
+      "timezone": "Asia/Shanghai",
+      "start_inclusive": "2026-09-01T00:00:00+08:00",
+      "end_exclusive": "2026-10-01T00:00:00+08:00"
+    },
+    "profile_assumption": "河北大学法学院2023级四年制在籍法学本科，预计2027届；资格、申请意愿、名单、缴费、注册及个人完成状态均unknown。",
+    "started_at_utc": null,
+    "finished_at_utc": null,
+    "investigation_scope": "整理九月发布的三部门公开通知，按本科教务、推荐资格、接收推免和统考条件分支选取相关事项；保留学历及发布窗重要排除。",
+    "limitations": [
+      "使用2026-10-28实际GET保存的公开材料；本整理未再次联网或执行新的独立发现。",
+      "网页显示九月发布，不证明发布当天的历史字节；多数2026年9—10月办理窗口早于取源时点，当前效力和能否补办均须另核。",
+      "范围非穷尽；无法从所读样本推出全站不存在更正、延期或冲突。",
+      "查询历史与读取原件的复用不是新候选执行轨迹，过程不可观测字段为unknown。",
+      "验证码后内容、旧XLS书目单元格、群内安排及任何真实学生个人名单归属未核。"
+    ],
+    "official_identity": {
+      "law_school": "学校院系页链接确认法学院/纪检监察学院入口。",
+      "graduate_school": "学校院系页链接确认研究生院入口。",
+      "academic_affairs": "学校组织机构页链接确认教务处入口。",
+      "alias_navigation_evidence": "法学院给定入口中教学导航链接到law.hbu.cn目录；保留HTTP原协议，不声称TLS。"
+    }
+  },
+  "discovery_observations": [
+    {
+      "discovery_id": "historical-search-1",
+      "method": "web_search",
+      "query_or_navigation_condition": "原有批次中的按域名范围搜索，详见queries；不是本轮新查询。",
+      "queries": [
+        {
+          "q": "2026 9月 2027 推免 招生",
+          "domains": [
+            "yjsy.hbu.edu.cn"
+          ]
+        },
+        {
+          "q": "2026 09 推免 本科 教学",
+          "domains": [
+            "law.hbu.edu.cn",
+            "law.hbu.cn"
+          ]
+        },
+        {
+          "q": "2026 9月 推免 2027 通知",
+          "domains": [
+            "jwc.hbu.cn"
+          ]
+        }
+      ],
+      "candidate_urls": [
+        "https://jwc.hbu.cn/",
+        "https://jwc.hbu.cn/index/tzgg.htm",
+        "https://jwc.hbu.cn/info/1108/11925.htm",
+        "https://jwc.hbu.cn/info/1108/12260.htm",
+        "https://jwc.hbu.cn/info/1108/12352.htm",
+        "https://jwc.hbu.cn/info/1108/12356.htm",
+        "https://jwc.hbu.cn/info/1108/12360.htm",
+        "https://jwc.hbu.cn/info/1108/12392.htm",
+        "https://jwc.hbu.cn/info/1108/12396.htm",
+        "https://jwc.hbu.cn/info/1108/12398.htm",
+        "https://jwc.hbu.cn/info/1108/12405.htm",
+        "https://jwc.hbu.cn/info/1108/12419.htm",
+        "https://law.hbu.cn/",
+        "https://law.hbu.cn/bkjx/index.jhtml",
+        "https://law.hbu.cn/glwj/index.jhtml",
+        "https://law.hbu.cn/jxcg/index.jhtml",
+        "https://law.hbu.cn/kxyj/index.jhtml",
+        "https://law.hbu.cn/kycg/index.jhtml",
+        "https://law.hbu.cn/kylx/index.jhtml",
+        "https://law.hbu.cn/szdw/index.jhtml",
+        "https://law.hbu.cn/xxjs/index.jhtml",
+        "https://law.hbu.cn/xygk/index.jhtml",
+        "https://law.hbu.cn/yhq/index.jhtml",
+        "https://law.hbu.edu.cn/",
+        "https://yjsy.hbu.edu.cn/",
+        "https://yjsy.hbu.edu.cn/__local/4/8E/8E/D119E5B85F10D1EA537B3371808_39E1EC5F_3DD5A.pdf?e=.pdf",
+        "https://yjsy.hbu.edu.cn/index.htm",
+        "https://yjsy.hbu.edu.cn/index/tztg.htm",
+        "https://yjsy.hbu.edu.cn/info/1100/4443.htm",
+        "https://yjsy.hbu.edu.cn/info/1150/4441.htm",
+        "https://yjsy.hbu.edu.cn/info/1150/4461.htm",
+        "https://yjsy.hbu.edu.cn/info/1150/4468.htm",
+        "https://yjsy.hbu.edu.cn/info/1159/4046.htm",
+        "https://yjsy.hbu.edu.cn/info/1159/4428.htm",
+        "https://yjsy.hbu.edu.cn/info/1159/4440.htm",
+        "https://yjsy.hbu.edu.cn/info/1159/4451.htm",
+        "https://yjsy.hbu.edu.cn/zsgz/sszs.htm",
+        "https://yz.chsi.com.cn/tm"
+      ],
+      "observed_at_utc": "2026-10-28T16:38:15Z",
+      "finished_at_utc": "2026-10-28T16:38:18Z",
+      "trace_refs": [],
+      "observation_state": "unknown",
+      "limitation": "明确复用历史批次记录；无新的搜索或当前attempt绑定，不以此声称本轮独立发现。",
+      "historical_record_sha256": "49cafcdd5e711988dc6d4769bc64abbffdf03a3e195b376363421a3916140d9a"
+    },
+    {
+      "discovery_id": "historical-search-2",
+      "method": "web_search",
+      "query_or_navigation_condition": "原有批次中的按域名范围搜索，详见queries；不是本轮新查询。",
+      "queries": [
+        {
+          "q": "2026 9 推免 更正 延期",
+          "domains": [
+            "yjsy.hbu.edu.cn"
+          ]
+        },
+        {
+          "q": "2026 9 推免 更正 延期",
+          "domains": [
+            "law.hbu.cn",
+            "law.hbu.edu.cn"
+          ]
+        },
+        {
+          "q": "2026 9 注册 补退选 更正 延期",
+          "domains": [
+            "jwc.hbu.cn"
+          ]
+        }
+      ],
+      "candidate_urls": [
+        "https://jwc.hbu.cn/index/tzgg.htm",
+        "https://jwc.hbu.cn/info/1108/12056.htm",
+        "https://jwc.hbu.cn/info/1108/12352.htm",
+        "https://jwc.hbu.cn/info/1108/12360.htm",
+        "https://jwc.hbu.cn/info/1108/12380.htm",
+        "https://jwc.hbu.cn/info/1108/12390.htm",
+        "https://jwc.hbu.cn/info/1108/12394.htm",
+        "https://jwc.hbu.cn/info/1108/12398.htm",
+        "https://jwc.hbu.cn/info/1108/12405.htm",
+        "https://jwc.hbu.cn/info/1108/12419.htm",
+        "https://jwc.hbu.cn/info/1168/11501.htm",
+        "https://jwc.hbu.cn/info/1245/11949.htm",
+        "https://law.hbu.cn/",
+        "https://law.hbu.cn/bkjx/index.jhtml",
+        "https://law.hbu.cn/flssjy/index.jhtml",
+        "https://law.hbu.cn/glwj/index.jhtml",
+        "https://law.hbu.cn/kxyj/index.jhtml",
+        "https://law.hbu.cn/kycg/index.jhtml",
+        "https://law.hbu.cn/kylx/index.jhtml",
+        "https://law.hbu.cn/ssyjsjy/index.jhtml",
+        "https://law.hbu.cn/szdw/index.jhtml",
+        "https://law.hbu.cn/xygk/index.jhtml",
+        "https://law.hbu.edu.cn/",
+        "https://law.hbu.edu.cn/ssyjsjy/index.jhtml",
+        "https://yjsy.hbu.edu.cn/2024hebeidaxueyanjiushengxuejiguanliguiding.pdf",
+        "https://yjsy.hbu.edu.cn/index.htm",
+        "https://yjsy.hbu.edu.cn/index/tztg.htm",
+        "https://yjsy.hbu.edu.cn/index/tztg/27.htm",
+        "https://yjsy.hbu.edu.cn/info/1102/4439.htm",
+        "https://yjsy.hbu.edu.cn/info/1104/4427.htm",
+        "https://yjsy.hbu.edu.cn/info/1159/3535.htm",
+        "https://yjsy.hbu.edu.cn/info/1159/4046.htm",
+        "https://yjsy.hbu.edu.cn/info/1159/4065.htm",
+        "https://yjsy.hbu.edu.cn/info/1159/4428.htm",
+        "https://yjsy.hbu.edu.cn/info/1159/4440.htm",
+        "https://yjsy.hbu.edu.cn/zsgz/sszs.htm",
+        "https://yjsy.hbu.edu.cn/zsgz/xxgk.htm"
+      ],
+      "observed_at_utc": "2026-10-28T16:52:23Z",
+      "finished_at_utc": "2026-10-28T16:52:27Z",
+      "trace_refs": [],
+      "observation_state": "unknown",
+      "limitation": "明确复用历史批次记录；无新的搜索或当前attempt绑定，不以此声称本轮独立发现。",
+      "historical_record_sha256": "ebbe6a6abbc0f37d265dc44fd794593c0df9bc74a125651df9f989b15959b950"
+    }
+  ],
+  "carriers": [
+    {
+      "carrier_id": "identity-colleges",
+      "url": "https://www.hbu.edu.cn/yxsz1.htm",
+      "requested_url": "https://www.hbu.edu.cn/yxsz1.htm",
+      "final_url": "https://www.hbu.edu.cn/yxsz1.htm",
+      "department": null,
+      "title": "河北大学院系设置",
+      "parent_carrier_ids": [],
+      "access_status": "read_excerpt",
+      "accessed_at": "2026-10-28T16:37:46.422224Z",
+      "unknown_reason": null,
+      "observed_content_kind": "other",
+      "access": {
+        "attempted": true,
+        "started_at_utc": "2026-10-28T16:37:46.065582Z",
+        "finished_at_utc": "2026-10-28T16:37:46.422224Z",
+        "http_status": 200,
+        "observed_media_type": "text/html",
+        "body_sha256_candidate_reported": "b193e63762adeed96d57b9ac4bfe445da27ca47285d127654018e2f45323f7e1",
+        "read_status": "read_relevant_body",
+        "trace_refs": [],
+        "observation_state": "unknown",
+        "error_or_limit": "重开已保存原件，读取本整理所用节点；无新的网络访问。"
+      },
+      "source_observations": [
+        {
+          "original_GET_started_at": "2026-10-28T16:37:46.065582Z",
+          "original_GET_finished_at": "2026-10-28T16:37:46.422224Z",
+          "body_sha256": "b193e63762adeed96d57b9ac4bfe445da27ca47285d127654018e2f45323f7e1",
+          "receipt_sha256": "14ec87aab26110e56c497b3fbd6261a30c25e6d9bd5b89e1fed9bb82e3f84684",
+          "stage": "historical_public_GET_reused_offline"
+        },
+        {
+          "original_GET_started_at": "2026-10-28T16:14:17.156294Z",
+          "original_GET_finished_at": "2026-10-28T16:14:18.854379Z",
+          "body_sha256": "b193e63762adeed96d57b9ac4bfe445da27ca47285d127654018e2f45323f7e1",
+          "receipt_sha256": "a0d4b4bf176e8877a6dfb13c129a8338409ac29c692114164a07b925dbf11ff6",
+          "stage": "another_historical_GET_same_official_carrier_not_independent_substantive_support"
+        }
+      ],
+      "content_lineage": "同一官方来源的重复采集不构成独立支持；以实际文书关系归并。",
+      "citations": [
+        {
+          "citation_id": "H033C078",
+          "quote": "法学院/纪检监察学院",
+          "locator": {
+            "type": "html",
+            "xpath": "/html/body/div[5]/div/ul/li[8]/a"
+          },
+          "supports_fields": [
+            "/research_context/official_identity/law_school"
+          ],
+          "relation": "supports",
+          "quote_normalization": "html_text_nodes_concatenated_then_unicode_whitespace_collapsed",
+          "evidence_kind": "actual_html_body"
+        },
+        {
+          "citation_id": "H033C079",
+          "quote": "研究生院(党委研究生工作部)",
+          "locator": {
+            "type": "html",
+            "xpath": "/html/body/div[5]/div/ul/li[29]/a"
+          },
+          "supports_fields": [
+            "/research_context/official_identity/graduate_school"
+          ],
+          "relation": "supports",
+          "quote_normalization": "html_text_nodes_concatenated_then_unicode_whitespace_collapsed",
+          "evidence_kind": "actual_html_body"
+        }
+      ]
+    },
+    {
+      "carrier_id": "identity-orgs",
+      "url": "https://www.hbu.edu.cn/xxgk/zzjg.htm",
+      "requested_url": "https://www.hbu.edu.cn/xxgk/zzjg.htm",
+      "final_url": "https://www.hbu.edu.cn/xxgk/zzjg.htm",
+      "department": null,
+      "title": "河北大学组织机构",
+      "parent_carrier_ids": [],
+      "access_status": "read_excerpt",
+      "accessed_at": "2026-10-28T16:37:46.333025Z",
+      "unknown_reason": null,
+      "observed_content_kind": "other",
+      "access": {
+        "attempted": true,
+        "started_at_utc": "2026-10-28T16:37:46.034637Z",
+        "finished_at_utc": "2026-10-28T16:37:46.333025Z",
+        "http_status": 200,
+        "observed_media_type": "text/html",
+        "body_sha256_candidate_reported": "58e1c6e5958be47cb3a2594bf831a337d96d4d000e0b592cf70bedbf3bfa0d8f",
+        "read_status": "read_relevant_body",
+        "trace_refs": [],
+        "observation_state": "unknown",
+        "error_or_limit": "重开已保存原件，读取本整理所用节点；无新的网络访问。"
+      },
+      "source_observations": [
+        {
+          "original_GET_started_at": "2026-10-28T16:37:46.034637Z",
+          "original_GET_finished_at": "2026-10-28T16:37:46.333025Z",
+          "body_sha256": "58e1c6e5958be47cb3a2594bf831a337d96d4d000e0b592cf70bedbf3bfa0d8f",
+          "receipt_sha256": "f01e6f8f384a90cdf8400aee480974e39966887f2b084c892f7519df851249eb",
+          "stage": "historical_public_GET_reused_offline"
+        },
+        {
+          "original_GET_started_at": "2026-10-28T16:14:17.156457Z",
+          "original_GET_finished_at": "2026-10-28T16:14:17.512032Z",
+          "body_sha256": "58e1c6e5958be47cb3a2594bf831a337d96d4d000e0b592cf70bedbf3bfa0d8f",
+          "receipt_sha256": "c5e27723ec7c3285f0af251314e080ef721873835dc07486303f03b55848960a",
+          "stage": "another_historical_GET_same_official_carrier_not_independent_substantive_support"
+        }
+      ],
+      "content_lineage": "同一官方来源的重复采集不构成独立支持；以实际文书关系归并。",
+      "citations": [
+        {
+          "citation_id": "H033C080",
+          "quote": "教务处",
+          "locator": {
+            "type": "html",
+            "xpath": "/html/body/div[5]/div/div[1]/div[2]/a[10]"
+          },
+          "supports_fields": [
+            "/research_context/official_identity/academic_affairs"
+          ],
+          "relation": "supports",
+          "quote_normalization": "html_text_nodes_concatenated_then_unicode_whitespace_collapsed",
+          "evidence_kind": "actual_html_body"
+        }
+      ]
+    },
+    {
+      "carrier_id": "seed-law-https",
+      "url": "https://law.hbu.edu.cn/",
+      "requested_url": "https://law.hbu.edu.cn/",
+      "final_url": "https://law.hbu.edu.cn/",
+      "department": "law",
+      "title": "河北大学法学院官方入口",
+      "parent_carrier_ids": [],
+      "access_status": "read_excerpt",
+      "accessed_at": "2026-10-28T16:37:46.001984Z",
+      "unknown_reason": null,
+      "observed_content_kind": "other",
+      "access": {
+        "attempted": true,
+        "started_at_utc": "2026-10-28T16:37:45.713662Z",
+        "finished_at_utc": "2026-10-28T16:37:46.001984Z",
+        "http_status": 200,
+        "observed_media_type": "text/html",
+        "body_sha256_candidate_reported": "c8a06b54923fb0a8af3d07cbd4a411fa1749eebb080791b979376b7e55bd2425",
+        "read_status": "read_relevant_body",
+        "trace_refs": [],
+        "observation_state": "unknown",
+        "error_or_limit": "重开已保存原件，读取本整理所用节点；无新的网络访问。"
+      },
+      "source_observations": [
+        {
+          "original_GET_started_at": "2026-10-28T16:37:45.713662Z",
+          "original_GET_finished_at": "2026-10-28T16:37:46.001984Z",
+          "body_sha256": "c8a06b54923fb0a8af3d07cbd4a411fa1749eebb080791b979376b7e55bd2425",
+          "receipt_sha256": "24927483a9f51f679da8511350f43302b85f701ed022c617c156d2d72c6c56a9",
+          "stage": "historical_public_GET_reused_offline"
+        },
+        {
+          "original_GET_started_at": "2026-10-28T16:14:17.155599Z",
+          "original_GET_finished_at": "2026-10-28T16:14:18.477958Z",
+          "body_sha256": "c8a06b54923fb0a8af3d07cbd4a411fa1749eebb080791b979376b7e55bd2425",
+          "receipt_sha256": "3be3386e4f7adfd6ec58ce90118ba4b5291302ff1a94a821764254ac595add29",
+          "stage": "another_historical_GET_same_official_carrier_not_independent_substantive_support"
+        }
+      ],
+      "content_lineage": "同一官方来源的重复采集不构成独立支持；以实际文书关系归并。",
+      "citations": [
+        {
+          "citation_id": "H033C081",
+          "quote": "查看更多",
+          "locator": {
+            "type": "html",
+            "xpath": "/html/body/div[2]/div[3]/div[1]/h3/span[2]/a"
+          },
+          "supports_fields": [
+            "/research_context/official_identity/alias_navigation_evidence"
+          ],
+          "relation": "supports",
+          "quote_normalization": "html_text_nodes_concatenated_then_unicode_whitespace_collapsed",
+          "evidence_kind": "actual_html_body"
+        }
+      ]
+    },
+    {
+      "carrier_id": "list-law-teaching-http",
+      "url": "http://law.hbu.cn/jxgz/index.jhtml",
+      "requested_url": "http://law.hbu.cn/jxgz/index.jhtml",
+      "final_url": "http://law.hbu.cn/jxgz/index.jhtml",
+      "department": "law",
+      "title": "法学院教学工作目录",
+      "parent_carrier_ids": [],
+      "access_status": "read_excerpt",
+      "accessed_at": "2026-10-28T16:39:29.927903Z",
+      "unknown_reason": null,
+      "observed_content_kind": "other",
+      "access": {
+        "attempted": true,
+        "started_at_utc": "2026-10-28T16:39:29.719267Z",
+        "finished_at_utc": "2026-10-28T16:39:29.927903Z",
+        "http_status": 200,
+        "observed_media_type": "text/html",
+        "body_sha256_candidate_reported": "ca300b56c9001573029dba811bcd38d05cc2f62de6d146d68554b4beb186a423",
+        "read_status": "read_relevant_body",
+        "trace_refs": [],
+        "observation_state": "unknown",
+        "error_or_limit": "重开已保存原件，读取本整理所用节点；无新的网络访问。"
+      },
+      "source_observations": [
+        {
+          "original_GET_started_at": "2026-10-28T16:39:29.719267Z",
+          "original_GET_finished_at": "2026-10-28T16:39:29.927903Z",
+          "body_sha256": "ca300b56c9001573029dba811bcd38d05cc2f62de6d146d68554b4beb186a423",
+          "receipt_sha256": "61c9c9ee01713a630878d608d1a2b47097397dec1df64d1ead728fab003734be",
+          "stage": "historical_public_GET_reused_offline"
+        }
+      ],
+      "content_lineage": "同一官方来源的重复采集不构成独立支持；以实际文书关系归并。",
+      "citations": []
+    },
+    {
+      "carrier_id": "notice-jwc-12352",
+      "url": "https://jwc.hbu.cn/info/1108/12352.htm",
+      "requested_url": "https://jwc.hbu.cn/info/1108/12352.htm",
+      "final_url": "https://jwc.hbu.cn/info/1108/12352.htm",
+      "department": "jwc",
+      "title": "关于组织2026-2027学年秋学期本科生补（缓）考的通知",
+      "parent_carrier_ids": [],
+      "access_status": "read_excerpt",
+      "accessed_at": "2026-10-28T16:42:02.139826Z",
+      "unknown_reason": null,
+      "observed_content_kind": "html_notice",
+      "access": {
+        "attempted": true,
+        "started_at_utc": "2026-10-28T16:42:01.682914Z",
+        "finished_at_utc": "2026-10-28T16:42:02.139826Z",
+        "http_status": 200,
+        "observed_media_type": "text/html",
+        "body_sha256_candidate_reported": "1da039b1d1ee7deedbf848fe19d0c2da4a12c70aad22ca1b69d27a43991b64e0",
+        "read_status": "read_relevant_body",
+        "trace_refs": [],
+        "observation_state": "unknown",
+        "error_or_limit": "重开已保存原件，读取本整理所用节点；无新的网络访问。"
+      },
+      "source_observations": [
+        {
+          "original_GET_started_at": "2026-10-28T16:42:01.682914Z",
+          "original_GET_finished_at": "2026-10-28T16:42:02.139826Z",
+          "body_sha256": "1da039b1d1ee7deedbf848fe19d0c2da4a12c70aad22ca1b69d27a43991b64e0",
+          "receipt_sha256": "a3276e0267f5b7331166a52e7b324ff82879eb7fb62a70bfd45ca384cf995974",
+          "stage": "historical_public_GET_reused_offline"
+        }
+      ],
+      "content_lineage": "同一官方来源的重复采集不构成独立支持；以实际文书关系归并。",
+      "citations": [
+        {
+          "citation_id": "H033C053",
+          "quote": "2026-08-31",
+          "locator": {
+            "type": "html",
+            "xpath": "/html/body/div[4]/div/div[2]/form/div[2]"
+          },
+          "supports_fields": [
+            "/claims/25/statement",
+            "/documents/0/date_fields/0"
+          ],
+          "relation": "supports",
+          "quote_normalization": "html_text_nodes_concatenated_then_unicode_whitespace_collapsed",
+          "evidence_kind": "actual_html_body"
+        }
+      ]
+    },
+    {
+      "carrier_id": "notice-jwc-12360",
+      "url": "https://jwc.hbu.cn/info/1108/12360.htm",
+      "requested_url": "https://jwc.hbu.cn/info/1108/12360.htm",
+      "final_url": "https://jwc.hbu.cn/info/1108/12360.htm",
+      "department": "jwc",
+      "title": "关于2026—2027学年秋学期学生补退选选课及课程替代的通知",
+      "parent_carrier_ids": [],
+      "access_status": "read_excerpt",
+      "accessed_at": "2026-10-28T16:42:02.175009Z",
+      "unknown_reason": null,
+      "observed_content_kind": "html_notice",
+      "access": {
+        "attempted": true,
+        "started_at_utc": "2026-10-28T16:42:01.715694Z",
+        "finished_at_utc": "2026-10-28T16:42:02.175009Z",
+        "http_status": 200,
+        "observed_media_type": "text/html",
+        "body_sha256_candidate_reported": "12595f79f1dd8a3df6f7e5ad422e08c882fe61d343a60f236f0c63e01a90bb77",
+        "read_status": "read_relevant_body",
+        "trace_refs": [],
+        "observation_state": "unknown",
+        "error_or_limit": "重开已保存原件，读取本整理所用节点；无新的网络访问。"
+      },
+      "source_observations": [
+        {
+          "original_GET_started_at": "2026-10-28T16:42:01.715694Z",
+          "original_GET_finished_at": "2026-10-28T16:42:02.175009Z",
+          "body_sha256": "12595f79f1dd8a3df6f7e5ad422e08c882fe61d343a60f236f0c63e01a90bb77",
+          "receipt_sha256": "04aec583ac88fcbd734c20fcd479b740577d8ba21d95f80a257a44b808a87932",
+          "stage": "historical_public_GET_reused_offline"
+        },
+        {
+          "original_GET_started_at": "2026-10-28T16:15:29.828143Z",
+          "original_GET_finished_at": "2026-10-28T16:15:30.226961Z",
+          "body_sha256": "12595f79f1dd8a3df6f7e5ad422e08c882fe61d343a60f236f0c63e01a90bb77",
+          "receipt_sha256": "d9895df3aac34e0cb951aaaea3bfb0466d8e11cb36a547ca2490b451024bdb12",
+          "stage": "another_historical_GET_same_official_carrier_not_independent_substantive_support"
+        }
+      ],
+      "content_lineage": "同一官方来源的重复采集不构成独立支持；以实际文书关系归并。",
+      "citations": [
+        {
+          "citation_id": "H033C037",
+          "quote": "9 月 7 日9时—— 9 月 8 日8时， 202 2 级（五年制）、202 3 级学生",
+          "locator": {
+            "type": "html",
+            "xpath": "/html/body/div[4]/div/div[2]/form/div[3]/div/div/p[5]"
+          },
+          "supports_fields": [
+            "/claims/16/statement",
+            "/actions/1/date_fields/0"
+          ],
+          "relation": "supports",
+          "quote_normalization": "html_text_nodes_joined_with_space_then_unicode_whitespace_collapsed",
+          "evidence_kind": "actual_html_body"
+        },
+        {
+          "citation_id": "H033C038",
+          "quote": "9 月 10 日9时—— 9 月 14 日8时 ，所有学生 （ 2026级学生除外 ）",
+          "locator": {
+            "type": "html",
+            "xpath": "/html/body/div[4]/div/div[2]/form/div[3]/div/div/p[8]"
+          },
+          "supports_fields": [
+            "/claims/16/statement",
+            "/actions/1/date_fields/1"
+          ],
+          "relation": "supports",
+          "quote_normalization": "html_text_nodes_joined_with_space_then_unicode_whitespace_collapsed",
+          "evidence_kind": "actual_html_body"
+        },
+        {
+          "citation_id": "H033C039",
+          "quote": "（四）选课期间，每天17时—18时进行选课数据备份，届时将临时关闭选课系统。",
+          "locator": {
+            "type": "html",
+            "xpath": "/html/body/div[4]/div/div[2]/form/div[3]/div/div/p[19]"
+          },
+          "supports_fields": [
+            "/claims/17/statement",
+            "/actions/1/date_fields/2"
+          ],
+          "relation": "supports",
+          "quote_normalization": "html_text_nodes_concatenated_then_unicode_whitespace_collapsed",
+          "evidence_kind": "actual_html_body"
+        },
+        {
+          "citation_id": "H033C040",
+          "quote": "学生办理课程替代的时间截止到9月9日18时。学院审批时间截止到9月11日18时。",
+          "locator": {
+            "type": "html",
+            "xpath": "/html/body/div[4]/div/div[2]/form/div[3]/div/div/p[21]"
+          },
+          "supports_fields": [
+            "/claims/18/statement",
+            "/actions/2/date_fields/0",
+            "/actions/3/date_fields/0",
+            "/relations/7/explanation"
+          ],
+          "relation": "supports",
+          "quote_normalization": "html_text_nodes_concatenated_then_unicode_whitespace_collapsed",
+          "evidence_kind": "actual_html_body"
+        },
+        {
+          "citation_id": "H033C058",
+          "quote": "2026-09-02",
+          "locator": {
+            "type": "html",
+            "xpath": "/html/body/div[4]/div/div[2]/form/div[2]"
+          },
+          "supports_fields": [
+            "/documents/1/date_fields/0"
+          ],
+          "relation": "supports",
+          "quote_normalization": "html_text_nodes_concatenated_then_unicode_whitespace_collapsed",
+          "evidence_kind": "actual_html_body"
+        },
+        {
+          "citation_id": "H033C077",
+          "quote": "202 6 年 9 月 3 日",
+          "locator": {
+            "type": "html",
+            "xpath": "/html/body/div[4]/div/div[2]/form/div[3]/div/div/p[25]"
+          },
+          "supports_fields": [
+            "/documents/1/date_fields/1"
+          ],
+          "relation": "supports",
+          "quote_normalization": "html_text_nodes_joined_with_space_then_unicode_whitespace_collapsed",
+          "evidence_kind": "actual_html_body"
+        }
+      ]
+    },
+    {
+      "carrier_id": "notice-jwc-12364",
+      "url": "https://jwc.hbu.cn/info/1108/12364.htm",
+      "requested_url": "https://jwc.hbu.cn/info/1108/12364.htm",
+      "final_url": "https://jwc.hbu.cn/info/1108/12364.htm",
+      "department": "jwc",
+      "title": "关于公示2027年推荐优秀应届本科毕业生免试攻读研究生名单的通知",
+      "parent_carrier_ids": [],
+      "access_status": "read_excerpt",
+      "accessed_at": "2026-10-28T16:52:27.577712Z",
+      "unknown_reason": null,
+      "observed_content_kind": "html_notice",
+      "access": {
+        "attempted": true,
+        "started_at_utc": "2026-10-28T16:52:27.281045Z",
+        "finished_at_utc": "2026-10-28T16:52:27.577712Z",
+        "http_status": 200,
+        "observed_media_type": "text/html",
+        "body_sha256_candidate_reported": "b05aff588f5151301c8107af37751c9f1bb3f6a8d2e066f6d3429c6d1a7a9706",
+        "read_status": "read_relevant_body",
+        "trace_refs": [],
+        "observation_state": "unknown",
+        "error_or_limit": "重开已保存原件，读取本整理所用节点；无新的网络访问。"
+      },
+      "source_observations": [
+        {
+          "original_GET_started_at": "2026-10-28T16:52:27.281045Z",
+          "original_GET_finished_at": "2026-10-28T16:52:27.577712Z",
+          "body_sha256": "b05aff588f5151301c8107af37751c9f1bb3f6a8d2e066f6d3429c6d1a7a9706",
+          "receipt_sha256": "c2fbb0a06d102ebad1c0c7e995cc8473c8be37f77a07238e45034f77c9290b59",
+          "stage": "historical_public_GET_reused_offline"
+        }
+      ],
+      "content_lineage": "同一官方来源的重复采集不构成独立支持；以实际文书关系归并。",
+      "citations": [
+        {
+          "citation_id": "H033C011",
+          "quote": "经学院遴选推荐、学校审议研究，确定了推荐优秀应届本科毕业生免试攻读研究生名单，现予以公示，公示时间为9月9日12:00至9月16日12:00。",
+          "locator": {
+            "type": "html",
+            "xpath": "/html/body/div[4]/div/div[2]/form/div[3]/div/p[2]"
+          },
+          "supports_fields": [
+            "/claims/5/statement",
+            "/actions/0/date_fields/1",
+            "/relations/3/explanation"
+          ],
+          "relation": "supports",
+          "quote_normalization": "html_text_nodes_concatenated_then_unicode_whitespace_collapsed",
+          "evidence_kind": "actual_html_body"
+        },
+        {
+          "citation_id": "H033C059",
+          "quote": "2026-09-09",
+          "locator": {
+            "type": "html",
+            "xpath": "/html/body/div[4]/div/div[2]/form/div[2]"
+          },
+          "supports_fields": [
+            "/documents/2/date_fields/0"
+          ],
+          "relation": "supports",
+          "quote_normalization": "html_text_nodes_concatenated_then_unicode_whitespace_collapsed",
+          "evidence_kind": "actual_html_body"
+        }
+      ]
+    },
+    {
+      "carrier_id": "notice-jwc-12386",
+      "url": "https://jwc.hbu.cn/info/1108/12386.htm",
+      "requested_url": "https://jwc.hbu.cn/info/1108/12386.htm",
+      "final_url": "https://jwc.hbu.cn/info/1108/12386.htm",
+      "department": "jwc",
+      "title": "关于2026-2027学年秋学期补退选后拟停开课程(课堂)的通知",
+      "parent_carrier_ids": [],
+      "access_status": "read_excerpt",
+      "accessed_at": "2026-10-28T16:47:24.325956Z",
+      "unknown_reason": null,
+      "observed_content_kind": "html_notice",
+      "access": {
+        "attempted": true,
+        "started_at_utc": "2026-10-28T16:47:24.035686Z",
+        "finished_at_utc": "2026-10-28T16:47:24.325956Z",
+        "http_status": 200,
+        "observed_media_type": "text/html",
+        "body_sha256_candidate_reported": "e36d430746c9e7b01940e1f6b38f9e11b5ab277a4fdc989102583096a5b0a9e6",
+        "read_status": "read_relevant_body",
+        "trace_refs": [],
+        "observation_state": "unknown",
+        "error_or_limit": "重开已保存原件，读取本整理所用节点；无新的网络访问。"
+      },
+      "source_observations": [
+        {
+          "original_GET_started_at": "2026-10-28T16:47:24.035686Z",
+          "original_GET_finished_at": "2026-10-28T16:47:24.325956Z",
+          "body_sha256": "e36d430746c9e7b01940e1f6b38f9e11b5ab277a4fdc989102583096a5b0a9e6",
+          "receipt_sha256": "c797aab9e32192fd1362e65ea4361018028258df5482f5db5b770391fcfe32e1",
+          "stage": "historical_public_GET_reused_offline"
+        }
+      ],
+      "content_lineage": "同一官方来源的重复采集不构成独立支持；以实际文书关系归并。",
+      "citations": [
+        {
+          "citation_id": "H033C041",
+          "quote": "9月15日 18:00",
+          "locator": {
+            "type": "html",
+            "xpath": "/html/body/div[4]/div/div[2]/form/div[3]/div/div/p[5]"
+          },
+          "supports_fields": [
+            "/claims/19/statement",
+            "/actions/4/date_fields/0",
+            "/relations/8/explanation"
+          ],
+          "relation": "supports",
+          "quote_normalization": "html_text_nodes_concatenated_then_unicode_whitespace_collapsed",
+          "evidence_kind": "actual_html_body"
+        },
+        {
+          "citation_id": "H033C042",
+          "quote": "2、如果课程停开，需在《2026-2027学年秋学期补退选后拟停开课程统计表》（附件1）中“是否停开”栏注明“停开”字样，不标注视为该课程继续开设。",
+          "locator": {
+            "type": "html",
+            "xpath": "/html/body/div[4]/div/div[2]/form/div[3]/div/div/p[4]"
+          },
+          "supports_fields": [
+            "/claims/19/statement",
+            "/relations/8/explanation"
+          ],
+          "relation": "supports",
+          "quote_normalization": "html_text_nodes_concatenated_then_unicode_whitespace_collapsed",
+          "evidence_kind": "actual_html_body"
+        },
+        {
+          "citation_id": "H033C060",
+          "quote": "2026-09-14",
+          "locator": {
+            "type": "html",
+            "xpath": "/html/body/div[4]/div/div[2]/form/div[2]"
+          },
+          "supports_fields": [
+            "/documents/3/date_fields/0"
+          ],
+          "relation": "supports",
+          "quote_normalization": "html_text_nodes_concatenated_then_unicode_whitespace_collapsed",
+          "evidence_kind": "actual_html_body"
+        }
+      ]
+    },
+    {
+      "carrier_id": "notice-jwc-12394",
+      "url": "https://jwc.hbu.cn/info/1108/12394.htm",
+      "requested_url": "https://jwc.hbu.cn/info/1108/12394.htm",
+      "final_url": "https://jwc.hbu.cn/info/1108/12394.htm",
+      "department": "jwc",
+      "title": "关于公布2026-2027学年秋学期补退选后停开课程（课堂）的通知",
+      "parent_carrier_ids": [],
+      "access_status": "read_excerpt",
+      "accessed_at": "2026-10-28T16:47:24.492225Z",
+      "unknown_reason": null,
+      "observed_content_kind": "html_notice",
+      "access": {
+        "attempted": true,
+        "started_at_utc": "2026-10-28T16:47:24.036110Z",
+        "finished_at_utc": "2026-10-28T16:47:24.492225Z",
+        "http_status": 200,
+        "observed_media_type": "text/html",
+        "body_sha256_candidate_reported": "98c5d14aefeebda3f3dafde1567412d22abda04e74cb13457fc05b963d3bd7fc",
+        "read_status": "read_relevant_body",
+        "trace_refs": [],
+        "observation_state": "unknown",
+        "error_or_limit": "重开已保存原件，读取本整理所用节点；无新的网络访问。"
+      },
+      "source_observations": [
+        {
+          "original_GET_started_at": "2026-10-28T16:47:24.036110Z",
+          "original_GET_finished_at": "2026-10-28T16:47:24.492225Z",
+          "body_sha256": "98c5d14aefeebda3f3dafde1567412d22abda04e74cb13457fc05b963d3bd7fc",
+          "receipt_sha256": "937dca39a6df1bf12c36044549cbadda389e163b692565a22868d689a10dd8d3",
+          "stage": "historical_public_GET_reused_offline"
+        }
+      ],
+      "content_lineage": "同一官方来源的重复采集不构成独立支持；以实际文书关系归并。",
+      "citations": [
+        {
+          "citation_id": "H033C043",
+          "quote": "已选停开课程（课堂）的学生（名单见附件2），其个人课表中的对应课程将同步删除，请相关学生及时查看并调整学习计划。",
+          "locator": {
+            "type": "html",
+            "xpath": "/html/body/div[4]/div/div[2]/form/div[3]/div/div/p[6]"
+          },
+          "supports_fields": [
+            "/claims/20/statement",
+            "/relations/8/explanation"
+          ],
+          "relation": "supports",
+          "quote_normalization": "html_text_nodes_concatenated_then_unicode_whitespace_collapsed",
+          "evidence_kind": "actual_html_body"
+        },
+        {
+          "citation_id": "H033C061",
+          "quote": "2026-09-16",
+          "locator": {
+            "type": "html",
+            "xpath": "/html/body/div[4]/div/div[2]/form/div[2]"
+          },
+          "supports_fields": [
+            "/documents/4/date_fields/0"
+          ],
+          "relation": "supports",
+          "quote_normalization": "html_text_nodes_concatenated_then_unicode_whitespace_collapsed",
+          "evidence_kind": "actual_html_body"
+        }
+      ]
+    },
+    {
+      "carrier_id": "notice-jwc-12398",
+      "url": "https://jwc.hbu.cn/info/1108/12398.htm",
+      "requested_url": "https://jwc.hbu.cn/info/1108/12398.htm",
+      "final_url": "https://jwc.hbu.cn/info/1108/12398.htm",
+      "department": "jwc",
+      "title": "关于2026-2027学年秋学期本科生电子注册的通知",
+      "parent_carrier_ids": [],
+      "access_status": "read_excerpt",
+      "accessed_at": "2026-10-28T16:39:30.274619Z",
+      "unknown_reason": null,
+      "observed_content_kind": "html_notice",
+      "access": {
+        "attempted": true,
+        "started_at_utc": "2026-10-28T16:39:30.013000Z",
+        "finished_at_utc": "2026-10-28T16:39:30.274619Z",
+        "http_status": 200,
+        "observed_media_type": "text/html",
+        "body_sha256_candidate_reported": "93712301eed960f079eab3f123dd23e2d812d43cd118f90c75116bea6e9f6d1f",
+        "read_status": "read_relevant_body",
+        "trace_refs": [],
+        "observation_state": "unknown",
+        "error_or_limit": "重开已保存原件，读取本整理所用节点；无新的网络访问。"
+      },
+      "source_observations": [
+        {
+          "original_GET_started_at": "2026-10-28T16:39:30.013000Z",
+          "original_GET_finished_at": "2026-10-28T16:39:30.274619Z",
+          "body_sha256": "93712301eed960f079eab3f123dd23e2d812d43cd118f90c75116bea6e9f6d1f",
+          "receipt_sha256": "4405439e28d2249fa8ae3985263eb502982e74cf4172b7a0ba06ddfaf431a91b",
+          "stage": "historical_public_GET_reused_offline"
+        },
+        {
+          "original_GET_started_at": "2026-10-28T16:15:29.920429Z",
+          "original_GET_finished_at": "2026-10-28T16:15:30.226472Z",
+          "body_sha256": "93712301eed960f079eab3f123dd23e2d812d43cd118f90c75116bea6e9f6d1f",
+          "receipt_sha256": "9480fe05eff95faf315e80a2a71b732b77839170b0bc9047248b81f01610351d",
+          "stage": "another_historical_GET_same_official_carrier_not_independent_substantive_support"
+        }
+      ],
+      "content_lineage": "同一官方来源的重复采集不构成独立支持；以实际文书关系归并。",
+      "citations": [
+        {
+          "citation_id": "H033C044",
+          "quote": "9月20日12:00---9月22日18:00。",
+          "locator": {
+            "type": "html",
+            "xpath": "/html/body/div[4]/div/div[2]/form/div[3]/div/div/p[14]"
+          },
+          "supports_fields": [
+            "/claims/21/statement",
+            "/actions/6/date_fields/0",
+            "/relations/9/explanation"
+          ],
+          "relation": "supports",
+          "quote_normalization": "html_text_nodes_concatenated_then_unicode_whitespace_collapsed",
+          "evidence_kind": "actual_html_body"
+        },
+        {
+          "citation_id": "H033C045",
+          "quote": "已交纳2026-2027学年学费的学生才可以进行电子注册。",
+          "locator": {
+            "type": "html",
+            "xpath": "/html/body/div[4]/div/div[2]/form/div[3]/div/div/p[6]"
+          },
+          "supports_fields": [
+            "/claims/21/statement",
+            "/relations/9/explanation"
+          ],
+          "relation": "supports",
+          "quote_normalization": "html_text_nodes_concatenated_then_unicode_whitespace_collapsed",
+          "evidence_kind": "actual_html_body"
+        },
+        {
+          "citation_id": "H033C046",
+          "quote": "2022级（五年制）、2023级 --- 2026级在籍本科生。",
+          "locator": {
+            "type": "html",
+            "xpath": "/html/body/div[4]/div/div[2]/form/div[3]/div/div/p[4]"
+          },
+          "supports_fields": [
+            "/claims/21/statement",
+            "/relations/9/explanation"
+          ],
+          "relation": "supports",
+          "quote_normalization": "html_text_nodes_joined_with_space_then_unicode_whitespace_collapsed",
+          "evidence_kind": "actual_html_body"
+        },
+        {
+          "citation_id": "H033C062",
+          "quote": "2026-09-20",
+          "locator": {
+            "type": "html",
+            "xpath": "/html/body/div[4]/div/div[2]/form/div[2]"
+          },
+          "supports_fields": [
+            "/documents/5/date_fields/0"
+          ],
+          "relation": "supports",
+          "quote_normalization": "html_text_nodes_concatenated_then_unicode_whitespace_collapsed",
+          "evidence_kind": "actual_html_body"
+        }
+      ]
+    },
+    {
+      "carrier_id": "notice-jwc-12405",
+      "url": "https://jwc.hbu.cn/info/1108/12405.htm",
+      "requested_url": "https://jwc.hbu.cn/info/1108/12405.htm",
+      "final_url": "https://jwc.hbu.cn/info/1108/12405.htm",
+      "department": "jwc",
+      "title": "关于办理2026-2027学年秋学期缓考学生选课的通知",
+      "parent_carrier_ids": [],
+      "access_status": "read_excerpt",
+      "accessed_at": "2026-10-28T16:39:30.397879Z",
+      "unknown_reason": null,
+      "observed_content_kind": "html_notice",
+      "access": {
+        "attempted": true,
+        "started_at_utc": "2026-10-28T16:39:30.118486Z",
+        "finished_at_utc": "2026-10-28T16:39:30.397879Z",
+        "http_status": 200,
+        "observed_media_type": "text/html",
+        "body_sha256_candidate_reported": "2498243512a742433ec82ef4970783eb2e9be7784fa5c94dda01ead59d7045d9",
+        "read_status": "read_relevant_body",
+        "trace_refs": [],
+        "observation_state": "unknown",
+        "error_or_limit": "重开已保存原件，读取本整理所用节点；无新的网络访问。"
+      },
+      "source_observations": [
+        {
+          "original_GET_started_at": "2026-10-28T16:39:30.118486Z",
+          "original_GET_finished_at": "2026-10-28T16:39:30.397879Z",
+          "body_sha256": "2498243512a742433ec82ef4970783eb2e9be7784fa5c94dda01ead59d7045d9",
+          "receipt_sha256": "97aa6a0320074a7938cbd3509e4d542f1782db03c10bc05c288b8a6e9532e4b5",
+          "stage": "historical_public_GET_reused_offline"
+        }
+      ],
+      "content_lineage": "同一官方来源的重复采集不构成独立支持；以实际文书关系归并。",
+      "citations": [
+        {
+          "citation_id": "H033C049",
+          "quote": "9 月 23 日18:00",
+          "locator": {
+            "type": "html",
+            "xpath": "/html/body/div[4]/div/div[2]/form/div[3]/div/div/p[14]"
+          },
+          "supports_fields": [
+            "/claims/23/statement",
+            "/actions/8/date_fields/0"
+          ],
+          "relation": "supports",
+          "quote_normalization": "html_text_nodes_joined_with_space_then_unicode_whitespace_collapsed",
+          "evidence_kind": "actual_html_body"
+        },
+        {
+          "citation_id": "H033C050",
+          "quote": "现对以往学期已办理缓考但未参加补缓考考试的学生选课事宜通知如下：",
+          "locator": {
+            "type": "html",
+            "xpath": "/html/body/div[4]/div/div[2]/form/div[3]/div/div/p[2]"
+          },
+          "supports_fields": [
+            "/claims/23/statement"
+          ],
+          "relation": "supports",
+          "quote_normalization": "html_text_nodes_concatenated_then_unicode_whitespace_collapsed",
+          "evidence_kind": "actual_html_body"
+        },
+        {
+          "citation_id": "H033C063",
+          "quote": "2026-09-21",
+          "locator": {
+            "type": "html",
+            "xpath": "/html/body/div[4]/div/div[2]/form/div[2]"
+          },
+          "supports_fields": [
+            "/documents/6/date_fields/0"
+          ],
+          "relation": "supports",
+          "quote_normalization": "html_text_nodes_concatenated_then_unicode_whitespace_collapsed",
+          "evidence_kind": "actual_html_body"
+        }
+      ]
+    },
+    {
+      "carrier_id": "notice-jwc-12411",
+      "url": "https://jwc.hbu.cn/info/1108/12411.htm",
+      "requested_url": "https://jwc.hbu.cn/info/1108/12411.htm",
+      "final_url": "https://jwc.hbu.cn/info/1108/12411.htm",
+      "department": "jwc",
+      "title": "关于公布2026-2027学年秋学期已注册学生名单的通知",
+      "parent_carrier_ids": [],
+      "access_status": "read_excerpt",
+      "accessed_at": "2026-10-28T16:42:01.833504Z",
+      "unknown_reason": null,
+      "observed_content_kind": "html_notice",
+      "access": {
+        "attempted": true,
+        "started_at_utc": "2026-10-28T16:42:01.572134Z",
+        "finished_at_utc": "2026-10-28T16:42:01.833504Z",
+        "http_status": 200,
+        "observed_media_type": "text/html",
+        "body_sha256_candidate_reported": "efb0e9c0b1d3ecac73a6aebdaa75ab013a3d394def000b535903995f90504e1c",
+        "read_status": "read_relevant_body",
+        "trace_refs": [],
+        "observation_state": "unknown",
+        "error_or_limit": "重开已保存原件，读取本整理所用节点；无新的网络访问。"
+      },
+      "source_observations": [
+        {
+          "original_GET_started_at": "2026-10-28T16:42:01.572134Z",
+          "original_GET_finished_at": "2026-10-28T16:42:01.833504Z",
+          "body_sha256": "efb0e9c0b1d3ecac73a6aebdaa75ab013a3d394def000b535903995f90504e1c",
+          "receipt_sha256": "635f50b2d7e6e099cb2625e94010a24a4cd986804b30c065b2a32a10ad9e864f",
+          "stage": "historical_public_GET_reused_offline"
+        },
+        {
+          "original_GET_started_at": "2026-10-28T16:18:55.321892Z",
+          "original_GET_finished_at": "2026-10-28T16:18:55.584470Z",
+          "body_sha256": "efb0e9c0b1d3ecac73a6aebdaa75ab013a3d394def000b535903995f90504e1c",
+          "receipt_sha256": "da6dddf0013cbcaeb823e35fb8c819de303b03a5a0403b9336e731ec9d71a93b",
+          "stage": "another_historical_GET_same_official_carrier_not_independent_substantive_support"
+        }
+      ],
+      "content_lineage": "同一官方来源的重复采集不构成独立支持；以实际文书关系归并。",
+      "citations": [
+        {
+          "citation_id": "H033C047",
+          "quote": "因特殊原因未能注册的学生请关注补注册通知。",
+          "locator": {
+            "type": "html",
+            "xpath": "/html/body/div[4]/div/div[2]/form/div[3]/div/div/p[3]"
+          },
+          "supports_fields": [
+            "/claims/22/statement",
+            "/relations/9/explanation"
+          ],
+          "relation": "supports",
+          "quote_normalization": "html_text_nodes_concatenated_then_unicode_whitespace_collapsed",
+          "evidence_kind": "actual_html_body"
+        },
+        {
+          "citation_id": "H033C048",
+          "quote": "2026-2027学年秋学期注册已结束，现公布已注册学生名单（见附件1），请各学院根据名单组织学生到本学院办理学生证盖注册专用章手续。",
+          "locator": {
+            "type": "html",
+            "xpath": "/html/body/div[4]/div/div[2]/form/div[3]/div/div/p[2]"
+          },
+          "supports_fields": [
+            "/claims/22/statement",
+            "/relations/9/explanation"
+          ],
+          "relation": "supports",
+          "quote_normalization": "html_text_nodes_concatenated_then_unicode_whitespace_collapsed",
+          "evidence_kind": "actual_html_body"
+        },
+        {
+          "citation_id": "H033C064",
+          "quote": "2026-09-23",
+          "locator": {
+            "type": "html",
+            "xpath": "/html/body/div[4]/div/div[2]/form/div[2]"
+          },
+          "supports_fields": [
+            "/documents/7/date_fields/0"
+          ],
+          "relation": "supports",
+          "quote_normalization": "html_text_nodes_concatenated_then_unicode_whitespace_collapsed",
+          "evidence_kind": "actual_html_body"
+        }
+      ]
+    },
+    {
+      "carrier_id": "notice-jwc-12419",
+      "url": "https://jwc.hbu.cn/info/1108/12419.htm",
+      "requested_url": "https://jwc.hbu.cn/info/1108/12419.htm",
+      "final_url": "https://jwc.hbu.cn/info/1108/12419.htm",
+      "department": "jwc",
+      "title": "关于2027届预计毕（结）业生未进行新华社图像信息采集的同学补照和图像信息核对的通知",
+      "parent_carrier_ids": [],
+      "access_status": "read_excerpt",
+      "accessed_at": "2026-10-28T16:39:30.525390Z",
+      "unknown_reason": null,
+      "observed_content_kind": "html_notice",
+      "access": {
+        "attempted": true,
+        "started_at_utc": "2026-10-28T16:39:30.285502Z",
+        "finished_at_utc": "2026-10-28T16:39:30.525390Z",
+        "http_status": 200,
+        "observed_media_type": "text/html",
+        "body_sha256_candidate_reported": "18452736e579747c33b615d039f3dac6d7fef27fc2f62f39f75135aea66fd3fe",
+        "read_status": "read_relevant_body",
+        "trace_refs": [],
+        "observation_state": "unknown",
+        "error_or_limit": "重开已保存原件，读取本整理所用节点；无新的网络访问。"
+      },
+      "source_observations": [
+        {
+          "original_GET_started_at": "2026-10-28T16:39:30.285502Z",
+          "original_GET_finished_at": "2026-10-28T16:39:30.525390Z",
+          "body_sha256": "18452736e579747c33b615d039f3dac6d7fef27fc2f62f39f75135aea66fd3fe",
+          "receipt_sha256": "186ec44314c97468c88002fd2a134485bc40d2b480ba7cac8d3ddb1d9aef4d35",
+          "stage": "historical_public_GET_reused_offline"
+        }
+      ],
+      "content_lineage": "同一官方来源的重复采集不构成独立支持；以实际文书关系归并。",
+      "citations": [
+        {
+          "citation_id": "H033C054",
+          "quote": "2026 年 10 月 8 日",
+          "locator": {
+            "type": "html",
+            "xpath": "/html/body/div[4]/div/div[2]/form/div[3]/div/p[21]"
+          },
+          "supports_fields": [
+            "/claims/26/statement"
+          ],
+          "relation": "supports",
+          "quote_normalization": "html_text_nodes_joined_with_space_then_unicode_whitespace_collapsed",
+          "evidence_kind": "actual_html_body"
+        },
+        {
+          "citation_id": "H033C055",
+          "quote": "日期：2026-10-08 信息来源： 点击数:",
+          "locator": {
+            "type": "html",
+            "xpath": "/html/body/div[4]/div/div[2]/form/div[2]"
+          },
+          "supports_fields": [
+            "/claims/26/statement"
+          ],
+          "relation": "supports",
+          "quote_normalization": "html_text_nodes_concatenated_then_unicode_whitespace_collapsed",
+          "evidence_kind": "actual_html_body"
+        },
+        {
+          "citation_id": "H033C065",
+          "quote": "2026-10-08",
+          "locator": {
+            "type": "html",
+            "xpath": "/html/body/div[4]/div/div[2]/form/div[2]"
+          },
+          "supports_fields": [
+            "/documents/8/date_fields/0"
+          ],
+          "relation": "supports",
+          "quote_normalization": "html_text_nodes_concatenated_then_unicode_whitespace_collapsed",
+          "evidence_kind": "actual_html_body"
+        }
+      ]
+    },
+    {
+      "carrier_id": "notice-law-19945",
+      "url": "http://law.hbu.cn/jxgz/19945.jhtml",
+      "requested_url": "http://law.hbu.cn/jxgz/19945.jhtml",
+      "final_url": "http://law.hbu.cn/jxgz/19945.jhtml",
+      "department": "law",
+      "title": "河北大学法学院推免工作实施细则",
+      "parent_carrier_ids": [],
+      "access_status": "read_excerpt",
+      "accessed_at": "2026-10-28T16:42:00.875169Z",
+      "unknown_reason": null,
+      "observed_content_kind": "html_notice",
+      "access": {
+        "attempted": true,
+        "started_at_utc": "2026-10-28T16:42:00.624297Z",
+        "finished_at_utc": "2026-10-28T16:42:00.875169Z",
+        "http_status": 200,
+        "observed_media_type": "text/html",
+        "body_sha256_candidate_reported": "e9a5474a63dab49f4e25a9ad170aa3fe2dc168964c422275841efa80ac3bc73b",
+        "read_status": "read_relevant_body",
+        "trace_refs": [],
+        "observation_state": "unknown",
+        "error_or_limit": "重开已保存原件，读取本整理所用节点；无新的网络访问。"
+      },
+      "source_observations": [
+        {
+          "original_GET_started_at": "2026-10-28T16:42:00.624297Z",
+          "original_GET_finished_at": "2026-10-28T16:42:00.875169Z",
+          "body_sha256": "e9a5474a63dab49f4e25a9ad170aa3fe2dc168964c422275841efa80ac3bc73b",
+          "receipt_sha256": "8dcd8fa138a26b975c1900d390800e6536e8970bc63df2e5ed1096812f89e058",
+          "stage": "historical_public_GET_reused_offline"
+        },
+        {
+          "original_GET_started_at": "2026-10-28T16:15:29.775716Z",
+          "original_GET_finished_at": "2026-10-28T16:15:30.028704Z",
+          "body_sha256": "e9a5474a63dab49f4e25a9ad170aa3fe2dc168964c422275841efa80ac3bc73b",
+          "receipt_sha256": "2b7409ab6bc8194a071c5e209886f60027cf83e0605d6207417594ac45e1aa87",
+          "stage": "another_historical_GET_same_official_carrier_not_independent_substantive_support"
+        }
+      ],
+      "content_lineage": "同一官方来源的重复采集不构成独立支持；以实际文书关系归并。",
+      "citations": [
+        {
+          "citation_id": "H033C001",
+          "quote": "综合测评成绩＝平均学分绩点 ×90%+创新实践能力评分×10%",
+          "locator": {
+            "type": "html",
+            "xpath": "/html/body/div[1]/div[2]/div/div[1]/div[2]/span/p[25]"
+          },
+          "supports_fields": [
+            "/claims/0/statement",
+            "/relations/2/explanation"
+          ],
+          "relation": "supports",
+          "quote_normalization": "html_text_nodes_joined_with_space_then_unicode_whitespace_collapsed",
+          "evidence_kind": "actual_html_body"
+        },
+        {
+          "citation_id": "H033C002",
+          "quote": "2.前三学年全部应修必修课程，如有不及格（包括通过重修、补考后及格）科目者不予推荐。",
+          "locator": {
+            "type": "html",
+            "xpath": "/html/body/div[1]/div[2]/div/div[1]/div[2]/span/p[28]"
+          },
+          "supports_fields": [
+            "/claims/1/statement"
+          ],
+          "relation": "supports",
+          "quote_normalization": "html_text_nodes_concatenated_then_unicode_whitespace_collapsed",
+          "evidence_kind": "actual_html_body"
+        },
+        {
+          "citation_id": "H033C003",
+          "quote": "3.外语基础好，全国大学英语四级考试成绩425分（含425分）以上，或托福80分（含）以上，或雅思6分（含）以上，小语种学生所学语种四级成绩须达到60分及以上。全国大学生英语六级考试不做要求。",
+          "locator": {
+            "type": "html",
+            "xpath": "/html/body/div[1]/div[2]/div/div[1]/div[2]/span/p[29]"
+          },
+          "supports_fields": [
+            "/claims/1/statement"
+          ],
+          "relation": "supports",
+          "quote_normalization": "html_text_nodes_concatenated_then_unicode_whitespace_collapsed",
+          "evidence_kind": "actual_html_body"
+        },
+        {
+          "citation_id": "H033C004",
+          "quote": "5.无任何考试作弊和剽窃他人学术成果记录，无任何违法违纪和受处分记录。",
+          "locator": {
+            "type": "html",
+            "xpath": "/html/body/div[1]/div[2]/div/div[1]/div[2]/span/p[31]"
+          },
+          "supports_fields": [
+            "/claims/1/statement"
+          ],
+          "relation": "supports",
+          "quote_normalization": "html_text_nodes_concatenated_then_unicode_whitespace_collapsed",
+          "evidence_kind": "actual_html_body"
+        },
+        {
+          "citation_id": "H033C066",
+          "quote": "2026-09-02 16:37:16",
+          "locator": {
+            "type": "html",
+            "xpath": "/html/body/div[1]/div[2]/div/div[1]/div[1]"
+          },
+          "supports_fields": [
+            "/documents/9/date_fields/0"
+          ],
+          "relation": "supports",
+          "quote_normalization": "html_text_nodes_concatenated_then_unicode_whitespace_collapsed",
+          "evidence_kind": "actual_html_body"
+        },
+        {
+          "citation_id": "H033C076",
+          "quote": "202 6 年 6 月",
+          "locator": {
+            "type": "html",
+            "xpath": "/html/body/div[1]/div[2]/div/div[1]/div[2]/span/p[49]"
+          },
+          "supports_fields": [
+            "/documents/9/date_fields/1"
+          ],
+          "relation": "supports",
+          "quote_normalization": "html_text_nodes_joined_with_space_then_unicode_whitespace_collapsed",
+          "evidence_kind": "actual_html_body"
+        },
+        {
+          "citation_id": "H033C082",
+          "quote": "河北大学法学院学生创新实践能力加分表.docx",
+          "locator": {
+            "type": "html",
+            "xpath": "/html/body/div[1]/div[2]/div/div[1]/div[2]/span/ol/li[3]/p/a"
+          },
+          "supports_fields": [
+            "/relations/11/explanation"
+          ],
+          "relation": "supports",
+          "quote_normalization": "html_text_nodes_concatenated_then_unicode_whitespace_collapsed",
+          "evidence_kind": "actual_html_body"
+        },
+        {
+          "citation_id": "H033C083",
+          "quote": "河北大学法学院学生课外学术科技竞赛分级目录C类.docx",
+          "locator": {
+            "type": "html",
+            "xpath": "/html/body/div[1]/div[2]/div/div[1]/div[2]/span/ol/li[2]/p/a"
+          },
+          "supports_fields": [
+            "/relations/12/explanation"
+          ],
+          "relation": "supports",
+          "quote_normalization": "html_text_nodes_concatenated_then_unicode_whitespace_collapsed",
+          "evidence_kind": "actual_html_body"
+        },
+        {
+          "citation_id": "H033C085",
+          "quote": "河北大学学生课外学术科技竞赛分级目录2024版.pdf",
+          "locator": {
+            "type": "html",
+            "xpath": "/html/body/div[1]/div[2]/div/div[1]/div[2]/span/ol/li[1]/p/a"
+          },
+          "supports_fields": [
+            "/relations/14/explanation"
+          ],
+          "relation": "supports",
+          "quote_normalization": "html_text_nodes_concatenated_then_unicode_whitespace_collapsed",
+          "evidence_kind": "actual_html_body"
+        }
+      ]
+    },
+    {
+      "carrier_id": "notice-law-19962",
+      "url": "http://law.hbu.cn/jxgz/19962.jhtml",
+      "requested_url": "http://law.hbu.cn/jxgz/19962.jhtml",
+      "final_url": "http://law.hbu.cn/jxgz/19962.jhtml",
+      "department": "law",
+      "title": "关于法学院2027年推荐优秀应届本科毕业生免试攻读硕士学位研究生名单的公示",
+      "parent_carrier_ids": [],
+      "access_status": "read_excerpt",
+      "accessed_at": "2026-10-28T16:42:01.084909Z",
+      "unknown_reason": null,
+      "observed_content_kind": "html_notice",
+      "access": {
+        "attempted": true,
+        "started_at_utc": "2026-10-28T16:42:00.891649Z",
+        "finished_at_utc": "2026-10-28T16:42:01.084909Z",
+        "http_status": 200,
+        "observed_media_type": "text/html",
+        "body_sha256_candidate_reported": "551e1ca889d8707fb91bf87a60a6cd9c8597ec89192a77b535b55e768d72d96b",
+        "read_status": "read_relevant_body",
+        "trace_refs": [],
+        "observation_state": "unknown",
+        "error_or_limit": "重开已保存原件，读取本整理所用节点；无新的网络访问。"
+      },
+      "source_observations": [
+        {
+          "original_GET_started_at": "2026-10-28T16:42:00.891649Z",
+          "original_GET_finished_at": "2026-10-28T16:42:01.084909Z",
+          "body_sha256": "551e1ca889d8707fb91bf87a60a6cd9c8597ec89192a77b535b55e768d72d96b",
+          "receipt_sha256": "0ffb81bd6bea1005faae6d37f2f3da5cc4eda84f4a9b5852bb150d50479ba610",
+          "stage": "historical_public_GET_reused_offline"
+        },
+        {
+          "original_GET_started_at": "2026-10-28T16:15:29.710643Z",
+          "original_GET_finished_at": "2026-10-28T16:15:29.918526Z",
+          "body_sha256": "551e1ca889d8707fb91bf87a60a6cd9c8597ec89192a77b535b55e768d72d96b",
+          "receipt_sha256": "5ceba6b6553bb89785865fdaebc54cb15a45208ce67b4ca603971bb03d015fea",
+          "stage": "another_historical_GET_same_official_carrier_not_independent_substantive_support"
+        }
+      ],
+      "content_lineage": "同一官方来源的重复采集不构成独立支持；以实际文书关系归并。",
+      "citations": [
+        {
+          "citation_id": "H033C010",
+          "quote": "推免遴选范围之内（本专业综合测评成绩前30%）的学生有 71 名，其中 42 名学生在专业推免名额之内。现予以公示，公示期： 202 6 年 9月 5 日 -9月 7 日",
+          "locator": {
+            "type": "html",
+            "xpath": "/html/body/div[1]/div[2]/div/div[1]/div[2]/span/p[1]"
+          },
+          "supports_fields": [
+            "/claims/4/statement",
+            "/actions/0/date_fields/0",
+            "/relations/2/explanation",
+            "/relations/3/explanation"
+          ],
+          "relation": "supports",
+          "quote_normalization": "html_text_nodes_joined_with_space_then_unicode_whitespace_collapsed",
+          "evidence_kind": "actual_html_body"
+        },
+        {
+          "citation_id": "H033C067",
+          "quote": "2026-09-04 17:23:03",
+          "locator": {
+            "type": "html",
+            "xpath": "/html/body/div[1]/div[2]/div/div[1]/div[1]"
+          },
+          "supports_fields": [
+            "/documents/10/date_fields/0"
+          ],
+          "relation": "supports",
+          "quote_normalization": "html_text_nodes_concatenated_then_unicode_whitespace_collapsed",
+          "evidence_kind": "actual_html_body"
+        }
+      ]
+    },
+    {
+      "carrier_id": "notice-law-20003",
+      "url": "http://law.hbu.cn/tzgg/20003.jhtml",
+      "requested_url": "http://law.hbu.cn/tzgg/20003.jhtml",
+      "final_url": "http://law.hbu.cn/tzgg/20003.jhtml",
+      "department": "law",
+      "title": "河北大学法学院（纪检监察学院）2027年优秀应届本科毕业生免试攻读硕士研究生招生录取工作实施细则",
+      "parent_carrier_ids": [],
+      "access_status": "read_excerpt",
+      "accessed_at": "2026-10-28T16:42:01.231303Z",
+      "unknown_reason": null,
+      "observed_content_kind": "html_notice",
+      "access": {
+        "attempted": true,
+        "started_at_utc": "2026-10-28T16:42:00.918712Z",
+        "finished_at_utc": "2026-10-28T16:42:01.231303Z",
+        "http_status": 200,
+        "observed_media_type": "text/html",
+        "body_sha256_candidate_reported": "7710fde36ca40ae8cc730426c2927a58fe16cc3ce8382973844f3fb069add381",
+        "read_status": "read_relevant_body",
+        "trace_refs": [],
+        "observation_state": "unknown",
+        "error_or_limit": "重开已保存原件，读取本整理所用节点；无新的网络访问。"
+      },
+      "source_observations": [
+        {
+          "original_GET_started_at": "2026-10-28T16:42:00.918712Z",
+          "original_GET_finished_at": "2026-10-28T16:42:01.231303Z",
+          "body_sha256": "7710fde36ca40ae8cc730426c2927a58fe16cc3ce8382973844f3fb069add381",
+          "receipt_sha256": "e0f791ce573aec40210fbf2eda1e32ec7fa02d2b89ab68afe4591164d3bb9c3a",
+          "stage": "historical_public_GET_reused_offline"
+        },
+        {
+          "original_GET_started_at": "2026-10-28T16:15:29.776007Z",
+          "original_GET_finished_at": "2026-10-28T16:15:30.041480Z",
+          "body_sha256": "7710fde36ca40ae8cc730426c2927a58fe16cc3ce8382973844f3fb069add381",
+          "receipt_sha256": "8c1c3cc0a80d15925ed16bb76186f8424635229c5efb507636ab9f9f6ba7b68e",
+          "stage": "another_historical_GET_same_official_carrier_not_independent_substantive_support"
+        }
+      ],
+      "content_lineage": "同一官方来源的重复采集不构成独立支持；以实际文书关系归并。",
+      "citations": [
+        {
+          "citation_id": "H033C015",
+          "quote": "电子版发送到邮箱hbussz@hbu.edu.cn；纸版材料交至法学院C3-301。材料接收截止时间为9月21日中午12点。",
+          "locator": {
+            "type": "html",
+            "xpath": "/html/body/div[1]/div[2]/div/div[1]/div[2]/span/p[28]"
+          },
+          "supports_fields": [
+            "/claims/8/statement",
+            "/actions/10/date_fields/0",
+            "/relations/5/explanation"
+          ],
+          "relation": "supports",
+          "quote_normalization": "html_text_nodes_concatenated_then_unicode_whitespace_collapsed",
+          "evidence_kind": "actual_html_body"
+        },
+        {
+          "citation_id": "H033C016",
+          "quote": "报考前所学专业为非法学专业。",
+          "locator": {
+            "type": "html",
+            "xpath": "/html/body/div[1]/div[2]/div/div[1]/div[2]/span/p[17]"
+          },
+          "supports_fields": [
+            "/claims/9/statement"
+          ],
+          "relation": "supports",
+          "quote_normalization": "html_text_nodes_concatenated_then_unicode_whitespace_collapsed",
+          "evidence_kind": "actual_html_body"
+        },
+        {
+          "citation_id": "H033C017",
+          "quote": "报名前所学专业为法学专业（获得法学第二学士学位的人员可报考）。",
+          "locator": {
+            "type": "html",
+            "xpath": "/html/body/div[1]/div[2]/div/div[1]/div[2]/span/p[19]"
+          },
+          "supports_fields": [
+            "/claims/9/statement"
+          ],
+          "relation": "supports",
+          "quote_normalization": "html_text_nodes_concatenated_then_unicode_whitespace_collapsed",
+          "evidence_kind": "actual_html_body"
+        },
+        {
+          "citation_id": "H033C026",
+          "quote": "各专业的拟接收人数仅供参考，实际接收人数会根据报考情况进行适度调整，最终以公示的拟录取名单为准。",
+          "locator": {
+            "type": "html",
+            "xpath": "/html/body/div[1]/div[2]/div/div[1]/div[2]/span/p[8]"
+          },
+          "supports_fields": [
+            "/claims/10/statement"
+          ],
+          "relation": "supports",
+          "quote_normalization": "html_text_nodes_concatenated_then_unicode_whitespace_collapsed",
+          "evidence_kind": "actual_html_body"
+        },
+        {
+          "citation_id": "H033C068",
+          "quote": "2026-09-11 18:06:50",
+          "locator": {
+            "type": "html",
+            "xpath": "/html/body/div[1]/div[2]/div/div[1]/div[1]"
+          },
+          "supports_fields": [
+            "/documents/11/date_fields/0"
+          ],
+          "relation": "supports",
+          "quote_normalization": "html_text_nodes_concatenated_then_unicode_whitespace_collapsed",
+          "evidence_kind": "actual_html_body"
+        },
+        {
+          "citation_id": "H033C084",
+          "quote": "附件1：2027年河北大学河北大学法学院（纪检监察学院）接收硕士推免生专业目录.xlsx",
+          "locator": {
+            "type": "html",
+            "xpath": "/html/body/div[1]/div[2]/div/div[1]/div[2]/span/p[82]/a"
+          },
+          "supports_fields": [
+            "/relations/13/explanation"
+          ],
+          "relation": "supports",
+          "quote_normalization": "html_text_nodes_concatenated_then_unicode_whitespace_collapsed",
+          "evidence_kind": "actual_html_body"
+        }
+      ]
+    },
+    {
+      "carrier_id": "notice-law-20037",
+      "url": "http://law.hbu.cn/tzgg/20037.jhtml",
+      "requested_url": "http://law.hbu.cn/tzgg/20037.jhtml",
+      "final_url": "http://law.hbu.cn/tzgg/20037.jhtml",
+      "department": "law",
+      "title": "法学院2027年硕士研究生招生考试参考书目",
+      "parent_carrier_ids": [],
+      "access_status": "read_excerpt",
+      "accessed_at": "2026-10-28T16:42:01.355553Z",
+      "unknown_reason": null,
+      "observed_content_kind": "html_notice",
+      "access": {
+        "attempted": true,
+        "started_at_utc": "2026-10-28T16:42:01.101176Z",
+        "finished_at_utc": "2026-10-28T16:42:01.355553Z",
+        "http_status": 200,
+        "observed_media_type": "text/html",
+        "body_sha256_candidate_reported": "4782422239c9d7b58ad82891be102cb4280cd4194fa80324fc5dd41add243736",
+        "read_status": "read_relevant_body",
+        "trace_refs": [],
+        "observation_state": "unknown",
+        "error_or_limit": "重开已保存原件，读取本整理所用节点；无新的网络访问。"
+      },
+      "source_observations": [
+        {
+          "original_GET_started_at": "2026-10-28T16:42:01.101176Z",
+          "original_GET_finished_at": "2026-10-28T16:42:01.355553Z",
+          "body_sha256": "4782422239c9d7b58ad82891be102cb4280cd4194fa80324fc5dd41add243736",
+          "receipt_sha256": "32c17a068cd060aa0f811829cc844c16704942a65a6ff6b0caf4837e801b5588",
+          "stage": "historical_public_GET_reused_offline"
+        }
+      ],
+      "content_lineage": "同一官方来源的重复采集不构成独立支持；以实际文书关系归并。",
+      "citations": [
+        {
+          "citation_id": "H033C069",
+          "quote": "2026-09-20 16:37:56",
+          "locator": {
+            "type": "html",
+            "xpath": "/html/body/div[1]/div[2]/div/div[1]/div[1]"
+          },
+          "supports_fields": [
+            "/documents/12/date_fields/0"
+          ],
+          "relation": "supports",
+          "quote_normalization": "html_text_nodes_concatenated_then_unicode_whitespace_collapsed",
+          "evidence_kind": "actual_html_body"
+        }
+      ]
+    },
+    {
+      "carrier_id": "notice-law-20046",
+      "url": "http://law.hbu.cn/tzgg/20046.jhtml",
+      "requested_url": "http://law.hbu.cn/tzgg/20046.jhtml",
+      "final_url": "http://law.hbu.cn/tzgg/20046.jhtml",
+      "department": "law",
+      "title": "河北大学法学院2027年接收优秀应届本科毕业生免试攻读硕士研究生复试通知",
+      "parent_carrier_ids": [],
+      "access_status": "read_excerpt",
+      "accessed_at": "2026-10-28T16:42:01.166754Z",
+      "unknown_reason": null,
+      "observed_content_kind": "html_notice",
+      "access": {
+        "attempted": true,
+        "started_at_utc": "2026-10-28T16:42:00.956332Z",
+        "finished_at_utc": "2026-10-28T16:42:01.166754Z",
+        "http_status": 200,
+        "observed_media_type": "text/html",
+        "body_sha256_candidate_reported": "d5cda2498a09495b4f2c5ad4a69ebb35ebe8ebf35fa1a2368354df8caefe2fc1",
+        "read_status": "read_relevant_body",
+        "trace_refs": [],
+        "observation_state": "unknown",
+        "error_or_limit": "重开已保存原件，读取本整理所用节点；无新的网络访问。"
+      },
+      "source_observations": [
+        {
+          "original_GET_started_at": "2026-10-28T16:42:00.956332Z",
+          "original_GET_finished_at": "2026-10-28T16:42:01.166754Z",
+          "body_sha256": "d5cda2498a09495b4f2c5ad4a69ebb35ebe8ebf35fa1a2368354df8caefe2fc1",
+          "receipt_sha256": "188780c80257f99b7f0f672463df262a9b44ac2d40b8d345e124e472f27d1210",
+          "stage": "historical_public_GET_reused_offline"
+        },
+        {
+          "original_GET_started_at": "2026-10-28T16:15:29.803250Z",
+          "original_GET_finished_at": "2026-10-28T16:15:30.022595Z",
+          "body_sha256": "d5cda2498a09495b4f2c5ad4a69ebb35ebe8ebf35fa1a2368354df8caefe2fc1",
+          "receipt_sha256": "71426b07f2d78ce5274e49282a27a80fb645524c1648e8b520d3836b53c27faf",
+          "stage": "another_historical_GET_same_official_carrier_not_independent_substantive_support"
+        }
+      ],
+      "content_lineage": "同一官方来源的重复采集不构成独立支持；以实际文书关系归并。",
+      "citations": [
+        {
+          "citation_id": "H033C027",
+          "quote": "经法学院研究生 招生 工作 领导 小组研究决定，拟 定 于 202 6 年 9 月 2 3 日 对 第一批申请 考生进行复试，具体复试安排 同步在 复试 QQ 群 （ 1108748700 ） 群 内通知。各专业具体安排如下：",
+          "locator": {
+            "type": "html",
+            "xpath": "/html/body/div[1]/div[2]/div/div[1]/div[2]/span/p[1]"
+          },
+          "supports_fields": [
+            "/claims/11/statement",
+            "/actions/12/date_fields/0",
+            "/relations/6/explanation"
+          ],
+          "relation": "supports",
+          "quote_normalization": "html_text_nodes_joined_with_space_then_unicode_whitespace_collapsed",
+          "evidence_kind": "actual_html_body"
+        },
+        {
+          "citation_id": "H033C028",
+          "quote": "15:10-18:00法律（法学）全日制",
+          "locator": {
+            "type": "html",
+            "xpath": "/html/body/div[1]/div[2]/div/div[1]/div[2]/span/table/tbody/tr[8]"
+          },
+          "supports_fields": [
+            "/claims/11/statement",
+            "/actions/12/date_fields/0",
+            "/relations/6/explanation"
+          ],
+          "relation": "supports",
+          "quote_normalization": "html_text_nodes_concatenated_then_unicode_whitespace_collapsed",
+          "evidence_kind": "actual_html_body"
+        },
+        {
+          "citation_id": "H033C070",
+          "quote": "2026-09-22 18:13:06",
+          "locator": {
+            "type": "html",
+            "xpath": "/html/body/div[1]/div[2]/div/div[1]/div[1]"
+          },
+          "supports_fields": [
+            "/documents/13/date_fields/0"
+          ],
+          "relation": "supports",
+          "quote_normalization": "html_text_nodes_concatenated_then_unicode_whitespace_collapsed",
+          "evidence_kind": "actual_html_body"
+        }
+      ]
+    },
+    {
+      "carrier_id": "notice-yjsy-4427",
+      "url": "https://yjsy.hbu.edu.cn/info/1104/4427.htm",
+      "requested_url": "https://yjsy.hbu.edu.cn/info/1104/4427.htm",
+      "final_url": "https://yjsy.hbu.edu.cn/info/1104/4427.htm",
+      "department": "yjsy",
+      "title": "河北大学2027年接收优秀应届本科毕业生免试攻读研究生（含直博生）工作办法",
+      "parent_carrier_ids": [],
+      "access_status": "read_excerpt",
+      "accessed_at": "2026-10-28T16:42:01.551697Z",
+      "unknown_reason": null,
+      "observed_content_kind": "html_notice",
+      "access": {
+        "attempted": true,
+        "started_at_utc": "2026-10-28T16:42:01.186429Z",
+        "finished_at_utc": "2026-10-28T16:42:01.551697Z",
+        "http_status": 200,
+        "observed_media_type": "text/html",
+        "body_sha256_candidate_reported": "27dd97e05344012758deba445354a358d59a6901824361282b62c763fed6f6cb",
+        "read_status": "read_relevant_body",
+        "trace_refs": [],
+        "observation_state": "unknown",
+        "error_or_limit": "重开已保存原件，读取本整理所用节点；无新的网络访问。"
+      },
+      "source_observations": [
+        {
+          "original_GET_started_at": "2026-10-28T16:42:01.186429Z",
+          "original_GET_finished_at": "2026-10-28T16:42:01.551697Z",
+          "body_sha256": "27dd97e05344012758deba445354a358d59a6901824361282b62c763fed6f6cb",
+          "receipt_sha256": "f4235ab0dc2f70d3f0fd750acbc4a75477fd36cf3a4f9428a22481a33a81bb11",
+          "stage": "historical_public_GET_reused_offline"
+        },
+        {
+          "original_GET_started_at": "2026-10-28T16:15:29.463580Z",
+          "original_GET_finished_at": "2026-10-28T16:15:29.773066Z",
+          "body_sha256": "27dd97e05344012758deba445354a358d59a6901824361282b62c763fed6f6cb",
+          "receipt_sha256": "5814cd4caf6b96132a26e4305c92d1306431ad5e7e73b75eaa3f996b91da5e54",
+          "stage": "another_historical_GET_same_official_carrier_not_independent_substantive_support"
+        }
+      ],
+      "content_lineage": "同一官方来源的重复采集不构成独立支持；以实际文书关系归并。",
+      "citations": [
+        {
+          "citation_id": "H033C012",
+          "quote": "2027年9月1日前能够获得本科毕业证书和学士学位证书",
+          "locator": {
+            "type": "html",
+            "xpath": "/html/body/div[5]/div[2]/form/div/div[2]/div/div/p[14]"
+          },
+          "supports_fields": [
+            "/claims/6/statement",
+            "/actions/9/date_fields/0",
+            "/relations/4/explanation"
+          ],
+          "relation": "supports",
+          "quote_normalization": "html_text_nodes_concatenated_then_unicode_whitespace_collapsed",
+          "evidence_kind": "actual_html_body"
+        },
+        {
+          "citation_id": "H033C013",
+          "quote": "1.在目前就读学校获得教育部推荐免试资格的优秀应届本科毕业生，以教育部推免系统备案信息为准；",
+          "locator": {
+            "type": "html",
+            "xpath": "/html/body/div[5]/div[2]/form/div/div[2]/div/div/p[13]"
+          },
+          "supports_fields": [
+            "/claims/6/statement",
+            "/relations/4/explanation"
+          ],
+          "relation": "supports",
+          "quote_normalization": "html_text_nodes_concatenated_then_unicode_whitespace_collapsed",
+          "evidence_kind": "actual_html_body"
+        },
+        {
+          "citation_id": "H033C014",
+          "quote": "上述材料制成PDF格式压缩成不大于5M的zip文件压缩包。以“申请专业—姓名”命名，于各二级学院（中心、系）推免生招生单位发布工作实施细则后发送至指定邮箱或寄送指定联系人。",
+          "locator": {
+            "type": "html",
+            "xpath": "/html/body/div[5]/div[2]/form/div/div[2]/div/div/p[29]"
+          },
+          "supports_fields": [
+            "/claims/7/statement",
+            "/relations/5/explanation"
+          ],
+          "relation": "supports",
+          "quote_normalization": "html_text_nodes_concatenated_then_unicode_whitespace_collapsed",
+          "evidence_kind": "actual_html_body"
+        },
+        {
+          "citation_id": "H033C029",
+          "quote": "2026年9月21日9:00开通推免生报名功能；",
+          "locator": {
+            "type": "html",
+            "xpath": "/html/body/div[5]/div[2]/form/div/div[2]/div/div/p[55]"
+          },
+          "supports_fields": [
+            "/claims/12/statement",
+            "/actions/11/date_fields/0"
+          ],
+          "relation": "supports",
+          "quote_normalization": "html_text_nodes_concatenated_then_unicode_whitespace_collapsed",
+          "evidence_kind": "actual_html_body"
+        },
+        {
+          "citation_id": "H033C030",
+          "quote": "2026年9月22日8:00开通发送复试考核通知及推免生确认复试考核通知功能；",
+          "locator": {
+            "type": "html",
+            "xpath": "/html/body/div[5]/div[2]/form/div/div[2]/div/div/p[56]"
+          },
+          "supports_fields": [
+            "/claims/12/statement",
+            "/actions/11/date_fields/1"
+          ],
+          "relation": "supports",
+          "quote_normalization": "html_text_nodes_concatenated_then_unicode_whitespace_collapsed",
+          "evidence_kind": "actual_html_body"
+        },
+        {
+          "citation_id": "H033C031",
+          "quote": "2026年9月24日8:00开通发送待录取通知功能；",
+          "locator": {
+            "type": "html",
+            "xpath": "/html/body/div[5]/div[2]/form/div/div[2]/div/div/p[57]"
+          },
+          "supports_fields": [
+            "/claims/12/statement",
+            "/actions/11/date_fields/2"
+          ],
+          "relation": "supports",
+          "quote_normalization": "html_text_nodes_concatenated_then_unicode_whitespace_collapsed",
+          "evidence_kind": "actual_html_body"
+        },
+        {
+          "citation_id": "H033C032",
+          "quote": "2026年9月24日14:00开通推免生确认待录取通知功能；",
+          "locator": {
+            "type": "html",
+            "xpath": "/html/body/div[5]/div[2]/form/div/div[2]/div/div/p[58]"
+          },
+          "supports_fields": [
+            "/claims/12/statement",
+            "/actions/11/date_fields/3"
+          ],
+          "relation": "supports",
+          "quote_normalization": "html_text_nodes_concatenated_then_unicode_whitespace_collapsed",
+          "evidence_kind": "actual_html_body"
+        },
+        {
+          "citation_id": "H033C033",
+          "quote": "10月18日系统关闭推免生注册、支付、报名功能。10月20日推免服务系统关闭",
+          "locator": {
+            "type": "html",
+            "xpath": "/html/body/div[5]/div[2]/form/div/div[2]/div/div/p[42]"
+          },
+          "supports_fields": [
+            "/claims/13/statement",
+            "/actions/13/date_fields/0",
+            "/actions/13/date_fields/2"
+          ],
+          "relation": "supports",
+          "quote_normalization": "html_text_nodes_concatenated_then_unicode_whitespace_collapsed",
+          "evidence_kind": "actual_html_body"
+        },
+        {
+          "citation_id": "H033C034",
+          "quote": "9月24日8:00——10月19日期间",
+          "locator": {
+            "type": "html",
+            "xpath": "/html/body/div[5]/div[2]/form/div/div[2]/div/div/p[42]"
+          },
+          "supports_fields": [
+            "/claims/13/statement",
+            "/actions/13/date_fields/1"
+          ],
+          "relation": "supports",
+          "quote_normalization": "html_text_nodes_concatenated_then_unicode_whitespace_collapsed",
+          "evidence_kind": "actual_html_body"
+        },
+        {
+          "citation_id": "H033C071",
+          "quote": "2026-09-10",
+          "locator": {
+            "type": "html",
+            "xpath": "/html/body/div[5]/div[2]/form/div/div[1]"
+          },
+          "supports_fields": [
+            "/documents/14/date_fields/0"
+          ],
+          "relation": "supports",
+          "quote_normalization": "html_text_nodes_concatenated_then_unicode_whitespace_collapsed",
+          "evidence_kind": "actual_html_body"
+        }
+      ]
+    },
+    {
+      "carrier_id": "notice-yjsy-4428",
+      "url": "https://yjsy.hbu.edu.cn/info/1159/4428.htm",
+      "requested_url": "https://yjsy.hbu.edu.cn/info/1159/4428.htm",
+      "final_url": "https://yjsy.hbu.edu.cn/info/1159/4428.htm",
+      "department": "yjsy",
+      "title": "河北大学2027年接收优秀应届本科毕业生免试攻读研究生（含直博生）工作办法",
+      "parent_carrier_ids": [],
+      "access_status": "read_excerpt",
+      "accessed_at": "2026-10-28T16:39:30.096318Z",
+      "unknown_reason": null,
+      "observed_content_kind": "html_notice",
+      "access": {
+        "attempted": true,
+        "started_at_utc": "2026-10-28T16:39:29.791809Z",
+        "finished_at_utc": "2026-10-28T16:39:30.096318Z",
+        "http_status": 200,
+        "observed_media_type": "text/html",
+        "body_sha256_candidate_reported": "4c35a3ce6773c5010e4dfe44a5d35ec9015df584fa42e6ef205738ecc3fa0fef",
+        "read_status": "read_relevant_body",
+        "trace_refs": [],
+        "observation_state": "unknown",
+        "error_or_limit": "重开已保存原件，读取本整理所用节点；无新的网络访问。"
+      },
+      "source_observations": [
+        {
+          "original_GET_started_at": "2026-10-28T16:39:29.791809Z",
+          "original_GET_finished_at": "2026-10-28T16:39:30.096318Z",
+          "body_sha256": "4c35a3ce6773c5010e4dfe44a5d35ec9015df584fa42e6ef205738ecc3fa0fef",
+          "receipt_sha256": "17073f40be28eac74bd9f451cac0b3fff70cc5377c94a8e51234f25ac6f7a943",
+          "stage": "historical_public_GET_reused_offline"
+        },
+        {
+          "original_GET_started_at": "2026-10-28T16:15:29.463706Z",
+          "original_GET_finished_at": "2026-10-28T16:15:29.826326Z",
+          "body_sha256": "4c35a3ce6773c5010e4dfe44a5d35ec9015df584fa42e6ef205738ecc3fa0fef",
+          "receipt_sha256": "e6ca88d1cde5dfd61ef5fcfdd236f5a838ad029540f60127d76059d77a5e7356",
+          "stage": "another_historical_GET_same_official_carrier_not_independent_substantive_support"
+        }
+      ],
+      "content_lineage": "同一官方来源的重复采集不构成独立支持；以实际文书关系归并。",
+      "citations": [
+        {
+          "citation_id": "H033C074",
+          "quote": "2026-09-10",
+          "locator": {
+            "type": "html",
+            "xpath": "/html/body/div[5]/div[2]/form/div/div[1]"
+          },
+          "supports_fields": [
+            "/documents/14/date_fields/0"
+          ],
+          "relation": "supports",
+          "quote_normalization": "html_text_nodes_concatenated_then_unicode_whitespace_collapsed",
+          "evidence_kind": "actual_html_body"
+        }
+      ]
+    },
+    {
+      "carrier_id": "notice-yjsy-4430",
+      "url": "https://yjsy.hbu.edu.cn/info/1159/4430.htm",
+      "requested_url": "https://yjsy.hbu.edu.cn/info/1159/4430.htm",
+      "final_url": "https://yjsy.hbu.edu.cn/info/1159/4430.htm",
+      "department": "yjsy",
+      "title": "关于开展2027届毕业研究生生源信息录入的通知",
+      "parent_carrier_ids": [],
+      "access_status": "read_excerpt",
+      "accessed_at": "2026-10-28T16:42:01.664147Z",
+      "unknown_reason": null,
+      "observed_content_kind": "html_notice",
+      "access": {
+        "attempted": true,
+        "started_at_utc": "2026-10-28T16:42:01.370886Z",
+        "finished_at_utc": "2026-10-28T16:42:01.664147Z",
+        "http_status": 200,
+        "observed_media_type": "text/html",
+        "body_sha256_candidate_reported": "ca518aee554a27827df07c222d683dac573fdf46825b9ba2a89d8604a77712ad",
+        "read_status": "read_relevant_body",
+        "trace_refs": [],
+        "observation_state": "unknown",
+        "error_or_limit": "重开已保存原件，读取本整理所用节点；无新的网络访问。"
+      },
+      "source_observations": [
+        {
+          "original_GET_started_at": "2026-10-28T16:42:01.370886Z",
+          "original_GET_finished_at": "2026-10-28T16:42:01.664147Z",
+          "body_sha256": "ca518aee554a27827df07c222d683dac573fdf46825b9ba2a89d8604a77712ad",
+          "receipt_sha256": "1db66c918b5537844d21e2e652b28487407363eb8b482887080e5316c934de25",
+          "stage": "historical_public_GET_reused_offline"
+        },
+        {
+          "original_GET_started_at": "2026-10-28T16:17:17.817003Z",
+          "original_GET_finished_at": "2026-10-28T16:17:18.213015Z",
+          "body_sha256": "ca518aee554a27827df07c222d683dac573fdf46825b9ba2a89d8604a77712ad",
+          "receipt_sha256": "1ac26cef233fd64dff3fa3bbb934d284a6eccf519b9c26e68d9ce80b76af955c",
+          "stage": "another_historical_GET_same_official_carrier_not_independent_substantive_support"
+        }
+      ],
+      "content_lineage": "同一官方来源的重复采集不构成独立支持；以实际文书关系归并。",
+      "citations": [
+        {
+          "citation_id": "H033C051",
+          "quote": "毕业研究生",
+          "locator": {
+            "type": "html",
+            "xpath": "/html/body/div[5]/div[2]/form/div/div[2]/div/div/div[2]/div/div/div/div/div/div/div/div/p[1]"
+          },
+          "supports_fields": [
+            "/claims/24/statement"
+          ],
+          "relation": "supports",
+          "quote_normalization": "html_text_nodes_concatenated_then_unicode_whitespace_collapsed",
+          "evidence_kind": "actual_html_body"
+        },
+        {
+          "citation_id": "H033C052",
+          "quote": "9月18日前",
+          "locator": {
+            "type": "html",
+            "xpath": "/html/body/div[5]/div[2]/form/div/div[2]/div/div/div[2]/div/div/div/div/div/div/div/div/p[15]"
+          },
+          "supports_fields": [
+            "/claims/24/statement"
+          ],
+          "relation": "supports",
+          "quote_normalization": "html_text_nodes_concatenated_then_unicode_whitespace_collapsed",
+          "evidence_kind": "actual_html_body"
+        },
+        {
+          "citation_id": "H033C072",
+          "quote": "2026-09-11",
+          "locator": {
+            "type": "html",
+            "xpath": "/html/body/div[5]/div[2]/form/div/div[1]"
+          },
+          "supports_fields": [
+            "/documents/15/date_fields/0"
+          ],
+          "relation": "supports",
+          "quote_normalization": "html_text_nodes_concatenated_then_unicode_whitespace_collapsed",
+          "evidence_kind": "actual_html_body"
+        }
+      ]
+    },
+    {
+      "carrier_id": "notice-yjsy-4439",
+      "url": "https://yjsy.hbu.edu.cn/info/1102/4439.htm",
+      "requested_url": "https://yjsy.hbu.edu.cn/info/1102/4439.htm",
+      "final_url": "https://yjsy.hbu.edu.cn/info/1102/4439.htm",
+      "department": "yjsy",
+      "title": "河北大学2027年硕士研究生招生章程",
+      "parent_carrier_ids": [],
+      "access_status": "read_excerpt",
+      "accessed_at": "2026-10-28T16:42:01.677299Z",
+      "unknown_reason": null,
+      "observed_content_kind": "html_notice",
+      "access": {
+        "attempted": true,
+        "started_at_utc": "2026-10-28T16:42:01.252704Z",
+        "finished_at_utc": "2026-10-28T16:42:01.677299Z",
+        "http_status": 200,
+        "observed_media_type": "text/html",
+        "body_sha256_candidate_reported": "6c4a304d1caa1b30e2c1ceb03d474bb8d8e7c8b8c0ade15853d8c1bad654873b",
+        "read_status": "read_relevant_body",
+        "trace_refs": [],
+        "observation_state": "unknown",
+        "error_or_limit": "重开已保存原件，读取本整理所用节点；无新的网络访问。"
+      },
+      "source_observations": [
+        {
+          "original_GET_started_at": "2026-10-28T16:42:01.252704Z",
+          "original_GET_finished_at": "2026-10-28T16:42:01.677299Z",
+          "body_sha256": "6c4a304d1caa1b30e2c1ceb03d474bb8d8e7c8b8c0ade15853d8c1bad654873b",
+          "receipt_sha256": "78d84552299a217881311c900e3f191770da714fea32f40d8f7e38082fecf92f",
+          "stage": "historical_public_GET_reused_offline"
+        }
+      ],
+      "content_lineage": "同一官方来源的重复采集不构成独立支持；以实际文书关系归并。",
+      "citations": [
+        {
+          "citation_id": "H033C073",
+          "quote": "2026-09-30",
+          "locator": {
+            "type": "html",
+            "xpath": "/html/body/div[5]/div[2]/form/div/div[1]"
+          },
+          "supports_fields": [
+            "/documents/16/date_fields/0"
+          ],
+          "relation": "supports",
+          "quote_normalization": "html_text_nodes_concatenated_then_unicode_whitespace_collapsed",
+          "evidence_kind": "actual_html_body"
+        }
+      ]
+    },
+    {
+      "carrier_id": "notice-yjsy-4440",
+      "url": "https://yjsy.hbu.edu.cn/info/1159/4440.htm",
+      "requested_url": "https://yjsy.hbu.edu.cn/info/1159/4440.htm",
+      "final_url": "https://yjsy.hbu.edu.cn/info/1159/4440.htm",
+      "department": "yjsy",
+      "title": "河北大学2027年硕士研究生招生章程",
+      "parent_carrier_ids": [],
+      "access_status": "read_excerpt",
+      "accessed_at": "2026-10-28T16:39:30.394773Z",
+      "unknown_reason": null,
+      "observed_content_kind": "html_notice",
+      "access": {
+        "attempted": true,
+        "started_at_utc": "2026-10-28T16:39:29.944424Z",
+        "finished_at_utc": "2026-10-28T16:39:30.394773Z",
+        "http_status": 200,
+        "observed_media_type": "text/html",
+        "body_sha256_candidate_reported": "d89377118b630f0bcf2a0f8f4b184b92972eac9a11613abf470e983122fc1ea0",
+        "read_status": "read_relevant_body",
+        "trace_refs": [],
+        "observation_state": "unknown",
+        "error_or_limit": "重开已保存原件，读取本整理所用节点；无新的网络访问。"
+      },
+      "source_observations": [
+        {
+          "original_GET_started_at": "2026-10-28T16:39:29.944424Z",
+          "original_GET_finished_at": "2026-10-28T16:39:30.394773Z",
+          "body_sha256": "d89377118b630f0bcf2a0f8f4b184b92972eac9a11613abf470e983122fc1ea0",
+          "receipt_sha256": "f3ce86e11b1905cadf064d321899591ccf6df0195de09c35a47edc6b7f9d6460",
+          "stage": "historical_public_GET_reused_offline"
+        },
+        {
+          "original_GET_started_at": "2026-10-28T16:17:17.824276Z",
+          "original_GET_finished_at": "2026-10-28T16:17:18.262111Z",
+          "body_sha256": "d89377118b630f0bcf2a0f8f4b184b92972eac9a11613abf470e983122fc1ea0",
+          "receipt_sha256": "d441e7669b0e71f3ff82421b1403960867528ac4d3e0a53bace9845e24dcba11",
+          "stage": "another_historical_GET_same_official_carrier_not_independent_substantive_support"
+        }
+      ],
+      "content_lineage": "同一官方来源的重复采集不构成独立支持；以实际文书关系归并。",
+      "citations": [
+        {
+          "citation_id": "H033C035",
+          "quote": "1.网上报名时间为2026年10月15日至10月24日，每日9:00—22:00。网上预报名时间为2026年10月9日至10月12日，每日9:00—22:00。",
+          "locator": {
+            "type": "html",
+            "xpath": "/html/body/div[5]/div[2]/form/div/div[2]/div/div/p[60]"
+          },
+          "supports_fields": [
+            "/claims/14/statement",
+            "/actions/14/date_fields/0",
+            "/actions/14/date_fields/1"
+          ],
+          "relation": "supports",
+          "quote_normalization": "html_text_nodes_concatenated_then_unicode_whitespace_collapsed",
+          "evidence_kind": "actual_html_body"
+        },
+        {
+          "citation_id": "H033C036",
+          "quote": "已被招生单位录取的推免生，不得再报名参加当年全国统一考试、单独考试。",
+          "locator": {
+            "type": "html",
+            "xpath": "/html/body/div[5]/div[2]/form/div/div[2]/div/div/p[34]"
+          },
+          "supports_fields": [
+            "/claims/15/statement",
+            "/relations/10/explanation"
+          ],
+          "relation": "supports",
+          "quote_normalization": "html_text_nodes_concatenated_then_unicode_whitespace_collapsed",
+          "evidence_kind": "actual_html_body"
+        },
+        {
+          "citation_id": "H033C075",
+          "quote": "2026-09-30",
+          "locator": {
+            "type": "html",
+            "xpath": "/html/body/div[5]/div[2]/form/div/div[1]"
+          },
+          "supports_fields": [
+            "/documents/16/date_fields/0"
+          ],
+          "relation": "supports",
+          "quote_normalization": "html_text_nodes_concatenated_then_unicode_whitespace_collapsed",
+          "evidence_kind": "actual_html_body"
+        }
+      ]
+    },
+    {
+      "carrier_id": "attachment-law-points-docx",
+      "url": "http://law.hbu.cn/u/cms/law/202609/0216371067x9.docx",
+      "requested_url": "http://law.hbu.cn/u/cms/law/202609/0216371067x9.docx",
+      "final_url": "http://law.hbu.cn/u/cms/law/202609/0216371067x9.docx",
+      "department": "law",
+      "title": "河北大学法学院学生创新实践能力加分表.docx",
+      "parent_carrier_ids": [
+        "notice-law-19945"
+      ],
+      "access_status": "read_full",
+      "accessed_at": "2026-10-28T16:47:24.820398Z",
+      "unknown_reason": null,
+      "observed_content_kind": "native_docx",
+      "access": {
+        "attempted": true,
+        "started_at_utc": "2026-10-28T16:47:24.504776Z",
+        "finished_at_utc": "2026-10-28T16:47:24.820398Z",
+        "http_status": 200,
+        "observed_media_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        "body_sha256_candidate_reported": "b8c915b56563d6147e3d84572406ac5b719fdc43243d7e491a39ccf9906a16c0",
+        "read_status": "read_native_content",
+        "trace_refs": [],
+        "observation_state": "unknown",
+        "error_or_limit": "重开已保存原件，读取本整理所用节点；无新的网络访问。"
+      },
+      "source_observations": [
+        {
+          "original_GET_started_at": "2026-10-28T16:47:24.504776Z",
+          "original_GET_finished_at": "2026-10-28T16:47:24.820398Z",
+          "body_sha256": "b8c915b56563d6147e3d84572406ac5b719fdc43243d7e491a39ccf9906a16c0",
+          "receipt_sha256": "8cdc3de949b05f6d03eb7a41b04282a4d1fe8542126573a9e68c782cdcc8973d",
+          "stage": "historical_public_GET_reused_offline"
+        },
+        {
+          "original_GET_started_at": "2026-10-28T16:17:17.576220Z",
+          "original_GET_finished_at": "2026-10-28T16:17:17.845720Z",
+          "body_sha256": "b8c915b56563d6147e3d84572406ac5b719fdc43243d7e491a39ccf9906a16c0",
+          "receipt_sha256": "f3aaabdb3ae41d37105e4a0cf5ce2c94733f06bbee99cfec4aa27af68cf9bc98",
+          "stage": "another_historical_GET_same_official_carrier_not_independent_substantive_support"
+        }
+      ],
+      "content_lineage": "同一官方来源的重复采集不构成独立支持；以实际文书关系归并。",
+      "citations": [
+        {
+          "citation_id": "H033C005",
+          "quote": "2025年7月7日修订",
+          "locator": {
+            "type": "docx",
+            "part": "word/document.xml",
+            "paragraph_1based": 2
+          },
+          "supports_fields": [
+            "/claims/2/statement",
+            "/documents/17/date_fields/0"
+          ],
+          "relation": "supports",
+          "quote_normalization": "native_text_whitespace_collapsed",
+          "evidence_kind": "native_docx_text"
+        },
+        {
+          "citation_id": "H033C006",
+          "quote": "学生创新实践能力加分所有类别累计限定最高为5分，各类别加分累计超过5分按5分计算。",
+          "locator": {
+            "type": "docx",
+            "part": "word/document.xml",
+            "paragraph_1based": 8
+          },
+          "supports_fields": [
+            "/claims/2/statement"
+          ],
+          "relation": "supports",
+          "quote_normalization": "native_text_whitespace_collapsed",
+          "evidence_kind": "native_docx_text"
+        }
+      ]
+    },
+    {
+      "carrier_id": "attachment-law-competition-c-docx",
+      "url": "http://law.hbu.cn/u/cms/law/202609/02163638plcf.docx",
+      "requested_url": "http://law.hbu.cn/u/cms/law/202609/02163638plcf.docx",
+      "final_url": "http://law.hbu.cn/u/cms/law/202609/02163638plcf.docx",
+      "department": "law",
+      "title": "法学院课外学术科技竞赛分级目录C类.docx",
+      "parent_carrier_ids": [
+        "notice-law-19945"
+      ],
+      "access_status": "read_full",
+      "accessed_at": "2026-10-28T16:47:24.660004Z",
+      "unknown_reason": null,
+      "observed_content_kind": "native_docx",
+      "access": {
+        "attempted": true,
+        "started_at_utc": "2026-10-28T16:47:24.457416Z",
+        "finished_at_utc": "2026-10-28T16:47:24.660004Z",
+        "http_status": 200,
+        "observed_media_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        "body_sha256_candidate_reported": "bc4403c616dfc3a37b3bab5108b5fc30a787b2ceb6bbb0aac740233bf6dfafa4",
+        "read_status": "read_native_content",
+        "trace_refs": [],
+        "observation_state": "unknown",
+        "error_or_limit": "重开已保存原件，读取本整理所用节点；无新的网络访问。"
+      },
+      "source_observations": [
+        {
+          "original_GET_started_at": "2026-10-28T16:47:24.457416Z",
+          "original_GET_finished_at": "2026-10-28T16:47:24.660004Z",
+          "body_sha256": "bc4403c616dfc3a37b3bab5108b5fc30a787b2ceb6bbb0aac740233bf6dfafa4",
+          "receipt_sha256": "a152f03a6ca650a27086e760ee752e2b10cb41a9ddd9a56d523dfa0a613fda10",
+          "stage": "historical_public_GET_reused_offline"
+        }
+      ],
+      "content_lineage": "同一官方来源的重复采集不构成独立支持；以实际文书关系归并。",
+      "citations": [
+        {
+          "citation_id": "H033C007",
+          "quote": "1全国学生“学宪法讲宪法”活动教育部全国教育普法领导小组办公室教育部全国青少年普法网C+",
+          "locator": {
+            "type": "docx",
+            "part": "word/document.xml",
+            "table_1based": 1,
+            "row_1based": 2
+          },
+          "supports_fields": [
+            "/claims/3/statement"
+          ],
+          "relation": "supports",
+          "quote_normalization": "native_text_whitespace_collapsed",
+          "evidence_kind": "native_docx_text"
+        },
+        {
+          "citation_id": "H033C008",
+          "quote": "6“理律杯”全国高校模拟法庭竞赛清华大学法学院C",
+          "locator": {
+            "type": "docx",
+            "part": "word/document.xml",
+            "table_1based": 1,
+            "row_1based": 7
+          },
+          "supports_fields": [
+            "/claims/3/statement"
+          ],
+          "relation": "supports",
+          "quote_normalization": "native_text_whitespace_collapsed",
+          "evidence_kind": "native_docx_text"
+        },
+        {
+          "citation_id": "H033C009",
+          "quote": "序号竞赛名称主办方级别",
+          "locator": {
+            "type": "docx",
+            "part": "word/document.xml",
+            "xpath": "/w:document/w:body/w:tbl[1]/w:tr[1]"
+          },
+          "supports_fields": [
+            "/claims/3/statement"
+          ],
+          "relation": "supports",
+          "quote_normalization": "native_text_whitespace_collapsed",
+          "evidence_kind": "native_docx_text"
+        }
+      ]
+    },
+    {
+      "carrier_id": "attachment-law-master-directory-xlsx",
+      "url": "http://law.hbu.cn/u/cms/law/202609/11180512gxg0.xlsx",
+      "requested_url": "http://law.hbu.cn/u/cms/law/202609/11180512gxg0.xlsx",
+      "final_url": "http://law.hbu.cn/u/cms/law/202609/11180512gxg0.xlsx",
+      "department": "law",
+      "title": "2027年法学院接收硕士推免生专业目录.xlsx",
+      "parent_carrier_ids": [
+        "notice-law-20003"
+      ],
+      "access_status": "read_full",
+      "accessed_at": "2026-10-28T16:47:24.995144Z",
+      "unknown_reason": null,
+      "observed_content_kind": "native_xlsx",
+      "access": {
+        "attempted": true,
+        "started_at_utc": "2026-10-28T16:47:24.826168Z",
+        "finished_at_utc": "2026-10-28T16:47:24.995144Z",
+        "http_status": 200,
+        "observed_media_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        "body_sha256_candidate_reported": "95eb3ca2db8bad8680adbbbdc24c5bba8edac8fc3e5373ec0fba7838f0f593d0",
+        "read_status": "read_native_content",
+        "trace_refs": [],
+        "observation_state": "unknown",
+        "error_or_limit": "重开已保存原件，读取本整理所用节点；无新的网络访问。"
+      },
+      "source_observations": [
+        {
+          "original_GET_started_at": "2026-10-28T16:47:24.826168Z",
+          "original_GET_finished_at": "2026-10-28T16:47:24.995144Z",
+          "body_sha256": "95eb3ca2db8bad8680adbbbdc24c5bba8edac8fc3e5373ec0fba7838f0f593d0",
+          "receipt_sha256": "c07cedd40cbc0f89688eee4c58fabcf941f11e4b2548e1ad0adc3ef8ea96dc27",
+          "stage": "historical_public_GET_reused_offline"
+        },
+        {
+          "original_GET_started_at": "2026-10-28T16:17:17.575929Z",
+          "original_GET_finished_at": "2026-10-28T16:17:17.745195Z",
+          "body_sha256": "95eb3ca2db8bad8680adbbbdc24c5bba8edac8fc3e5373ec0fba7838f0f593d0",
+          "receipt_sha256": "44fdfcb3c31c003cf547d817012a5e4674d8ee962e83a08ebd0845e76f21e2b6",
+          "stage": "another_historical_GET_same_official_carrier_not_independent_substantive_support"
+        }
+      ],
+      "content_lineage": "同一官方来源的重复采集不构成独立支持；以实际文书关系归并。",
+      "citations": [
+        {
+          "citation_id": "H033C018",
+          "quote": "专业",
+          "locator": {
+            "type": "xlsx",
+            "sheet": "Sheet1",
+            "cell_or_range": "B1",
+            "cell": "B1",
+            "part": "xl/worksheets/sheet1.xml",
+            "value_role": "literal_value"
+          },
+          "supports_fields": [
+            "/claims/10/statement"
+          ],
+          "relation": "supports",
+          "quote_normalization": "native_text_whitespace_collapsed",
+          "evidence_kind": "native_xlsx_cells"
+        },
+        {
+          "citation_id": "H033C019",
+          "quote": "研究方向",
+          "locator": {
+            "type": "xlsx",
+            "sheet": "Sheet1",
+            "cell_or_range": "C1",
+            "cell": "C1",
+            "part": "xl/worksheets/sheet1.xml",
+            "value_role": "literal_value"
+          },
+          "supports_fields": [
+            "/claims/10/statement"
+          ],
+          "relation": "supports",
+          "quote_normalization": "native_text_whitespace_collapsed",
+          "evidence_kind": "native_xlsx_cells"
+        },
+        {
+          "citation_id": "H033C020",
+          "quote": "学习方式",
+          "locator": {
+            "type": "xlsx",
+            "sheet": "Sheet1",
+            "cell_or_range": "D1",
+            "cell": "D1",
+            "part": "xl/worksheets/sheet1.xml",
+            "value_role": "literal_value"
+          },
+          "supports_fields": [
+            "/claims/10/statement"
+          ],
+          "relation": "supports",
+          "quote_normalization": "native_text_whitespace_collapsed",
+          "evidence_kind": "native_xlsx_cells"
+        },
+        {
+          "citation_id": "H033C021",
+          "quote": "拟接收推免生人数",
+          "locator": {
+            "type": "xlsx",
+            "sheet": "Sheet1",
+            "cell_or_range": "E1",
+            "cell": "E1",
+            "part": "xl/worksheets/sheet1.xml",
+            "value_role": "literal_value"
+          },
+          "supports_fields": [
+            "/claims/10/statement"
+          ],
+          "relation": "supports",
+          "quote_normalization": "native_text_whitespace_collapsed",
+          "evidence_kind": "native_xlsx_cells"
+        },
+        {
+          "citation_id": "H033C022",
+          "quote": "030101法学理论",
+          "locator": {
+            "type": "xlsx",
+            "sheet": "Sheet1",
+            "cell_or_range": "B2",
+            "cell": "B2",
+            "part": "xl/worksheets/sheet1.xml",
+            "value_role": "literal_value"
+          },
+          "supports_fields": [
+            "/claims/10/statement"
+          ],
+          "relation": "supports",
+          "quote_normalization": "native_text_whitespace_collapsed",
+          "evidence_kind": "native_xlsx_cells"
+        },
+        {
+          "citation_id": "H033C023",
+          "quote": "2",
+          "locator": {
+            "type": "xlsx",
+            "sheet": "Sheet1",
+            "cell_or_range": "E2",
+            "cell": "E2",
+            "part": "xl/worksheets/sheet1.xml",
+            "value_role": "literal_value"
+          },
+          "supports_fields": [
+            "/claims/10/statement"
+          ],
+          "relation": "supports",
+          "quote_normalization": "native_text_whitespace_collapsed",
+          "evidence_kind": "native_xlsx_cells"
+        },
+        {
+          "citation_id": "H033C024",
+          "quote": "035102法律（法学）",
+          "locator": {
+            "type": "xlsx",
+            "sheet": "Sheet1",
+            "cell_or_range": "B36",
+            "cell": "B36",
+            "part": "xl/worksheets/sheet1.xml",
+            "value_role": "literal_value"
+          },
+          "supports_fields": [
+            "/claims/10/statement"
+          ],
+          "relation": "supports",
+          "quote_normalization": "native_text_whitespace_collapsed",
+          "evidence_kind": "native_xlsx_cells"
+        },
+        {
+          "citation_id": "H033C025",
+          "quote": "28",
+          "locator": {
+            "type": "xlsx",
+            "sheet": "Sheet1",
+            "cell_or_range": "E36",
+            "cell": "E36",
+            "part": "xl/worksheets/sheet1.xml",
+            "value_role": "literal_value"
+          },
+          "supports_fields": [
+            "/claims/10/statement"
+          ],
+          "relation": "supports",
+          "quote_normalization": "native_text_whitespace_collapsed",
+          "evidence_kind": "native_xlsx_cells"
+        }
+      ]
+    },
+    {
+      "carrier_id": "attachment-law-competition-pdf",
+      "url": "http://law.hbu.cn/u/cms/law/202609/021635300d9s.pdf",
+      "requested_url": "http://law.hbu.cn/u/cms/law/202609/021635300d9s.pdf",
+      "final_url": "http://law.hbu.cn/u/cms/law/202609/021635300d9s.pdf",
+      "department": "law",
+      "title": "河北大学学生课外学术科技竞赛分级目录2024版.pdf",
+      "parent_carrier_ids": [
+        "notice-law-19945"
+      ],
+      "access_status": "read_full",
+      "accessed_at": "2026-10-28T16:47:24.920049Z",
+      "unknown_reason": null,
+      "observed_content_kind": "pdf_text",
+      "access": {
+        "attempted": true,
+        "started_at_utc": "2026-10-28T16:47:24.342092Z",
+        "finished_at_utc": "2026-10-28T16:47:24.920049Z",
+        "http_status": 200,
+        "observed_media_type": "application/pdf",
+        "body_sha256_candidate_reported": "9b52b007ae4812a6ab8d4645e8e1ad0b3840e27c5b873f0dfe60d328899013ec",
+        "read_status": "read_native_content",
+        "trace_refs": [],
+        "observation_state": "unknown",
+        "error_or_limit": "重开已保存原件，读取本整理所用节点；无新的网络访问。"
+      },
+      "source_observations": [
+        {
+          "original_GET_started_at": "2026-10-28T16:47:24.342092Z",
+          "original_GET_finished_at": "2026-10-28T16:47:24.920049Z",
+          "body_sha256": "9b52b007ae4812a6ab8d4645e8e1ad0b3840e27c5b873f0dfe60d328899013ec",
+          "receipt_sha256": "2f8120eb10d5088b8de92a7191aa032a4f710a6718fda723cba477d89127a8b8",
+          "stage": "historical_public_GET_reused_offline"
+        }
+      ],
+      "content_lineage": "同一官方来源的重复采集不构成独立支持；以实际文书关系归并。",
+      "citations": [
+        {
+          "citation_id": "H033C056",
+          "quote": "校团字〔2024〕1号",
+          "locator": {
+            "type": "pdf",
+            "physical_page_1based": 1
+          },
+          "supports_fields": [
+            "/claims/27/statement"
+          ],
+          "relation": "supports",
+          "quote_normalization": "native_text_whitespace_collapsed",
+          "evidence_kind": "physical_pdf_text"
+        },
+        {
+          "citation_id": "H033C057",
+          "quote": "（2024版）",
+          "locator": {
+            "type": "pdf",
+            "physical_page_1based": 1
+          },
+          "supports_fields": [
+            "/claims/27/statement",
+            "/documents/20/date_fields/0"
+          ],
+          "relation": "supports",
+          "quote_normalization": "native_text_whitespace_collapsed",
+          "evidence_kind": "physical_pdf_text"
+        }
+      ]
+    },
+    {
+      "carrier_id": "attachment-yjsy-master-directory-xlsx",
+      "url": "https://yjsy.hbu.edu.cn/system/_content/download.jsp?urltype=news.DownloadAttachUrl&owner=1871155637&wbfileid=18204521",
+      "requested_url": "https://yjsy.hbu.edu.cn/system/_content/download.jsp?urltype=news.DownloadAttachUrl&owner=1871155637&wbfileid=18204521",
+      "final_url": "https://yjsy.hbu.edu.cn/system/_content/download.jsp?urltype=news.DownloadAttachUrl&owner=1871155637&wbfileid=18204521",
+      "department": null,
+      "title": "2027年河北大学接收硕士推免生专业目录.xlsx",
+      "parent_carrier_ids": [
+        "notice-yjsy-4427",
+        "notice-yjsy-4428"
+      ],
+      "access_status": "unavailable",
+      "accessed_at": "2026-10-28T16:47:26.609851Z",
+      "unknown_reason": "实际取得验证码HTML，未取得链接所称附件。",
+      "observed_content_kind": "html_captcha",
+      "access": {
+        "attempted": true,
+        "started_at_utc": "2026-10-28T16:47:26.241829Z",
+        "finished_at_utc": "2026-10-28T16:47:26.609851Z",
+        "http_status": 200,
+        "observed_media_type": "text/html",
+        "body_sha256_candidate_reported": "00d3e27e7dd3d99e0a0df385219f733acf9e461597bb7016372ad05d057a90e7",
+        "read_status": "blocked",
+        "trace_refs": [],
+        "observation_state": "unknown",
+        "error_or_limit": "实际取得验证码HTML，未取得链接所称附件。"
+      },
+      "source_observations": [
+        {
+          "original_GET_started_at": "2026-10-28T16:47:26.241829Z",
+          "original_GET_finished_at": "2026-10-28T16:47:26.609851Z",
+          "body_sha256": "00d3e27e7dd3d99e0a0df385219f733acf9e461597bb7016372ad05d057a90e7",
+          "receipt_sha256": "4d8484c4045efa93169399535ec5a446c83779df53a75c2db942625cfc29da39",
+          "stage": "historical_public_GET_reused_offline"
+        },
+        {
+          "original_GET_started_at": "2026-10-28T16:17:17.575156Z",
+          "original_GET_finished_at": "2026-10-28T16:17:17.814781Z",
+          "body_sha256": "00d3e27e7dd3d99e0a0df385219f733acf9e461597bb7016372ad05d057a90e7",
+          "receipt_sha256": "50eb83c77a738860e02c877bf739575a9d1d03210457e4217ef885e081d9fa11",
+          "stage": "another_historical_GET_same_official_carrier_not_independent_substantive_support"
+        }
+      ],
+      "content_lineage": "同一官方来源的重复采集不构成独立支持；以实际文书关系归并。",
+      "citations": []
+    },
+    {
+      "carrier_id": "attachment-yjsy-general-directory-pdf",
+      "url": "https://yjsy.hbu.edu.cn/system/_content/download.jsp?urltype=news.DownloadAttachUrl&owner=1871155637&wbfileid=18206089",
+      "requested_url": "https://yjsy.hbu.edu.cn/system/_content/download.jsp?urltype=news.DownloadAttachUrl&owner=1871155637&wbfileid=18206089",
+      "final_url": "https://yjsy.hbu.edu.cn/system/_content/download.jsp?urltype=news.DownloadAttachUrl&owner=1871155637&wbfileid=18206089",
+      "department": null,
+      "title": "2027年河北大学硕士研究生招生专业目录.pdf",
+      "parent_carrier_ids": [
+        "notice-yjsy-4439",
+        "notice-yjsy-4440"
+      ],
+      "access_status": "unavailable",
+      "accessed_at": "2026-10-28T16:47:26.922629Z",
+      "unknown_reason": "实际取得验证码HTML，未取得链接所称附件。",
+      "observed_content_kind": "html_captcha",
+      "access": {
+        "attempted": true,
+        "started_at_utc": "2026-10-28T16:47:26.620875Z",
+        "finished_at_utc": "2026-10-28T16:47:26.922629Z",
+        "http_status": 200,
+        "observed_media_type": "text/html",
+        "body_sha256_candidate_reported": "29d66b6a7868f875e02f7a7801ce7d9707b4daf8da5421079e1e8da6c957def2",
+        "read_status": "blocked",
+        "trace_refs": [],
+        "observation_state": "unknown",
+        "error_or_limit": "实际取得验证码HTML，未取得链接所称附件。"
+      },
+      "source_observations": [
+        {
+          "original_GET_started_at": "2026-10-28T16:47:26.620875Z",
+          "original_GET_finished_at": "2026-10-28T16:47:26.922629Z",
+          "body_sha256": "29d66b6a7868f875e02f7a7801ce7d9707b4daf8da5421079e1e8da6c957def2",
+          "receipt_sha256": "c8ece01b04a808b8513935dc5a36a6366d1c0cde39d85158c9b66304cc56adc8",
+          "stage": "historical_public_GET_reused_offline"
+        }
+      ],
+      "content_lineage": "同一官方来源的重复采集不构成独立支持；以实际文书关系归并。",
+      "citations": []
+    },
+    {
+      "carrier_id": "attachment-jwc-course-handbook-xls",
+      "url": "https://jwc.hbu.cn/system/_content/download.jsp?urltype=news.DownloadAttachUrl&owner=1779593327&wbfileid=18204135",
+      "requested_url": "https://jwc.hbu.cn/system/_content/download.jsp?urltype=news.DownloadAttachUrl&owner=1779593327&wbfileid=18204135",
+      "final_url": "https://jwc.hbu.cn/system/_content/download.jsp?urltype=news.DownloadAttachUrl&owner=1779593327&wbfileid=18204135",
+      "department": null,
+      "title": "2026-2027学年秋学期学生选课手册.xls",
+      "parent_carrier_ids": [
+        "notice-jwc-12360"
+      ],
+      "access_status": "unavailable",
+      "accessed_at": "2026-10-28T16:47:28.497241Z",
+      "unknown_reason": "实际取得验证码HTML，未取得链接所称附件。",
+      "observed_content_kind": "html_captcha",
+      "access": {
+        "attempted": true,
+        "started_at_utc": "2026-10-28T16:47:26.632594Z",
+        "finished_at_utc": "2026-10-28T16:47:28.497241Z",
+        "http_status": 200,
+        "observed_media_type": "text/html",
+        "body_sha256_candidate_reported": "1cfa41d4f31c57bb3bb0cf5faeda79c0fbf2b6cb5225c211ba62ab2116f76a03",
+        "read_status": "blocked",
+        "trace_refs": [],
+        "observation_state": "unknown",
+        "error_or_limit": "实际取得验证码HTML，未取得链接所称附件。"
+      },
+      "source_observations": [
+        {
+          "original_GET_started_at": "2026-10-28T16:47:26.632594Z",
+          "original_GET_finished_at": "2026-10-28T16:47:28.497241Z",
+          "body_sha256": "1cfa41d4f31c57bb3bb0cf5faeda79c0fbf2b6cb5225c211ba62ab2116f76a03",
+          "receipt_sha256": "fbb339261b4ccc569282867490767cafc6e521a33000fd8b09670bef8a7e9118",
+          "stage": "historical_public_GET_reused_offline"
+        }
+      ],
+      "content_lineage": "同一官方来源的重复采集不构成独立支持；以实际文书关系归并。",
+      "citations": []
+    },
+    {
+      "carrier_id": "attachment-jwc-course-substitution-pdf",
+      "url": "https://jwc.hbu.cn/system/_content/download.jsp?urltype=news.DownloadAttachUrl&owner=1779593327&wbfileid=18204138",
+      "requested_url": "https://jwc.hbu.cn/system/_content/download.jsp?urltype=news.DownloadAttachUrl&owner=1779593327&wbfileid=18204138",
+      "final_url": "https://jwc.hbu.cn/system/_content/download.jsp?urltype=news.DownloadAttachUrl&owner=1779593327&wbfileid=18204138",
+      "department": null,
+      "title": "本科教务系统课程替代操作说明（学生端）.pdf",
+      "parent_carrier_ids": [
+        "notice-jwc-12360"
+      ],
+      "access_status": "unavailable",
+      "accessed_at": "2026-10-28T16:47:27.127615Z",
+      "unknown_reason": "实际取得验证码HTML，未取得链接所称附件。",
+      "observed_content_kind": "html_captcha",
+      "access": {
+        "attempted": true,
+        "started_at_utc": "2026-10-28T16:47:26.891338Z",
+        "finished_at_utc": "2026-10-28T16:47:27.127615Z",
+        "http_status": 200,
+        "observed_media_type": "text/html",
+        "body_sha256_candidate_reported": "bddd30f23f21c1b492b794509037658e6c25e04d650929b7b009826371b90499",
+        "read_status": "blocked",
+        "trace_refs": [],
+        "observation_state": "unknown",
+        "error_or_limit": "实际取得验证码HTML，未取得链接所称附件。"
+      },
+      "source_observations": [
+        {
+          "original_GET_started_at": "2026-10-28T16:47:26.891338Z",
+          "original_GET_finished_at": "2026-10-28T16:47:27.127615Z",
+          "body_sha256": "bddd30f23f21c1b492b794509037658e6c25e04d650929b7b009826371b90499",
+          "receipt_sha256": "13d8dc0d043578e51781d2fb5d67e8d30c01cd863b634095afd27944092f9734",
+          "stage": "historical_public_GET_reused_offline"
+        },
+        {
+          "original_GET_started_at": "2026-10-28T16:17:17.576049Z",
+          "original_GET_finished_at": "2026-10-28T16:17:17.822434Z",
+          "body_sha256": "bddd30f23f21c1b492b794509037658e6c25e04d650929b7b009826371b90499",
+          "receipt_sha256": "d783c5d4e660fefa79cd599dd41a109ea154a9918febfcf7777e05a804b9f3db",
+          "stage": "another_historical_GET_same_official_carrier_not_independent_substantive_support"
+        }
+      ],
+      "content_lineage": "同一官方来源的重复采集不构成独立支持；以实际文书关系归并。",
+      "citations": []
+    },
+    {
+      "carrier_id": "attachment-jwc-registration-vpn-pdf",
+      "url": "https://jwc.hbu.cn/system/_content/download.jsp?urltype=news.DownloadAttachUrl&owner=1779593327&wbfileid=18205693",
+      "requested_url": "https://jwc.hbu.cn/system/_content/download.jsp?urltype=news.DownloadAttachUrl&owner=1779593327&wbfileid=18205693",
+      "final_url": "https://jwc.hbu.cn/system/_content/download.jsp?urltype=news.DownloadAttachUrl&owner=1779593327&wbfileid=18205693",
+      "department": null,
+      "title": "使用WEBVPN登录教务系统网页端操作说明202609.pdf",
+      "parent_carrier_ids": [
+        "notice-jwc-12398"
+      ],
+      "access_status": "unavailable",
+      "accessed_at": "2026-10-28T16:47:26.884965Z",
+      "unknown_reason": "实际取得验证码HTML，未取得链接所称附件。",
+      "observed_content_kind": "html_captcha",
+      "access": {
+        "attempted": true,
+        "started_at_utc": "2026-10-28T16:47:26.631308Z",
+        "finished_at_utc": "2026-10-28T16:47:26.884965Z",
+        "http_status": 200,
+        "observed_media_type": "text/html",
+        "body_sha256_candidate_reported": "799430f4d53bc7c7b7b0b4f7a3e833b3890ad6e2221b27f0ef47ba476d280663",
+        "read_status": "blocked",
+        "trace_refs": [],
+        "observation_state": "unknown",
+        "error_or_limit": "实际取得验证码HTML，未取得链接所称附件。"
+      },
+      "source_observations": [
+        {
+          "original_GET_started_at": "2026-10-28T16:47:26.631308Z",
+          "original_GET_finished_at": "2026-10-28T16:47:26.884965Z",
+          "body_sha256": "799430f4d53bc7c7b7b0b4f7a3e833b3890ad6e2221b27f0ef47ba476d280663",
+          "receipt_sha256": "493248c31debf06565c38d08ad9d8d0652349771b0d57a22c52b70a1aae839c5",
+          "stage": "historical_public_GET_reused_offline"
+        },
+        {
+          "original_GET_started_at": "2026-10-28T16:17:17.576434Z",
+          "original_GET_finished_at": "2026-10-28T16:17:17.830356Z",
+          "body_sha256": "799430f4d53bc7c7b7b0b4f7a3e833b3890ad6e2221b27f0ef47ba476d280663",
+          "receipt_sha256": "101a9a970996844ca6cccc585fdbd6cbe5981eda87390b58b99d5a33da1e3817",
+          "stage": "another_historical_GET_same_official_carrier_not_independent_substantive_support"
+        }
+      ],
+      "content_lineage": "同一官方来源的重复采集不构成独立支持；以实际文书关系归并。",
+      "citations": []
+    },
+    {
+      "carrier_id": "attachment-jwc-deferred-form-xls",
+      "url": "https://jwc.hbu.cn/system/_content/download.jsp?urltype=news.DownloadAttachUrl&owner=1779593327&wbfileid=18205785",
+      "requested_url": "https://jwc.hbu.cn/system/_content/download.jsp?urltype=news.DownloadAttachUrl&owner=1779593327&wbfileid=18205785",
+      "final_url": "https://jwc.hbu.cn/system/_content/download.jsp?urltype=news.DownloadAttachUrl&owner=1779593327&wbfileid=18205785",
+      "department": null,
+      "title": "缓考学生选课情况统计表.xls",
+      "parent_carrier_ids": [
+        "notice-jwc-12405"
+      ],
+      "access_status": "unavailable",
+      "accessed_at": "2026-10-28T16:47:28.505883Z",
+      "unknown_reason": "实际取得验证码HTML，未取得链接所称附件。",
+      "observed_content_kind": "html_captcha",
+      "access": {
+        "attempted": true,
+        "started_at_utc": "2026-10-28T16:47:26.929169Z",
+        "finished_at_utc": "2026-10-28T16:47:28.505883Z",
+        "http_status": 200,
+        "observed_media_type": "text/html",
+        "body_sha256_candidate_reported": "2a4b11cd51469df557b67fb9d8b57dca2b76939dee89c44241b7f47e5f1cbca9",
+        "read_status": "blocked",
+        "trace_refs": [],
+        "observation_state": "unknown",
+        "error_or_limit": "实际取得验证码HTML，未取得链接所称附件。"
+      },
+      "source_observations": [
+        {
+          "original_GET_started_at": "2026-10-28T16:47:26.929169Z",
+          "original_GET_finished_at": "2026-10-28T16:47:28.505883Z",
+          "body_sha256": "2a4b11cd51469df557b67fb9d8b57dca2b76939dee89c44241b7f47e5f1cbca9",
+          "receipt_sha256": "3754ca3da2c449111c8d43aafe61f330eb1221b86b777b85be8d63e566195d08",
+          "stage": "historical_public_GET_reused_offline"
+        }
+      ],
+      "content_lineage": "同一官方来源的重复采集不构成独立支持；以实际文书关系归并。",
+      "citations": []
+    },
+    {
+      "carrier_id": "attachment-law-books-xls",
+      "url": "http://law.hbu.cn/u/cms/law/202609/20163749lz33.xls",
+      "requested_url": "http://law.hbu.cn/u/cms/law/202609/20163749lz33.xls",
+      "final_url": "http://law.hbu.cn/u/cms/law/202609/20163749lz33.xls",
+      "department": "law",
+      "title": "法学院2027年硕士研究生招生考试参考书目.xls",
+      "parent_carrier_ids": [
+        "notice-law-20037"
+      ],
+      "access_status": "unavailable",
+      "accessed_at": "2026-10-28T16:47:25.803238Z",
+      "unknown_reason": "已取得旧XLS字节；现有冻结读取未形成单元格内容。",
+      "observed_content_kind": "native_xls",
+      "access": {
+        "attempted": true,
+        "started_at_utc": "2026-10-28T16:47:25.529427Z",
+        "finished_at_utc": "2026-10-28T16:47:25.803238Z",
+        "http_status": 200,
+        "observed_media_type": "application/vnd.ms-excel",
+        "body_sha256_candidate_reported": "f685b1ca2c9d2ec2c05050b675c51e6937fd3d02df540f64668d6e1749dfe9a9",
+        "read_status": "blocked",
+        "trace_refs": [],
+        "observation_state": "unknown",
+        "error_or_limit": "已取得旧XLS字节；现有冻结读取未形成单元格内容。"
+      },
+      "source_observations": [
+        {
+          "original_GET_started_at": "2026-10-28T16:47:25.529427Z",
+          "original_GET_finished_at": "2026-10-28T16:47:25.803238Z",
+          "body_sha256": "f685b1ca2c9d2ec2c05050b675c51e6937fd3d02df540f64668d6e1749dfe9a9",
+          "receipt_sha256": "bbb87ecd76c606422f4898d3a72f450d9a4511529918d6c6baffcdb30f44298d",
+          "stage": "historical_public_GET_reused_offline"
+        }
+      ],
+      "content_lineage": "同一官方来源的重复采集不构成独立支持；以实际文书关系归并。",
+      "citations": []
+    }
+  ],
+  "documents": [
+    {
+      "document_id": "doc-jwc-12352",
+      "document_kind": "notice",
+      "title": "关于组织2026-2027学年秋学期本科生补（缓）考的通知",
+      "carrier_ids": [
+        "notice-jwc-12352"
+      ],
+      "date_fields": [
+        {
+          "role": "webpage_publication",
+          "raw_text": "2026-08-31",
+          "normalized_start": "2026-08-31",
+          "normalized_end": null,
+          "precision": "date",
+          "timezone": "Asia/Shanghai",
+          "timezone_basis": "task_context",
+          "actor": "jwc",
+          "citation_ids": [
+            "H033C053"
+          ]
+        }
+      ],
+      "publication_window_status": "out_of_window",
+      "version_status": "observed_version",
+      "identity_or_version_citation_ids": [
+        "H033C053"
+      ],
+      "original_or_repost_order": "unknown",
+      "current_effectiveness": "unknown; captured after publication window, no global latest-version proof"
+    },
+    {
+      "document_id": "doc-jwc-12360",
+      "document_kind": "notice",
+      "title": "关于2026—2027学年秋学期学生补退选选课及课程替代的通知",
+      "carrier_ids": [
+        "notice-jwc-12360"
+      ],
+      "date_fields": [
+        {
+          "role": "webpage_publication",
+          "raw_text": "2026-09-02",
+          "normalized_start": "2026-09-02",
+          "normalized_end": null,
+          "precision": "date",
+          "timezone": "Asia/Shanghai",
+          "timezone_basis": "task_context",
+          "actor": "jwc",
+          "citation_ids": [
+            "H033C058"
+          ]
+        },
+        {
+          "role": "body_signoff",
+          "raw_text": "202 6 年 9 月 3 日",
+          "normalized_start": "2026-09-03",
+          "normalized_end": null,
+          "precision": "date",
+          "timezone": "Asia/Shanghai",
+          "timezone_basis": "task_context",
+          "actor": null,
+          "citation_ids": [
+            "H033C077"
+          ]
+        }
+      ],
+      "publication_window_status": "in_window",
+      "version_status": "observed_version",
+      "identity_or_version_citation_ids": [
+        "H033C058",
+        "H033C077"
+      ],
+      "original_or_repost_order": "unknown",
+      "current_effectiveness": "unknown; captured after publication window, no global latest-version proof"
+    },
+    {
+      "document_id": "doc-jwc-12364",
+      "document_kind": "notice",
+      "title": "关于公示2027年推荐优秀应届本科毕业生免试攻读研究生名单的通知",
+      "carrier_ids": [
+        "notice-jwc-12364"
+      ],
+      "date_fields": [
+        {
+          "role": "webpage_publication",
+          "raw_text": "2026-09-09",
+          "normalized_start": "2026-09-09",
+          "normalized_end": null,
+          "precision": "date",
+          "timezone": "Asia/Shanghai",
+          "timezone_basis": "task_context",
+          "actor": "jwc",
+          "citation_ids": [
+            "H033C059"
+          ]
+        }
+      ],
+      "publication_window_status": "in_window",
+      "version_status": "observed_version",
+      "identity_or_version_citation_ids": [
+        "H033C059"
+      ],
+      "original_or_repost_order": "unknown",
+      "current_effectiveness": "unknown; captured after publication window, no global latest-version proof"
+    },
+    {
+      "document_id": "doc-jwc-12386",
+      "document_kind": "notice",
+      "title": "关于2026-2027学年秋学期补退选后拟停开课程(课堂)的通知",
+      "carrier_ids": [
+        "notice-jwc-12386"
+      ],
+      "date_fields": [
+        {
+          "role": "webpage_publication",
+          "raw_text": "2026-09-14",
+          "normalized_start": "2026-09-14",
+          "normalized_end": null,
+          "precision": "date",
+          "timezone": "Asia/Shanghai",
+          "timezone_basis": "task_context",
+          "actor": "jwc",
+          "citation_ids": [
+            "H033C060"
+          ]
+        }
+      ],
+      "publication_window_status": "in_window",
+      "version_status": "observed_version",
+      "identity_or_version_citation_ids": [
+        "H033C060"
+      ],
+      "original_or_repost_order": "unknown",
+      "current_effectiveness": "unknown; captured after publication window, no global latest-version proof"
+    },
+    {
+      "document_id": "doc-jwc-12394",
+      "document_kind": "notice",
+      "title": "关于公布2026-2027学年秋学期补退选后停开课程（课堂）的通知",
+      "carrier_ids": [
+        "notice-jwc-12394"
+      ],
+      "date_fields": [
+        {
+          "role": "webpage_publication",
+          "raw_text": "2026-09-16",
+          "normalized_start": "2026-09-16",
+          "normalized_end": null,
+          "precision": "date",
+          "timezone": "Asia/Shanghai",
+          "timezone_basis": "task_context",
+          "actor": "jwc",
+          "citation_ids": [
+            "H033C061"
+          ]
+        }
+      ],
+      "publication_window_status": "in_window",
+      "version_status": "observed_version",
+      "identity_or_version_citation_ids": [
+        "H033C061"
+      ],
+      "original_or_repost_order": "unknown",
+      "current_effectiveness": "unknown; captured after publication window, no global latest-version proof"
+    },
+    {
+      "document_id": "doc-jwc-12398",
+      "document_kind": "notice",
+      "title": "关于2026-2027学年秋学期本科生电子注册的通知",
+      "carrier_ids": [
+        "notice-jwc-12398"
+      ],
+      "date_fields": [
+        {
+          "role": "webpage_publication",
+          "raw_text": "2026-09-20",
+          "normalized_start": "2026-09-20",
+          "normalized_end": null,
+          "precision": "date",
+          "timezone": "Asia/Shanghai",
+          "timezone_basis": "task_context",
+          "actor": "jwc",
+          "citation_ids": [
+            "H033C062"
+          ]
+        }
+      ],
+      "publication_window_status": "in_window",
+      "version_status": "observed_version",
+      "identity_or_version_citation_ids": [
+        "H033C062"
+      ],
+      "original_or_repost_order": "unknown",
+      "current_effectiveness": "unknown; captured after publication window, no global latest-version proof"
+    },
+    {
+      "document_id": "doc-jwc-12405",
+      "document_kind": "notice",
+      "title": "关于办理2026-2027学年秋学期缓考学生选课的通知",
+      "carrier_ids": [
+        "notice-jwc-12405"
+      ],
+      "date_fields": [
+        {
+          "role": "webpage_publication",
+          "raw_text": "2026-09-21",
+          "normalized_start": "2026-09-21",
+          "normalized_end": null,
+          "precision": "date",
+          "timezone": "Asia/Shanghai",
+          "timezone_basis": "task_context",
+          "actor": "jwc",
+          "citation_ids": [
+            "H033C063"
+          ]
+        }
+      ],
+      "publication_window_status": "in_window",
+      "version_status": "observed_version",
+      "identity_or_version_citation_ids": [
+        "H033C063"
+      ],
+      "original_or_repost_order": "unknown",
+      "current_effectiveness": "unknown; captured after publication window, no global latest-version proof"
+    },
+    {
+      "document_id": "doc-jwc-12411",
+      "document_kind": "notice",
+      "title": "关于公布2026-2027学年秋学期已注册学生名单的通知",
+      "carrier_ids": [
+        "notice-jwc-12411"
+      ],
+      "date_fields": [
+        {
+          "role": "webpage_publication",
+          "raw_text": "2026-09-23",
+          "normalized_start": "2026-09-23",
+          "normalized_end": null,
+          "precision": "date",
+          "timezone": "Asia/Shanghai",
+          "timezone_basis": "task_context",
+          "actor": "jwc",
+          "citation_ids": [
+            "H033C064"
+          ]
+        }
+      ],
+      "publication_window_status": "in_window",
+      "version_status": "observed_version",
+      "identity_or_version_citation_ids": [
+        "H033C064"
+      ],
+      "original_or_repost_order": "unknown",
+      "current_effectiveness": "unknown; captured after publication window, no global latest-version proof"
+    },
+    {
+      "document_id": "doc-jwc-12419",
+      "document_kind": "notice",
+      "title": "关于2027届预计毕（结）业生未进行新华社图像信息采集的同学补照和图像信息核对的通知",
+      "carrier_ids": [
+        "notice-jwc-12419"
+      ],
+      "date_fields": [
+        {
+          "role": "webpage_publication",
+          "raw_text": "2026-10-08",
+          "normalized_start": "2026-10-08",
+          "normalized_end": null,
+          "precision": "date",
+          "timezone": "Asia/Shanghai",
+          "timezone_basis": "task_context",
+          "actor": "jwc",
+          "citation_ids": [
+            "H033C065"
+          ]
+        }
+      ],
+      "publication_window_status": "out_of_window",
+      "version_status": "observed_version",
+      "identity_or_version_citation_ids": [
+        "H033C065"
+      ],
+      "original_or_repost_order": "unknown",
+      "current_effectiveness": "unknown; captured after publication window, no global latest-version proof"
+    },
+    {
+      "document_id": "doc-law-19945",
+      "document_kind": "notice",
+      "title": "河北大学法学院推免工作实施细则",
+      "carrier_ids": [
+        "notice-law-19945"
+      ],
+      "date_fields": [
+        {
+          "role": "webpage_publication",
+          "raw_text": "2026-09-02 16:37:16",
+          "normalized_start": "2026-09-02T16:37:16",
+          "normalized_end": null,
+          "precision": "second",
+          "timezone": "Asia/Shanghai",
+          "timezone_basis": "task_context",
+          "actor": "law",
+          "citation_ids": [
+            "H033C066"
+          ]
+        },
+        {
+          "role": "body_signoff",
+          "raw_text": "202 6 年 6 月",
+          "normalized_start": "2026-06",
+          "normalized_end": null,
+          "precision": "month",
+          "timezone": "Asia/Shanghai",
+          "timezone_basis": "task_context",
+          "actor": null,
+          "citation_ids": [
+            "H033C076"
+          ]
+        }
+      ],
+      "publication_window_status": "in_window",
+      "version_status": "observed_version",
+      "identity_or_version_citation_ids": [
+        "H033C066",
+        "H033C076"
+      ],
+      "original_or_repost_order": "unknown",
+      "current_effectiveness": "unknown; captured after publication window, no global latest-version proof"
+    },
+    {
+      "document_id": "doc-law-19962",
+      "document_kind": "notice",
+      "title": "关于法学院2027年推荐优秀应届本科毕业生免试攻读硕士学位研究生名单的公示",
+      "carrier_ids": [
+        "notice-law-19962"
+      ],
+      "date_fields": [
+        {
+          "role": "webpage_publication",
+          "raw_text": "2026-09-04 17:23:03",
+          "normalized_start": "2026-09-04T17:23:03",
+          "normalized_end": null,
+          "precision": "second",
+          "timezone": "Asia/Shanghai",
+          "timezone_basis": "task_context",
+          "actor": "law",
+          "citation_ids": [
+            "H033C067"
+          ]
+        }
+      ],
+      "publication_window_status": "in_window",
+      "version_status": "observed_version",
+      "identity_or_version_citation_ids": [
+        "H033C067"
+      ],
+      "original_or_repost_order": "unknown",
+      "current_effectiveness": "unknown; captured after publication window, no global latest-version proof"
+    },
+    {
+      "document_id": "doc-law-20003",
+      "document_kind": "notice",
+      "title": "河北大学法学院（纪检监察学院）2027年优秀应届本科毕业生免试攻读硕士研究生招生录取工作实施细则",
+      "carrier_ids": [
+        "notice-law-20003"
+      ],
+      "date_fields": [
+        {
+          "role": "webpage_publication",
+          "raw_text": "2026-09-11 18:06:50",
+          "normalized_start": "2026-09-11T18:06:50",
+          "normalized_end": null,
+          "precision": "second",
+          "timezone": "Asia/Shanghai",
+          "timezone_basis": "task_context",
+          "actor": "law",
+          "citation_ids": [
+            "H033C068"
+          ]
+        }
+      ],
+      "publication_window_status": "in_window",
+      "version_status": "observed_version",
+      "identity_or_version_citation_ids": [
+        "H033C068"
+      ],
+      "original_or_repost_order": "unknown",
+      "current_effectiveness": "unknown; captured after publication window, no global latest-version proof"
+    },
+    {
+      "document_id": "doc-law-20037",
+      "document_kind": "notice",
+      "title": "法学院2027年硕士研究生招生考试参考书目",
+      "carrier_ids": [
+        "notice-law-20037"
+      ],
+      "date_fields": [
+        {
+          "role": "webpage_publication",
+          "raw_text": "2026-09-20 16:37:56",
+          "normalized_start": "2026-09-20T16:37:56",
+          "normalized_end": null,
+          "precision": "second",
+          "timezone": "Asia/Shanghai",
+          "timezone_basis": "task_context",
+          "actor": "law",
+          "citation_ids": [
+            "H033C069"
+          ]
+        }
+      ],
+      "publication_window_status": "in_window",
+      "version_status": "observed_version",
+      "identity_or_version_citation_ids": [
+        "H033C069"
+      ],
+      "original_or_repost_order": "unknown",
+      "current_effectiveness": "unknown; captured after publication window, no global latest-version proof"
+    },
+    {
+      "document_id": "doc-law-20046",
+      "document_kind": "notice",
+      "title": "河北大学法学院2027年接收优秀应届本科毕业生免试攻读硕士研究生复试通知",
+      "carrier_ids": [
+        "notice-law-20046"
+      ],
+      "date_fields": [
+        {
+          "role": "webpage_publication",
+          "raw_text": "2026-09-22 18:13:06",
+          "normalized_start": "2026-09-22T18:13:06",
+          "normalized_end": null,
+          "precision": "second",
+          "timezone": "Asia/Shanghai",
+          "timezone_basis": "task_context",
+          "actor": "law",
+          "citation_ids": [
+            "H033C070"
+          ]
+        }
+      ],
+      "publication_window_status": "in_window",
+      "version_status": "observed_version",
+      "identity_or_version_citation_ids": [
+        "H033C070"
+      ],
+      "original_or_repost_order": "unknown",
+      "current_effectiveness": "unknown; captured after publication window, no global latest-version proof"
+    },
+    {
+      "document_id": "doc-school-receive",
+      "document_kind": "notice",
+      "title": "河北大学2027年接收优秀应届本科毕业生免试攻读研究生（含直博生）工作办法",
+      "carrier_ids": [
+        "notice-yjsy-4427",
+        "notice-yjsy-4428"
+      ],
+      "date_fields": [
+        {
+          "role": "webpage_publication",
+          "raw_text": "2026-09-10",
+          "normalized_start": "2026-09-10",
+          "normalized_end": null,
+          "precision": "date",
+          "timezone": "Asia/Shanghai",
+          "timezone_basis": "task_context",
+          "actor": "yjsy",
+          "citation_ids": [
+            "H033C071"
+          ]
+        }
+      ],
+      "publication_window_status": "in_window",
+      "version_status": "observed_version",
+      "identity_or_version_citation_ids": [
+        "H033C071"
+      ],
+      "original_or_repost_order": "unknown",
+      "current_effectiveness": "unknown; captured after publication window, no global latest-version proof"
+    },
+    {
+      "document_id": "doc-yjsy-4430",
+      "document_kind": "notice",
+      "title": "关于开展2027届毕业研究生生源信息录入的通知",
+      "carrier_ids": [
+        "notice-yjsy-4430"
+      ],
+      "date_fields": [
+        {
+          "role": "webpage_publication",
+          "raw_text": "2026-09-11",
+          "normalized_start": "2026-09-11",
+          "normalized_end": null,
+          "precision": "date",
+          "timezone": "Asia/Shanghai",
+          "timezone_basis": "task_context",
+          "actor": "yjsy",
+          "citation_ids": [
+            "H033C072"
+          ]
+        }
+      ],
+      "publication_window_status": "in_window",
+      "version_status": "observed_version",
+      "identity_or_version_citation_ids": [
+        "H033C072"
+      ],
+      "original_or_repost_order": "unknown",
+      "current_effectiveness": "unknown; captured after publication window, no global latest-version proof"
+    },
+    {
+      "document_id": "doc-master-charter",
+      "document_kind": "notice",
+      "title": "河北大学2027年硕士研究生招生章程",
+      "carrier_ids": [
+        "notice-yjsy-4439",
+        "notice-yjsy-4440"
+      ],
+      "date_fields": [
+        {
+          "role": "webpage_publication",
+          "raw_text": "2026-09-30",
+          "normalized_start": "2026-09-30",
+          "normalized_end": null,
+          "precision": "date",
+          "timezone": "Asia/Shanghai",
+          "timezone_basis": "task_context",
+          "actor": "yjsy",
+          "citation_ids": [
+            "H033C073"
+          ]
+        }
+      ],
+      "publication_window_status": "in_window",
+      "version_status": "observed_version",
+      "identity_or_version_citation_ids": [
+        "H033C073"
+      ],
+      "original_or_repost_order": "unknown",
+      "current_effectiveness": "unknown; captured after publication window, no global latest-version proof"
+    },
+    {
+      "document_id": "doc-law-points-docx",
+      "document_kind": "attachment",
+      "title": "河北大学法学院学生创新实践能力加分表.docx",
+      "carrier_ids": [
+        "attachment-law-points-docx"
+      ],
+      "date_fields": [
+        {
+          "role": "attachment_version",
+          "raw_text": "2025年7月7日修订",
+          "normalized_start": "2025-07-07",
+          "normalized_end": null,
+          "precision": "date",
+          "timezone": "Asia/Shanghai",
+          "timezone_basis": "task_context",
+          "actor": null,
+          "citation_ids": [
+            "H033C005"
+          ]
+        }
+      ],
+      "publication_window_status": "not_a_notice",
+      "version_status": "observed_version",
+      "identity_or_version_citation_ids": [
+        "H033C005"
+      ],
+      "original_or_repost_order": "unknown",
+      "current_effectiveness": "unknown; captured after publication window, no global latest-version proof"
+    },
+    {
+      "document_id": "doc-law-competition-c-docx",
+      "document_kind": "attachment",
+      "title": "法学院课外学术科技竞赛分级目录C类.docx",
+      "carrier_ids": [
+        "attachment-law-competition-c-docx"
+      ],
+      "date_fields": [],
+      "publication_window_status": "not_a_notice",
+      "version_status": "observed_version",
+      "identity_or_version_citation_ids": [],
+      "original_or_repost_order": "unknown",
+      "current_effectiveness": "unknown; captured after publication window, no global latest-version proof"
+    },
+    {
+      "document_id": "doc-law-master-directory-xlsx",
+      "document_kind": "attachment",
+      "title": "2027年法学院接收硕士推免生专业目录.xlsx",
+      "carrier_ids": [
+        "attachment-law-master-directory-xlsx"
+      ],
+      "date_fields": [],
+      "publication_window_status": "not_a_notice",
+      "version_status": "observed_version",
+      "identity_or_version_citation_ids": [],
+      "original_or_repost_order": "unknown",
+      "current_effectiveness": "unknown; captured after publication window, no global latest-version proof"
+    },
+    {
+      "document_id": "doc-law-competition-pdf",
+      "document_kind": "attachment",
+      "title": "河北大学学生课外学术科技竞赛分级目录2024版.pdf",
+      "carrier_ids": [
+        "attachment-law-competition-pdf"
+      ],
+      "date_fields": [
+        {
+          "role": "attachment_version",
+          "raw_text": "（2024版）",
+          "normalized_start": "2024",
+          "normalized_end": null,
+          "precision": "year",
+          "timezone": "Asia/Shanghai",
+          "timezone_basis": "task_context",
+          "actor": null,
+          "citation_ids": [
+            "H033C057"
+          ]
+        }
+      ],
+      "publication_window_status": "not_a_notice",
+      "version_status": "observed_version",
+      "identity_or_version_citation_ids": [
+        "H033C057"
+      ],
+      "original_or_repost_order": "unknown",
+      "current_effectiveness": "unknown; captured after publication window, no global latest-version proof"
+    }
+  ],
+  "matters": [
+    {
+      "matter_id": "qualification",
+      "label": "本科推荐资格与院校公示",
+      "document_ids": [
+        "doc-law-19945",
+        "doc-law-19962",
+        "doc-jwc-12364",
+        "doc-law-points-docx",
+        "doc-law-competition-c-docx",
+        "doc-law-competition-pdf"
+      ],
+      "selection": "selected",
+      "selection_reason": "先核资格与意愿；公开名单不证明个人入选。",
+      "profile_relevance": "potentially_applicable",
+      "conditions": [
+        {
+          "statement": "先核资格与意愿；公开名单不证明个人入选。",
+          "status": "author_inference",
+          "citation_ids": [
+            "H033C001",
+            "H033C002",
+            "H033C003",
+            "H033C004",
+            "H033C005",
+            "H033C006",
+            "H033C007",
+            "H033C008",
+            "H033C009",
+            "H033C010",
+            "H033C011",
+            "H033C056",
+            "H033C057"
+          ]
+        }
+      ],
+      "claim_ids": [
+        "claim-01",
+        "claim-02",
+        "claim-03",
+        "claim-04",
+        "claim-05",
+        "claim-06",
+        "claim-28"
+      ]
+    },
+    {
+      "matter_id": "receive",
+      "label": "学校接收推免与学院实施、首批复试",
+      "document_ids": [
+        "doc-school-receive",
+        "doc-law-20003",
+        "doc-law-20046",
+        "doc-law-master-directory-xlsx"
+      ],
+      "selection": "selected",
+      "selection_reason": "学校框架、学院实施和第一批安排分阶段；资格和申请状态未知。",
+      "profile_relevance": "potentially_applicable",
+      "conditions": [
+        {
+          "statement": "学校框架、学院实施和第一批安排分阶段；资格和申请状态未知。",
+          "status": "author_inference",
+          "citation_ids": [
+            "H033C012",
+            "H033C013",
+            "H033C014",
+            "H033C015",
+            "H033C016",
+            "H033C017",
+            "H033C018",
+            "H033C019",
+            "H033C020",
+            "H033C021",
+            "H033C022",
+            "H033C023",
+            "H033C024",
+            "H033C025",
+            "H033C026",
+            "H033C027",
+            "H033C028",
+            "H033C029",
+            "H033C030",
+            "H033C031",
+            "H033C032",
+            "H033C033",
+            "H033C034"
+          ]
+        }
+      ],
+      "claim_ids": [
+        "claim-07",
+        "claim-08",
+        "claim-09",
+        "claim-10",
+        "claim-11",
+        "claim-12",
+        "claim-13",
+        "claim-14"
+      ]
+    },
+    {
+      "matter_id": "exam",
+      "label": "统考条件替代分支",
+      "document_ids": [
+        "doc-master-charter",
+        "doc-law-20037"
+      ],
+      "selection": "selected",
+      "selection_reason": "仅在有意愿且满足资格、未被推免录取等条件时考虑。",
+      "profile_relevance": "potentially_applicable",
+      "conditions": [
+        {
+          "statement": "仅在有意愿且满足资格、未被推免录取等条件时考虑。",
+          "status": "author_inference",
+          "citation_ids": [
+            "H033C035",
+            "H033C036"
+          ]
+        }
+      ],
+      "claim_ids": [
+        "claim-15",
+        "claim-16"
+      ]
+    },
+    {
+      "matter_id": "course",
+      "label": "本科补退选、课程替代与停开后续",
+      "document_ids": [
+        "doc-jwc-12360",
+        "doc-jwc-12386",
+        "doc-jwc-12394"
+      ],
+      "selection": "selected",
+      "selection_reason": "年级符合但具体修课、替代或受停开影响未知。",
+      "profile_relevance": "potentially_applicable",
+      "conditions": [
+        {
+          "statement": "年级符合但具体修课、替代或受停开影响未知。",
+          "status": "author_inference",
+          "citation_ids": [
+            "H033C037",
+            "H033C038",
+            "H033C039",
+            "H033C040",
+            "H033C041",
+            "H033C042",
+            "H033C043"
+          ]
+        }
+      ],
+      "claim_ids": [
+        "claim-17",
+        "claim-18",
+        "claim-19",
+        "claim-20",
+        "claim-21"
+      ]
+    },
+    {
+      "matter_id": "registration",
+      "label": "本科电子注册与名单、盖章后续",
+      "document_ids": [
+        "doc-jwc-12398",
+        "doc-jwc-12411"
+      ],
+      "selection": "selected",
+      "selection_reason": "缴费、注册和是否需补注册未知。",
+      "profile_relevance": "potentially_applicable",
+      "conditions": [
+        {
+          "statement": "缴费、注册和是否需补注册未知。",
+          "status": "author_inference",
+          "citation_ids": [
+            "H033C044",
+            "H033C045",
+            "H033C046",
+            "H033C047",
+            "H033C048"
+          ]
+        }
+      ],
+      "claim_ids": [
+        "claim-22",
+        "claim-23"
+      ]
+    },
+    {
+      "matter_id": "deferred",
+      "label": "既往缓考学生选课",
+      "document_ids": [
+        "doc-jwc-12405"
+      ],
+      "selection": "selected",
+      "selection_reason": "仅特殊既往缓考经历者，学院报送不当作普遍学生截止。",
+      "profile_relevance": "potentially_applicable",
+      "conditions": [
+        {
+          "statement": "仅特殊既往缓考经历者，学院报送不当作普遍学生截止。",
+          "status": "author_inference",
+          "citation_ids": [
+            "H033C049",
+            "H033C050"
+          ]
+        }
+      ],
+      "claim_ids": [
+        "claim-24"
+      ]
+    },
+    {
+      "matter_id": "graduate_excluded",
+      "label": "毕业研究生生源信息",
+      "document_ids": [
+        "doc-yjsy-4430"
+      ],
+      "selection": "excluded",
+      "selection_reason": "研究生对象与本科画像不符。",
+      "profile_relevance": "not_applicable",
+      "conditions": [
+        {
+          "statement": "研究生对象与本科画像不符。",
+          "status": "author_inference",
+          "citation_ids": [
+            "H033C051",
+            "H033C052"
+          ]
+        }
+      ],
+      "claim_ids": [
+        "claim-25"
+      ]
+    },
+    {
+      "matter_id": "window_context",
+      "label": "发布窗边界上下文",
+      "document_ids": [
+        "doc-jwc-12352",
+        "doc-jwc-12419"
+      ],
+      "selection": "context_only",
+      "selection_reason": "分别是八月、十月发布，不能因九月节点或毕业届别当九月新通知。",
+      "profile_relevance": "context_only",
+      "conditions": [
+        {
+          "statement": "分别是八月、十月发布，不能因九月节点或毕业届别当九月新通知。",
+          "status": "author_inference",
+          "citation_ids": [
+            "H033C053",
+            "H033C054",
+            "H033C055"
+          ]
+        }
+      ],
+      "claim_ids": [
+        "claim-26",
+        "claim-27"
+      ]
+    }
+  ],
+  "claims": [
+    {
+      "claim_id": "claim-01",
+      "statement": "法学院推荐综合测评采用平均学分绩点×90%加创新实践能力评分×10%。",
+      "claim_kind": "source_statement",
+      "entity_refs": [
+        {
+          "entity_type": "matter",
+          "entity_id": "qualification"
+        }
+      ],
+      "conditions": [],
+      "citation_ids": [
+        "H033C001"
+      ],
+      "support_status": "supported",
+      "boundary": "仅是学院规则，不代表个人成绩或排名。"
+    },
+    {
+      "claim_id": "claim-02",
+      "statement": "前三学年应修必修课程出现不及格，即使重修或补考后及格仍不予推荐；外语另有门槛，大学英语六级不作必备要求。",
+      "claim_kind": "source_statement",
+      "entity_refs": [
+        {
+          "entity_type": "matter",
+          "entity_id": "qualification"
+        }
+      ],
+      "conditions": [],
+      "citation_ids": [
+        "H033C002",
+        "H033C003",
+        "H033C004"
+      ],
+      "support_status": "supported",
+      "boundary": "个人课程、外语、体测和纪律条件未知。"
+    },
+    {
+      "claim_id": "claim-03",
+      "statement": "加分DOCX标注2025年7月7日修订，创新实践能力所有类别累计最高5分。",
+      "claim_kind": "source_statement",
+      "entity_refs": [
+        {
+          "entity_type": "matter",
+          "entity_id": "qualification"
+        }
+      ],
+      "conditions": [],
+      "citation_ids": [
+        "H033C005",
+        "H033C006"
+      ],
+      "support_status": "supported",
+      "boundary": "附件版本与九月页面发布日期分开，未计算个人加分。"
+    },
+    {
+      "claim_id": "claim-04",
+      "statement": "学院C类竞赛目录按竞赛名称、主办方、级别列项，所读行有C+及C等级。",
+      "claim_kind": "source_statement",
+      "entity_refs": [
+        {
+          "entity_type": "matter",
+          "entity_id": "qualification"
+        }
+      ],
+      "conditions": [],
+      "citation_ids": [
+        "H033C007",
+        "H033C008",
+        "H033C009"
+      ],
+      "support_status": "supported",
+      "boundary": "目录是程序性依据，不证明个人获奖。"
+    },
+    {
+      "claim_id": "claim-05",
+      "statement": "推荐名单公示正文列71名在遴选范围，其中42名在专业名额内；学院公示期为9月5日至9月7日。",
+      "claim_kind": "source_statement",
+      "entity_refs": [
+        {
+          "entity_type": "matter",
+          "entity_id": "qualification"
+        }
+      ],
+      "conditions": [],
+      "citation_ids": [
+        "H033C010"
+      ],
+      "support_status": "supported",
+      "boundary": "公开汇总与个人名单归属分开；未复制个人行。"
+    },
+    {
+      "claim_id": "claim-06",
+      "statement": "学校名单是在学院遴选推荐、学校审议后形成；校级公示期为9月9日12:00至9月16日12:00。",
+      "claim_kind": "source_statement",
+      "entity_refs": [
+        {
+          "entity_type": "matter",
+          "entity_id": "qualification"
+        }
+      ],
+      "conditions": [],
+      "citation_ids": [
+        "H033C011"
+      ],
+      "support_status": "supported",
+      "boundary": "属于不同层级阶段，不自动延长学院公示。"
+    },
+    {
+      "claim_id": "claim-07",
+      "statement": "学校接收推免要求在就读学校获得并备案推荐免试资格，并于2027年9月1日前取得本科毕业证和学士学位证。",
+      "claim_kind": "source_statement",
+      "entity_refs": [
+        {
+          "entity_type": "matter",
+          "entity_id": "receive"
+        }
+      ],
+      "conditions": [],
+      "citation_ids": [
+        "H033C012",
+        "H033C013"
+      ],
+      "support_status": "supported",
+      "boundary": "应届本科身份不能证明已满足这些条件。"
+    },
+    {
+      "claim_id": "claim-08",
+      "statement": "材料须形成PDF材料ZIP且不大于原文所称5M；具体收件方式依学院实施细则。",
+      "claim_kind": "source_statement",
+      "entity_refs": [
+        {
+          "entity_type": "matter",
+          "entity_id": "receive"
+        }
+      ],
+      "conditions": [],
+      "citation_ids": [
+        "H033C014"
+      ],
+      "support_status": "supported",
+      "boundary": "保留5M原单位，不将系统报名开放当材料截止。"
+    },
+    {
+      "claim_id": "claim-09",
+      "statement": "学院要求电子材料发指定邮箱，纸件交法学院C3-301，材料接收截止为9月21日中午12点。",
+      "claim_kind": "source_statement",
+      "entity_refs": [
+        {
+          "entity_type": "matter",
+          "entity_id": "receive"
+        }
+      ],
+      "conditions": [],
+      "citation_ids": [
+        "H033C015"
+      ],
+      "support_status": "supported",
+      "boundary": "仅适用于符合条件且有申请意愿者；没有发送或递交。"
+    },
+    {
+      "claim_id": "claim-10",
+      "statement": "法律（非法学）要求此前为非法学专业，法律（法学）要求此前为法学专业。",
+      "claim_kind": "source_statement",
+      "entity_refs": [
+        {
+          "entity_type": "matter",
+          "entity_id": "receive"
+        }
+      ],
+      "conditions": [],
+      "citation_ids": [
+        "H033C016",
+        "H033C017"
+      ],
+      "support_status": "supported",
+      "boundary": "合成法学本科不能无条件走法律（非法学）分支，其余条件仍未知。"
+    },
+    {
+      "claim_id": "claim-11",
+      "statement": "院级目录Sheet1的表头列专业、研究方向、学习方式及拟接收人数；法学理论对应2，法律（法学）对应28。",
+      "claim_kind": "source_statement",
+      "entity_refs": [
+        {
+          "entity_type": "matter",
+          "entity_id": "receive"
+        }
+      ],
+      "conditions": [],
+      "citation_ids": [
+        "H033C018",
+        "H033C019",
+        "H033C020",
+        "H033C021",
+        "H033C022",
+        "H033C023",
+        "H033C024",
+        "H033C025",
+        "H033C026"
+      ],
+      "support_status": "supported",
+      "boundary": "不同专业行，不是数值冲突；人数仅供参考并可调整。"
+    },
+    {
+      "claim_id": "claim-12",
+      "statement": "第一批复试拟于9月23日进行，法律（法学）的表列时段为15:10—18:00、全日制，细节在复试群同步。",
+      "claim_kind": "source_statement",
+      "entity_refs": [
+        {
+          "entity_type": "matter",
+          "entity_id": "receive"
+        }
+      ],
+      "conditions": [],
+      "citation_ids": [
+        "H033C027",
+        "H033C028"
+      ],
+      "support_status": "supported",
+      "boundary": "个人第一批名单归属和群内安排未知；计划不证明实际举行。"
+    },
+    {
+      "claim_id": "claim-13",
+      "statement": "系统报名9月21日09:00开放，复试通知发送及确认9月22日08:00开放；待录取发送9月24日08:00开放，考生确认14:00开放。",
+      "claim_kind": "source_statement",
+      "entity_refs": [
+        {
+          "entity_type": "matter",
+          "entity_id": "receive"
+        }
+      ],
+      "conditions": [],
+      "citation_ids": [
+        "H033C029",
+        "H033C030",
+        "H033C031",
+        "H033C032"
+      ],
+      "support_status": "supported",
+      "boundary": "各功能不同，个人实际确认期限未知。"
+    },
+    {
+      "claim_id": "claim-14",
+      "statement": "10月18日关闭注册、支付、报名；校方发送待录取期间至10月19日；10月20日服务系统关闭。",
+      "claim_kind": "source_statement",
+      "entity_refs": [
+        {
+          "entity_type": "matter",
+          "entity_id": "receive"
+        }
+      ],
+      "conditions": [],
+      "citation_ids": [
+        "H033C033",
+        "H033C034"
+      ],
+      "support_status": "supported",
+      "boundary": "日期精度保留，不补每日闭站小时。"
+    },
+    {
+      "claim_id": "claim-15",
+      "statement": "统考预报名为10月9日至12日、报名为10月15日至24日，均每日09:00—22:00。",
+      "claim_kind": "source_statement",
+      "entity_refs": [
+        {
+          "entity_type": "matter",
+          "entity_id": "exam"
+        }
+      ],
+      "conditions": [],
+      "citation_ids": [
+        "H033C035"
+      ],
+      "support_status": "supported",
+      "boundary": "这些是九月章程中的历史十月办理节点。"
+    },
+    {
+      "claim_id": "claim-16",
+      "statement": "已被招生单位录取的推免生不得再报当年统一考试、单独考试。",
+      "claim_kind": "source_statement",
+      "entity_refs": [
+        {
+          "entity_type": "matter",
+          "entity_id": "exam"
+        }
+      ],
+      "conditions": [],
+      "citation_ids": [
+        "H033C036"
+      ],
+      "support_status": "supported",
+      "boundary": "申请意愿和录取状态未知，不能把统考与已录取推免列为同时必做。"
+    },
+    {
+      "claim_id": "claim-17",
+      "statement": "2023级补退选时段为9月7日09:00至9月8日08:00；9月10日09:00至9月14日08:00另有除2026级外的共同窗口。",
+      "claim_kind": "source_statement",
+      "entity_refs": [
+        {
+          "entity_type": "matter",
+          "entity_id": "course"
+        }
+      ],
+      "conditions": [],
+      "citation_ids": [
+        "H033C037",
+        "H033C038"
+      ],
+      "support_status": "supported",
+      "boundary": "年级符合来自明确合成画像，具体选课需求未知。"
+    },
+    {
+      "claim_id": "claim-18",
+      "statement": "选课期间每日17:00—18:00备份并临时关闭选课系统。",
+      "claim_kind": "source_statement",
+      "entity_refs": [
+        {
+          "entity_type": "matter",
+          "entity_id": "course"
+        }
+      ],
+      "conditions": [],
+      "citation_ids": [
+        "H033C039"
+      ],
+      "support_status": "supported",
+      "boundary": "不外推其它系统。"
+    },
+    {
+      "claim_id": "claim-19",
+      "statement": "课程替代学生端截止9月9日18:00，学院审批截止9月11日18:00。",
+      "claim_kind": "source_statement",
+      "entity_refs": [
+        {
+          "entity_type": "matter",
+          "entity_id": "course"
+        }
+      ],
+      "conditions": [],
+      "citation_ids": [
+        "H033C040"
+      ],
+      "support_status": "supported",
+      "boundary": "只对规定的课程号不一致等情形；两个主体的截止不可互换。"
+    },
+    {
+      "claim_id": "claim-20",
+      "statement": "拟停开统计要求教学单位9月15日18:00前报送；未标停开视为继续开设。",
+      "claim_kind": "source_statement",
+      "entity_refs": [
+        {
+          "entity_type": "matter",
+          "entity_id": "course"
+        }
+      ],
+      "conditions": [],
+      "citation_ids": [
+        "H033C041",
+        "H033C042"
+      ],
+      "support_status": "supported",
+      "boundary": "这是单位反馈，不是学生补选延期。"
+    },
+    {
+      "claim_id": "claim-21",
+      "statement": "正式停开通知说明已选停开课程者课表对应课程将删除，须查看并调整学习计划。",
+      "claim_kind": "source_statement",
+      "entity_refs": [
+        {
+          "entity_type": "matter",
+          "entity_id": "course"
+        }
+      ],
+      "conditions": [],
+      "citation_ids": [
+        "H033C043"
+      ],
+      "support_status": "supported",
+      "boundary": "具体课程附件和个人受影响情况未核；未证新补选期限。"
+    },
+    {
+      "claim_id": "claim-22",
+      "statement": "2022级五年制及2023—2026级在籍本科属于注册对象；已缴当学年学费才可电子注册，窗口为9月20日12:00至9月22日18:00。",
+      "claim_kind": "source_statement",
+      "entity_refs": [
+        {
+          "entity_type": "matter",
+          "entity_id": "registration"
+        }
+      ],
+      "conditions": [],
+      "citation_ids": [
+        "H033C044",
+        "H033C045",
+        "H033C046"
+      ],
+      "support_status": "supported",
+      "boundary": "个人缴费、注册状态未知，不与更早选课构造循环前置。"
+    },
+    {
+      "claim_id": "claim-23",
+      "statement": "注册结束后按已注册名单由学院组织学生证盖章；未注册者应关注补注册通知，所读页未给补注册日期。",
+      "claim_kind": "source_statement",
+      "entity_refs": [
+        {
+          "entity_type": "matter",
+          "entity_id": "registration"
+        }
+      ],
+      "conditions": [],
+      "citation_ids": [
+        "H033C047",
+        "H033C048"
+      ],
+      "support_status": "supported",
+      "boundary": "名单公告是后续，不能解释成原截止自动延期。"
+    },
+    {
+      "claim_id": "claim-24",
+      "statement": "缓考选课仅针对以往学期已办缓考但未参加补缓考者；9月23日18:00为学院汇总报送节点。",
+      "claim_kind": "source_statement",
+      "entity_refs": [
+        {
+          "entity_type": "matter",
+          "entity_id": "deferred"
+        }
+      ],
+      "conditions": [],
+      "citation_ids": [
+        "H033C049",
+        "H033C050"
+      ],
+      "support_status": "supported",
+      "boundary": "个人是否有既往缓考经历未知，不适用于所有学生。"
+    },
+    {
+      "claim_id": "claim-25",
+      "statement": "生源信息录入通知对象为2027届毕业研究生，要求9月18日前完成核对。",
+      "claim_kind": "source_statement",
+      "entity_refs": [
+        {
+          "entity_type": "matter",
+          "entity_id": "graduate_excluded"
+        }
+      ],
+      "conditions": [],
+      "citation_ids": [
+        "H033C051",
+        "H033C052"
+      ],
+      "support_status": "supported",
+      "boundary": "本科画像不适用；仅毕业届别相同不足以跨学历套用。"
+    },
+    {
+      "claim_id": "claim-26",
+      "statement": "补缓考通知网页发布于8月31日，不属于九月发布通知。",
+      "claim_kind": "source_statement",
+      "entity_refs": [
+        {
+          "entity_type": "matter",
+          "entity_id": "window_context"
+        }
+      ],
+      "conditions": [],
+      "citation_ids": [
+        "H033C053"
+      ],
+      "support_status": "supported",
+      "boundary": "保留发布窗边界，不下载其RAR。"
+    },
+    {
+      "claim_id": "claim-27",
+      "statement": "毕业图像核对通知网页与落款在10月8日，超出九月发布窗。",
+      "claim_kind": "source_statement",
+      "entity_refs": [
+        {
+          "entity_type": "matter",
+          "entity_id": "window_context"
+        }
+      ],
+      "conditions": [],
+      "citation_ids": [
+        "H033C054",
+        "H033C055"
+      ],
+      "support_status": "supported",
+      "boundary": "只作发布窗边界，不取个人名单。"
+    },
+    {
+      "claim_id": "claim-28",
+      "statement": "竞赛目录PDF标校团字〔2024〕1号及2024版，属于推荐细则链接的历史附件。",
+      "claim_kind": "source_statement",
+      "entity_refs": [
+        {
+          "entity_type": "matter",
+          "entity_id": "qualification"
+        }
+      ],
+      "conditions": [],
+      "citation_ids": [
+        "H033C056",
+        "H033C057"
+      ],
+      "support_status": "supported",
+      "boundary": "历史版本不替代九月网页发布日。"
+    }
+  ],
+  "actions": [
+    {
+      "action_id": "review-publicity",
+      "matter_id": "qualification",
+      "label": "核对学院与学校公示阶段",
+      "actor": "有异议者/学院/学校",
+      "conditions": [
+        {
+          "statement": "若曾参与推荐且需要核对；个人名单归属未知。",
+          "status": "author_inference",
+          "citation_ids": [
+            "H033C010",
+            "H033C011"
+          ]
+        }
+      ],
+      "date_fields": [
+        {
+          "role": "action_window",
+          "raw_text": "9月5日—9月7日",
+          "normalized_start": "2026-09-05",
+          "normalized_end": "2026-09-07",
+          "precision": "date",
+          "timezone": "Asia/Shanghai",
+          "timezone_basis": "task_context",
+          "actor": "学院公示",
+          "citation_ids": [
+            "H033C010"
+          ]
+        },
+        {
+          "role": "action_window",
+          "raw_text": "9月9日12:00至9月16日12:00",
+          "normalized_start": "2026-09-09T12:00",
+          "normalized_end": "2026-09-16T12:00",
+          "precision": "minute",
+          "timezone": "Asia/Shanghai",
+          "timezone_basis": "task_context",
+          "actor": "学校公示",
+          "citation_ids": [
+            "H033C011"
+          ]
+        }
+      ],
+      "basis_claim_ids": [
+        "claim-05",
+        "claim-06"
+      ],
+      "prerequisite_claim_or_action_ids": [],
+      "exclusion_claim_or_action_ids": [],
+      "citation_ids": [
+        "H033C010",
+        "H033C011"
+      ],
+      "personal_status": "unknown",
+      "priority": "条件核验顺序，非当前仍可办理承诺",
+      "priority_reason": "先区分院校层级，不能据公告认定个人入选。",
+      "temporal_use": "按原通知整理；当前效力/补办途径另核"
+    },
+    {
+      "action_id": "course-change",
+      "matter_id": "course",
+      "label": "核对年级补退选与共同窗口",
+      "actor": "学生",
+      "conditions": [
+        {
+          "statement": "有补退选需求；原时间已过，后续处理须另核。",
+          "status": "author_inference",
+          "citation_ids": [
+            "H033C037",
+            "H033C038",
+            "H033C039"
+          ]
+        }
+      ],
+      "date_fields": [
+        {
+          "role": "action_window",
+          "raw_text": "9月7日9时—9月8日8时",
+          "normalized_start": "2026-09-07T09:00",
+          "normalized_end": "2026-09-08T08:00",
+          "precision": "minute",
+          "timezone": "Asia/Shanghai",
+          "timezone_basis": "task_context",
+          "actor": "2023级学生",
+          "citation_ids": [
+            "H033C037"
+          ]
+        },
+        {
+          "role": "action_window",
+          "raw_text": "9月10日9时—9月14日8时",
+          "normalized_start": "2026-09-10T09:00",
+          "normalized_end": "2026-09-14T08:00",
+          "precision": "minute",
+          "timezone": "Asia/Shanghai",
+          "timezone_basis": "task_context",
+          "actor": "除2026级外规定对象",
+          "citation_ids": [
+            "H033C038"
+          ]
+        },
+        {
+          "role": "system_unavailable",
+          "raw_text": "每日17时—18时",
+          "normalized_start": "17:00",
+          "normalized_end": "18:00",
+          "precision": "daily_recurrence",
+          "timezone": "Asia/Shanghai",
+          "timezone_basis": "task_context",
+          "actor": "选课系统",
+          "citation_ids": [
+            "H033C039"
+          ]
+        }
+      ],
+      "basis_claim_ids": [
+        "claim-17",
+        "claim-18"
+      ],
+      "prerequisite_claim_or_action_ids": [],
+      "exclusion_claim_or_action_ids": [],
+      "citation_ids": [
+        "H033C037",
+        "H033C038",
+        "H033C039"
+      ],
+      "personal_status": "unknown",
+      "priority": "条件核验顺序，非当前仍可办理承诺",
+      "priority_reason": "先核是否有实际课程需求，再核新通知/当前可办条件。",
+      "temporal_use": "按原通知整理；当前效力/补办途径另核"
+    },
+    {
+      "action_id": "substitution-student",
+      "matter_id": "course",
+      "label": "核对课程替代学生申请节点",
+      "actor": "学生",
+      "conditions": [
+        {
+          "statement": "符合已补修/重修及格且课程号不一致等规定情形。",
+          "status": "author_inference",
+          "citation_ids": [
+            "H033C040"
+          ]
+        }
+      ],
+      "date_fields": [
+        {
+          "role": "action_deadline",
+          "raw_text": "9月9日18时",
+          "normalized_start": null,
+          "normalized_end": "2026-09-09T18:00",
+          "precision": "minute",
+          "timezone": "Asia/Shanghai",
+          "timezone_basis": "task_context",
+          "actor": "学生",
+          "citation_ids": [
+            "H033C040"
+          ]
+        }
+      ],
+      "basis_claim_ids": [
+        "claim-19"
+      ],
+      "prerequisite_claim_or_action_ids": [],
+      "exclusion_claim_or_action_ids": [],
+      "citation_ids": [
+        "H033C040"
+      ],
+      "personal_status": "unknown",
+      "priority": "条件核验顺序，非当前仍可办理承诺",
+      "priority_reason": "学生节点早于学院审批，不用较晚日期替代。",
+      "temporal_use": "按原通知整理；当前效力/补办途径另核"
+    },
+    {
+      "action_id": "substitution-college",
+      "matter_id": "course",
+      "label": "区分课程替代学院审批节点",
+      "actor": "学院",
+      "conditions": [
+        {
+          "statement": "存在合格学生申请；个人申请状态未知。",
+          "status": "author_inference",
+          "citation_ids": [
+            "H033C040"
+          ]
+        }
+      ],
+      "date_fields": [
+        {
+          "role": "action_deadline",
+          "raw_text": "9月11日18时",
+          "normalized_start": null,
+          "normalized_end": "2026-09-11T18:00",
+          "precision": "minute",
+          "timezone": "Asia/Shanghai",
+          "timezone_basis": "task_context",
+          "actor": "学院",
+          "citation_ids": [
+            "H033C040"
+          ]
+        }
+      ],
+      "basis_claim_ids": [
+        "claim-19"
+      ],
+      "prerequisite_claim_or_action_ids": [
+        "substitution-student"
+      ],
+      "exclusion_claim_or_action_ids": [],
+      "citation_ids": [
+        "H033C040"
+      ],
+      "personal_status": "unknown",
+      "priority": "条件核验顺序，非当前仍可办理承诺",
+      "priority_reason": "此为学院节点，非给学生的新提交截止。",
+      "temporal_use": "按原通知整理；当前效力/补办途径另核"
+    },
+    {
+      "action_id": "course-closure-feedback",
+      "matter_id": "course",
+      "label": "区分拟停开单位报送",
+      "actor": "教学单位",
+      "conditions": [
+        {
+          "statement": "单位处理拟停开统计。",
+          "status": "author_inference",
+          "citation_ids": [
+            "H033C041",
+            "H033C042"
+          ]
+        }
+      ],
+      "date_fields": [
+        {
+          "role": "action_deadline",
+          "raw_text": "9月15日18:00",
+          "normalized_start": null,
+          "normalized_end": "2026-09-15T18:00",
+          "precision": "minute",
+          "timezone": "Asia/Shanghai",
+          "timezone_basis": "task_context",
+          "actor": "教学单位",
+          "citation_ids": [
+            "H033C041"
+          ]
+        }
+      ],
+      "basis_claim_ids": [
+        "claim-20"
+      ],
+      "prerequisite_claim_or_action_ids": [],
+      "exclusion_claim_or_action_ids": [],
+      "citation_ids": [
+        "H033C041",
+        "H033C042"
+      ],
+      "personal_status": "unknown",
+      "priority": "条件核验顺序，非当前仍可办理承诺",
+      "priority_reason": "不派给所有学生，不解释为补选延期。",
+      "temporal_use": "按原通知整理；当前效力/补办途径另核"
+    },
+    {
+      "action_id": "course-closure-result",
+      "matter_id": "course",
+      "label": "查看正式停开后的课程影响",
+      "actor": "受影响学生",
+      "conditions": [
+        {
+          "statement": "本人是否选中停开课未知。",
+          "status": "author_inference",
+          "citation_ids": [
+            "H033C043"
+          ]
+        }
+      ],
+      "date_fields": [],
+      "basis_claim_ids": [
+        "claim-21"
+      ],
+      "prerequisite_claim_or_action_ids": [],
+      "exclusion_claim_or_action_ids": [],
+      "citation_ids": [
+        "H033C043"
+      ],
+      "personal_status": "unknown",
+      "priority": "条件核验顺序，非当前仍可办理承诺",
+      "priority_reason": "需有个人课程证据及当前安排，不能编补选截止。",
+      "temporal_use": "按原通知整理；当前效力/补办途径另核"
+    },
+    {
+      "action_id": "registration",
+      "matter_id": "registration",
+      "label": "核电子注册对象、学费与原窗口",
+      "actor": "符合条件本科生",
+      "conditions": [
+        {
+          "statement": "年级符合；学费和注册完成未知。",
+          "status": "author_inference",
+          "citation_ids": [
+            "H033C044",
+            "H033C045",
+            "H033C046"
+          ]
+        }
+      ],
+      "date_fields": [
+        {
+          "role": "action_window",
+          "raw_text": "9月20日12:00至9月22日18:00",
+          "normalized_start": "2026-09-20T12:00",
+          "normalized_end": "2026-09-22T18:00",
+          "precision": "minute",
+          "timezone": "Asia/Shanghai",
+          "timezone_basis": "task_context",
+          "actor": "已缴费的规定年级在籍本科生",
+          "citation_ids": [
+            "H033C044"
+          ]
+        }
+      ],
+      "basis_claim_ids": [
+        "claim-22"
+      ],
+      "prerequisite_claim_or_action_ids": [],
+      "exclusion_claim_or_action_ids": [],
+      "citation_ids": [
+        "H033C044",
+        "H033C045",
+        "H033C046"
+      ],
+      "personal_status": "unknown",
+      "priority": "条件核验顺序，非当前仍可办理承诺",
+      "priority_reason": "先核缴费/注册状态；原窗口已过，当前补办需另核。",
+      "temporal_use": "按原通知整理；当前效力/补办途径另核"
+    },
+    {
+      "action_id": "registration-followup",
+      "matter_id": "registration",
+      "label": "按实际注册状态核盖章或补注册",
+      "actor": "学院/学生",
+      "conditions": [
+        {
+          "statement": "若在已注册名单则按学院组织盖章；未注册补办日期未知。",
+          "status": "author_inference",
+          "citation_ids": [
+            "H033C047",
+            "H033C048"
+          ]
+        }
+      ],
+      "date_fields": [],
+      "basis_claim_ids": [
+        "claim-23"
+      ],
+      "prerequisite_claim_or_action_ids": [],
+      "exclusion_claim_or_action_ids": [],
+      "citation_ids": [
+        "H033C047",
+        "H033C048"
+      ],
+      "personal_status": "unknown",
+      "priority": "条件核验顺序，非当前仍可办理承诺",
+      "priority_reason": "名单后续不是延期，不替画像认定已注册。",
+      "temporal_use": "按原通知整理；当前效力/补办途径另核"
+    },
+    {
+      "action_id": "deferred-submit",
+      "matter_id": "deferred",
+      "label": "仅有既往缓考经历时核报送流程",
+      "actor": "学院",
+      "conditions": [
+        {
+          "statement": "既往批准缓考但未参加补缓考；画像无此经历信息。",
+          "status": "author_inference",
+          "citation_ids": [
+            "H033C049",
+            "H033C050"
+          ]
+        }
+      ],
+      "date_fields": [
+        {
+          "role": "action_deadline",
+          "raw_text": "9月23日18:00",
+          "normalized_start": null,
+          "normalized_end": "2026-09-23T18:00",
+          "precision": "minute",
+          "timezone": "Asia/Shanghai",
+          "timezone_basis": "task_context",
+          "actor": "学院",
+          "citation_ids": [
+            "H033C049"
+          ]
+        }
+      ],
+      "basis_claim_ids": [
+        "claim-24"
+      ],
+      "prerequisite_claim_or_action_ids": [],
+      "exclusion_claim_or_action_ids": [],
+      "citation_ids": [
+        "H033C049",
+        "H033C050"
+      ],
+      "personal_status": "unknown",
+      "priority": "条件核验顺序，非当前仍可办理承诺",
+      "priority_reason": "保留特殊条件，学院汇总不当成所有学生deadline。",
+      "temporal_use": "按原通知整理；当前效力/补办途径另核"
+    },
+    {
+      "action_id": "receive-eligibility",
+      "matter_id": "receive",
+      "label": "先核推荐资格、申请意愿及毕业条件",
+      "actor": "拟申请者",
+      "conditions": [
+        {
+          "statement": "资格备案、意愿、毕业与学位条件均未知。",
+          "status": "author_inference",
+          "citation_ids": [
+            "H033C012",
+            "H033C013",
+            "H033C016",
+            "H033C017"
+          ]
+        }
+      ],
+      "date_fields": [
+        {
+          "role": "action_deadline",
+          "raw_text": "2027年9月1日前",
+          "normalized_start": null,
+          "normalized_end": "2027-09-01",
+          "precision": "date",
+          "timezone": "Asia/Shanghai",
+          "timezone_basis": "task_context",
+          "actor": "拟接收者",
+          "citation_ids": [
+            "H033C012"
+          ]
+        }
+      ],
+      "basis_claim_ids": [
+        "claim-07",
+        "claim-10"
+      ],
+      "prerequisite_claim_or_action_ids": [],
+      "exclusion_claim_or_action_ids": [],
+      "citation_ids": [
+        "H033C012",
+        "H033C013",
+        "H033C016",
+        "H033C017"
+      ],
+      "personal_status": "unknown",
+      "priority": "条件核验顺序，非当前仍可办理承诺",
+      "priority_reason": "资格与意愿是先行核验，不从本科身份推定录取路径。",
+      "temporal_use": "按原通知整理；当前效力/补办途径另核"
+    },
+    {
+      "action_id": "receive-material",
+      "matter_id": "receive",
+      "label": "核学院材料收件原节点",
+      "actor": "符合条件且有意愿的申请者",
+      "conditions": [
+        {
+          "statement": "不代表已选择申请或已递交材料。",
+          "status": "author_inference",
+          "citation_ids": [
+            "H033C014",
+            "H033C015"
+          ]
+        }
+      ],
+      "date_fields": [
+        {
+          "role": "action_deadline",
+          "raw_text": "9月21日中午12点",
+          "normalized_start": null,
+          "normalized_end": "2026-09-21T12:00",
+          "precision": "minute",
+          "timezone": "Asia/Shanghai",
+          "timezone_basis": "task_context",
+          "actor": "申请者/学院",
+          "citation_ids": [
+            "H033C015"
+          ]
+        }
+      ],
+      "basis_claim_ids": [
+        "claim-08",
+        "claim-09"
+      ],
+      "prerequisite_claim_or_action_ids": [
+        "receive-eligibility"
+      ],
+      "exclusion_claim_or_action_ids": [],
+      "citation_ids": [
+        "H033C014",
+        "H033C015"
+      ],
+      "personal_status": "unknown",
+      "priority": "条件核验顺序，非当前仍可办理承诺",
+      "priority_reason": "校级材料框架与学院电子/纸件要求共同使用。",
+      "temporal_use": "按原通知整理；当前效力/补办途径另核"
+    },
+    {
+      "action_id": "receive-features",
+      "matter_id": "receive",
+      "label": "区分推免系统各功能开放",
+      "actor": "系统/招生单位/申请人",
+      "conditions": [
+        {
+          "statement": "只有满足资格并实际进入相应流程才有关；个人确认时限未知。",
+          "status": "author_inference",
+          "citation_ids": [
+            "H033C029",
+            "H033C030",
+            "H033C031",
+            "H033C032"
+          ]
+        }
+      ],
+      "date_fields": [
+        {
+          "role": "action_opens",
+          "raw_text": "9月21日9:00",
+          "normalized_start": "2026-09-21T09:00",
+          "normalized_end": null,
+          "precision": "minute",
+          "timezone": "Asia/Shanghai",
+          "timezone_basis": "task_context",
+          "actor": "报名系统",
+          "citation_ids": [
+            "H033C029"
+          ]
+        },
+        {
+          "role": "action_opens",
+          "raw_text": "9月22日8:00",
+          "normalized_start": "2026-09-22T08:00",
+          "normalized_end": null,
+          "precision": "minute",
+          "timezone": "Asia/Shanghai",
+          "timezone_basis": "task_context",
+          "actor": "复试通知发送及确认",
+          "citation_ids": [
+            "H033C030"
+          ]
+        },
+        {
+          "role": "action_opens",
+          "raw_text": "9月24日8:00",
+          "normalized_start": "2026-09-24T08:00",
+          "normalized_end": null,
+          "precision": "minute",
+          "timezone": "Asia/Shanghai",
+          "timezone_basis": "task_context",
+          "actor": "招生单位发送待录取",
+          "citation_ids": [
+            "H033C031"
+          ]
+        },
+        {
+          "role": "action_opens",
+          "raw_text": "9月24日14:00",
+          "normalized_start": "2026-09-24T14:00",
+          "normalized_end": null,
+          "precision": "minute",
+          "timezone": "Asia/Shanghai",
+          "timezone_basis": "task_context",
+          "actor": "考生确认待录取",
+          "citation_ids": [
+            "H033C032"
+          ]
+        }
+      ],
+      "basis_claim_ids": [
+        "claim-13"
+      ],
+      "prerequisite_claim_or_action_ids": [
+        "receive-eligibility"
+      ],
+      "exclusion_claim_or_action_ids": [],
+      "citation_ids": [
+        "H033C029",
+        "H033C030",
+        "H033C031",
+        "H033C032"
+      ],
+      "personal_status": "unknown",
+      "priority": "条件核验顺序，非当前仍可办理承诺",
+      "priority_reason": "功能开放与材料截止、个人确认期限分别处理。",
+      "temporal_use": "按原通知整理；当前效力/补办途径另核"
+    },
+    {
+      "action_id": "first-interview",
+      "matter_id": "receive",
+      "label": "核第一批法律（法学）复试计划",
+      "actor": "第一批该专业考生",
+      "conditions": [
+        {
+          "statement": "个人专业意向、名单归属与群内变动未知。",
+          "status": "author_inference",
+          "citation_ids": [
+            "H033C027",
+            "H033C028"
+          ]
+        }
+      ],
+      "date_fields": [
+        {
+          "role": "action_window",
+          "raw_text": "9月23日15:10—18:00",
+          "normalized_start": "2026-09-23T15:10",
+          "normalized_end": "2026-09-23T18:00",
+          "precision": "minute",
+          "timezone": "Asia/Shanghai",
+          "timezone_basis": "task_context",
+          "actor": "第一批法律（法学）考生",
+          "citation_ids": [
+            "H033C027",
+            "H033C028"
+          ]
+        }
+      ],
+      "basis_claim_ids": [
+        "claim-12"
+      ],
+      "prerequisite_claim_or_action_ids": [
+        "receive-eligibility"
+      ],
+      "exclusion_claim_or_action_ids": [],
+      "citation_ids": [
+        "H033C027",
+        "H033C028"
+      ],
+      "personal_status": "unknown",
+      "priority": "条件核验顺序，非当前仍可办理承诺",
+      "priority_reason": "公开计划不证明个人获邀或复试举行。",
+      "temporal_use": "按原通知整理；当前效力/补办途径另核"
+    },
+    {
+      "action_id": "receive-closes",
+      "matter_id": "receive",
+      "label": "保留推免系统不同终止节点",
+      "actor": "系统/招生单位",
+      "conditions": [
+        {
+          "statement": "不把三个日期压成统一截止。",
+          "status": "author_inference",
+          "citation_ids": [
+            "H033C033",
+            "H033C034"
+          ]
+        }
+      ],
+      "date_fields": [
+        {
+          "role": "action_deadline",
+          "raw_text": "10月18日",
+          "normalized_start": null,
+          "normalized_end": "2026-10-18",
+          "precision": "date",
+          "timezone": "Asia/Shanghai",
+          "timezone_basis": "task_context",
+          "actor": "注册/支付/报名功能",
+          "citation_ids": [
+            "H033C033"
+          ]
+        },
+        {
+          "role": "action_window",
+          "raw_text": "9月24日8:00——10月19日期间",
+          "normalized_start": "2026-09-24T08:00",
+          "normalized_end": "2026-10-19",
+          "precision": "mixed",
+          "timezone": "Asia/Shanghai",
+          "timezone_basis": "task_context",
+          "actor": "招生单位发送待录取",
+          "citation_ids": [
+            "H033C034"
+          ]
+        },
+        {
+          "role": "action_deadline",
+          "raw_text": "10月20日",
+          "normalized_start": null,
+          "normalized_end": "2026-10-20",
+          "precision": "date",
+          "timezone": "Asia/Shanghai",
+          "timezone_basis": "task_context",
+          "actor": "推免服务系统",
+          "citation_ids": [
+            "H033C033"
+          ]
+        }
+      ],
+      "basis_claim_ids": [
+        "claim-14"
+      ],
+      "prerequisite_claim_or_action_ids": [],
+      "exclusion_claim_or_action_ids": [],
+      "citation_ids": [
+        "H033C033",
+        "H033C034"
+      ],
+      "personal_status": "unknown",
+      "priority": "条件核验顺序，非当前仍可办理承诺",
+      "priority_reason": "只整理原通知时间，未核当前系统或个人办理。",
+      "temporal_use": "按原通知整理；当前效力/补办途径另核"
+    },
+    {
+      "action_id": "exam-branch",
+      "matter_id": "exam",
+      "label": "有意愿且未被推免录取时核统考分支",
+      "actor": "符合资格的统考申请者",
+      "conditions": [
+        {
+          "statement": "意愿和录取状态未知；已被录取推免者不得再报当年统考。",
+          "status": "author_inference",
+          "citation_ids": [
+            "H033C035",
+            "H033C036"
+          ]
+        }
+      ],
+      "date_fields": [
+        {
+          "role": "action_window",
+          "raw_text": "10月9日至10月12日，每日9:00—22:00",
+          "normalized_start": "2026-10-09",
+          "normalized_end": "2026-10-12",
+          "precision": "date",
+          "timezone": "Asia/Shanghai",
+          "timezone_basis": "task_context",
+          "actor": "预报名",
+          "citation_ids": [
+            "H033C035"
+          ]
+        },
+        {
+          "role": "action_window",
+          "raw_text": "10月15日至10月24日，每日9:00—22:00",
+          "normalized_start": "2026-10-15",
+          "normalized_end": "2026-10-24",
+          "precision": "date",
+          "timezone": "Asia/Shanghai",
+          "timezone_basis": "task_context",
+          "actor": "网上报名",
+          "citation_ids": [
+            "H033C035"
+          ]
+        }
+      ],
+      "basis_claim_ids": [
+        "claim-15",
+        "claim-16"
+      ],
+      "prerequisite_claim_or_action_ids": [],
+      "exclusion_claim_or_action_ids": [
+        "claim-16"
+      ],
+      "citation_ids": [
+        "H033C035",
+        "H033C036"
+      ],
+      "personal_status": "unknown",
+      "priority": "条件核验顺序，非当前仍可办理承诺",
+      "priority_reason": "这是条件替代分支，不与已录取推免同时必做。",
+      "temporal_use": "按原通知整理；当前效力/补办途径另核"
+    }
+  ],
+  "relations": [
+    {
+      "relation_id": "relation-01",
+      "from": {
+        "entity_type": "carrier",
+        "entity_id": "notice-yjsy-4427"
+      },
+      "to": {
+        "entity_type": "carrier",
+        "entity_id": "notice-yjsy-4428"
+      },
+      "relation_type": "same_document_carrier",
+      "status": "supported",
+      "citation_ids": [],
+      "claim_ids": [],
+      "explanation": "同日显示、统一规范的实际正文与附件URL一致；原HTML包装不同，首发/转载顺序unknown。",
+      "comparison": {
+        "carrier_ids": [
+          "notice-yjsy-4427",
+          "notice-yjsy-4428"
+        ],
+        "main_body_locators": [
+          "/html/body/div[5]/div[2]/form/div/div[2]",
+          "/html/body/div[5]/div[2]/form/div/div[2]"
+        ],
+        "main_body_normalization": "HTML text-node concatenation excluding style/script; Unicode whitespace collapsed",
+        "main_body_text_sha256": [
+          "3b583dbec5cd2047c3e62473e11bfef330d74644dc6ef93e181195deffc6ba67",
+          "3b583dbec5cd2047c3e62473e11bfef330d74644dc6ef93e181195deffc6ba67"
+        ],
+        "attachment_URL_lists_equal": true,
+        "attachment_URL_list_sha256": "ca736e771a9029eb211f2b6c020c7039945892ac15ed1d3a455e45135c51a5e7",
+        "same_displayed_publication_date": true,
+        "first_original_or_repost_order": "unknown"
+      }
+    },
+    {
+      "relation_id": "relation-02",
+      "from": {
+        "entity_type": "carrier",
+        "entity_id": "notice-yjsy-4439"
+      },
+      "to": {
+        "entity_type": "carrier",
+        "entity_id": "notice-yjsy-4440"
+      },
+      "relation_type": "same_document_carrier",
+      "status": "supported",
+      "citation_ids": [],
+      "claim_ids": [],
+      "explanation": "同一章程的并行栏目载体，不计为两个独立业务事项。",
+      "comparison": {
+        "carrier_ids": [
+          "notice-yjsy-4439",
+          "notice-yjsy-4440"
+        ],
+        "main_body_locators": [
+          "/html/body/div[5]/div[2]/form/div/div[2]",
+          "/html/body/div[5]/div[2]/form/div/div[2]"
+        ],
+        "main_body_normalization": "HTML text-node concatenation excluding style/script; Unicode whitespace collapsed",
+        "main_body_text_sha256": [
+          "56797a3643db4ef5d92e4cf4bb331da589c98e6b2691ccbfdb52a1303c9b081d",
+          "56797a3643db4ef5d92e4cf4bb331da589c98e6b2691ccbfdb52a1303c9b081d"
+        ],
+        "attachment_URL_lists_equal": true,
+        "attachment_URL_list_sha256": "38b89ef92c235cde4bb1a73d2c8eca44e126f53cbc52ceadc88900c2c0e6bdb8",
+        "same_displayed_publication_date": true,
+        "first_original_or_repost_order": "unknown"
+      }
+    },
+    {
+      "relation_id": "relation-03",
+      "from": {
+        "entity_type": "document",
+        "entity_id": "doc-law-19945"
+      },
+      "to": {
+        "entity_type": "document",
+        "entity_id": "doc-law-19962"
+      },
+      "relation_type": "stage_followup",
+      "status": "supported",
+      "citation_ids": [
+        "H033C001",
+        "H033C010"
+      ],
+      "claim_ids": [
+        "claim-01",
+        "claim-05"
+      ],
+      "explanation": "学院实施规则到学院名单公示。"
+    },
+    {
+      "relation_id": "relation-04",
+      "from": {
+        "entity_type": "document",
+        "entity_id": "doc-law-19962"
+      },
+      "to": {
+        "entity_type": "document",
+        "entity_id": "doc-jwc-12364"
+      },
+      "relation_type": "stage_followup",
+      "status": "supported",
+      "citation_ids": [
+        "H033C010",
+        "H033C011"
+      ],
+      "claim_ids": [
+        "claim-05",
+        "claim-06"
+      ],
+      "explanation": "学院遴选后学校审议公示；非学院公示延期。"
+    },
+    {
+      "relation_id": "relation-05",
+      "from": {
+        "entity_type": "matter",
+        "entity_id": "qualification"
+      },
+      "to": {
+        "entity_type": "matter",
+        "entity_id": "receive"
+      },
+      "relation_type": "prerequisite",
+      "status": "supported",
+      "citation_ids": [
+        "H033C012",
+        "H033C013"
+      ],
+      "claim_ids": [
+        "claim-07"
+      ],
+      "explanation": "获得并备案推荐资格是接收申请条件；不是个人已满足的事实。"
+    },
+    {
+      "relation_id": "relation-06",
+      "from": {
+        "entity_type": "document",
+        "entity_id": "doc-school-receive"
+      },
+      "to": {
+        "entity_type": "document",
+        "entity_id": "doc-law-20003"
+      },
+      "relation_type": "college_implements_school",
+      "status": "supported",
+      "citation_ids": [
+        "H033C014",
+        "H033C015"
+      ],
+      "claim_ids": [
+        "claim-08",
+        "claim-09"
+      ],
+      "explanation": "学校材料框架由学院细化，学院材料截止与系统报名开放是不同动作。"
+    },
+    {
+      "relation_id": "relation-07",
+      "from": {
+        "entity_type": "document",
+        "entity_id": "doc-law-20003"
+      },
+      "to": {
+        "entity_type": "document",
+        "entity_id": "doc-law-20046"
+      },
+      "relation_type": "stage_followup",
+      "status": "supported",
+      "citation_ids": [
+        "H033C027",
+        "H033C028"
+      ],
+      "claim_ids": [
+        "claim-12"
+      ],
+      "explanation": "实施细则后的第一批复试计划；名单和群内个体安排未知。"
+    },
+    {
+      "relation_id": "relation-08",
+      "from": {
+        "entity_type": "action",
+        "entity_id": "substitution-student"
+      },
+      "to": {
+        "entity_type": "action",
+        "entity_id": "substitution-college"
+      },
+      "relation_type": "prerequisite",
+      "status": "supported",
+      "citation_ids": [
+        "H033C040"
+      ],
+      "claim_ids": [
+        "claim-19"
+      ],
+      "explanation": "学生申请先于学院审批；不得用学院时间替代学生截止。"
+    },
+    {
+      "relation_id": "relation-09",
+      "from": {
+        "entity_type": "document",
+        "entity_id": "doc-jwc-12386"
+      },
+      "to": {
+        "entity_type": "document",
+        "entity_id": "doc-jwc-12394"
+      },
+      "relation_type": "stage_followup",
+      "status": "supported",
+      "citation_ids": [
+        "H033C041",
+        "H033C042",
+        "H033C043"
+      ],
+      "claim_ids": [
+        "claim-20",
+        "claim-21"
+      ],
+      "explanation": "拟停开单位反馈到正式停开结果，不证明学生补选延期。"
+    },
+    {
+      "relation_id": "relation-10",
+      "from": {
+        "entity_type": "action",
+        "entity_id": "registration"
+      },
+      "to": {
+        "entity_type": "action",
+        "entity_id": "registration-followup"
+      },
+      "relation_type": "stage_followup",
+      "status": "supported",
+      "citation_ids": [
+        "H033C044",
+        "H033C045",
+        "H033C046",
+        "H033C047",
+        "H033C048"
+      ],
+      "claim_ids": [
+        "claim-22",
+        "claim-23"
+      ],
+      "explanation": "原注册之后按实际注册状态核盖章/补注册；未给补注册时间。"
+    },
+    {
+      "relation_id": "relation-11",
+      "from": {
+        "entity_type": "matter",
+        "entity_id": "receive"
+      },
+      "to": {
+        "entity_type": "matter",
+        "entity_id": "exam"
+      },
+      "relation_type": "conditional_exclusion",
+      "status": "supported",
+      "citation_ids": [
+        "H033C036"
+      ],
+      "claim_ids": [
+        "claim-16"
+      ],
+      "explanation": "只有已被录取推免的个人状态触发不能再报当年统考；两个路径不并列为无条件必做。"
+    },
+    {
+      "relation_id": "relation-12",
+      "from": {
+        "entity_type": "document",
+        "entity_id": "doc-law-points-docx"
+      },
+      "to": {
+        "entity_type": "document",
+        "entity_id": "doc-law-19945"
+      },
+      "relation_type": "attachment_of",
+      "status": "supported",
+      "citation_ids": [
+        "H033C082"
+      ],
+      "claim_ids": [],
+      "explanation": "实际附件的父通知链接关系；附件版本与父通知发布日期分别保留。"
+    },
+    {
+      "relation_id": "relation-13",
+      "from": {
+        "entity_type": "document",
+        "entity_id": "doc-law-competition-c-docx"
+      },
+      "to": {
+        "entity_type": "document",
+        "entity_id": "doc-law-19945"
+      },
+      "relation_type": "attachment_of",
+      "status": "supported",
+      "citation_ids": [
+        "H033C083"
+      ],
+      "claim_ids": [],
+      "explanation": "实际附件的父通知链接关系；附件版本与父通知发布日期分别保留。"
+    },
+    {
+      "relation_id": "relation-14",
+      "from": {
+        "entity_type": "document",
+        "entity_id": "doc-law-master-directory-xlsx"
+      },
+      "to": {
+        "entity_type": "document",
+        "entity_id": "doc-law-20003"
+      },
+      "relation_type": "attachment_of",
+      "status": "supported",
+      "citation_ids": [
+        "H033C084"
+      ],
+      "claim_ids": [],
+      "explanation": "实际附件的父通知链接关系；附件版本与父通知发布日期分别保留。"
+    },
+    {
+      "relation_id": "relation-15",
+      "from": {
+        "entity_type": "document",
+        "entity_id": "doc-law-competition-pdf"
+      },
+      "to": {
+        "entity_type": "document",
+        "entity_id": "doc-law-19945"
+      },
+      "relation_type": "attachment_of",
+      "status": "supported",
+      "citation_ids": [
+        "H033C085"
+      ],
+      "claim_ids": [],
+      "explanation": "实际附件的父通知链接关系；附件版本与父通知发布日期分别保留。"
+    }
+  ],
+  "unknowns": [
+    {
+      "unknown_id": "personal-eligibility",
+      "entity_refs": [],
+      "field": "资格/成绩/外语/纪律/获奖",
+      "reason": "合成画像没有这些个人证据。",
+      "effect_on_conclusion_or_action": "不能认定推免资格或排名。",
+      "possible_followup": "如需实际决策，另核本人合法提供的记录；本整理不办理。"
+    },
+    {
+      "unknown_id": "personal-status",
+      "entity_refs": [],
+      "field": "申请意愿/方向/名单/缴费/注册/完成",
+      "reason": "题目未提供具体个人状态。",
+      "effect_on_conclusion_or_action": "所有建议保持条件分支，个人完成unknown。",
+      "possible_followup": "由当事人另行确认，不从真实名单行填补。"
+    },
+    {
+      "unknown_id": "current-effect",
+      "entity_refs": [],
+      "field": "当下有效版本及是否仍可办理",
+      "reason": "材料于2026-10-28后取，未系统核遍后续更新。",
+      "effect_on_conclusion_or_action": "不能将历史窗口变成当前可办承诺。",
+      "possible_followup": "实际使用前另核最新官方通知与本人条件。"
+    },
+    {
+      "unknown_id": "confirmation",
+      "entity_refs": [
+        {
+          "entity_type": "matter",
+          "entity_id": "receive"
+        }
+      ],
+      "field": "个人确认期限/群内安排",
+      "reason": "公开通知未给统一个人确认时长；未进入群或系统。",
+      "effect_on_conclusion_or_action": "不补统一小时数或个人复试次序。",
+      "possible_followup": "仅在有合法实际通知时按其要求核验。"
+    },
+    {
+      "unknown_id": "course-impact",
+      "entity_refs": [
+        {
+          "entity_type": "matter",
+          "entity_id": "course"
+        }
+      ],
+      "field": "具体停开课程与本人课程影响",
+      "reason": "具体课程/学生附件未读取。",
+      "effect_on_conclusion_or_action": "不能判断画像哪门课受影响或编补选延期。",
+      "possible_followup": "在实际使用时核本人课程及官方后续。"
+    },
+    {
+      "unknown_id": "supplement-registration",
+      "entity_refs": [
+        {
+          "entity_type": "matter",
+          "entity_id": "registration"
+        }
+      ],
+      "field": "补注册日期",
+      "reason": "所读名单后续仅要求关注补注册通知。",
+      "effect_on_conclusion_or_action": "不能将名单公告认定原截止延期。",
+      "possible_followup": "如确未注册且有意办理，另核正式补注册通知。"
+    },
+    {
+      "unknown_id": "unread-attachment-yjsy-master-directory-xlsx",
+      "entity_refs": [
+        {
+          "entity_type": "carrier",
+          "entity_id": "attachment-yjsy-master-directory-xlsx"
+        }
+      ],
+      "field": "标称附件具体正文/单元格",
+      "reason": "实际取得验证码HTML，未取得链接所称附件。",
+      "effect_on_conclusion_or_action": "不补写其中内容，不以门禁页或扩展名证明取得原件。",
+      "possible_followup": "若实际决策需要该内容，应另行取得官方可读版本或向相关单位核实；当前不据缺失内容作结论。"
+    },
+    {
+      "unknown_id": "unread-attachment-yjsy-general-directory-pdf",
+      "entity_refs": [
+        {
+          "entity_type": "carrier",
+          "entity_id": "attachment-yjsy-general-directory-pdf"
+        }
+      ],
+      "field": "标称附件具体正文/单元格",
+      "reason": "实际取得验证码HTML，未取得链接所称附件。",
+      "effect_on_conclusion_or_action": "不补写其中内容，不以门禁页或扩展名证明取得原件。",
+      "possible_followup": "若实际决策需要该内容，应另行取得官方可读版本或向相关单位核实；当前不据缺失内容作结论。"
+    },
+    {
+      "unknown_id": "unread-attachment-jwc-course-handbook-xls",
+      "entity_refs": [
+        {
+          "entity_type": "carrier",
+          "entity_id": "attachment-jwc-course-handbook-xls"
+        }
+      ],
+      "field": "标称附件具体正文/单元格",
+      "reason": "实际取得验证码HTML，未取得链接所称附件。",
+      "effect_on_conclusion_or_action": "不补写其中内容，不以门禁页或扩展名证明取得原件。",
+      "possible_followup": "若实际决策需要该内容，应另行取得官方可读版本或向相关单位核实；当前不据缺失内容作结论。"
+    },
+    {
+      "unknown_id": "unread-attachment-jwc-course-substitution-pdf",
+      "entity_refs": [
+        {
+          "entity_type": "carrier",
+          "entity_id": "attachment-jwc-course-substitution-pdf"
+        }
+      ],
+      "field": "标称附件具体正文/单元格",
+      "reason": "实际取得验证码HTML，未取得链接所称附件。",
+      "effect_on_conclusion_or_action": "不补写其中内容，不以门禁页或扩展名证明取得原件。",
+      "possible_followup": "若实际决策需要该内容，应另行取得官方可读版本或向相关单位核实；当前不据缺失内容作结论。"
+    },
+    {
+      "unknown_id": "unread-attachment-jwc-registration-vpn-pdf",
+      "entity_refs": [
+        {
+          "entity_type": "carrier",
+          "entity_id": "attachment-jwc-registration-vpn-pdf"
+        }
+      ],
+      "field": "标称附件具体正文/单元格",
+      "reason": "实际取得验证码HTML，未取得链接所称附件。",
+      "effect_on_conclusion_or_action": "不补写其中内容，不以门禁页或扩展名证明取得原件。",
+      "possible_followup": "若实际决策需要该内容，应另行取得官方可读版本或向相关单位核实；当前不据缺失内容作结论。"
+    },
+    {
+      "unknown_id": "unread-attachment-jwc-deferred-form-xls",
+      "entity_refs": [
+        {
+          "entity_type": "carrier",
+          "entity_id": "attachment-jwc-deferred-form-xls"
+        }
+      ],
+      "field": "标称附件具体正文/单元格",
+      "reason": "实际取得验证码HTML，未取得链接所称附件。",
+      "effect_on_conclusion_or_action": "不补写其中内容，不以门禁页或扩展名证明取得原件。",
+      "possible_followup": "若实际决策需要该内容，应另行取得官方可读版本或向相关单位核实；当前不据缺失内容作结论。"
+    },
+    {
+      "unknown_id": "unread-attachment-law-books-xls",
+      "entity_refs": [
+        {
+          "entity_type": "carrier",
+          "entity_id": "attachment-law-books-xls"
+        }
+      ],
+      "field": "标称附件具体正文/单元格",
+      "reason": "已取得旧XLS字节；现有冻结读取未形成单元格内容。",
+      "effect_on_conclusion_or_action": "不补写其中内容，不以门禁页或扩展名证明取得原件。",
+      "possible_followup": "若实际决策需要该内容，应另行取得官方可读版本或向相关单位核实；当前不据缺失内容作结论。"
+    }
+  ]
+}

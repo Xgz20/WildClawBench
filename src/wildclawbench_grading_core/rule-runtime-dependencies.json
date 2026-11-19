@@ -75,6 +75,14 @@
       ],
       "runtime_assets": [],
       "version_policy": "freeze-in-managed-rule-runtime"
+    },
+    {
+      "distribution": "pdfplumber",
+      "import_roots": [
+        "pdfplumber"
+      ],
+      "runtime_assets": [],
+      "version_policy": "optional-freeze-in-supplied-managed-runtime"
     }
   ]
 }

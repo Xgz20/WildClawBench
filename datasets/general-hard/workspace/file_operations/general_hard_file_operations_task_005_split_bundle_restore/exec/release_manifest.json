@@ -1,0 +1,577 @@
+{
+  "schema": "h039.release/v1",
+  "release_id": "WB-20261029-r7",
+  "version": "3.2.1",
+  "entrypoint": "index.html",
+  "layout": "single_root_no_extra_wrapper",
+  "parts": [
+    {
+      "part_id": "core",
+      "path": "parts/Workbench_bundle_A.zip",
+      "sha256": "5f9e75636fbc2683368f4ee02d04c664f0254752a25d0738a4d42718d7c2ba14",
+      "release_id": "WB-20261029-r7",
+      "version": "3.2.1",
+      "payload_prefix": "Workbench/",
+      "payload_members": 11
+    },
+    {
+      "part_id": "docs",
+      "path": "parts/Workbench_bundle_B.zip",
+      "sha256": "180361bdaed86ee858b0af5ec55b5a85e72616b8ec7fd8ec653ba0fb55811607",
+      "release_id": "WB-20261029-r7",
+      "version": "3.2.1",
+      "payload_prefix": "bundle/Workbench/",
+      "payload_members": 17
+    },
+    {
+      "part_id": "assets",
+      "path": "parts/Workbench_bundle_C.zip",
+      "sha256": "c51d4fb6dc39bed11d824d26607a9aa731cfe1bb42850f33414572bcc6e1e7f5",
+      "release_id": "WB-20261029-r7",
+      "version": "3.2.1",
+      "payload_prefix": "AssetsDrop/",
+      "payload_members": 14
+    }
+  ],
+  "nonselected_archive_policy": "Any ZIP without matching release_id/version/part_id/whole-archive SHA is an old/incompatible input; record exclusion, do not mix. Do not infer by filename.",
+  "members": [
+    {
+      "path": "LICENSE.txt",
+      "bytes": 172,
+      "sha256": "2ec2f2360806994d6ae457403db3f29da81338bea9a64d5e0d202c0070bfd5c4",
+      "sources": [
+        {
+          "part_id": "core",
+          "member": "Workbench/LICENSE.txt"
+        },
+        {
+          "part_id": "docs",
+          "member": "bundle/Workbench/LICENSE.txt"
+        }
+      ]
+    },
+    {
+      "path": "README.md",
+      "bytes": 91,
+      "sha256": "da6b229ac09c2e5dba393554f0078bfc5a3b734afe8231d075ea768dd94af5b7",
+      "sources": [
+        {
+          "part_id": "core",
+          "member": "Workbench/README.md"
+        }
+      ]
+    },
+    {
+      "path": "assets/css/Theme.css",
+      "bytes": 37,
+      "sha256": "766a7dee3c38d3f8a62ba80dc11abf1dc8840cdbfd6ea241f36f386ad1dc6c1e",
+      "sources": [
+        {
+          "part_id": "core",
+          "member": "Workbench/assets/css/Theme.css"
+        }
+      ]
+    },
+    {
+      "path": "assets/css/base.css",
+      "bytes": 783,
+      "sha256": "6d4cb3f982035fb68d2ce32d71d5d82402c37a553650e7d59b770d8fee6d464c",
+      "sources": [
+        {
+          "part_id": "core",
+          "member": "Workbench/assets/css/base.css"
+        }
+      ]
+    },
+    {
+      "path": "assets/css/print.css",
+      "bytes": 63,
+      "sha256": "da913244c15e5ca2fe9155b5166101ac1ffd348eda6f43aefdccb65f0d1e4452",
+      "sources": [
+        {
+          "part_id": "core",
+          "member": "Workbench/assets/css/print.css"
+        }
+      ]
+    },
+    {
+      "path": "assets/fonts/readme.txt",
+      "bytes": 62,
+      "sha256": "49fdd788c1c6c7e3c5d3f4143ad15ad45bba05fd07bdbeb87c8073cef2b0e01a",
+      "sources": [
+        {
+          "part_id": "assets",
+          "member": "AssetsDrop/assets/fonts/readme.txt"
+        }
+      ]
+    },
+    {
+      "path": "assets/img/Logo.svg",
+      "bytes": 234,
+      "sha256": "2def37df60267b8b2416002099e970086d9b28198cf02591a1ec1c280f4ebb18",
+      "sources": [
+        {
+          "part_id": "assets",
+          "member": "AssetsDrop/assets/img/Logo.svg"
+        }
+      ]
+    },
+    {
+      "path": "assets/img/icons/archive.svg",
+      "bytes": 234,
+      "sha256": "e121f50a4a9d31890dfb624491fe4544005aeb29f6976fbcef00f6b97fbe059e",
+      "sources": [
+        {
+          "part_id": "assets",
+          "member": "AssetsDrop/assets/img/icons/archive.svg"
+        }
+      ]
+    },
+    {
+      "path": "assets/img/icons/check.svg",
+      "bytes": 234,
+      "sha256": "bb404c0c82a98787f18b6121ba4fd2be642b9d41ea68c50fedf4279fd90483c1",
+      "sources": [
+        {
+          "part_id": "assets",
+          "member": "AssetsDrop/assets/img/icons/check.svg"
+        }
+      ]
+    },
+    {
+      "path": "assets/img/icons/notes.svg",
+      "bytes": 234,
+      "sha256": "964fd359b61c832c6d583aa2be64ddbd512ecf5da7f35c39054d08f68837c4d2",
+      "sources": [
+        {
+          "part_id": "assets",
+          "member": "AssetsDrop/assets/img/icons/notes.svg"
+        }
+      ]
+    },
+    {
+      "path": "assets/img/theme-grid.svg",
+      "bytes": 117,
+      "sha256": "b088f9dd34810aab3f7aeeaf6cac950d45989e6085f2d7d6dfea5f106048b468",
+      "sources": [
+        {
+          "part_id": "assets",
+          "member": "AssetsDrop/assets/img/theme-grid.svg"
+        }
+      ]
+    },
+    {
+      "path": "assets/js/app.js",
+      "bytes": 1371,
+      "sha256": "4dafd96de25123f7818f031e7a6c15f021c0802c00dd1bf7f6e347dbaf730dd4",
+      "sources": [
+        {
+          "part_id": "core",
+          "member": "Workbench/assets/js/app.js"
+        }
+      ]
+    },
+    {
+      "path": "assets/js/catalog-data.js",
+      "bytes": 1649,
+      "sha256": "2e9f9ec6ff63ac1f34947e0abc498b0d601a658a16467ebb06c52225089ae302",
+      "sources": [
+        {
+          "part_id": "assets",
+          "member": "AssetsDrop/assets/js/catalog-data.js"
+        }
+      ]
+    },
+    {
+      "path": "build-info.json",
+      "bytes": 78,
+      "sha256": "eb778d36443fd71f6b8d368837d38e1255f1df5947fba8367c0c6fec27b17b6a",
+      "sources": [
+        {
+          "part_id": "core",
+          "member": "Workbench/build-info.json"
+        },
+        {
+          "part_id": "assets",
+          "member": "AssetsDrop/build-info.json"
+        }
+      ]
+    },
+    {
+      "path": "data/catalog.json",
+      "bytes": 1846,
+      "sha256": "719a6ee1a85b2730ce7bd8e97b50bab53c756f73950c31be4d758371d68f67f8",
+      "sources": [
+        {
+          "part_id": "assets",
+          "member": "AssetsDrop/data/catalog.json"
+        }
+      ]
+    },
+    {
+      "path": "data/labels.csv",
+      "bytes": 53,
+      "sha256": "d56b69d15d504437fe0727276cea9d240433bf6e6378a8602916ae2a31e7327a",
+      "sources": [
+        {
+          "part_id": "assets",
+          "member": "AssetsDrop/data/labels.csv"
+        }
+      ]
+    },
+    {
+      "path": "data/metrics.json",
+      "bytes": 91,
+      "sha256": "bae2d4e135e233a519567642a1906ab1d0ee072b239c6a44f67bf23a83565376",
+      "sources": [
+        {
+          "part_id": "assets",
+          "member": "AssetsDrop/data/metrics.json"
+        }
+      ]
+    },
+    {
+      "path": "data/release.json",
+      "bytes": 144,
+      "sha256": "5d435f652b367759cd46a1b82bd7883d5d639f0fd17e986b51a7b49dcabdfcba",
+      "sources": [
+        {
+          "part_id": "assets",
+          "member": "AssetsDrop/data/release.json"
+        }
+      ]
+    },
+    {
+      "path": "data/sample-rows.csv",
+      "bytes": 37,
+      "sha256": "9aeeb7cff3392d2613cdd40ca90ebd783e7e3187c033c7125992eca864c22031",
+      "sources": [
+        {
+          "part_id": "assets",
+          "member": "AssetsDrop/data/sample-rows.csv"
+        }
+      ]
+    },
+    {
+      "path": "data/schema.json",
+      "bytes": 124,
+      "sha256": "5153c05dff35166e9502ea28b0011a57e82b3d4757ea818c25fe5e915feed152",
+      "sources": [
+        {
+          "part_id": "assets",
+          "member": "AssetsDrop/data/schema.json"
+        }
+      ]
+    },
+    {
+      "path": "docs/data-model.md",
+      "bytes": 114,
+      "sha256": "f98fe3a4f4b04545569d405838f4719e2f262e46d2fbf03522adabcaeae77cb3",
+      "sources": [
+        {
+          "part_id": "docs",
+          "member": "bundle/Workbench/docs/data-model.md"
+        }
+      ]
+    },
+    {
+      "path": "docs/examples/README.md",
+      "bytes": 79,
+      "sha256": "d87e909fb14b5cf10491cac9764fc8827daff23b04aa5cec966381b3c204b01a",
+      "sources": [
+        {
+          "part_id": "docs",
+          "member": "bundle/Workbench/docs/examples/README.md"
+        }
+      ]
+    },
+    {
+      "path": "docs/examples/sample.csv",
+      "bytes": 39,
+      "sha256": "83a2f567b321178c933b1b698108e7aa845fd4635aa31853316f4f3ebd30b0a9",
+      "sources": [
+        {
+          "part_id": "docs",
+          "member": "bundle/Workbench/docs/examples/sample.csv"
+        }
+      ]
+    },
+    {
+      "path": "docs/examples/sample.tsv",
+      "bytes": 28,
+      "sha256": "8a68a1f989f6f1abcebf5afd0068342e212f6cc1c7749cefe54bef73da543e43",
+      "sources": [
+        {
+          "part_id": "docs",
+          "member": "bundle/Workbench/docs/examples/sample.tsv"
+        }
+      ]
+    },
+    {
+      "path": "docs/item-01.md",
+      "bytes": 176,
+      "sha256": "6766642e1e418d0c3e357e764ae290165f06337bea4781fbee8bba608ffb01ec",
+      "sources": [
+        {
+          "part_id": "docs",
+          "member": "bundle/Workbench/docs/item-01.md"
+        }
+      ]
+    },
+    {
+      "path": "docs/item-02.md",
+      "bytes": 190,
+      "sha256": "31efee5766be894901f3b0f093e14e25d1ed5a9c30ed66cef6305abb5a83f799",
+      "sources": [
+        {
+          "part_id": "docs",
+          "member": "bundle/Workbench/docs/item-02.md"
+        }
+      ]
+    },
+    {
+      "path": "docs/item-03.md",
+      "bytes": 174,
+      "sha256": "91c8ec000666cccdd0a492b2e2e1aa7be947911427cda1670db4b4a1d9a123cb",
+      "sources": [
+        {
+          "part_id": "docs",
+          "member": "bundle/Workbench/docs/item-03.md"
+        }
+      ]
+    },
+    {
+      "path": "docs/item-04.md",
+      "bytes": 173,
+      "sha256": "b38e19c7b269b4f056c9d896932deb88e7b268a30d35a7571ecc59f32118a9d7",
+      "sources": [
+        {
+          "part_id": "docs",
+          "member": "bundle/Workbench/docs/item-04.md"
+        }
+      ]
+    },
+    {
+      "path": "docs/item-05.md",
+      "bytes": 176,
+      "sha256": "d6af5937ae50e0264c8f1bc398876390e6a39f29098ac4a79da4791633739799",
+      "sources": [
+        {
+          "part_id": "docs",
+          "member": "bundle/Workbench/docs/item-05.md"
+        }
+      ]
+    },
+    {
+      "path": "docs/item-06.md",
+      "bytes": 173,
+      "sha256": "8e6973b9c4b25813e8ea7cfe3ab593ee4dc950d45d05fb12222c4affbe376e1d",
+      "sources": [
+        {
+          "part_id": "docs",
+          "member": "bundle/Workbench/docs/item-06.md"
+        }
+      ]
+    },
+    {
+      "path": "docs/item-07.md",
+      "bytes": 176,
+      "sha256": "2a25fa3f2678d0402c619e1b1c444ed244ebf5769e4b486621988756e1961a8b",
+      "sources": [
+        {
+          "part_id": "docs",
+          "member": "bundle/Workbench/docs/item-07.md"
+        }
+      ]
+    },
+    {
+      "path": "docs/item-08.md",
+      "bytes": 170,
+      "sha256": "bbb5332899f49b7720651d51177b29d8d8ade950ec2cdd8a7605ca6630fe567e",
+      "sources": [
+        {
+          "part_id": "docs",
+          "member": "bundle/Workbench/docs/item-08.md"
+        }
+      ]
+    },
+    {
+      "path": "docs/troubleshooting.md",
+      "bytes": 108,
+      "sha256": "8c560d619a75d1c171826c5be5b1187e603e27aa6e2c691b6f74cea445a776b4",
+      "sources": [
+        {
+          "part_id": "docs",
+          "member": "bundle/Workbench/docs/troubleshooting.md"
+        }
+      ]
+    },
+    {
+      "path": "docs/usage.md",
+      "bytes": 114,
+      "sha256": "bc8471a200490579f7908bb5bfa6f47bc53d5369cb6e73be2185a153cd323c2f",
+      "sources": [
+        {
+          "part_id": "docs",
+          "member": "bundle/Workbench/docs/usage.md"
+        }
+      ]
+    },
+    {
+      "path": "index.html",
+      "bytes": 1252,
+      "sha256": "58f775c8d67c340c8399b0eb21de1260ed597f4b975b4ab35fcc72cb17ff0846",
+      "sources": [
+        {
+          "part_id": "core",
+          "member": "Workbench/index.html"
+        }
+      ]
+    },
+    {
+      "path": "pages/guide.html",
+      "bytes": 950,
+      "sha256": "6434f5aaf845ad03eac49ae50102454e881c90bacb26e34490f7ae64af0a2b25",
+      "sources": [
+        {
+          "part_id": "core",
+          "member": "Workbench/pages/guide.html"
+        }
+      ]
+    },
+    {
+      "path": "pages/notes.html",
+      "bytes": 867,
+      "sha256": "f0b2fc55da487b5b4ebbe11e6aac5c5df21604680bbc6e33b8630836232701df",
+      "sources": [
+        {
+          "part_id": "core",
+          "member": "Workbench/pages/notes.html"
+        }
+      ]
+    },
+    {
+      "path": "pages/reports.html",
+      "bytes": 893,
+      "sha256": "1853c9fceaea4515fa37133350be277027bcbb743c653e39b7c494bb4809ac67",
+      "sources": [
+        {
+          "part_id": "core",
+          "member": "Workbench/pages/reports.html"
+        }
+      ]
+    },
+    {
+      "path": "user_notes/README.md",
+      "bytes": 77,
+      "sha256": "83e5ca03d53f39a472f138e841ec0167586e05b6fb2415385f41a9afe1fbc481",
+      "sources": [
+        {
+          "part_id": "docs",
+          "member": "bundle/Workbench/user_notes/README.md"
+        }
+      ]
+    },
+    {
+      "path": "user_notes/case/README.md",
+      "bytes": 91,
+      "sha256": "523dabcc515800207c54c21e909c072460ca601fa4cd1344ab24d182c789cb74",
+      "sources": [
+        {
+          "part_id": "docs",
+          "member": "bundle/Workbench/user_notes/case/README.md"
+        }
+      ]
+    }
+  ],
+  "notes_policy": {
+    "mount": "user_notes",
+    "existing_user_priority": true,
+    "comparison": "NFC + casefold for conflict detection; retain original existing path/case/bytes",
+    "release_conflict_prefix": "distribution_templates",
+    "preserve_existing_bytes": true,
+    "do_not_edit_release_bytes": true
+  },
+  "notes": [
+    {
+      "path": "2026/计划.md",
+      "bytes": 99,
+      "sha256": "d98657cf25d81de28582bb2b076121ed998afc346da72e1f8216a952832993a7"
+    },
+    {
+      "path": "Case/ReadMe.md",
+      "bytes": 77,
+      "sha256": "c03fb77a2cab155b97e37073bc4048ada1b4cbe2cd598e87d51ee312e8a9bdfb"
+    },
+    {
+      "path": "README.md",
+      "bytes": 112,
+      "sha256": "ddb88133376dd85df9b62c089ba2af0d1ac58649f3d9a72f3e1eadcebbd9bb96"
+    },
+    {
+      "path": "prefs.json",
+      "bytes": 53,
+      "sha256": "5d3a26b1b54de67cb2a911681f83ea411796c5ac0fbdd1888a5c4e15e3bd78bf"
+    },
+    {
+      "path": "resources/ref-card.txt",
+      "bytes": 62,
+      "sha256": "a29b331f4fd96f60674a935bf3eb02f0356627b7de1d8ddfe2198f9e179a6ed4"
+    },
+    {
+      "path": "topic/links.md",
+      "bytes": 64,
+      "sha256": "68a5707fa037f0a657153461137fd95d5ca1006ddc8808b96203984d220002e5"
+    }
+  ],
+  "root_policy": "Strip exactly each selected part payload_prefix, map payload path to restored single root. PART_INFO.json is metadata, not restored payload. Equal repeated member in same release merges once; conflicting bytes block and report, never last-writer-wins.",
+  "resource_policy": "Relative HTML href/src, CSS url/import, Markdown links, and catalog href with base=root; resolve percent paths/dot segments within restored root, preserve exact case and validate HTML fragments. No network/CDN/eval.",
+  "verification_policy": "Verify actual restored bytes and resource graph. Existing notes override exact/casefold path collisions; preserve release member bytes in distribution_templates/<release path>. Never regenerate missing slices or entire app.",
+  "local_use": "Open results/restored/index.html as a local file; controlled original classic scripts use embedded catalog, no fetch/server/account required. If browser not actually opened, record not_run/unknown honestly rather than claiming launch.",
+  "functional_cases": [
+    {
+      "query": "",
+      "group": "",
+      "ids": [
+        "D01",
+        "D02",
+        "D03",
+        "D04",
+        "D05",
+        "D06",
+        "D07",
+        "D08"
+      ]
+    },
+    {
+      "query": "hash",
+      "group": "",
+      "ids": [
+        "D02",
+        "D03"
+      ]
+    },
+    {
+      "query": "",
+      "group": "archive",
+      "ids": [
+        "D01",
+        "D02",
+        "D03"
+      ]
+    },
+    {
+      "query": "离线",
+      "group": "notes",
+      "ids": [
+        "D07"
+      ]
+    },
+    {
+      "query": "not-present",
+      "group": "",
+      "ids": []
+    }
+  ],
+  "audit_contract": "restore_audit.json: release_id/version/selected_parts(part_id,path,sha256)/excluded_parts(path,release_id,reason)/members(release_path,target_path,sha256,bytes,part_ids)/notes(source_path,target_path,sha256,bytes)/conflicts/resource_checks. resource_checks entries source/kind/raw_ref/target/fragment/status=resolved, grouped/reordered allowed. input_sha256 binds inputs. handoff.md explains exact entrypoint, file open instructions, version choices, notes and collision handling, actual static vs browser validation boundary; add a two-column table or fenced JSON summary with release_id,entrypoint,release_member_count,note_count,restored_file_count,resource_edge_count."
+}

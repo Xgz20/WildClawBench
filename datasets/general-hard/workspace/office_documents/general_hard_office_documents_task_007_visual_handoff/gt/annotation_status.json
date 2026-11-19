@@ -1,0 +1,42 @@
+{
+  "status": "approved",
+  "required": 2,
+  "received": 2,
+  "type": "independent_model_annotation",
+  "human_expert": false,
+  "delegation_authorized_by_user": true,
+  "user_authorization": "授权两名子代理独立标注（推荐）",
+  "construction_labels_are_not_independent_annotations": true,
+  "input_sha256": {
+    "annotated_pages/page_01.png": "bc96cdb69201b0c0c3322e966c22c9f5f9407b58866056ce37d2deb62e9f3465",
+    "annotated_pages/page_02.png": "db80ec3f35de875cf0cc85430e11551bfab306a8d04800583777fb6640fcf954",
+    "annotated_pages/page_03.png": "b14f12865a2ba51078a768b57cba6cff1ebbf6773ddbf17e7924dcf75fef1f76",
+    "edit_scope.md": "34810b360ebd4e914907de349dab65b6447131e2294bd3445c3ddc3db3ebea51",
+    "handoff.docx": "80cef74cde39fd4ad8357b28823d25013c6cc38c254fb7a8074719a77e761d38"
+  },
+  "reviewers": [
+    {
+      "reviewer_id": "reviewer_a",
+      "kind": "independent_model_annotation",
+      "human_expert": false,
+      "agent_task": "/root/h007_annotator_a",
+      "history": "fork_turns=none",
+      "path": "reviews/reviewer_a.json",
+      "sha256": "b7fd29de9311e5fe896311e61eedfcc74f0339c731a02ce958e8d1750f8fbc33"
+    },
+    {
+      "reviewer_id": "reviewer_b",
+      "kind": "independent_model_annotation",
+      "human_expert": false,
+      "agent_task": "/root/h007_annotator_b",
+      "history": "fork_turns=none",
+      "path": "reviews/reviewer_b.json",
+      "sha256": "336705b3b79c025a5c15f0a3d06bcbcf6e66f69d0c24409443241a0fb815648d"
+    }
+  ],
+  "reconciliation": {
+    "path": "reviews/reconciliation.json",
+    "sha256": "4d9ee0801c76c867d1a368c219af8f17b10c2e96211e99902d74efd798e196d4"
+  },
+  "limit": "Two blind model reads plus author reconciliation; not human expert review or model scoring."
+}

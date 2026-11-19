@@ -1,0 +1,36 @@
+{
+  "schema": "h058-source-first-counterexamples/v1",
+  "examples": [
+    {
+      "kind": "fabricated_quote",
+      "quote": "心静万事归无痕",
+      "reason": "合成假古语，不在八段原文；不得作为任何作者原句。"
+    },
+    {
+      "kind": "author_mismatch",
+      "source_id": "S02",
+      "wrong_author": "李白",
+      "right_author": "陶渊明"
+    },
+    {
+      "kind": "author_mismatch",
+      "source_id": "S06",
+      "wrong_author": "王安石",
+      "right_author": "苏轼"
+    },
+    {
+      "kind": "semantic_reversal",
+      "source_id": "S08",
+      "wrong_claim": "古人认为书本毫无价值",
+      "right_boundary": "终觉浅不等于全无价值，尚需躬行。"
+    },
+    {
+      "kind": "mechanical_truncation",
+      "reason": "三渠道正文相同或仅是同一正文的前缀，结构/字数之外还需Judge判渠道适配。"
+    },
+    {
+      "kind": "unperformed_publication",
+      "reason": "一次性建议不能写成已发布或已设置自动任务。"
+    }
+  ]
+}

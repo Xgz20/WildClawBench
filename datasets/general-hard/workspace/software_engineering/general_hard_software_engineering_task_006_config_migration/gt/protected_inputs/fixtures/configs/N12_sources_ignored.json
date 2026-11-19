@@ -1,0 +1,14 @@
+{
+  "case_id": "N12_sources_ignored",
+  "defaults": {},
+  "project": {
+    "timeout_ms": "obsolete-invalid",
+    "network": {
+      "timeout_seconds": 0
+    }
+  },
+  "user": {
+    "cache": null,
+    "cache_enabled": true
+  }
+}

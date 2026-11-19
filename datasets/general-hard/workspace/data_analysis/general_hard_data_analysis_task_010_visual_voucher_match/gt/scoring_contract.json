@@ -1,0 +1,27 @@
+{
+  "schema_version": "h026-scoring-contract/v1",
+  "weights": {
+    "business_correctness": 0.55,
+    "boundary_cases": 0.25,
+    "delivery_integrity": 0.15,
+    "evidence_binding": 0.05
+  },
+  "hybrid_weights": {
+    "automatic": 0.75,
+    "semantic": 0.25
+  },
+  "grading_source_sha256": "cb2cd459b216cd4f86a640af8aa9b2dd00b9811370d9d5ab5f7b140b7bde798a",
+  "private_sha256": {
+    "voucher_io.py": "d8f09daf4e563d462392679f86704b64343168e4ad6a6691f8704201fc0b41f5",
+    "office_runtime.py": "a18c64c8ea7d267157e95d46a544471e7b47018ce1afad9c0da49537f0bf5cf3",
+    "expected.json": "8e1bedc806aca5864e43bef6d3a05e55077d7625d08bf925a10a75b52c28e12a",
+    "annotation_reconciliation.json": "eab0f94c285533c9123954cfaf979c0c686dffb1f0b443ef801c52bf900fcf15",
+    "visual_regions.json": "9e9080becc5c646638614f54686db103d4bf13873d08daf828c32627f732079c",
+    "protected_sha256.json": "979ccb29b0750ee2da9a68831162d50f5a4e2bf8910a4c7de32f2323b826894c",
+    "artifact_contract.json": "bb160f4aeff76635ac230f67abe16186a568f1a2b145555cdf197f147fe001e7",
+    "business_oracle.json": "14582798951c9be371c662bb885594a4717a8f71a718fe40b7070529c4f6fe4e",
+    "counterexamples.json": "16404e55b66e624e1e1f565e0294caf25242afa9722f1d7dceafaccfeb5845d2",
+    "evidence_requirements.json": "3ed6515dab15b20b4ba1c446042a0320c830a9334296dd9d766147a3fb0cc9dd",
+    "runtime_contract.json": "77dce378a5e8f61030a466250daacc69375b75ca40c4db7bc83dd3e941fa50d9"
+  }
+}

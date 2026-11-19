@@ -1,0 +1,19 @@
+{
+  "schema": "h048-trusted-files/v1",
+  "files": {
+    "artifact_contract.json": "b6cc9a59df55f79fa1f05b19b14548e0610d89d01d3f648460d03a889601b647",
+    "business_oracle.json": "f225635fb7e87e983a16253b351331b2567f08f42d64ab3e3c9e36c533a9a16e",
+    "counterexamples.json": "72da83c58cdd1d0dd5369691876cd07865c95eccf6ee72fcbfd95f40cf9f1f4a",
+    "evidence_requirements.json": "3fa2699672dc5978da30f8c40c7452f45c63f8b4a2ed2ad3812a56a5ac34d76b",
+    "expected.json": "ecaafe7985cf48fb4784aee76e1c8b9a519fb84c186aa664d4c06cc0b6bb226c",
+    "grader.py": "c6cfd22a3aee831d50794e85e11885ad26f90ad2ab6db9c1a60e27bf5e60480b",
+    "hidden_tests/runner.py": "594fdcdb35fe7df9b538fc80a99168d7179c606fe4fb708c11c24c43650bdb97",
+    "protected_inputs/fixtures/events.jsonl": "0f2d7ce0c8a0e33c20b18dd4b4b070fcbf4f93968128aceeee9f5f27559efc28",
+    "protected_inputs/project/__init__.py": "6e6203abd9f22bad9d43dd05544514c309f028fbabd1defce67f759db1c824f0",
+    "protected_inputs/project/test_public.py": "6e5489975faec0dc0fd1f8200da9b2ca3a01397a84436ec7955739cedc6aff27",
+    "protected_inputs/protocol.md": "0bbee570a4ecf588d590235bfefa640e385827f95ed70a2cbd4f293e42a47046",
+    "protected_inputs/requirements.lock": "31ea50226be50a6749a407656a3e009488a676e1b191da351aeafcb408d4b411",
+    "protected_inputs/tools/replay.py": "081ec2242d09b1f90d84aff28f89359e18eac19e1ca1e69719aff632e652a2ef",
+    "protected_sha256.json": "45dd4f59e5c474a4e61c2a93fd43a7a90944b844f517f46f4efb52572beb022a"
+  }
+}

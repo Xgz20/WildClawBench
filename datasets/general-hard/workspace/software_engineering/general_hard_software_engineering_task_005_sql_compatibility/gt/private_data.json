@@ -1,0 +1,126 @@
+{
+  "customer": [
+    {
+      "id": 201,
+      "name": "Ada",
+      "group": "alpha",
+      "region": "north",
+      "joined_at": "2026-01-01",
+      "credit": 10
+    },
+    {
+      "id": 202,
+      "name": "O'Neil",
+      "group": null,
+      "region": "south",
+      "joined_at": "2026-02-01",
+      "credit": null
+    },
+    {
+      "id": 203,
+      "name": "王同学",
+      "group": "beta",
+      "region": null,
+      "joined_at": null,
+      "credit": 0
+    },
+    {
+      "id": 204,
+      "name": "café",
+      "group": "alpha",
+      "region": "north",
+      "joined_at": "2024-02-29",
+      "credit": -2
+    },
+    {
+      "id": 205,
+      "name": "Ada",
+      "group": null,
+      "region": "north",
+      "joined_at": "2026-02-28",
+      "credit": 20
+    },
+    {
+      "id": 206,
+      "name": "合成余量",
+      "group": "gamma",
+      "region": null,
+      "joined_at": "2026-03-01",
+      "credit": null
+    }
+  ],
+  "order": [
+    {
+      "id": 111,
+      "customer_id": 201,
+      "group": "alpha",
+      "amount": 10,
+      "note": "safe-target",
+      "created_at": "2026-01-31",
+      "select": "keep"
+    },
+    {
+      "id": 112,
+      "customer_id": 202,
+      "group": null,
+      "amount": 0,
+      "note": "x' OR 1=1 --",
+      "created_at": "2026-02-01",
+      "select": null
+    },
+    {
+      "id": 113,
+      "customer_id": 203,
+      "group": "beta",
+      "amount": null,
+      "note": null,
+      "created_at": "2026-02-28",
+      "select": "keep"
+    },
+    {
+      "id": 114,
+      "customer_id": 204,
+      "group": "alpha",
+      "amount": -2,
+      "note": "café_%",
+      "created_at": "2026-03-01",
+      "select": "drop"
+    },
+    {
+      "id": 115,
+      "customer_id": 201,
+      "group": "beta",
+      "amount": 10,
+      "note": "safe-target",
+      "created_at": null,
+      "select": "keep"
+    },
+    {
+      "id": 116,
+      "customer_id": 205,
+      "group": null,
+      "amount": null,
+      "note": "safe-target",
+      "created_at": "2024-02-29",
+      "select": "keep"
+    },
+    {
+      "id": 117,
+      "customer_id": 206,
+      "group": "beta",
+      "amount": 0,
+      "note": "x' OR 1=1 --",
+      "created_at": "2026-02-28",
+      "select": null
+    },
+    {
+      "id": 118,
+      "customer_id": 201,
+      "group": "beta",
+      "amount": 10,
+      "note": "safe-target",
+      "created_at": "2026-02-01",
+      "select": "keep"
+    }
+  ]
+}

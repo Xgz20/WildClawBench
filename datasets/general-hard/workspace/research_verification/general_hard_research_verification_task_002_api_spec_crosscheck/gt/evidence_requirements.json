@@ -1,0 +1,45 @@
+{
+  "schema_version": "h028-evidence-requirements/v1",
+  "required_candidate": [
+    "results/api_contract.xlsx",
+    "results/integration_revised.md",
+    "results/sources.json"
+  ],
+  "protected_inputs": [
+    "client_requirements.md",
+    "legacy_integration.md",
+    "official_entry.json"
+  ],
+  "managed_environment": [
+    "GENERAL_E2E_OFFICE_LOCK",
+    "GENERAL_E2E_RULE_EVIDENCE_DIR",
+    "GENERAL_E2E_RESEARCH_SOURCE_BUNDLE",
+    "GENERAL_E2E_RESEARCH_SOURCE_BUNDLE_SHA256"
+  ],
+  "research_bundle": {
+    "manifest": "manifest.json",
+    "sha_from_environment": true,
+    "per_source_parts": [
+      "body",
+      "projection",
+      "text",
+      "receipt"
+    ],
+    "projection_json_path_key": "projection_path",
+    "schema": "wildclawbench.research-source-text/v1",
+    "quote": "Actual HTML heading/anchor/logical table row; whitespace/Markdown cell separators allowed without erasing case/numbers. No semantic fuzzy matching.",
+    "main_identity": "api_snapshot.article_identity(body).main_text_sha256 == document_snapshot.identity.main_text_sha256"
+  },
+  "observations": "GENERAL_E2E_RULE_EVIDENCE_DIR/h028-observations.json",
+  "formula_evidence": "GENERAL_E2E_RULE_EVIDENCE_DIR/recalculated/office-audit.json when formulas exist",
+  "judge_reads": [
+    "Candidate native XLSX, complete revised Markdown and source ledger",
+    "Source-first frozen expected facts and three independently computed vectors",
+    "Independently acquired official body and bound text/receipt",
+    "Per-field/leaf automatic observations and explicit semantic boundary"
+  ],
+  "automatic_pass_is_not_semantic_pass": true,
+  "source_before_reference": true,
+  "full_source_reviews_or_article_copied_into_GT": false,
+  "evidence_written_outside_workspace": true
+}

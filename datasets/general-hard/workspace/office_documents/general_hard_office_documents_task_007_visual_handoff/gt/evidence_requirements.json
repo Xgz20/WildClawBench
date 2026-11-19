@@ -1,0 +1,10 @@
+{
+  "schema_version": "h007-evidence-requirements/v1",
+  "full_credit_iou": 0.3,
+  "same_input_image_required": true,
+  "input_hashes_required": true,
+  "note_box_excludes_long_connector": true,
+  "whole_image_is_not_a_target_box": true,
+  "reorder_requires_destination": true,
+  "limits": "Rule geometry is coordinate/provenance evidence; actual image meaning must be independently reviewed and judged."
+}

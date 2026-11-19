@@ -1,0 +1,17 @@
+{
+  "fixtures/configs/B01_default.json": "a0b4c1e8a06df05c10bd4b910ba361f06f27d7f296d4ee250462b52f7f9731fd",
+  "fixtures/configs/B02_scalar_priority.json": "9f96991e0f5b95e1ae5c84f16f0dd481bd87059608d8bc00681fa052845dc0a1",
+  "fixtures/configs/B03_legacy_all.json": "a37945a52322debe56b87872c255757b497b347a3ad8a86e54df57267eb3ade0",
+  "fixtures/configs/B04_user_legacy_beats_project_new.json": "efa3ffaae77835141433c993add03ff1b4ce684e0c2e72cb9b632cb513cb9c54",
+  "fixtures/configs/B06_unknown_nested.json": "fbcfefed080e6bde27e5c6e960b18a411f428f6c06e7835f0023cf3f479cdef7",
+  "fixtures/configs/N01_zero_all.json": "1503d89cc0da9fec17d46819feaa068a8dee964eaf883652a2bc78c51c7c69d8",
+  "fixtures/configs/N03_explicit_null_alias.json": "0376ab06e852c88eaf7b2de6f572aae0b50f809d27627891a84a35980f2f2f53",
+  "fixtures/configs/N06_barrier_no_resurrection.json": "9f91999d4f17d5416dfba7f22bd8dc41c7a9658f0b485df71f21c09b54bdc635",
+  "fixtures/configs/N11_sources_legacy.json": "27d9ece59e0790f2405c68c5a2811f4750d5094afd8a1ecdaccbedc2a6b0e54c",
+  "fixtures/configs/N12_sources_ignored.json": "c5f1915dca7ec39c8081ef629a98c69917c8b2878c3702ac61b9595f4b97f1f8",
+  "project/__init__.py": "dfe152a5077ff4a80a8c19dd7d164ae12a0228600f5f0c1b4e91b04a7c55b68f",
+  "project/test_public.py": "d759730825f204e814ebdc598fba5398bd338332ab354dadc6e09efd7d6ff972",
+  "requirements.lock": "103c3619e38efc711426f1ca620c2f02a316fc1239d552ba2d37dc313cfb1bb8",
+  "schema.md": "6572357618025f0d02915a0df29f983a5ab47a980c52419c51431b17c96e4685",
+  "tools/run_migration_checks.py": "41554c6b392538377e4a62fcedc4d40c182e4f43ade7202724c237f1b92c07de"
+}

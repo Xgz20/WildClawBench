@@ -1,0 +1,274 @@
+{
+  "schema_version": "h006-artifact-contract/v1",
+  "csv": "results/coverage.csv",
+  "operator": "results/operator.docx",
+  "supervisor": "results/supervisor.docx",
+  "field_aliases": {
+    "incident_id": [
+      "incident_id",
+      "情境编号",
+      "情境ID"
+    ],
+    "route": [
+      "route",
+      "办理路线",
+      "路线"
+    ],
+    "next_owner": [
+      "next_owner",
+      "下一责任岗",
+      "下一责任人"
+    ],
+    "approval_owner": [
+      "approval_owner",
+      "金额审批岗",
+      "金额批准岗"
+    ],
+    "execution_owner": [
+      "execution_owner",
+      "资金执行岗",
+      "执行岗"
+    ],
+    "ack_hours": [
+      "ack_hours",
+      "首响工作小时",
+      "首响工时"
+    ],
+    "inspection_workdays": [
+      "inspection_workdays",
+      "验收工作日"
+    ],
+    "payment_workdays": [
+      "payment_workdays",
+      "资金工作日"
+    ],
+    "clock_state": [
+      "clock_state",
+      "时钟状态"
+    ],
+    "clearance_roles": [
+      "clearance_roles",
+      "解除确认岗",
+      "解除角色"
+    ],
+    "steps": [
+      "steps",
+      "路径步骤"
+    ],
+    "forbidden_steps": [
+      "forbidden_steps",
+      "禁止动作"
+    ],
+    "operator_ref": [
+      "operator_ref",
+      "操作员章节"
+    ],
+    "supervisor_ref": [
+      "supervisor_ref",
+      "主管章节"
+    ],
+    "source_refs": [
+      "source_refs",
+      "来源引用"
+    ],
+    "explanation": [
+      "explanation",
+      "说明"
+    ],
+    "operator_action": [
+      "operator_action",
+      "操作员下一步"
+    ],
+    "supervision_action": [
+      "supervision_action",
+      "主管办理要求"
+    ]
+  },
+  "required_csv": [
+    "incident_id",
+    "route",
+    "next_owner",
+    "approval_owner",
+    "execution_owner",
+    "ack_hours",
+    "inspection_workdays",
+    "payment_workdays",
+    "clock_state",
+    "clearance_roles",
+    "steps",
+    "forbidden_steps",
+    "operator_ref",
+    "supervisor_ref",
+    "source_refs",
+    "explanation"
+  ],
+  "operator_fields": [
+    "incident_id",
+    "route",
+    "next_owner",
+    "clock_state",
+    "operator_action"
+  ],
+  "supervisor_fields": [
+    "incident_id",
+    "approval_owner",
+    "execution_owner",
+    "ack_hours",
+    "inspection_workdays",
+    "payment_workdays",
+    "clearance_roles",
+    "supervision_action"
+  ],
+  "roles": {
+    "CS": "CS",
+    "WH": "WH",
+    "QA": "QA",
+    "FC": "FC",
+    "FE": "FE",
+    "OPS": "OPS",
+    "PR": "PR",
+    "客户支持受理岗": "CS",
+    "仓储负责人": "WH",
+    "质检负责人": "QA",
+    "财务主管": "FC",
+    "财务执行岗": "FE",
+    "运营主管": "OPS",
+    "隐私专员": "PR",
+    "支持台": "CS",
+    "客服": "CS",
+    "仓库": "WH",
+    "质控": "QA",
+    "财务复核岗": "FC",
+    "出纳": "FE",
+    "运营经理": "OPS",
+    "数据合规专员": "PR"
+  },
+  "steps": {
+    "REG": "REG",
+    "DOC": "DOC",
+    "RECV": "RECV",
+    "INSPECT": "INSPECT",
+    "VERIFY_APPR": "VERIFY_APPR",
+    "VERIFY_BANK": "VERIFY_BANK",
+    "HANDOFF_FIN": "HANDOFF_FIN",
+    "REQUEST_DOCS": "REQUEST_DOCS",
+    "WAIT_RECEIPT": "WAIT_RECEIPT",
+    "REQUEST_OPS_APPROVAL": "REQUEST_OPS_APPROVAL",
+    "REQUEST_FIN_APPROVAL": "REQUEST_FIN_APPROVAL",
+    "SAFE_HOLD": "SAFE_HOLD",
+    "SAFE_REPORT": "SAFE_REPORT",
+    "PRIV_HOLD": "PRIV_HOLD",
+    "PRIV_ISOLATE": "PRIV_ISOLATE",
+    "PRIV_REPORT": "PRIV_REPORT",
+    "JOINT_COORD": "JOINT_COORD",
+    "LINK": "LINK",
+    "PAUSE_PAYMENT": "PAUSE_PAYMENT",
+    "WITHDRAW_REVIEW": "WITHDRAW_REVIEW",
+    "BANK_REVIEW": "BANK_REVIEW",
+    "登记本次联系": "REG",
+    "核验资料": "DOC",
+    "签收登记": "RECV",
+    "实物验收": "INSPECT",
+    "核验批准": "VERIFY_APPR",
+    "核验当前账户": "VERIFY_BANK",
+    "转财务执行": "HANDOFF_FIN",
+    "请求补证": "REQUEST_DOCS",
+    "等待实物": "WAIT_RECEIPT",
+    "请求运营审批": "REQUEST_OPS_APPROVAL",
+    "请求财务审批": "REQUEST_FIN_APPROVAL",
+    "安全暂停": "SAFE_HOLD",
+    "报告质检": "SAFE_REPORT",
+    "停止外发": "PRIV_HOLD",
+    "登记隐私隔离请求": "PRIV_ISOLATE",
+    "报告隐私专员": "PRIV_REPORT",
+    "联合协调": "JOINT_COORD",
+    "关联原案": "LINK",
+    "暂停资金办理": "PAUSE_PAYMENT",
+    "撤回核对审批": "WITHDRAW_REVIEW",
+    "账户复核": "BANK_REVIEW",
+    "入仓": "RECV",
+    "包裹签收": "RECV",
+    "验收通过": "INSPECT",
+    "材料校验": "DOC",
+    "流转财务": "HANDOFF_FIN"
+  },
+  "forbidden": {
+    "OPS_PAY": "OPS_PAY",
+    "DELETE_AUDIT": "DELETE_AUDIT",
+    "CLAIM_PAID": "CLAIM_PAID",
+    "PAY_BEFORE_GATE": "PAY_BEFORE_GATE",
+    "REJECT_FOR_MISSING": "REJECT_FOR_MISSING",
+    "RELEASE_WITHOUT_CLEARANCE": "RELEASE_WITHOUT_CLEARANCE",
+    "RESET_CLOCK": "RESET_CLOCK",
+    "NEW_CASE": "NEW_CASE",
+    "CLOSE_WITHOUT_FIN": "CLOSE_WITHOUT_FIN",
+    "SWITCH_BANK_UNVERIFIED": "SWITCH_BANK_UNVERIFIED",
+    "运营自行划款": "OPS_PAY",
+    "删除审计": "DELETE_AUDIT",
+    "无回执声称已付款": "CLAIM_PAID",
+    "门禁不齐先付": "PAY_BEFORE_GATE",
+    "因缺资料直接最终拒绝": "REJECT_FOR_MISSING",
+    "无解除确认放行": "RELEASE_WITHOUT_CLEARANCE",
+    "重置已有时钟": "RESET_CLOCK",
+    "重复案另建独立退款流程": "NEW_CASE",
+    "撤回未经财务确认关单": "CLOSE_WITHOUT_FIN",
+    "使用未核验新账户": "SWITCH_BANK_UNVERIFIED"
+  },
+  "routes": {
+    "joint_hold": "joint_hold",
+    "safety_hold": "safety_hold",
+    "privacy_hold": "privacy_hold",
+    "link_existing": "link_existing",
+    "withdrawal_review": "withdrawal_review",
+    "request_documents": "request_documents",
+    "await_receipt": "await_receipt",
+    "await_inspection": "await_inspection",
+    "request_approval": "request_approval",
+    "bank_review": "bank_review",
+    "ready_finance": "ready_finance",
+    "联合风险暂停": "joint_hold",
+    "安全暂停": "safety_hold",
+    "隐私暂停": "privacy_hold",
+    "关联原案": "link_existing",
+    "撤回核对": "withdrawal_review",
+    "补证": "request_documents",
+    "等待实物": "await_receipt",
+    "等待质检": "await_inspection",
+    "请求有效审批": "request_approval",
+    "账户复核": "bank_review",
+    "转财务执行": "ready_finance"
+  },
+  "clocks": {
+    "not_started": "not_started",
+    "running": "running",
+    "paused": "paused",
+    "reuse_existing": "reuse_existing",
+    "未启动": "not_started",
+    "运行": "running",
+    "暂停": "paused",
+    "沿用原案": "reuse_existing",
+    "三门禁尚未全部满足且未曾启动": "not_started",
+    "已启动且当前无需暂停": "running",
+    "已经启动，现因异常暂停，不另起计时": "paused",
+    "仅关联原案时钟，本次不另起": "reuse_existing"
+  },
+  "empty_markers": [
+    "",
+    "N/A",
+    "NA",
+    "无",
+    "不适用",
+    "-"
+  ],
+  "set_fields": [
+    "clearance_roles",
+    "forbidden_steps",
+    "source_refs"
+  ],
+  "notes": [
+    "CSV UTF-8/BOM、表头别名及行列顺序等价；角色/路线/步骤可用authority字典名称。数值字段用相同单位下的数值。",
+    "DOCX原生表按ID合并，允许表拆分、重排和中文表头。禁止冲突重复字段；缺列与空集合分别处理。",
+    "章节引用可有多个，以分号分隔，实际章节内须包含该情境所需字段，不能仅验证同名标题存在。",
+    "路径限当前安全交接终点，步骤集合及依赖边均须成立；不强制某一合法并行顺序。"
+  ]
+}

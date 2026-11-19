@@ -1,0 +1,89 @@
+{
+  "status": "authoring_specs_not_yet_executed",
+  "cases": [
+    {
+      "id": "last_physical_row",
+      "execution_status": "pending_candidate_controls"
+    },
+    {
+      "id": "latest_invalid_replaces_valid",
+      "execution_status": "pending_candidate_controls"
+    },
+    {
+      "id": "timestamp_tie_wrong_id",
+      "execution_status": "pending_candidate_controls"
+    },
+    {
+      "id": "ignore_routing",
+      "execution_status": "pending_candidate_controls"
+    },
+    {
+      "id": "drop_whole_person_for_one_missing_answer",
+      "execution_status": "pending_candidate_controls"
+    },
+    {
+      "id": "missing_as_zero",
+      "execution_status": "pending_candidate_controls"
+    },
+    {
+      "id": "duplicate_multi_option",
+      "execution_status": "pending_candidate_controls"
+    },
+    {
+      "id": "none_with_other_option",
+      "execution_status": "pending_candidate_controls"
+    },
+    {
+      "id": "all_questions_denominator_185",
+      "execution_status": "pending_candidate_controls"
+    },
+    {
+      "id": "cross_question_denominator",
+      "execution_status": "pending_candidate_controls"
+    },
+    {
+      "id": "weighted_equals_raw",
+      "execution_status": "pending_candidate_controls"
+    },
+    {
+      "id": "unnormalized_stratum",
+      "execution_status": "pending_candidate_controls"
+    },
+    {
+      "id": "rate_times_weight",
+      "execution_status": "pending_candidate_controls"
+    },
+    {
+      "id": "static_summary",
+      "execution_status": "pending_candidate_controls"
+    },
+    {
+      "id": "constant_formulas",
+      "execution_status": "pending_candidate_controls"
+    },
+    {
+      "id": "wrong_formulas_correct_cache",
+      "execution_status": "pending_candidate_controls"
+    },
+    {
+      "id": "zero_weight_rate_as_zero",
+      "execution_status": "pending_candidate_controls"
+    },
+    {
+      "id": "false_exclusion_locator",
+      "execution_status": "pending_candidate_controls"
+    },
+    {
+      "id": "missing_scope_quotes",
+      "execution_status": "pending_candidate_controls"
+    },
+    {
+      "id": "wrong_word_percentage",
+      "execution_status": "pending_candidate_controls"
+    },
+    {
+      "id": "mutated_input",
+      "execution_status": "pending_candidate_controls"
+    }
+  ]
+}

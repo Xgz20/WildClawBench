@@ -1,0 +1,249 @@
+{
+  "schema_version": "h026-proposals/v1",
+  "approval_required": true,
+  "approval_status": "pending",
+  "applied": false,
+  "proposals": [
+    {
+      "action": "reverse_void",
+      "entry_id": "L001",
+      "key": {
+        "voucher_no": "NF-260910-018",
+        "counterparty_id": "CP-001",
+        "business_date": "2026-09-10",
+        "currency": "CNY",
+        "direction": "expense"
+      },
+      "delta_amount": "-1280.00",
+      "target_amount": "0.00",
+      "source_files": [
+        "vouchers/voucher_01.png",
+        "vouchers/voucher_02.png"
+      ],
+      "approval_required": true,
+      "approval_status": "pending",
+      "applied": false,
+      "reason": "同键02明确作废，作废优先；冲回本笔原账1280.00，不另作重复动作。"
+    },
+    {
+      "action": "reverse_void",
+      "entry_id": "L002",
+      "key": {
+        "voucher_no": "NF-260910-018",
+        "counterparty_id": "CP-001",
+        "business_date": "2026-09-10",
+        "currency": "CNY",
+        "direction": "expense"
+      },
+      "delta_amount": "-1280.00",
+      "target_amount": "0.00",
+      "source_files": [
+        "vouchers/voucher_01.png",
+        "vouchers/voucher_02.png"
+      ],
+      "approval_required": true,
+      "approval_status": "pending",
+      "applied": false,
+      "reason": "同键02明确作废，作废优先；第二笔也分别冲回原账1280.00，不叠加reverse_duplicate。"
+    },
+    {
+      "action": "reverse_duplicate",
+      "entry_id": "L004",
+      "key": {
+        "voucher_no": "NF-260912-004",
+        "counterparty_id": "CP-002",
+        "business_date": "2026-09-12",
+        "currency": "CNY",
+        "direction": "expense"
+      },
+      "delta_amount": "-860.50",
+      "target_amount": "0.00",
+      "source_files": [
+        "vouchers/voucher_03.png",
+        "vouchers/voucher_04.png"
+      ],
+      "approval_required": true,
+      "approval_status": "pending",
+      "applied": false,
+      "reason": "本笔10:05晚于L003的10:00，为同键重复账；图片03/04只支持一个事项。"
+    },
+    {
+      "action": "correct_amount",
+      "entry_id": "L006",
+      "key": {
+        "voucher_no": "NF-260914-027",
+        "counterparty_id": "CP-003",
+        "business_date": "2026-09-14",
+        "currency": "CNY",
+        "direction": "expense"
+      },
+      "delta_amount": "-260.00",
+      "target_amount": "2140.00",
+      "source_files": [
+        "vouchers/voucher_05.png",
+        "vouchers/voucher_06.png"
+      ],
+      "approval_required": true,
+      "approval_status": "pending",
+      "applied": false,
+      "reason": "本笔11:00为同键本轮posted首笔；有效更正金额2140.00，原账2400.00，差额为-260.00。"
+    },
+    {
+      "action": "reverse_duplicate",
+      "entry_id": "L007",
+      "key": {
+        "voucher_no": "NF-260914-027",
+        "counterparty_id": "CP-003",
+        "business_date": "2026-09-14",
+        "currency": "CNY",
+        "direction": "expense"
+      },
+      "delta_amount": "-2140.00",
+      "target_amount": "0.00",
+      "source_files": [
+        "vouchers/voucher_05.png",
+        "vouchers/voucher_06.png"
+      ],
+      "approval_required": true,
+      "approval_status": "pending",
+      "applied": false,
+      "reason": "本笔11:10晚于L006；即使原账恰等于2140.00，也不能以金额接近替换首笔，故重复全额冲回。"
+    },
+    {
+      "action": "reverse_duplicate",
+      "entry_id": "L013",
+      "key": {
+        "voucher_no": "NF-260920-052",
+        "counterparty_id": "CP-006",
+        "business_date": "2026-09-20",
+        "currency": "CNY",
+        "direction": "expense"
+      },
+      "delta_amount": "-9.99",
+      "target_amount": "0.00",
+      "source_files": [
+        "vouchers/voucher_10.png"
+      ],
+      "approval_required": true,
+      "approval_status": "pending",
+      "applied": false,
+      "reason": "真实0.00组首笔是14:00的L014，本笔14:05为重复；不能按较小entry_id选为首笔。"
+    },
+    {
+      "action": "create",
+      "entry_id": null,
+      "key": {
+        "voucher_no": "NF-260922-062",
+        "counterparty_id": "CP-007",
+        "business_date": "2026-09-22",
+        "currency": "CNY",
+        "direction": "expense"
+      },
+      "delta_amount": "460.00",
+      "target_amount": "460.00",
+      "source_files": [
+        "vouchers/voucher_11.png"
+      ],
+      "approval_required": true,
+      "approval_status": "pending",
+      "applied": false,
+      "reason": "11有效、无手写更正且金额460.00；无完整键的本轮posted账目，只提出待审批补账建议。"
+    }
+  ],
+  "pending_items": [
+    {
+      "entry_id": "L011",
+      "key": {
+        "voucher_no": "NF-260918-036",
+        "counterparty_id": "CP-005",
+        "business_date": "2026-09-18",
+        "currency": "CNY",
+        "direction": "expense"
+      },
+      "source_files": [
+        "vouchers/voucher_09.png"
+      ],
+      "reason": "完整键匹配09，但状态待核；保持原账780.00待核，不确认目标、不冲销。",
+      "kind": "ledger_hold"
+    },
+    {
+      "entry_id": "L012",
+      "key": {
+        "voucher_no": "NF-260918-036",
+        "counterparty_id": "CP-005",
+        "business_date": "2026-09-18",
+        "currency": "CNY",
+        "direction": "expense"
+      },
+      "source_files": [
+        "vouchers/voucher_09.png"
+      ],
+      "reason": "同键凭据状态待核；即便本笔785.00不同于印刷780.00，仍不能自行确认金额或冲重复，保留待核。",
+      "kind": "ledger_hold"
+    },
+    {
+      "entry_id": "L015",
+      "key": {
+        "voucher_no": "NF-260924-080",
+        "counterparty_id": "CP-031",
+        "business_date": "2026-09-24",
+        "currency": "CNY",
+        "direction": "expense"
+      },
+      "source_files": [],
+      "reason": "账面CP-031与12原图CP-013不同，虽编号/名称/日期等相同也不能归并；无完整键凭据，原账1020.00待核。",
+      "kind": "ledger_hold"
+    },
+    {
+      "entry_id": "L016",
+      "key": {
+        "voucher_no": "NF-260916-10B",
+        "counterparty_id": "CP-004",
+        "business_date": "2026-09-16",
+        "currency": "CNY",
+        "direction": "expense"
+      },
+      "source_files": [],
+      "reason": "编号NF-260916-10B与07的108、08的1O8均不同；禁止按形似编号或相同金额猜配，原账510.20待核。",
+      "kind": "ledger_hold"
+    },
+    {
+      "entry_id": null,
+      "key": {
+        "voucher_no": "NF-260924-080",
+        "counterparty_id": "CP-013",
+        "business_date": "2026-09-24",
+        "currency": "CNY",
+        "direction": "expense"
+      },
+      "source_files": [
+        "vouchers/voucher_12.png"
+      ],
+      "reason": "状态有效，但原始1020.00已划线且手写1200.00的更正复核章被交叉划销，金额未决；不退回1020.00也不采纳1200.00。图示CP-013与账面L015的CP-031不匹配，本组属未入账待核。",
+      "kind": "unbooked_pending"
+    }
+  ],
+  "summary": {
+    "image_count": 12,
+    "voucher_group_count": 9,
+    "ledger_row_count": 18,
+    "eligible_entry_count": 14,
+    "excluded_entry_count": 4,
+    "eligible_book_amount": "12946.59",
+    "proposed_delta_sum": "-5370.49",
+    "book_amount_after_proposals": "7576.10",
+    "unresolved_book_amount": "3095.20",
+    "unresolved_entry_count": 4,
+    "proposal_count": 7,
+    "unbooked_pending_group_count": 1,
+    "confirmed_voucher_target_sum": "4480.90",
+    "fully_reconciled": false,
+    "applied": false,
+    "approval_required": true
+  },
+  "limitations": [
+    "全部仅为待审批建议，未应用到账目、未付款。",
+    "测算账面额含未核清的当前账面保留额，不代表最终确认费用。",
+    "未入账且金额未决的凭据另列，未以原金额或0补账。"
+  ]
+}

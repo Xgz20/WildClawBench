@@ -1,0 +1,20 @@
+kind,term_id,concept,fact_ids,zh,en,vi,note
+terminology,T01,product,,NoriDesk,NoriDesk,NoriDesk,虚构产品名，不改写为真实Harness或翻译品牌。
+terminology,T02,workspace,,工作空间,workspace,không gian làm việc,产品实体，不写成工作目录/working directory/thư mục làm việc。引用旧口径并明确纠正时不因字面出现而判错。
+terminology,T03,stable,,稳定版,stable release,bản ổn định,不得与预览版混为已全平台GA。
+terminology,T04,preview,,预览版,preview,bản xem trước,预览不等于正式发布，也不等于账号已获准加入。
+terminology,T05,workaround,,临时绕过,workaround,biện pháp tạm thời,不得表达成已发布修复。
+terminology,T06,refund_review,,退款审核,refund review,xét duyệt hoàn tiền,申请/审核不是批准或到账。
+terminology,T07,calendar_days,,自然日,calendar days,ngày theo lịch,退款与审计保留期；不要改成工作日。
+terminology,T08,business_days,,工作日,business days,ngày làm việc,首次响应目标；不是解决或退款时限。
+terminology,T09,credits,,credits,credits,credits,消耗计量单位；不是CNY、USD或退款金额。
+terminology,T10,plans,,Starter / Team / Enterprise,Starter / Team / Enterprise,Starter / Team / Enterprise,套餐标签保留原文，不能改行数或权限。
+terminology,T11,roles,,Owner / Editor / Viewer,Owner / Editor / Viewer,Owner / Editor / Viewer,角色标签保留；说明可本地化，不能升级权限。
+terminology,T12,unit,,MiB,MiB,MiB,2^20字节；当前限制不能替成MB。
+prohibited_claim,P01,unsupported_proposition,F03,任意套餐可无限导出,Every plan has unlimited exports,Mọi gói đều có thể xuất không giới hạn,这是禁用命题，不是禁用字符串；明确引用或否定须按完整含义判断。
+prohibited_claim,P02,unsupported_proposition,F04,OCR已发布并可立即启用,OCR has shipped and can be enabled immediately,OCR đã phát hành và có thể bật ngay,这是禁用命题，不是禁用字符串；明确引用或否定须按完整含义判断。
+prohibited_claim,P03,unsupported_proposition,F05,删除缓存即可永久修复同步问题,Deleting the cache permanently fixes the sync issue,Xóa bộ nhớ đệm sẽ sửa vĩnh viễn lỗi đồng bộ,这是禁用命题，不是禁用字符串；明确引用或否定须按完整含义判断。
+prohibited_claim,P04,unsupported_proposition,F10,保证立即全额退款,An immediate full refund is guaranteed,Cam kết hoàn toàn bộ tiền ngay lập tức,这是禁用命题，不是禁用字符串；明确引用或否定须按完整含义判断。
+prohibited_claim,P05,unsupported_proposition,F06;F09,离线窗口到期即数据已删除，且保证可从备份恢复,"Offline expiry means deletion, and backup recovery is guaranteed",Hết thời hạn ngoại tuyến nghĩa là dữ liệu đã bị xóa và chắc chắn khôi phục được từ bản sao lưu,这是禁用命题，不是禁用字符串；明确引用或否定须按完整含义判断。
+prohibited_claim,P06,unsupported_proposition,F08;F11,EU SSO预览资格即自动迁移许可，ID和附件全部保留,EU SSO preview enrollment automatically permits migration with all IDs and attachments preserved,Được tham gia bản xem trước SSO tại EU đồng nghĩa có quyền di chuyển tự động và giữ nguyên mọi ID cùng tệp đính kèm,这是禁用命题，不是禁用字符串；明确引用或否定须按完整含义判断。
+prohibited_claim,P07,unsupported_proposition,F12,保证2个工作日内解决所有问题或完成退款,Every issue or refund is guaranteed to be resolved within two business days,Bảo đảm giải quyết mọi sự cố hoặc hoàn tiền trong hai ngày làm việc,这是禁用命题，不是禁用字符串；明确引用或否定须按完整含义判断。

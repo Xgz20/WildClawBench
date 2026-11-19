@@ -1,0 +1,262 @@
+{
+  "2025/ALL": {
+    "revenue_cny": {
+      "numerator": 10000000,
+      "denominator": 1
+    },
+    "cogs_cny": {
+      "numerator": 6600000,
+      "denominator": 1
+    },
+    "receipts_cny": {
+      "numerator": 9500000,
+      "denominator": 1
+    },
+    "gross_profit_cny": {
+      "numerator": 3400000,
+      "denominator": 1
+    },
+    "gross_margin": {
+      "numerator": 17,
+      "denominator": 50
+    },
+    "receipts_revenue_ratio": {
+      "numerator": 19,
+      "denominator": 20
+    }
+  },
+  "2025/dealer": {
+    "revenue_cny": {
+      "numerator": 2000000,
+      "denominator": 1
+    },
+    "cogs_cny": {
+      "numerator": 1500000,
+      "denominator": 1
+    },
+    "receipts_cny": {
+      "numerator": 1900000,
+      "denominator": 1
+    },
+    "gross_profit_cny": {
+      "numerator": 500000,
+      "denominator": 1
+    },
+    "gross_margin": {
+      "numerator": 1,
+      "denominator": 4
+    },
+    "receipts_revenue_ratio": {
+      "numerator": 19,
+      "denominator": 20
+    }
+  },
+  "2025/direct": {
+    "revenue_cny": {
+      "numerator": 4000000,
+      "denominator": 1
+    },
+    "cogs_cny": {
+      "numerator": 2400000,
+      "denominator": 1
+    },
+    "receipts_cny": {
+      "numerator": 3750000,
+      "denominator": 1
+    },
+    "gross_profit_cny": {
+      "numerator": 1600000,
+      "denominator": 1
+    },
+    "gross_margin": {
+      "numerator": 2,
+      "denominator": 5
+    },
+    "receipts_revenue_ratio": {
+      "numerator": 15,
+      "denominator": 16
+    }
+  },
+  "2025/platform": {
+    "revenue_cny": {
+      "numerator": 3000000,
+      "denominator": 1
+    },
+    "cogs_cny": {
+      "numerator": 2400000,
+      "denominator": 1
+    },
+    "receipts_cny": {
+      "numerator": 2850000,
+      "denominator": 1
+    },
+    "gross_profit_cny": {
+      "numerator": 600000,
+      "denominator": 1
+    },
+    "gross_margin": {
+      "numerator": 1,
+      "denominator": 5
+    },
+    "receipts_revenue_ratio": {
+      "numerator": 19,
+      "denominator": 20
+    }
+  },
+  "2025/renewal": {
+    "revenue_cny": {
+      "numerator": 1000000,
+      "denominator": 1
+    },
+    "cogs_cny": {
+      "numerator": 300000,
+      "denominator": 1
+    },
+    "receipts_cny": {
+      "numerator": 1000000,
+      "denominator": 1
+    },
+    "gross_profit_cny": {
+      "numerator": 700000,
+      "denominator": 1
+    },
+    "gross_margin": {
+      "numerator": 7,
+      "denominator": 10
+    },
+    "receipts_revenue_ratio": {
+      "numerator": 1,
+      "denominator": 1
+    }
+  },
+  "2026/ALL": {
+    "revenue_cny": {
+      "numerator": 11700000,
+      "denominator": 1
+    },
+    "cogs_cny": {
+      "numerator": 8445000,
+      "denominator": 1
+    },
+    "receipts_cny": {
+      "numerator": 8700000,
+      "denominator": 1
+    },
+    "gross_profit_cny": {
+      "numerator": 3255000,
+      "denominator": 1
+    },
+    "gross_margin": {
+      "numerator": 217,
+      "denominator": 780
+    },
+    "receipts_revenue_ratio": {
+      "numerator": 29,
+      "denominator": 39
+    }
+  },
+  "2026/dealer": {
+    "revenue_cny": {
+      "numerator": 1800000,
+      "denominator": 1
+    },
+    "cogs_cny": {
+      "numerator": 1512000,
+      "denominator": 1
+    },
+    "receipts_cny": {
+      "numerator": 1500000,
+      "denominator": 1
+    },
+    "gross_profit_cny": {
+      "numerator": 288000,
+      "denominator": 1
+    },
+    "gross_margin": {
+      "numerator": 4,
+      "denominator": 25
+    },
+    "receipts_revenue_ratio": {
+      "numerator": 5,
+      "denominator": 6
+    }
+  },
+  "2026/direct": {
+    "revenue_cny": {
+      "numerator": 4200000,
+      "denominator": 1
+    },
+    "cogs_cny": {
+      "numerator": 2688000,
+      "denominator": 1
+    },
+    "receipts_cny": {
+      "numerator": 3150000,
+      "denominator": 1
+    },
+    "gross_profit_cny": {
+      "numerator": 1512000,
+      "denominator": 1
+    },
+    "gross_margin": {
+      "numerator": 9,
+      "denominator": 25
+    },
+    "receipts_revenue_ratio": {
+      "numerator": 3,
+      "denominator": 4
+    }
+  },
+  "2026/platform": {
+    "revenue_cny": {
+      "numerator": 4500000,
+      "denominator": 1
+    },
+    "cogs_cny": {
+      "numerator": 3825000,
+      "denominator": 1
+    },
+    "receipts_cny": {
+      "numerator": 3050000,
+      "denominator": 1
+    },
+    "gross_profit_cny": {
+      "numerator": 675000,
+      "denominator": 1
+    },
+    "gross_margin": {
+      "numerator": 3,
+      "denominator": 20
+    },
+    "receipts_revenue_ratio": {
+      "numerator": 61,
+      "denominator": 90
+    }
+  },
+  "2026/renewal": {
+    "revenue_cny": {
+      "numerator": 1200000,
+      "denominator": 1
+    },
+    "cogs_cny": {
+      "numerator": 420000,
+      "denominator": 1
+    },
+    "receipts_cny": {
+      "numerator": 1000000,
+      "denominator": 1
+    },
+    "gross_profit_cny": {
+      "numerator": 780000,
+      "denominator": 1
+    },
+    "gross_margin": {
+      "numerator": 13,
+      "denominator": 20
+    },
+    "receipts_revenue_ratio": {
+      "numerator": 5,
+      "denominator": 6
+    }
+  }
+}

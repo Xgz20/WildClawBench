@@ -1,0 +1,229 @@
+{
+  "schema_version": "h020-runtime/v1",
+  "grading_type": "hybrid",
+  "grading_weights": {
+    "automated": 0.75,
+    "llm_judge": 0.25
+  },
+  "office": true,
+  "office_render": true,
+  "sdk_core": "0.14.0",
+  "office_helper": "office_runtime_v014.py",
+  "aliases": {
+    "company_id": [
+      "company_id",
+      "company",
+      "公司",
+      "公司ID",
+      "公司编号",
+      "企业"
+    ],
+    "period_year": [
+      "period_year",
+      "year",
+      "年度",
+      "报告年度",
+      "报告年",
+      "报告期"
+    ],
+    "metric_id": [
+      "metric_id",
+      "metric",
+      "指标",
+      "指标ID",
+      "指标编号"
+    ],
+    "numerator_wan": [
+      "numerator_wan",
+      "分子万元",
+      "分子（万元）",
+      "分子"
+    ],
+    "denominator_wan": [
+      "denominator_wan",
+      "分母万元",
+      "分母（万元）",
+      "分母"
+    ],
+    "value": [
+      "value",
+      "数值",
+      "数值%",
+      "比率",
+      "指标值",
+      "指标值%",
+      "结果"
+    ],
+    "rank": [
+      "rank",
+      "名次",
+      "排名"
+    ],
+    "change_pp": [
+      "change_pp",
+      "变化百分点",
+      "变化（百分点）",
+      "变动百分点",
+      "百分点变化",
+      "较上年变化百分点"
+    ],
+    "status": [
+      "status",
+      "状态",
+      "可比状态"
+    ],
+    "reason": [
+      "reason",
+      "原因",
+      "不可比原因"
+    ],
+    "revenue": [
+      "revenue_wan",
+      "营业收入万元",
+      "生效营业收入万元",
+      "营业收入（万元）"
+    ],
+    "parent_profit": [
+      "parent_profit_wan",
+      "归母净利润万元",
+      "归母净利润（万元）",
+      "生效归母净利润万元"
+    ],
+    "cfo": [
+      "cfo_wan",
+      "合并经营现金流万元",
+      "合并经营现金流（万元）",
+      "经营现金流净额万元"
+    ],
+    "equity_open": [
+      "equity_open_wan",
+      "期初归母权益万元",
+      "期初归母权益（万元）"
+    ],
+    "equity_close": [
+      "equity_close_wan",
+      "期末归母权益万元",
+      "期末归母权益（万元）"
+    ],
+    "prior_revenue": [
+      "prior_revenue_wan",
+      "上年收入万元",
+      "上年营业收入（万元）",
+      "上年收入（万元）"
+    ],
+    "scope_comparable": [
+      "scope_comparable",
+      "口径可比标记",
+      "范围可比标记",
+      "收入可比标记"
+    ],
+    "restatement_id": [
+      "restatement_id",
+      "更正ID",
+      "重述ID",
+      "更正编号",
+      "重述编号"
+    ],
+    "old_value_wan": [
+      "old_value_wan",
+      "原值万元",
+      "原值（万元）",
+      "原金额万元"
+    ],
+    "new_value_wan": [
+      "new_value_wan",
+      "生效值万元",
+      "新值万元",
+      "生效值（万元）",
+      "更正后万元"
+    ],
+    "difference_wan": [
+      "difference_wan",
+      "差额万元",
+      "差额（万元）",
+      "更正差额万元"
+    ]
+  },
+  "metric_aliases": {
+    "revenue_yoy": [
+      "revenue_yoy",
+      "收入同比",
+      "营业收入同比",
+      "营业收入增长率"
+    ],
+    "roe": [
+      "roe",
+      "归母ROE",
+      "归母净资产收益率"
+    ],
+    "cash_to_profit": [
+      "cash_to_profit",
+      "现金利润比",
+      "经营现金与归母利润比",
+      "经营现金流与归母净利润比"
+    ]
+  },
+  "reason_aliases": {
+    "missing_base": [
+      "missing_base",
+      "上年收入未披露",
+      "上年收入缺失",
+      "上年营业收入未披露"
+    ],
+    "scope_change": [
+      "scope_change",
+      "收入同比范围变更",
+      "范围变更",
+      "收入同比口径不可比",
+      "并表范围变更"
+    ],
+    "zero_profit": [
+      "zero_profit",
+      "归母净利润为0",
+      "现金比率分母为0",
+      "零利润分母"
+    ],
+    "missing_cash": [
+      "missing_cash",
+      "经营现金流未披露",
+      "经营现金流缺失",
+      "合并经营现金流未披露"
+    ]
+  },
+  "metric_fields": [
+    "numerator_wan",
+    "denominator_wan",
+    "value",
+    "rank",
+    "change_pp",
+    "status",
+    "reason"
+  ],
+  "data_fields": [
+    "revenue",
+    "parent_profit",
+    "cfo",
+    "equity_open",
+    "equity_close",
+    "prior_revenue",
+    "scope_comparable"
+  ],
+  "source_fields": [
+    "company_id",
+    "period_year",
+    "field",
+    "source_file",
+    "locator",
+    "reported_value",
+    "unit",
+    "effective_value_wan",
+    "restatement_id",
+    "adjustment_source",
+    "adjustment_locator"
+  ],
+  "case_limits": {
+    "max_driver_trials_per_case": 12
+  },
+  "missing_private_or_runtime": "evaluation_error, score null",
+  "material_authority": "Old material-stage contracts remain immutable history; this runtime contract and scoring_contract govern the registered rule."
+}

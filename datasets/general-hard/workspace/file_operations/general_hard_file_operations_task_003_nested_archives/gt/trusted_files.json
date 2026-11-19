@@ -1,0 +1,10 @@
+{
+  "artifact_contract.json": "8605f45dc0ccc79fb35a1152f585639561c3fa924dba0b4f321ff23b9895c5a0",
+  "business_oracle.json": "e81ad2d3be8315df81ad6ec5f7a99e12dfab82735b7db2501528d76f00d48a62",
+  "counterexamples.json": "90f8d3b590247c4d131e4803363866dd76aa557e5a24892a5a05e026946ada7a",
+  "evidence_requirements.json": "defb31d583ebb294ccb28536020376bfdbaffa199f109be2bed54e3ffc0c2dc8",
+  "expected.json": "688c55d823aed7651f719953b76a2f5507d5f0d79e14ab1339dcb9a3966d4bd2",
+  "grader.py": "3a084ab31e272f08718a06b4b49ac4226ce112d501fbf9816bdbff62a48a4451",
+  "native_io.py": "53cf6c54917be374efbf1833e5af1351fd3ce8a8466db84fbd04906095ec744d",
+  "protected_sha256.json": "9cb92eeac72af132cb2c0fee1156d6a8adac13d0476a76f583bdca3e2b7ada79"
+}

@@ -1,0 +1,4637 @@
+{
+  "schema_version": "h017-oracle/v1",
+  "status": "native_source_two_path_verified",
+  "targets": [
+    {
+      "target_id": "T0001",
+      "project_id": "0001",
+      "contract_id": "C0001",
+      "month": "2026-09",
+      "original": {
+        "project_id": "0001",
+        "contract_id": "C0001",
+        "month": "2026-09",
+        "name": "清峦项目组02"
+      },
+      "status": "matched",
+      "match_count": 1,
+      "amount_cny": 357.25,
+      "hours": 1.25,
+      "count": 2
+    },
+    {
+      "target_id": "T0002",
+      "project_id": "0002",
+      "contract_id": "C0002",
+      "month": "2026-09",
+      "original": {
+        "project_id": "0002",
+        "contract_id": "C0002",
+        "month": "2026-09",
+        "name": "清峦项目组03"
+      },
+      "status": "matched",
+      "match_count": 1,
+      "amount_cny": 364.5,
+      "hours": 1.5,
+      "count": 3
+    },
+    {
+      "target_id": "T0003",
+      "project_id": "0003",
+      "contract_id": "C0003",
+      "month": "2026-09",
+      "original": {
+        "project_id": "0003",
+        "contract_id": "C0003",
+        "month": "2026-09",
+        "name": "清峦项目组04"
+      },
+      "status": "matched",
+      "match_count": 1,
+      "amount_cny": 371.75,
+      "hours": 1.75,
+      "count": 4
+    },
+    {
+      "target_id": "T0004",
+      "project_id": "0004",
+      "contract_id": "C0004",
+      "month": "2026-09",
+      "original": {
+        "project_id": "0004",
+        "contract_id": "C0004",
+        "month": "2026-09",
+        "name": "清峦项目组05"
+      },
+      "status": "matched",
+      "match_count": 1,
+      "amount_cny": 379.0,
+      "hours": 2.0,
+      "count": 1
+    },
+    {
+      "target_id": "T0005",
+      "project_id": "0005",
+      "contract_id": "C0005",
+      "month": "2026-09",
+      "original": {
+        "project_id": "0005",
+        "contract_id": "C0005",
+        "month": "2026-09",
+        "name": "清峦项目组06"
+      },
+      "status": "matched",
+      "match_count": 1,
+      "amount_cny": 386.25,
+      "hours": 2.25,
+      "count": 2
+    },
+    {
+      "target_id": "T0006",
+      "project_id": "0006",
+      "contract_id": "C0006",
+      "month": "2026-09",
+      "original": {
+        "project_id": "0006",
+        "contract_id": "C0006",
+        "month": "2026-09",
+        "name": "清峦项目组07"
+      },
+      "status": "matched",
+      "match_count": 1,
+      "amount_cny": 393.5,
+      "hours": 2.5,
+      "count": 3
+    },
+    {
+      "target_id": "T0007",
+      "project_id": "0007",
+      "contract_id": "C0007",
+      "month": "2026-09",
+      "original": {
+        "project_id": "0007",
+        "contract_id": "C0007",
+        "month": "2026-09",
+        "name": "清峦项目组08"
+      },
+      "status": "matched",
+      "match_count": 1,
+      "amount_cny": 400.75,
+      "hours": 2.75,
+      "count": 4
+    },
+    {
+      "target_id": "T0008",
+      "project_id": "0008",
+      "contract_id": "C0008",
+      "month": "2026-09",
+      "original": {
+        "project_id": "0008",
+        "contract_id": "C0008",
+        "month": "2026-09",
+        "name": "清峦项目组09"
+      },
+      "status": "matched",
+      "match_count": 1,
+      "amount_cny": 408.0,
+      "hours": 3.0,
+      "count": 1
+    },
+    {
+      "target_id": "T0009",
+      "project_id": "0009",
+      "contract_id": "C0009",
+      "month": "2026-09",
+      "original": {
+        "project_id": "0009",
+        "contract_id": "C0009",
+        "month": "2026-09",
+        "name": "清峦项目组10"
+      },
+      "status": "matched",
+      "match_count": 1,
+      "amount_cny": 415.25,
+      "hours": 3.25,
+      "count": 2
+    },
+    {
+      "target_id": "T0010",
+      "project_id": "0010",
+      "contract_id": "C0010",
+      "month": "2026-09",
+      "original": {
+        "project_id": "0010",
+        "contract_id": "C0010",
+        "month": "2026-09",
+        "name": "清峦项目组11"
+      },
+      "status": "matched",
+      "match_count": 1,
+      "amount_cny": 422.5,
+      "hours": 3.5,
+      "count": 3
+    },
+    {
+      "target_id": "T0011",
+      "project_id": "0011",
+      "contract_id": "C0011",
+      "month": "2026-09",
+      "original": {
+        "project_id": "0011",
+        "contract_id": "C0011",
+        "month": "2026/09",
+        "name": "清峦项目组12"
+      },
+      "status": "matched",
+      "match_count": 1,
+      "amount_cny": 429.75,
+      "hours": 3.75,
+      "count": 4
+    },
+    {
+      "target_id": "T0012",
+      "project_id": "0012",
+      "contract_id": "C0012",
+      "month": "2026-09",
+      "original": {
+        "project_id": "0012",
+        "contract_id": "C0012",
+        "month": "2026-09",
+        "name": "清峦项目组13"
+      },
+      "status": "matched",
+      "match_count": 1,
+      "amount_cny": 437.0,
+      "hours": 4.0,
+      "count": 1
+    },
+    {
+      "target_id": "T0013",
+      "project_id": "0013",
+      "contract_id": "C0013",
+      "month": "2026-09",
+      "original": {
+        "project_id": "0013",
+        "contract_id": "C0013",
+        "month": "2026-09",
+        "name": "清峦项目组14"
+      },
+      "status": "matched",
+      "match_count": 1,
+      "amount_cny": 444.25,
+      "hours": 4.25,
+      "count": 2
+    },
+    {
+      "target_id": "T0014",
+      "project_id": "0014",
+      "contract_id": "C0014",
+      "month": "2026-09",
+      "original": {
+        "project_id": "0014",
+        "contract_id": "C0014",
+        "month": "2026-09",
+        "name": "清峦项目组01"
+      },
+      "status": "matched",
+      "match_count": 1,
+      "amount_cny": 451.5,
+      "hours": 4.5,
+      "count": 3
+    },
+    {
+      "target_id": "T0015",
+      "project_id": "0015",
+      "contract_id": "C0015",
+      "month": "2026-09",
+      "original": {
+        "project_id": "0015",
+        "contract_id": "C0015",
+        "month": "2026-09",
+        "name": "清峦项目组02"
+      },
+      "status": "matched",
+      "match_count": 1,
+      "amount_cny": 458.75,
+      "hours": 1.0,
+      "count": 4
+    },
+    {
+      "target_id": "T0016",
+      "project_id": "0016",
+      "contract_id": "C0016",
+      "month": "2026-09",
+      "original": {
+        "project_id": "0016",
+        "contract_id": "C0016",
+        "month": "2026-09",
+        "name": "清峦项目组03"
+      },
+      "status": "matched",
+      "match_count": 1,
+      "amount_cny": 466.0,
+      "hours": 1.25,
+      "count": 1
+    },
+    {
+      "target_id": "T0017",
+      "project_id": "0017",
+      "contract_id": "C0017",
+      "month": "2026-09",
+      "original": {
+        "project_id": "0017",
+        "contract_id": "C0017",
+        "month": "2026-09",
+        "name": "清峦项目组04"
+      },
+      "status": "matched",
+      "match_count": 1,
+      "amount_cny": 473.25,
+      "hours": 1.5,
+      "count": 2
+    },
+    {
+      "target_id": "T0018",
+      "project_id": "0018",
+      "contract_id": "C0018",
+      "month": "2026-09",
+      "original": {
+        "project_id": "0018",
+        "contract_id": "C0018",
+        "month": "2026-09",
+        "name": "清峦项目组05"
+      },
+      "status": "matched",
+      "match_count": 1,
+      "amount_cny": 480.5,
+      "hours": 1.75,
+      "count": 3
+    },
+    {
+      "target_id": "T0019",
+      "project_id": "0019",
+      "contract_id": "C0019",
+      "month": "2026-09",
+      "original": {
+        "project_id": "0019",
+        "contract_id": "C0019",
+        "month": "2026-09",
+        "name": "清峦项目组06"
+      },
+      "status": "matched",
+      "match_count": 1,
+      "amount_cny": 487.75,
+      "hours": 2.0,
+      "count": 4
+    },
+    {
+      "target_id": "T0020",
+      "project_id": "0020",
+      "contract_id": "C0020",
+      "month": "2026-09",
+      "original": {
+        "project_id": "0020",
+        "contract_id": "C0020",
+        "month": "2026-09",
+        "name": "清峦项目组07"
+      },
+      "status": "matched",
+      "match_count": 1,
+      "amount_cny": 495.0,
+      "hours": 2.25,
+      "count": 1
+    },
+    {
+      "target_id": "T0021",
+      "project_id": "0021",
+      "contract_id": "C0021",
+      "month": "2026-09",
+      "original": {
+        "project_id": "0021",
+        "contract_id": "C0021",
+        "month": "2026-09",
+        "name": "清峦项目组08"
+      },
+      "status": "matched",
+      "match_count": 1,
+      "amount_cny": 502.25,
+      "hours": 2.5,
+      "count": 2
+    },
+    {
+      "target_id": "T0022",
+      "project_id": "0022",
+      "contract_id": "C0022",
+      "month": "2026-09",
+      "original": {
+        "project_id": "0022",
+        "contract_id": "C0022",
+        "month": "2026/09",
+        "name": "清峦项目组09"
+      },
+      "status": "matched",
+      "match_count": 1,
+      "amount_cny": 509.5,
+      "hours": 2.75,
+      "count": 3
+    },
+    {
+      "target_id": "T0023",
+      "project_id": "0023",
+      "contract_id": "C0023",
+      "month": "2026-09",
+      "original": {
+        "project_id": "0023",
+        "contract_id": "C0023",
+        "month": "2026-09",
+        "name": "清峦项目组10"
+      },
+      "status": "matched",
+      "match_count": 1,
+      "amount_cny": 516.75,
+      "hours": 3.0,
+      "count": 4
+    },
+    {
+      "target_id": "T0024",
+      "project_id": "0024",
+      "contract_id": "C0024",
+      "month": "2026-09",
+      "original": {
+        "project_id": "0024",
+        "contract_id": "C0024",
+        "month": "2026-09",
+        "name": "清峦项目组11"
+      },
+      "status": "matched",
+      "match_count": 1,
+      "amount_cny": 524.0,
+      "hours": 3.25,
+      "count": 1
+    },
+    {
+      "target_id": "T0025",
+      "project_id": "0025",
+      "contract_id": "C0025",
+      "month": "2026-09",
+      "original": {
+        "project_id": "0025",
+        "contract_id": "C0025",
+        "month": "2026-09",
+        "name": "清峦项目组12"
+      },
+      "status": "matched",
+      "match_count": 1,
+      "amount_cny": 531.25,
+      "hours": 3.5,
+      "count": 2
+    },
+    {
+      "target_id": "T0026",
+      "project_id": "0026",
+      "contract_id": "C0026",
+      "month": "2026-09",
+      "original": {
+        "project_id": "0026",
+        "contract_id": "C0026",
+        "month": "2026-09",
+        "name": "清峦项目组13"
+      },
+      "status": "matched",
+      "match_count": 1,
+      "amount_cny": 538.5,
+      "hours": 3.75,
+      "count": 3
+    },
+    {
+      "target_id": "T0027",
+      "project_id": "0027",
+      "contract_id": "C0027",
+      "month": "2026-09",
+      "original": {
+        "project_id": "0027",
+        "contract_id": "C0027",
+        "month": "2026-09",
+        "name": "清峦项目组14"
+      },
+      "status": "matched",
+      "match_count": 1,
+      "amount_cny": 545.75,
+      "hours": 4.0,
+      "count": 4
+    },
+    {
+      "target_id": "T0028",
+      "project_id": "0028",
+      "contract_id": "C0028",
+      "month": "2026-09",
+      "original": {
+        "project_id": "0028",
+        "contract_id": "C0028",
+        "month": "2026-09",
+        "name": "清峦项目组01"
+      },
+      "status": "matched",
+      "match_count": 1,
+      "amount_cny": 553.0,
+      "hours": 4.25,
+      "count": 1
+    },
+    {
+      "target_id": "T0029",
+      "project_id": "0029",
+      "contract_id": "C0029",
+      "month": "2026-09",
+      "original": {
+        "project_id": "0029",
+        "contract_id": "C0029",
+        "month": "2026-09",
+        "name": "清峦项目组02"
+      },
+      "status": "matched",
+      "match_count": 1,
+      "amount_cny": 560.25,
+      "hours": 4.5,
+      "count": 2
+    },
+    {
+      "target_id": "T0030",
+      "project_id": "0030",
+      "contract_id": "C0030",
+      "month": "2026-09",
+      "original": {
+        "project_id": "0030",
+        "contract_id": "C0030",
+        "month": "2026-09",
+        "name": "清峦项目组03"
+      },
+      "status": "matched",
+      "match_count": 1,
+      "amount_cny": 567.5,
+      "hours": 1.0,
+      "count": 3
+    },
+    {
+      "target_id": "T0031",
+      "project_id": "0031",
+      "contract_id": "C0031",
+      "month": "2026-09",
+      "original": {
+        "project_id": "0031",
+        "contract_id": "C0031",
+        "month": "2026-09",
+        "name": "清峦项目组04"
+      },
+      "status": "matched",
+      "match_count": 1,
+      "amount_cny": 574.75,
+      "hours": 1.25,
+      "count": 4
+    },
+    {
+      "target_id": "T0032",
+      "project_id": "0032",
+      "contract_id": "C0032",
+      "month": "2026-09",
+      "original": {
+        "project_id": "0032",
+        "contract_id": "C0032",
+        "month": "2026-09",
+        "name": "清峦项目组05"
+      },
+      "status": "matched",
+      "match_count": 1,
+      "amount_cny": 582.0,
+      "hours": 1.5,
+      "count": 1
+    },
+    {
+      "target_id": "T0033",
+      "project_id": "0033",
+      "contract_id": "C0033",
+      "month": "2026-09",
+      "original": {
+        "project_id": "0033",
+        "contract_id": "C0033",
+        "month": "2026/09",
+        "name": "清峦项目组06"
+      },
+      "status": "matched",
+      "match_count": 1,
+      "amount_cny": 589.25,
+      "hours": 1.75,
+      "count": 2
+    },
+    {
+      "target_id": "T0034",
+      "project_id": "0034",
+      "contract_id": "C0034",
+      "month": "2026-09",
+      "original": {
+        "project_id": "0034",
+        "contract_id": "C0034",
+        "month": "2026-09",
+        "name": "清峦项目组07"
+      },
+      "status": "matched",
+      "match_count": 1,
+      "amount_cny": 596.5,
+      "hours": 2.0,
+      "count": 3
+    },
+    {
+      "target_id": "T0035",
+      "project_id": "0035",
+      "contract_id": "C0035",
+      "month": "2026-09",
+      "original": {
+        "project_id": "0035",
+        "contract_id": "C0035",
+        "month": "2026-09",
+        "name": "清峦项目组08"
+      },
+      "status": "matched",
+      "match_count": 1,
+      "amount_cny": 603.75,
+      "hours": 2.25,
+      "count": 4
+    },
+    {
+      "target_id": "T0036",
+      "project_id": "0036",
+      "contract_id": "C0036",
+      "month": "2026-09",
+      "original": {
+        "project_id": "0036",
+        "contract_id": "C0036",
+        "month": "2026-09",
+        "name": "清峦项目组09"
+      },
+      "status": "matched",
+      "match_count": 1,
+      "amount_cny": 611.0,
+      "hours": 2.5,
+      "count": 1
+    },
+    {
+      "target_id": "T0037",
+      "project_id": "0037",
+      "contract_id": "C0037",
+      "month": "2026-09",
+      "original": {
+        "project_id": "0037",
+        "contract_id": "C0037",
+        "month": "2026-09",
+        "name": "清峦项目组10"
+      },
+      "status": "matched",
+      "match_count": 1,
+      "amount_cny": 618.25,
+      "hours": 2.75,
+      "count": 2
+    },
+    {
+      "target_id": "T0038",
+      "project_id": "0038",
+      "contract_id": "C0038",
+      "month": "2026-09",
+      "original": {
+        "project_id": "0038",
+        "contract_id": "C0038",
+        "month": "2026-09",
+        "name": "清峦项目组11"
+      },
+      "status": "matched",
+      "match_count": 1,
+      "amount_cny": 625.5,
+      "hours": 3.0,
+      "count": 3
+    },
+    {
+      "target_id": "T0039",
+      "project_id": "0039",
+      "contract_id": "C0039",
+      "month": "2026-09",
+      "original": {
+        "project_id": "0039",
+        "contract_id": "C0039",
+        "month": "2026-09",
+        "name": "清峦项目组12"
+      },
+      "status": "matched",
+      "match_count": 1,
+      "amount_cny": 632.75,
+      "hours": 3.25,
+      "count": 4
+    },
+    {
+      "target_id": "T0040",
+      "project_id": "0040",
+      "contract_id": "C0040",
+      "month": "2026-09",
+      "original": {
+        "project_id": "0040",
+        "contract_id": "C0040",
+        "month": "2026-09",
+        "name": "清峦项目组13"
+      },
+      "status": "matched",
+      "match_count": 1,
+      "amount_cny": 640.0,
+      "hours": 3.5,
+      "count": 1
+    },
+    {
+      "target_id": "T0041",
+      "project_id": "0041",
+      "contract_id": "C0041",
+      "month": "2026-09",
+      "original": {
+        "project_id": "0041",
+        "contract_id": "C0041",
+        "month": "2026-09",
+        "name": "清峦项目组14"
+      },
+      "status": "matched",
+      "match_count": 1,
+      "amount_cny": 647.25,
+      "hours": 3.75,
+      "count": 2
+    },
+    {
+      "target_id": "T0042",
+      "project_id": "0042",
+      "contract_id": "C0042",
+      "month": "2026-09",
+      "original": {
+        "project_id": "0042",
+        "contract_id": "C0042",
+        "month": "2026-09",
+        "name": "清峦项目组01"
+      },
+      "status": "matched",
+      "match_count": 1,
+      "amount_cny": 654.5,
+      "hours": 4.0,
+      "count": 3
+    },
+    {
+      "target_id": "T0043",
+      "project_id": "0043",
+      "contract_id": "C0043",
+      "month": "2026-09",
+      "original": {
+        "project_id": "0043",
+        "contract_id": "C0043",
+        "month": "2026-09",
+        "name": "清峦项目组02"
+      },
+      "status": "matched",
+      "match_count": 1,
+      "amount_cny": 661.75,
+      "hours": 4.25,
+      "count": 4
+    },
+    {
+      "target_id": "T0044",
+      "project_id": "0044",
+      "contract_id": "C0044",
+      "month": "2026-09",
+      "original": {
+        "project_id": "0044",
+        "contract_id": "C0044",
+        "month": "2026/09",
+        "name": "清峦项目组03"
+      },
+      "status": "matched",
+      "match_count": 1,
+      "amount_cny": 669.0,
+      "hours": 4.5,
+      "count": 1
+    },
+    {
+      "target_id": "T0045",
+      "project_id": "0045",
+      "contract_id": "C0045",
+      "month": "2026-09",
+      "original": {
+        "project_id": "0045",
+        "contract_id": "C0045",
+        "month": "2026-09",
+        "name": "清峦项目组04"
+      },
+      "status": "matched",
+      "match_count": 1,
+      "amount_cny": 676.25,
+      "hours": 1.0,
+      "count": 2
+    },
+    {
+      "target_id": "T0046",
+      "project_id": "0046",
+      "contract_id": "C0046",
+      "month": "2026-09",
+      "original": {
+        "project_id": "0046",
+        "contract_id": "C0046",
+        "month": "2026-09",
+        "name": "清峦项目组05"
+      },
+      "status": "matched",
+      "match_count": 1,
+      "amount_cny": 683.5,
+      "hours": 1.25,
+      "count": 3
+    },
+    {
+      "target_id": "T0047",
+      "project_id": "0047",
+      "contract_id": "C0047",
+      "month": "2026-09",
+      "original": {
+        "project_id": "0047",
+        "contract_id": "C0047",
+        "month": "2026-09",
+        "name": "清峦项目组06"
+      },
+      "status": "matched",
+      "match_count": 1,
+      "amount_cny": 690.75,
+      "hours": 1.5,
+      "count": 4
+    },
+    {
+      "target_id": "T0048",
+      "project_id": "0048",
+      "contract_id": "C0048",
+      "month": "2026-09",
+      "original": {
+        "project_id": "0048",
+        "contract_id": "C0048",
+        "month": "2026-09",
+        "name": "清峦项目组07"
+      },
+      "status": "matched",
+      "match_count": 1,
+      "amount_cny": 698.0,
+      "hours": 1.75,
+      "count": 1
+    },
+    {
+      "target_id": "T0049",
+      "project_id": "0049",
+      "contract_id": "C0049",
+      "month": "2026-09",
+      "original": {
+        "project_id": "0049",
+        "contract_id": "C0049",
+        "month": "2026-09",
+        "name": "清峦项目组08"
+      },
+      "status": "matched",
+      "match_count": 1,
+      "amount_cny": 705.25,
+      "hours": 2.0,
+      "count": 2
+    },
+    {
+      "target_id": "T0050",
+      "project_id": "0050",
+      "contract_id": "C0050",
+      "month": "2026-09",
+      "original": {
+        "project_id": "0050",
+        "contract_id": "C0050",
+        "month": "2026-09",
+        "name": "清峦项目组09"
+      },
+      "status": "matched",
+      "match_count": 1,
+      "amount_cny": 712.5,
+      "hours": 2.25,
+      "count": 3
+    },
+    {
+      "target_id": "T0051",
+      "project_id": "0051",
+      "contract_id": "C0051",
+      "month": "2026-09",
+      "original": {
+        "project_id": "0051",
+        "contract_id": "C0051",
+        "month": "2026-09",
+        "name": "清峦项目组10"
+      },
+      "status": "matched",
+      "match_count": 1,
+      "amount_cny": 719.75,
+      "hours": 2.5,
+      "count": 4
+    },
+    {
+      "target_id": "T0052",
+      "project_id": "0052",
+      "contract_id": "C0052",
+      "month": "2026-09",
+      "original": {
+        "project_id": "0052",
+        "contract_id": "C0052",
+        "month": "2026-09",
+        "name": "清峦项目组11"
+      },
+      "status": "matched",
+      "match_count": 1,
+      "amount_cny": 727.0,
+      "hours": 2.75,
+      "count": 1
+    },
+    {
+      "target_id": "T0053",
+      "project_id": "0053",
+      "contract_id": "C0053",
+      "month": "2026-09",
+      "original": {
+        "project_id": "0053",
+        "contract_id": "C0053",
+        "month": "2026-09",
+        "name": "清峦项目组12"
+      },
+      "status": "matched",
+      "match_count": 1,
+      "amount_cny": 734.25,
+      "hours": 3.0,
+      "count": 2
+    },
+    {
+      "target_id": "T0054",
+      "project_id": "0054",
+      "contract_id": "C0054",
+      "month": "2026-09",
+      "original": {
+        "project_id": "0054",
+        "contract_id": "C0054",
+        "month": "2026-09",
+        "name": "清峦项目组13"
+      },
+      "status": "matched",
+      "match_count": 1,
+      "amount_cny": 741.5,
+      "hours": 3.25,
+      "count": 3
+    },
+    {
+      "target_id": "T0055",
+      "project_id": "0055",
+      "contract_id": "C0055",
+      "month": "2026-09",
+      "original": {
+        "project_id": "0055",
+        "contract_id": "C0055",
+        "month": "2026/09",
+        "name": "清峦项目组14"
+      },
+      "status": "matched",
+      "match_count": 1,
+      "amount_cny": 748.75,
+      "hours": 3.5,
+      "count": 4
+    },
+    {
+      "target_id": "T0056",
+      "project_id": "0056",
+      "contract_id": "C0056",
+      "month": "2026-09",
+      "original": {
+        "project_id": "0056",
+        "contract_id": "C0056",
+        "month": "2026-09",
+        "name": "清峦项目组01"
+      },
+      "status": "matched",
+      "match_count": 1,
+      "amount_cny": 756.0,
+      "hours": 3.75,
+      "count": 1
+    },
+    {
+      "target_id": "T0057",
+      "project_id": "0057",
+      "contract_id": "C0057",
+      "month": "2026-09",
+      "original": {
+        "project_id": "0057",
+        "contract_id": "C0057",
+        "month": "2026-09",
+        "name": "清峦项目组02"
+      },
+      "status": "matched",
+      "match_count": 1,
+      "amount_cny": 763.25,
+      "hours": 4.0,
+      "count": 2
+    },
+    {
+      "target_id": "T0058",
+      "project_id": "0058",
+      "contract_id": "C0058",
+      "month": "2026-09",
+      "original": {
+        "project_id": "0058",
+        "contract_id": "C0058",
+        "month": "2026-09",
+        "name": "清峦项目组03"
+      },
+      "status": "matched",
+      "match_count": 1,
+      "amount_cny": 770.5,
+      "hours": 4.25,
+      "count": 3
+    },
+    {
+      "target_id": "T0059",
+      "project_id": "0059",
+      "contract_id": "C0059",
+      "month": "2026-09",
+      "original": {
+        "project_id": "0059",
+        "contract_id": "C0059",
+        "month": "2026-09",
+        "name": "清峦项目组04"
+      },
+      "status": "matched",
+      "match_count": 1,
+      "amount_cny": 777.75,
+      "hours": 4.5,
+      "count": 4
+    },
+    {
+      "target_id": "T0060",
+      "project_id": "0060",
+      "contract_id": "C0060",
+      "month": "2026-09",
+      "original": {
+        "project_id": "0060",
+        "contract_id": "C0060",
+        "month": "2026-09",
+        "name": "清峦项目组05"
+      },
+      "status": "matched",
+      "match_count": 1,
+      "amount_cny": 785.0,
+      "hours": 1.0,
+      "count": 1
+    },
+    {
+      "target_id": "T0061",
+      "project_id": "0061",
+      "contract_id": "C0061",
+      "month": "2026-09",
+      "original": {
+        "project_id": "0061",
+        "contract_id": "C0061",
+        "month": "2026-09",
+        "name": "清峦项目组06"
+      },
+      "status": "matched",
+      "match_count": 1,
+      "amount_cny": 792.25,
+      "hours": 1.25,
+      "count": 2
+    },
+    {
+      "target_id": "T0062",
+      "project_id": "0062",
+      "contract_id": "C0062",
+      "month": "2026-09",
+      "original": {
+        "project_id": "0062",
+        "contract_id": "C0062",
+        "month": "2026-09",
+        "name": "清峦项目组07"
+      },
+      "status": "matched",
+      "match_count": 1,
+      "amount_cny": 799.5,
+      "hours": 1.5,
+      "count": 3
+    },
+    {
+      "target_id": "T0063",
+      "project_id": "0063",
+      "contract_id": "C0063",
+      "month": "2026-09",
+      "original": {
+        "project_id": "0063",
+        "contract_id": "C0063",
+        "month": "2026-09",
+        "name": "清峦项目组08"
+      },
+      "status": "matched",
+      "match_count": 1,
+      "amount_cny": 806.75,
+      "hours": 1.75,
+      "count": 4
+    },
+    {
+      "target_id": "T0064",
+      "project_id": "0064",
+      "contract_id": "C0064",
+      "month": "2026-09",
+      "original": {
+        "project_id": "0064",
+        "contract_id": "C0064",
+        "month": "2026-09",
+        "name": "清峦项目组09"
+      },
+      "status": "matched",
+      "match_count": 1,
+      "amount_cny": 814.0,
+      "hours": 2.0,
+      "count": 1
+    },
+    {
+      "target_id": "T0065",
+      "project_id": "0065",
+      "contract_id": "C0065",
+      "month": "2026-09",
+      "original": {
+        "project_id": "0065",
+        "contract_id": "C0065",
+        "month": "2026-09",
+        "name": "清峦项目组10"
+      },
+      "status": "matched",
+      "match_count": 1,
+      "amount_cny": 821.25,
+      "hours": 2.25,
+      "count": 2
+    },
+    {
+      "target_id": "T0066",
+      "project_id": "0066",
+      "contract_id": "C0066",
+      "month": "2026-09",
+      "original": {
+        "project_id": "0066",
+        "contract_id": "C0066",
+        "month": "2026/09",
+        "name": "清峦项目组11"
+      },
+      "status": "matched",
+      "match_count": 1,
+      "amount_cny": 828.5,
+      "hours": 2.5,
+      "count": 3
+    },
+    {
+      "target_id": "T0067",
+      "project_id": "0067",
+      "contract_id": "C0067",
+      "month": "2026-09",
+      "original": {
+        "project_id": "0067",
+        "contract_id": "C0067",
+        "month": "2026-09",
+        "name": "清峦项目组12"
+      },
+      "status": "matched",
+      "match_count": 1,
+      "amount_cny": 835.75,
+      "hours": 2.75,
+      "count": 4
+    },
+    {
+      "target_id": "T0068",
+      "project_id": "0068",
+      "contract_id": "C0068",
+      "month": "2026-09",
+      "original": {
+        "project_id": "0068",
+        "contract_id": "C0068",
+        "month": "2026-09",
+        "name": "清峦项目组13"
+      },
+      "status": "matched",
+      "match_count": 1,
+      "amount_cny": 843.0,
+      "hours": 3.0,
+      "count": 1
+    },
+    {
+      "target_id": "T0069",
+      "project_id": "0069",
+      "contract_id": "C0069",
+      "month": "2026-09",
+      "original": {
+        "project_id": "0069",
+        "contract_id": "C0069",
+        "month": "2026-09",
+        "name": "清峦项目组14"
+      },
+      "status": "matched",
+      "match_count": 1,
+      "amount_cny": 850.25,
+      "hours": 3.25,
+      "count": 2
+    },
+    {
+      "target_id": "T0070",
+      "project_id": "0070",
+      "contract_id": "C0070",
+      "month": "2026-09",
+      "original": {
+        "project_id": "0070",
+        "contract_id": "C0070",
+        "month": "2026-09",
+        "name": "清峦项目组01"
+      },
+      "status": "matched",
+      "match_count": 1,
+      "amount_cny": 857.5,
+      "hours": 3.5,
+      "count": 3
+    },
+    {
+      "target_id": "T0071",
+      "project_id": "0071",
+      "contract_id": "C0071",
+      "month": "2026-09",
+      "original": {
+        "project_id": "0071",
+        "contract_id": "C0071",
+        "month": "2026-09",
+        "name": "清峦项目组02"
+      },
+      "status": "one_to_many",
+      "match_count": 2,
+      "amount_cny": null,
+      "hours": null,
+      "count": null
+    },
+    {
+      "target_id": "T0072",
+      "project_id": "0072",
+      "contract_id": "C0072",
+      "month": "2026-09",
+      "original": {
+        "project_id": "0072",
+        "contract_id": "C0072",
+        "month": "2026-09",
+        "name": "清峦项目组03"
+      },
+      "status": "one_to_many",
+      "match_count": 2,
+      "amount_cny": null,
+      "hours": null,
+      "count": null
+    },
+    {
+      "target_id": "T0073",
+      "project_id": "0073",
+      "contract_id": "C0073",
+      "month": "2026-09",
+      "original": {
+        "project_id": "0073",
+        "contract_id": "C0073",
+        "month": "2026-09",
+        "name": "清峦项目组04"
+      },
+      "status": "one_to_many",
+      "match_count": 2,
+      "amount_cny": null,
+      "hours": null,
+      "count": null
+    },
+    {
+      "target_id": "T0074",
+      "project_id": "0074",
+      "contract_id": "C0074",
+      "month": "2026-09",
+      "original": {
+        "project_id": "0074",
+        "contract_id": "C0074",
+        "month": "2026-09",
+        "name": "清峦项目组05"
+      },
+      "status": "one_to_many",
+      "match_count": 2,
+      "amount_cny": null,
+      "hours": null,
+      "count": null
+    },
+    {
+      "target_id": "T0075",
+      "project_id": "0075",
+      "contract_id": "C0075",
+      "month": "2026-09",
+      "original": {
+        "project_id": "0075",
+        "contract_id": "C0075",
+        "month": "2026-09",
+        "name": "清峦项目组06"
+      },
+      "status": "one_to_many",
+      "match_count": 2,
+      "amount_cny": null,
+      "hours": null,
+      "count": null
+    },
+    {
+      "target_id": "T0076",
+      "project_id": "0076",
+      "contract_id": "C0076",
+      "month": "2026-09",
+      "original": {
+        "project_id": "0076",
+        "contract_id": "C0076",
+        "month": "2026-09",
+        "name": "清峦项目组07"
+      },
+      "status": "one_to_many",
+      "match_count": 2,
+      "amount_cny": null,
+      "hours": null,
+      "count": null
+    },
+    {
+      "target_id": "T0077",
+      "project_id": "0077",
+      "contract_id": "C0077",
+      "month": "2026-09",
+      "original": {
+        "project_id": "0077",
+        "contract_id": "C0077",
+        "month": "2026/09",
+        "name": "清峦项目组08"
+      },
+      "status": "one_to_many",
+      "match_count": 2,
+      "amount_cny": null,
+      "hours": null,
+      "count": null
+    },
+    {
+      "target_id": "T0078",
+      "project_id": "0078",
+      "contract_id": "C0078",
+      "month": "2026-09",
+      "original": {
+        "project_id": "0078",
+        "contract_id": "C0078",
+        "month": "2026-09",
+        "name": "清峦项目组09"
+      },
+      "status": "one_to_many",
+      "match_count": 2,
+      "amount_cny": null,
+      "hours": null,
+      "count": null
+    },
+    {
+      "target_id": "T0079",
+      "project_id": "0079",
+      "contract_id": "C0079",
+      "month": "2026-09",
+      "original": {
+        "project_id": "0079",
+        "contract_id": "C0079",
+        "month": "2026-09",
+        "name": "清峦项目组10"
+      },
+      "status": "one_to_many",
+      "match_count": 2,
+      "amount_cny": null,
+      "hours": null,
+      "count": null
+    },
+    {
+      "target_id": "T0080",
+      "project_id": "0080",
+      "contract_id": "C0080",
+      "month": "2026-09",
+      "original": {
+        "project_id": "0080",
+        "contract_id": "C0080",
+        "month": "2026-09",
+        "name": "清峦项目组11"
+      },
+      "status": "one_to_many",
+      "match_count": 2,
+      "amount_cny": null,
+      "hours": null,
+      "count": null
+    },
+    {
+      "target_id": "T0081",
+      "project_id": null,
+      "contract_id": "C0081",
+      "month": "2026-09",
+      "original": {
+        "project_id": null,
+        "contract_id": "C0081",
+        "month": "2026-09",
+        "name": "清峦项目组12"
+      },
+      "status": "matched",
+      "match_count": 1,
+      "amount_cny": 937.25,
+      "hours": 2.5,
+      "count": 2
+    },
+    {
+      "target_id": "T0082",
+      "project_id": null,
+      "contract_id": "C0082",
+      "month": "2026-09",
+      "original": {
+        "project_id": null,
+        "contract_id": "C0082",
+        "month": "2026-09",
+        "name": "清峦项目组13"
+      },
+      "status": "matched",
+      "match_count": 1,
+      "amount_cny": 944.5,
+      "hours": 2.75,
+      "count": 3
+    },
+    {
+      "target_id": "T0083",
+      "project_id": null,
+      "contract_id": "C0083",
+      "month": "2026-09",
+      "original": {
+        "project_id": null,
+        "contract_id": "C0083",
+        "month": "2026-09",
+        "name": "清峦项目组14"
+      },
+      "status": "matched",
+      "match_count": 1,
+      "amount_cny": 951.75,
+      "hours": 3.0,
+      "count": 4
+    },
+    {
+      "target_id": "T0084",
+      "project_id": null,
+      "contract_id": "C0084",
+      "month": "2026-09",
+      "original": {
+        "project_id": null,
+        "contract_id": "C0084",
+        "month": "2026-09",
+        "name": "清峦项目组01"
+      },
+      "status": "matched",
+      "match_count": 1,
+      "amount_cny": 959.0,
+      "hours": 3.25,
+      "count": 1
+    },
+    {
+      "target_id": "T0085",
+      "project_id": null,
+      "contract_id": "C0085",
+      "month": "2026-09",
+      "original": {
+        "project_id": null,
+        "contract_id": "C0085",
+        "month": "2026-09",
+        "name": "清峦项目组02"
+      },
+      "status": "matched",
+      "match_count": 1,
+      "amount_cny": 966.25,
+      "hours": 3.5,
+      "count": 2
+    },
+    {
+      "target_id": "T0086",
+      "project_id": null,
+      "contract_id": "C0086",
+      "month": "2026-09",
+      "original": {
+        "project_id": null,
+        "contract_id": "C0086",
+        "month": "2026-09",
+        "name": "清峦项目组03"
+      },
+      "status": "matched",
+      "match_count": 1,
+      "amount_cny": 973.5,
+      "hours": 3.75,
+      "count": 3
+    },
+    {
+      "target_id": "T0087",
+      "project_id": null,
+      "contract_id": "C0087",
+      "month": "2026-09",
+      "original": {
+        "project_id": null,
+        "contract_id": "C0087",
+        "month": "2026-09",
+        "name": "清峦项目组04"
+      },
+      "status": "matched",
+      "match_count": 1,
+      "amount_cny": 980.75,
+      "hours": 4.0,
+      "count": 4
+    },
+    {
+      "target_id": "T0088",
+      "project_id": null,
+      "contract_id": "C0088",
+      "month": "2026-09",
+      "original": {
+        "project_id": null,
+        "contract_id": "C0088",
+        "month": "2026/09",
+        "name": "清峦项目组05"
+      },
+      "status": "matched",
+      "match_count": 1,
+      "amount_cny": 988.0,
+      "hours": 4.25,
+      "count": 1
+    },
+    {
+      "target_id": "T0089",
+      "project_id": null,
+      "contract_id": "C0089",
+      "month": "2026-09",
+      "original": {
+        "project_id": null,
+        "contract_id": "C0089",
+        "month": "2026-09",
+        "name": "清峦项目组06"
+      },
+      "status": "matched",
+      "match_count": 1,
+      "amount_cny": 995.25,
+      "hours": 4.5,
+      "count": 2
+    },
+    {
+      "target_id": "T0090",
+      "project_id": null,
+      "contract_id": "C0090",
+      "month": "2026-09",
+      "original": {
+        "project_id": null,
+        "contract_id": "C0090",
+        "month": "2026-09",
+        "name": "清峦项目组07"
+      },
+      "status": "matched",
+      "match_count": 1,
+      "amount_cny": 1002.5,
+      "hours": 1.0,
+      "count": 3
+    },
+    {
+      "target_id": "T0091",
+      "project_id": null,
+      "contract_id": "C0091",
+      "month": "2026-09",
+      "original": {
+        "project_id": null,
+        "contract_id": "C0091",
+        "month": "2026-09",
+        "name": "清峦项目组08"
+      },
+      "status": "one_to_many",
+      "match_count": 2,
+      "amount_cny": null,
+      "hours": null,
+      "count": null
+    },
+    {
+      "target_id": "T0092",
+      "project_id": null,
+      "contract_id": "C0092",
+      "month": "2026-09",
+      "original": {
+        "project_id": null,
+        "contract_id": "C0092",
+        "month": "2026-09",
+        "name": "清峦项目组09"
+      },
+      "status": "one_to_many",
+      "match_count": 2,
+      "amount_cny": null,
+      "hours": null,
+      "count": null
+    },
+    {
+      "target_id": "T0093",
+      "project_id": null,
+      "contract_id": "C0093",
+      "month": "2026-09",
+      "original": {
+        "project_id": null,
+        "contract_id": "C0093",
+        "month": "2026-09",
+        "name": "清峦项目组10"
+      },
+      "status": "one_to_many",
+      "match_count": 2,
+      "amount_cny": null,
+      "hours": null,
+      "count": null
+    },
+    {
+      "target_id": "T0094",
+      "project_id": null,
+      "contract_id": "C0094",
+      "month": "2026-09",
+      "original": {
+        "project_id": null,
+        "contract_id": "C0094",
+        "month": "2026-09",
+        "name": "清峦项目组11"
+      },
+      "status": "one_to_many",
+      "match_count": 2,
+      "amount_cny": null,
+      "hours": null,
+      "count": null
+    },
+    {
+      "target_id": "T0095",
+      "project_id": null,
+      "contract_id": "C0095",
+      "month": "2026-09",
+      "original": {
+        "project_id": null,
+        "contract_id": "C0095",
+        "month": "2026-09",
+        "name": "清峦项目组12"
+      },
+      "status": "one_to_many",
+      "match_count": 2,
+      "amount_cny": null,
+      "hours": null,
+      "count": null
+    },
+    {
+      "target_id": "T0096",
+      "project_id": null,
+      "contract_id": "C0096",
+      "month": "2026-09",
+      "original": {
+        "project_id": null,
+        "contract_id": "C0096",
+        "month": "2026-09",
+        "name": "清峦项目组13"
+      },
+      "status": "one_to_many",
+      "match_count": 2,
+      "amount_cny": null,
+      "hours": null,
+      "count": null
+    },
+    {
+      "target_id": "T0097",
+      "project_id": "1",
+      "contract_id": "C0097",
+      "month": "2026-09",
+      "original": {
+        "project_id": "1",
+        "contract_id": "C0097",
+        "month": "2026-09",
+        "name": "清峦项目组14"
+      },
+      "status": "no_match",
+      "match_count": 0,
+      "amount_cny": null,
+      "hours": null,
+      "count": null
+    },
+    {
+      "target_id": "T0098",
+      "project_id": "9098",
+      "contract_id": "C0098",
+      "month": "2026-09",
+      "original": {
+        "project_id": "9098",
+        "contract_id": "C0098",
+        "month": "2026-09",
+        "name": "清峦项目组01"
+      },
+      "status": "no_match",
+      "match_count": 0,
+      "amount_cny": null,
+      "hours": null,
+      "count": null
+    },
+    {
+      "target_id": "T0099",
+      "project_id": "9099",
+      "contract_id": "C0099",
+      "month": "2026-09",
+      "original": {
+        "project_id": "9099",
+        "contract_id": "C0099",
+        "month": "2026/09",
+        "name": "清峦项目组02"
+      },
+      "status": "no_match",
+      "match_count": 0,
+      "amount_cny": null,
+      "hours": null,
+      "count": null
+    },
+    {
+      "target_id": "T0100",
+      "project_id": "9100",
+      "contract_id": "C0100",
+      "month": "2026-09",
+      "original": {
+        "project_id": "9100",
+        "contract_id": "C0100",
+        "month": "2026-09",
+        "name": "清峦项目组03"
+      },
+      "status": "no_match",
+      "match_count": 0,
+      "amount_cny": null,
+      "hours": null,
+      "count": null
+    },
+    {
+      "target_id": "T0101",
+      "project_id": "9101",
+      "contract_id": "C0101",
+      "month": "2026-09",
+      "original": {
+        "project_id": "9101",
+        "contract_id": "C0101",
+        "month": "2026-09",
+        "name": "清峦项目组04"
+      },
+      "status": "no_match",
+      "match_count": 0,
+      "amount_cny": null,
+      "hours": null,
+      "count": null
+    },
+    {
+      "target_id": "T0102",
+      "project_id": "9102",
+      "contract_id": "C0102",
+      "month": "2026-09",
+      "original": {
+        "project_id": "9102",
+        "contract_id": "C0102",
+        "month": "2026-09",
+        "name": "清峦项目组05"
+      },
+      "status": "no_match",
+      "match_count": 0,
+      "amount_cny": null,
+      "hours": null,
+      "count": null
+    },
+    {
+      "target_id": "T0103",
+      "project_id": null,
+      "contract_id": null,
+      "month": "2026-09",
+      "original": {
+        "project_id": null,
+        "contract_id": null,
+        "month": "2026-09",
+        "name": "清峦项目组06"
+      },
+      "status": "no_key",
+      "match_count": 0,
+      "amount_cny": null,
+      "hours": null,
+      "count": null
+    },
+    {
+      "target_id": "T0104",
+      "project_id": null,
+      "contract_id": null,
+      "month": "2026-09",
+      "original": {
+        "project_id": null,
+        "contract_id": null,
+        "month": "2026-09",
+        "name": "清峦项目组07"
+      },
+      "status": "no_key",
+      "match_count": 0,
+      "amount_cny": null,
+      "hours": null,
+      "count": null
+    },
+    {
+      "target_id": "T0105",
+      "project_id": null,
+      "contract_id": null,
+      "month": "2026-09",
+      "original": {
+        "project_id": null,
+        "contract_id": null,
+        "month": "2026-09",
+        "name": "清峦项目组08"
+      },
+      "status": "no_key",
+      "match_count": 0,
+      "amount_cny": null,
+      "hours": null,
+      "count": null
+    },
+    {
+      "target_id": "T0106",
+      "project_id": null,
+      "contract_id": null,
+      "month": "2026-09",
+      "original": {
+        "project_id": null,
+        "contract_id": null,
+        "month": "2026-09",
+        "name": "清峦项目组09"
+      },
+      "status": "no_key",
+      "match_count": 0,
+      "amount_cny": null,
+      "hours": null,
+      "count": null
+    },
+    {
+      "target_id": "T0107",
+      "project_id": null,
+      "contract_id": null,
+      "month": "2026-09",
+      "original": {
+        "project_id": null,
+        "contract_id": null,
+        "month": "2026-09",
+        "name": "清峦项目组10"
+      },
+      "status": "no_key",
+      "match_count": 0,
+      "amount_cny": null,
+      "hours": null,
+      "count": null
+    },
+    {
+      "target_id": "T0108",
+      "project_id": null,
+      "contract_id": null,
+      "month": "2026-09",
+      "original": {
+        "project_id": null,
+        "contract_id": null,
+        "month": "2026-09",
+        "name": "清峦项目组11"
+      },
+      "status": "no_key",
+      "match_count": 0,
+      "amount_cny": null,
+      "hours": null,
+      "count": null
+    },
+    {
+      "target_id": "T0109",
+      "project_id": "0109",
+      "contract_id": "C0109",
+      "month": "2026-09",
+      "original": {
+        "project_id": "0109",
+        "contract_id": "C0109",
+        "month": "2026-09",
+        "name": "清峦项目组12"
+      },
+      "status": "no_match",
+      "match_count": 0,
+      "amount_cny": null,
+      "hours": null,
+      "count": null
+    },
+    {
+      "target_id": "T0110",
+      "project_id": "0110",
+      "contract_id": "C0110",
+      "month": "2026-09",
+      "original": {
+        "project_id": "0110",
+        "contract_id": "C0110",
+        "month": "2026/09",
+        "name": "清峦项目组13"
+      },
+      "status": "no_match",
+      "match_count": 0,
+      "amount_cny": null,
+      "hours": null,
+      "count": null
+    },
+    {
+      "target_id": "T0111",
+      "project_id": "0111",
+      "contract_id": "C0111",
+      "month": "2026-09",
+      "original": {
+        "project_id": "0111",
+        "contract_id": "C0111",
+        "month": "2026-09",
+        "name": "清峦项目组14"
+      },
+      "status": "no_match",
+      "match_count": 0,
+      "amount_cny": null,
+      "hours": null,
+      "count": null
+    },
+    {
+      "target_id": "T0112",
+      "project_id": "0112",
+      "contract_id": "C0112",
+      "month": "2026-09",
+      "original": {
+        "project_id": "0112",
+        "contract_id": "C0112",
+        "month": "2026-09",
+        "name": "清峦项目组01"
+      },
+      "status": "no_match",
+      "match_count": 0,
+      "amount_cny": null,
+      "hours": null,
+      "count": null
+    },
+    {
+      "target_id": "T0113",
+      "project_id": "0113",
+      "contract_id": "C0113",
+      "month": "2026-09",
+      "original": {
+        "project_id": "0113",
+        "contract_id": "C0113",
+        "month": "2026-09",
+        "name": "清峦项目组02"
+      },
+      "status": "no_match",
+      "match_count": 0,
+      "amount_cny": null,
+      "hours": null,
+      "count": null
+    },
+    {
+      "target_id": "T0114",
+      "project_id": "0114",
+      "contract_id": "C0114",
+      "month": "2026-09",
+      "original": {
+        "project_id": "0114",
+        "contract_id": "C0114",
+        "month": "2026-09",
+        "name": "清峦项目组03"
+      },
+      "status": "no_match",
+      "match_count": 0,
+      "amount_cny": null,
+      "hours": null,
+      "count": null
+    },
+    {
+      "target_id": "T0115",
+      "project_id": "0115",
+      "contract_id": "C0115",
+      "month": "2026-09",
+      "original": {
+        "project_id": "0115",
+        "contract_id": "C0115",
+        "month": "2026-09",
+        "name": "清峦项目组04"
+      },
+      "status": "matched",
+      "match_count": 1,
+      "amount_cny": -200.0,
+      "hours": 0.0,
+      "count": 0
+    },
+    {
+      "target_id": "T0116",
+      "project_id": "0116",
+      "contract_id": "C0116",
+      "month": "2026-09",
+      "original": {
+        "project_id": "0116",
+        "contract_id": "C0116",
+        "month": "2026-09",
+        "name": "清峦项目组05"
+      },
+      "status": "matched",
+      "match_count": 1,
+      "amount_cny": 0.0,
+      "hours": 0.0,
+      "count": 0
+    },
+    {
+      "target_id": "T0117",
+      "project_id": "0117",
+      "contract_id": "C0117",
+      "month": "2026-09",
+      "original": {
+        "project_id": "0117",
+        "contract_id": "C0117",
+        "month": "2026-09",
+        "name": "清峦项目组06"
+      },
+      "status": "matched",
+      "match_count": 1,
+      "amount_cny": 1198.25,
+      "hours": null,
+      "count": 2
+    },
+    {
+      "target_id": "T0118",
+      "project_id": "0118",
+      "contract_id": "C0118",
+      "month": "2026-09",
+      "original": {
+        "project_id": "0118",
+        "contract_id": "C0118",
+        "month": "2026-09",
+        "name": "清峦项目组07"
+      },
+      "status": "matched",
+      "match_count": 1,
+      "amount_cny": null,
+      "hours": 4.25,
+      "count": 3
+    },
+    {
+      "target_id": "T0119",
+      "project_id": "0119",
+      "contract_id": "C0119",
+      "month": "2026-09",
+      "original": {
+        "project_id": "0119",
+        "contract_id": "C0119",
+        "month": "2026-09",
+        "name": "清峦项目组08"
+      },
+      "status": "matched",
+      "match_count": 1,
+      "amount_cny": 1212.75,
+      "hours": 4.5,
+      "count": null
+    },
+    {
+      "target_id": "T0120",
+      "project_id": "0120",
+      "contract_id": "C0120",
+      "month": "2026-09",
+      "original": {
+        "project_id": "0120",
+        "contract_id": "C0120",
+        "month": "2026-09",
+        "name": "清峦项目组09"
+      },
+      "status": "matched",
+      "match_count": 1,
+      "amount_cny": 0.01,
+      "hours": 0.25,
+      "count": 1
+    }
+  ],
+  "sources": [
+    {
+      "source_id": "S0001",
+      "project_id": "8099",
+      "contract_id": "C0099",
+      "month": "2026-09",
+      "name": "清峦项目组02",
+      "amount_cny": 1067.75,
+      "hours": 3.25,
+      "count": 4,
+      "source_sheet": "东区填报",
+      "source_row": 7
+    },
+    {
+      "source_id": "S0005",
+      "project_id": "0027",
+      "contract_id": "C0027",
+      "month": "2026-09",
+      "name": "清峦项目组14",
+      "amount_cny": 545.75,
+      "hours": 4.0,
+      "count": 4,
+      "source_sheet": "东区填报",
+      "source_row": 8
+    },
+    {
+      "source_id": "S0009",
+      "project_id": "0117",
+      "contract_id": "C0117",
+      "month": "2026-09",
+      "name": "清峦项目组06",
+      "amount_cny": 1198.25,
+      "hours": null,
+      "count": 2,
+      "source_sheet": "东区填报",
+      "source_row": 9
+    },
+    {
+      "source_id": "S0013",
+      "project_id": "0004",
+      "contract_id": "C0004",
+      "month": "2026-09",
+      "name": "清峦项目组05",
+      "amount_cny": 379.0,
+      "hours": 2.0,
+      "count": 1,
+      "source_sheet": "东区填报",
+      "source_row": 10
+    },
+    {
+      "source_id": "S0017",
+      "project_id": "0009",
+      "contract_id": "C0009",
+      "month": "2026-08",
+      "name": "清峦项目组10",
+      "amount_cny": 1209.75,
+      "hours": 6.75,
+      "count": 2,
+      "source_sheet": "东区填报",
+      "source_row": 11
+    },
+    {
+      "source_id": "S0021",
+      "project_id": "0060",
+      "contract_id": "C0060",
+      "month": "2026-09",
+      "name": "清峦项目组05",
+      "amount_cny": 785.0,
+      "hours": 1.0,
+      "count": 1,
+      "source_sheet": "东区填报",
+      "source_row": 12
+    },
+    {
+      "source_id": "S0025",
+      "project_id": "0037",
+      "contract_id": "C0037",
+      "month": "2026-09",
+      "name": "清峦项目组10",
+      "amount_cny": 618.25,
+      "hours": 2.75,
+      "count": 2,
+      "source_sheet": "东区填报",
+      "source_row": 13
+    },
+    {
+      "source_id": "S0029",
+      "project_id": "0043",
+      "contract_id": "C0043",
+      "month": "2026-09",
+      "name": "清峦项目组02",
+      "amount_cny": 661.75,
+      "hours": 4.25,
+      "count": 4,
+      "source_sheet": "东区填报",
+      "source_row": 14
+    },
+    {
+      "source_id": "S0033",
+      "project_id": "7083",
+      "contract_id": "C0083",
+      "month": "2026-09",
+      "name": "清峦项目组14",
+      "amount_cny": 951.75,
+      "hours": 3.0,
+      "count": 4,
+      "source_sheet": "东区填报",
+      "source_row": 15
+    },
+    {
+      "source_id": "S0037",
+      "project_id": "7085",
+      "contract_id": "C0085",
+      "month": "2026-09",
+      "name": "清峦项目组02",
+      "amount_cny": 966.25,
+      "hours": 3.5,
+      "count": 2,
+      "source_sheet": "东区填报",
+      "source_row": 16
+    },
+    {
+      "source_id": "S0041",
+      "project_id": "7090",
+      "contract_id": "C0090",
+      "month": "2026-09",
+      "name": "清峦项目组07",
+      "amount_cny": 1002.5,
+      "hours": 1.0,
+      "count": 3,
+      "source_sheet": "东区填报",
+      "source_row": 17
+    },
+    {
+      "source_id": "S0045",
+      "project_id": "0040",
+      "contract_id": "C0040",
+      "month": "2026-09",
+      "name": "清峦项目组13",
+      "amount_cny": 640.0,
+      "hours": 3.5,
+      "count": 1,
+      "source_sheet": "东区填报",
+      "source_row": 18
+    },
+    {
+      "source_id": "S0049",
+      "project_id": "7081",
+      "contract_id": "C0081",
+      "month": "2026-09",
+      "name": "清峦项目组12",
+      "amount_cny": 937.25,
+      "hours": 2.5,
+      "count": 2,
+      "source_sheet": "东区填报",
+      "source_row": 19
+    },
+    {
+      "source_id": "S0053",
+      "project_id": "0025",
+      "contract_id": "C0025",
+      "month": "2026-09",
+      "name": "清峦项目组12",
+      "amount_cny": 531.25,
+      "hours": 3.5,
+      "count": 2,
+      "source_sheet": "东区填报",
+      "source_row": 20
+    },
+    {
+      "source_id": "S0057",
+      "project_id": "0015",
+      "contract_id": "C0015",
+      "month": "2026-08",
+      "name": "清峦项目组02",
+      "amount_cny": 1253.25,
+      "hours": 4.5,
+      "count": 4,
+      "source_sheet": "东区填报",
+      "source_row": 21
+    },
+    {
+      "source_id": "S0061",
+      "project_id": "0014",
+      "contract_id": "C0014",
+      "month": "2026-09",
+      "name": "清峦项目组01",
+      "amount_cny": 451.5,
+      "hours": 4.5,
+      "count": 3,
+      "source_sheet": "东区填报",
+      "source_row": 22
+    },
+    {
+      "source_id": "S0065",
+      "project_id": "7088",
+      "contract_id": "C0088",
+      "month": "2026-09",
+      "name": "清峦项目组05",
+      "amount_cny": 988.0,
+      "hours": 4.25,
+      "count": 1,
+      "source_sheet": "东区填报",
+      "source_row": 23
+    },
+    {
+      "source_id": "S0069",
+      "project_id": "0016",
+      "contract_id": "C0016",
+      "month": "2026-09",
+      "name": "清峦项目组03",
+      "amount_cny": 466.0,
+      "hours": 1.25,
+      "count": 1,
+      "source_sheet": "东区填报",
+      "source_row": 24
+    },
+    {
+      "source_id": "S0073",
+      "project_id": "0074",
+      "contract_id": "C0074",
+      "month": "2026-09",
+      "name": "清峦项目组05",
+      "amount_cny": 1000.0,
+      "hours": 5.0,
+      "count": 3,
+      "source_sheet": "东区填报",
+      "source_row": 25
+    },
+    {
+      "source_id": "S0077",
+      "project_id": "0111",
+      "contract_id": "C0111",
+      "month": "2026-08",
+      "name": "清峦项目组14",
+      "amount_cny": 1154.75,
+      "hours": 2.5,
+      "count": 4,
+      "source_sheet": "东区填报",
+      "source_row": 26
+    },
+    {
+      "source_id": "S0081",
+      "project_id": "7095",
+      "contract_id": "C0095",
+      "month": "2026-09",
+      "name": "清峦项目组12",
+      "amount_cny": 1038.75,
+      "hours": 2.25,
+      "count": 4,
+      "source_sheet": "东区填报",
+      "source_row": 27
+    },
+    {
+      "source_id": "S0085",
+      "project_id": "8093",
+      "contract_id": "C0093",
+      "month": "2026-09",
+      "name": "清峦项目组10",
+      "amount_cny": 1137.75,
+      "hours": 2.25,
+      "count": 2,
+      "source_sheet": "东区填报",
+      "source_row": 28
+    },
+    {
+      "source_id": "S0089",
+      "project_id": null,
+      "contract_id": null,
+      "month": "2026-09",
+      "name": "清峦项目组07",
+      "amount_cny": 1104.0,
+      "hours": 4.5,
+      "count": 1,
+      "source_sheet": "东区填报",
+      "source_row": 29
+    },
+    {
+      "source_id": "S0093",
+      "project_id": "0019",
+      "contract_id": "C0019",
+      "month": "2026-09",
+      "name": "清峦项目组06",
+      "amount_cny": 487.75,
+      "hours": 2.0,
+      "count": 4,
+      "source_sheet": "东区填报",
+      "source_row": 30
+    },
+    {
+      "source_id": "S0097",
+      "project_id": "0002",
+      "contract_id": "C0002",
+      "month": "2026-09",
+      "name": "清峦项目组03",
+      "amount_cny": 364.5,
+      "hours": 1.5,
+      "count": 3,
+      "source_sheet": "东区填报",
+      "source_row": 31
+    },
+    {
+      "source_id": "S0101",
+      "project_id": "0011",
+      "contract_id": "C0011",
+      "month": "2026-09",
+      "name": "清峦项目组12",
+      "amount_cny": 429.75,
+      "hours": 3.75,
+      "count": 4,
+      "source_sheet": "东区填报",
+      "source_row": 32
+    },
+    {
+      "source_id": "S0105",
+      "project_id": "0062",
+      "contract_id": "C0062",
+      "month": "2026-09",
+      "name": "清峦项目组07",
+      "amount_cny": 799.5,
+      "hours": 1.5,
+      "count": 3,
+      "source_sheet": "东区填报",
+      "source_row": 33
+    },
+    {
+      "source_id": "S0109",
+      "project_id": "0036",
+      "contract_id": "C0036",
+      "month": "2026-09",
+      "name": "清峦项目组09",
+      "amount_cny": 611.0,
+      "hours": 2.5,
+      "count": 1,
+      "source_sheet": "东区填报",
+      "source_row": 34
+    },
+    {
+      "source_id": "S0113",
+      "project_id": "0050",
+      "contract_id": "C0050",
+      "month": "2026-09",
+      "name": "清峦项目组09",
+      "amount_cny": 712.5,
+      "hours": 2.25,
+      "count": 3,
+      "source_sheet": "东区填报",
+      "source_row": 35
+    },
+    {
+      "source_id": "S0117",
+      "project_id": "0070",
+      "contract_id": "C0070",
+      "month": "2026-09",
+      "name": "清峦项目组01",
+      "amount_cny": 857.5,
+      "hours": 3.5,
+      "count": 3,
+      "source_sheet": "东区填报",
+      "source_row": 36
+    },
+    {
+      "source_id": "S0121",
+      "project_id": "0029",
+      "contract_id": "C0029",
+      "month": "2026-09",
+      "name": "清峦项目组02",
+      "amount_cny": 560.25,
+      "hours": 4.5,
+      "count": 2,
+      "source_sheet": "东区填报",
+      "source_row": 37
+    },
+    {
+      "source_id": "S0125",
+      "project_id": "0048",
+      "contract_id": "C0048",
+      "month": "2026-09",
+      "name": "清峦项目组07",
+      "amount_cny": 698.0,
+      "hours": 1.75,
+      "count": 1,
+      "source_sheet": "东区填报",
+      "source_row": 38
+    },
+    {
+      "source_id": "S0129",
+      "project_id": "0080",
+      "contract_id": "C0080",
+      "month": "2026-09",
+      "name": "清峦项目组11",
+      "amount_cny": 930.0,
+      "hours": 2.25,
+      "count": 1,
+      "source_sheet": "东区填报",
+      "source_row": 39
+    },
+    {
+      "source_id": "S0133",
+      "project_id": "0033",
+      "contract_id": "C0033",
+      "month": "2026-09",
+      "name": "清峦项目组06",
+      "amount_cny": 589.25,
+      "hours": 1.75,
+      "count": 2,
+      "source_sheet": "东区填报",
+      "source_row": 40
+    },
+    {
+      "source_id": "S0137",
+      "project_id": "0064",
+      "contract_id": "C0064",
+      "month": "2026-09",
+      "name": "清峦项目组09",
+      "amount_cny": 814.0,
+      "hours": 2.0,
+      "count": 1,
+      "source_sheet": "东区填报",
+      "source_row": 41
+    },
+    {
+      "source_id": "S0141",
+      "project_id": "8092",
+      "contract_id": "C0092",
+      "month": "2026-09",
+      "name": "清峦项目组09",
+      "amount_cny": 1130.5,
+      "hours": 2.0,
+      "count": 1,
+      "source_sheet": "东区填报",
+      "source_row": 42
+    },
+    {
+      "source_id": "S0145",
+      "project_id": "0052",
+      "contract_id": "C0052",
+      "month": "2026-09",
+      "name": "清峦项目组11",
+      "amount_cny": 727.0,
+      "hours": 2.75,
+      "count": 1,
+      "source_sheet": "东区填报",
+      "source_row": 43
+    },
+    {
+      "source_id": "S0002",
+      "project_id": "0015",
+      "contract_id": "C0015",
+      "month": "2026-09",
+      "name": "清峦项目组02",
+      "amount_cny": 458.75,
+      "hours": 1.0,
+      "count": 4,
+      "source_sheet": "南区导出",
+      "source_row": 7
+    },
+    {
+      "source_id": "S0006",
+      "project_id": "0051",
+      "contract_id": "C0051",
+      "month": "2026-09",
+      "name": "清峦项目组10",
+      "amount_cny": 719.75,
+      "hours": 2.5,
+      "count": 4,
+      "source_sheet": "南区导出",
+      "source_row": 8
+    },
+    {
+      "source_id": "S0010",
+      "project_id": "0073",
+      "contract_id": "C0073",
+      "month": "2026-09",
+      "name": "清峦项目组04",
+      "amount_cny": 879.25,
+      "hours": 4.25,
+      "count": 2,
+      "source_sheet": "南区导出",
+      "source_row": 9
+    },
+    {
+      "source_id": "S0014",
+      "project_id": "0074",
+      "contract_id": "C0074",
+      "month": "2026-09",
+      "name": "清峦项目组05",
+      "amount_cny": 886.5,
+      "hours": 4.5,
+      "count": 3,
+      "source_sheet": "南区导出",
+      "source_row": 10
+    },
+    {
+      "source_id": "S0018",
+      "project_id": null,
+      "contract_id": null,
+      "month": "2026-09",
+      "name": "清峦项目组09",
+      "amount_cny": 1118.5,
+      "hours": 1.25,
+      "count": 3,
+      "source_sheet": "南区导出",
+      "source_row": 11
+    },
+    {
+      "source_id": "S0022",
+      "project_id": "0042",
+      "contract_id": "C0042",
+      "month": "2026-09",
+      "name": "清峦项目组01",
+      "amount_cny": 654.5,
+      "hours": 4.0,
+      "count": 3,
+      "source_sheet": "南区导出",
+      "source_row": 12
+    },
+    {
+      "source_id": "S0026",
+      "project_id": "0059",
+      "contract_id": "C0059",
+      "month": "2026-09",
+      "name": "清峦项目组04",
+      "amount_cny": 777.75,
+      "hours": 4.5,
+      "count": 4,
+      "source_sheet": "南区导出",
+      "source_row": 13
+    },
+    {
+      "source_id": "S0030",
+      "project_id": "7094",
+      "contract_id": "C0094",
+      "month": "2026-09",
+      "name": "清峦项目组11",
+      "amount_cny": 1031.5,
+      "hours": 2.0,
+      "count": 3,
+      "source_sheet": "南区导出",
+      "source_row": 14
+    },
+    {
+      "source_id": "S0034",
+      "project_id": "8098",
+      "contract_id": "C0098",
+      "month": "2026-09",
+      "name": "清峦项目组01",
+      "amount_cny": 1060.5,
+      "hours": 3.0,
+      "count": 3,
+      "source_sheet": "南区导出",
+      "source_row": 15
+    },
+    {
+      "source_id": "S0038",
+      "project_id": "0072",
+      "contract_id": "C0072",
+      "month": "2026-09",
+      "name": "清峦项目组03",
+      "amount_cny": 985.5,
+      "hours": 4.5,
+      "count": 1,
+      "source_sheet": "南区导出",
+      "source_row": 16
+    },
+    {
+      "source_id": "S0042",
+      "project_id": "7089",
+      "contract_id": "C0089",
+      "month": "2026-09",
+      "name": "清峦项目组06",
+      "amount_cny": 995.25,
+      "hours": 4.5,
+      "count": 2,
+      "source_sheet": "南区导出",
+      "source_row": 17
+    },
+    {
+      "source_id": "S0046",
+      "project_id": "7092",
+      "contract_id": "C0092",
+      "month": "2026-09",
+      "name": "清峦项目组09",
+      "amount_cny": 1017.0,
+      "hours": 1.5,
+      "count": 1,
+      "source_sheet": "南区导出",
+      "source_row": 18
+    },
+    {
+      "source_id": "S0050",
+      "project_id": "0058",
+      "contract_id": "C0058",
+      "month": "2026-09",
+      "name": "清峦项目组03",
+      "amount_cny": 770.5,
+      "hours": 4.25,
+      "count": 3,
+      "source_sheet": "南区导出",
+      "source_row": 19
+    },
+    {
+      "source_id": "S0054",
+      "project_id": "0021",
+      "contract_id": "C0021",
+      "month": "2026-09",
+      "name": "清峦项目组08",
+      "amount_cny": 502.25,
+      "hours": 2.5,
+      "count": 2,
+      "source_sheet": "南区导出",
+      "source_row": 20
+    },
+    {
+      "source_id": "S0058",
+      "project_id": "0119",
+      "contract_id": "C0119",
+      "month": "2026-09",
+      "name": "清峦项目组08",
+      "amount_cny": 1212.75,
+      "hours": 4.5,
+      "count": null,
+      "source_sheet": "南区导出",
+      "source_row": 21
+    },
+    {
+      "source_id": "S0062",
+      "project_id": "8091",
+      "contract_id": "C0091",
+      "month": "2026-09",
+      "name": "清峦项目组08",
+      "amount_cny": 1123.25,
+      "hours": 1.75,
+      "count": 4,
+      "source_sheet": "南区导出",
+      "source_row": 22
+    },
+    {
+      "source_id": "S0066",
+      "project_id": "0044",
+      "contract_id": "C0044",
+      "month": "2026-09",
+      "name": "清峦项目组03",
+      "amount_cny": 669.0,
+      "hours": 4.5,
+      "count": 1,
+      "source_sheet": "南区导出",
+      "source_row": 23
+    },
+    {
+      "source_id": "S0070",
+      "project_id": "0069",
+      "contract_id": "C0069",
+      "month": "2026-09",
+      "name": "清峦项目组14",
+      "amount_cny": 850.25,
+      "hours": 3.25,
+      "count": 2,
+      "source_sheet": "南区导出",
+      "source_row": 24
+    },
+    {
+      "source_id": "S0074",
+      "project_id": "0045",
+      "contract_id": "C0045",
+      "month": "2026-09",
+      "name": "清峦项目组04",
+      "amount_cny": 676.25,
+      "hours": 1.0,
+      "count": 2,
+      "source_sheet": "南区导出",
+      "source_row": 25
+    },
+    {
+      "source_id": "S0078",
+      "project_id": "8097",
+      "contract_id": "C0097",
+      "month": "2026-09",
+      "name": "清峦项目组14",
+      "amount_cny": 1053.25,
+      "hours": 2.75,
+      "count": 2,
+      "source_sheet": "南区导出",
+      "source_row": 26
+    },
+    {
+      "source_id": "S0082",
+      "project_id": "0024",
+      "contract_id": "C0024",
+      "month": "2026-08",
+      "name": "清峦项目组11",
+      "amount_cny": 1318.5,
+      "hours": 6.75,
+      "count": 1,
+      "source_sheet": "南区导出",
+      "source_row": 27
+    },
+    {
+      "source_id": "S0086",
+      "project_id": "0071",
+      "contract_id": "C0071",
+      "month": "2026-09",
+      "name": "清峦项目组02",
+      "amount_cny": 864.75,
+      "hours": 3.75,
+      "count": 4,
+      "source_sheet": "南区导出",
+      "source_row": 28
+    },
+    {
+      "source_id": "S0090",
+      "project_id": "7091",
+      "contract_id": "C0091",
+      "month": "2026-09",
+      "name": "清峦项目组08",
+      "amount_cny": 1009.75,
+      "hours": 1.25,
+      "count": 4,
+      "source_sheet": "南区导出",
+      "source_row": 29
+    },
+    {
+      "source_id": "S0094",
+      "project_id": "0116",
+      "contract_id": "C0116",
+      "month": "2026-09",
+      "name": "清峦项目组05",
+      "amount_cny": 0.0,
+      "hours": 0.0,
+      "count": 0,
+      "source_sheet": "南区导出",
+      "source_row": 30
+    },
+    {
+      "source_id": "S0098",
+      "project_id": "0063",
+      "contract_id": "C0063",
+      "month": "2026-09",
+      "name": "清峦项目组08",
+      "amount_cny": 806.75,
+      "hours": 1.75,
+      "count": 4,
+      "source_sheet": "南区导出",
+      "source_row": 31
+    },
+    {
+      "source_id": "S0102",
+      "project_id": "0012",
+      "contract_id": "C0012",
+      "month": "2026-08",
+      "name": "清峦项目组13",
+      "amount_cny": 1231.5,
+      "hours": 7.5,
+      "count": 1,
+      "source_sheet": "南区导出",
+      "source_row": 32
+    },
+    {
+      "source_id": "S0106",
+      "project_id": "0112",
+      "contract_id": "C0112",
+      "month": "2026-08",
+      "name": "清峦项目组01",
+      "amount_cny": 1162.0,
+      "hours": 2.75,
+      "count": 1,
+      "source_sheet": "南区导出",
+      "source_row": 33
+    },
+    {
+      "source_id": "S0110",
+      "project_id": "0046",
+      "contract_id": "C0046",
+      "month": "2026-09",
+      "name": "清峦项目组05",
+      "amount_cny": 683.5,
+      "hours": 1.25,
+      "count": 3,
+      "source_sheet": "南区导出",
+      "source_row": 34
+    },
+    {
+      "source_id": "S0114",
+      "project_id": "8100",
+      "contract_id": "C0100",
+      "month": "2026-09",
+      "name": "清峦项目组03",
+      "amount_cny": 1075.0,
+      "hours": 3.5,
+      "count": 1,
+      "source_sheet": "南区导出",
+      "source_row": 35
+    },
+    {
+      "source_id": "S0118",
+      "project_id": "0118",
+      "contract_id": "C0118",
+      "month": "2026-09",
+      "name": "清峦项目组07",
+      "amount_cny": null,
+      "hours": 4.25,
+      "count": 3,
+      "source_sheet": "南区导出",
+      "source_row": 36
+    },
+    {
+      "source_id": "S0122",
+      "project_id": "7087",
+      "contract_id": "C0087",
+      "month": "2026-09",
+      "name": "清峦项目组04",
+      "amount_cny": 980.75,
+      "hours": 4.0,
+      "count": 4,
+      "source_sheet": "南区导出",
+      "source_row": 37
+    },
+    {
+      "source_id": "S0126",
+      "project_id": "0110",
+      "contract_id": "C0110",
+      "month": "2026-08",
+      "name": "清峦项目组13",
+      "amount_cny": 1147.5,
+      "hours": 2.25,
+      "count": 3,
+      "source_sheet": "南区导出",
+      "source_row": 38
+    },
+    {
+      "source_id": "S0130",
+      "project_id": "7093",
+      "contract_id": "C0093",
+      "month": "2026-09",
+      "name": "清峦项目组10",
+      "amount_cny": 1024.25,
+      "hours": 1.75,
+      "count": 2,
+      "source_sheet": "南区导出",
+      "source_row": 39
+    },
+    {
+      "source_id": "S0134",
+      "project_id": "0008",
+      "contract_id": "C0008",
+      "month": "2026-09",
+      "name": "清峦项目组09",
+      "amount_cny": 408.0,
+      "hours": 3.0,
+      "count": 1,
+      "source_sheet": "南区导出",
+      "source_row": 40
+    },
+    {
+      "source_id": "S0138",
+      "project_id": "8102",
+      "contract_id": "C0102",
+      "month": "2026-09",
+      "name": "清峦项目组05",
+      "amount_cny": 1089.5,
+      "hours": 4.0,
+      "count": 3,
+      "source_sheet": "南区导出",
+      "source_row": 41
+    },
+    {
+      "source_id": "S0142",
+      "project_id": "7084",
+      "contract_id": "C0084",
+      "month": "2026-09",
+      "name": "清峦项目组01",
+      "amount_cny": 959.0,
+      "hours": 3.25,
+      "count": 1,
+      "source_sheet": "南区导出",
+      "source_row": 42
+    },
+    {
+      "source_id": "S0146",
+      "project_id": "0034",
+      "contract_id": "C0034",
+      "month": "2026-09",
+      "name": "清峦项目组07",
+      "amount_cny": 596.5,
+      "hours": 2.0,
+      "count": 3,
+      "source_sheet": "南区导出",
+      "source_row": 43
+    },
+    {
+      "source_id": "S0003",
+      "project_id": "0013",
+      "contract_id": "C0013",
+      "month": "2026-09",
+      "name": "清峦项目组14",
+      "amount_cny": 444.25,
+      "hours": 4.25,
+      "count": 2,
+      "source_sheet": "合作方回执",
+      "source_row": 6
+    },
+    {
+      "source_id": "S0007",
+      "project_id": "0018",
+      "contract_id": "C0018",
+      "month": "2026-09",
+      "name": "清峦项目组05",
+      "amount_cny": 480.5,
+      "hours": 1.75,
+      "count": 3,
+      "source_sheet": "合作方回执",
+      "source_row": 7
+    },
+    {
+      "source_id": "S0011",
+      "project_id": "0009",
+      "contract_id": "C0009",
+      "month": "2026-09",
+      "name": "清峦项目组10",
+      "amount_cny": 415.25,
+      "hours": 3.25,
+      "count": 2,
+      "source_sheet": "合作方回执",
+      "source_row": 8
+    },
+    {
+      "source_id": "S0015",
+      "project_id": "0078",
+      "contract_id": "C0078",
+      "month": "2026-09",
+      "name": "清峦项目组09",
+      "amount_cny": 1029.0,
+      "hours": 2.25,
+      "count": 3,
+      "source_sheet": "合作方回执",
+      "source_row": 9
+    },
+    {
+      "source_id": "S0019",
+      "project_id": "7096",
+      "contract_id": "C0096",
+      "month": "2026-09",
+      "name": "清峦项目组13",
+      "amount_cny": 1046.0,
+      "hours": 2.5,
+      "count": 1,
+      "source_sheet": "合作方回执",
+      "source_row": 10
+    },
+    {
+      "source_id": "S0023",
+      "project_id": "0022",
+      "contract_id": "C0022",
+      "month": "2026-09",
+      "name": "清峦项目组09",
+      "amount_cny": 509.5,
+      "hours": 2.75,
+      "count": 3,
+      "source_sheet": "合作方回执",
+      "source_row": 11
+    },
+    {
+      "source_id": "S0027",
+      "project_id": "0047",
+      "contract_id": "C0047",
+      "month": "2026-09",
+      "name": "清峦项目组06",
+      "amount_cny": 690.75,
+      "hours": 1.5,
+      "count": 4,
+      "source_sheet": "合作方回执",
+      "source_row": 12
+    },
+    {
+      "source_id": "S0031",
+      "project_id": "7086",
+      "contract_id": "C0086",
+      "month": "2026-09",
+      "name": "清峦项目组03",
+      "amount_cny": 973.5,
+      "hours": 3.75,
+      "count": 3,
+      "source_sheet": "合作方回执",
+      "source_row": 13
+    },
+    {
+      "source_id": "S0035",
+      "project_id": "0027",
+      "contract_id": "C0027",
+      "month": "2026-08",
+      "name": "清峦项目组14",
+      "amount_cny": 1340.25,
+      "hours": 7.5,
+      "count": 4,
+      "source_sheet": "合作方回执",
+      "source_row": 14
+    },
+    {
+      "source_id": "S0039",
+      "project_id": "0028",
+      "contract_id": "C0028",
+      "month": "2026-09",
+      "name": "清峦项目组01",
+      "amount_cny": 553.0,
+      "hours": 4.25,
+      "count": 1,
+      "source_sheet": "合作方回执",
+      "source_row": 15
+    },
+    {
+      "source_id": "S0043",
+      "project_id": "0115",
+      "contract_id": "C0115",
+      "month": "2026-09",
+      "name": "清峦项目组04",
+      "amount_cny": -200.0,
+      "hours": 0.0,
+      "count": 0,
+      "source_sheet": "合作方回执",
+      "source_row": 16
+    },
+    {
+      "source_id": "S0047",
+      "project_id": "0049",
+      "contract_id": "C0049",
+      "month": "2026-09",
+      "name": "清峦项目组08",
+      "amount_cny": 705.25,
+      "hours": 2.0,
+      "count": 2,
+      "source_sheet": "合作方回执",
+      "source_row": 17
+    },
+    {
+      "source_id": "S0051",
+      "project_id": "0001",
+      "contract_id": "C0001",
+      "month": "2026-09",
+      "name": "清峦项目组02",
+      "amount_cny": 357.25,
+      "hours": 1.25,
+      "count": 2,
+      "source_sheet": "合作方回执",
+      "source_row": 18
+    },
+    {
+      "source_id": "S0055",
+      "project_id": "0055",
+      "contract_id": "C0055",
+      "month": "2026-09",
+      "name": "清峦项目组14",
+      "amount_cny": 748.75,
+      "hours": 3.5,
+      "count": 4,
+      "source_sheet": "合作方回执",
+      "source_row": 19
+    },
+    {
+      "source_id": "S0059",
+      "project_id": "0041",
+      "contract_id": "C0041",
+      "month": "2026-09",
+      "name": "清峦项目组14",
+      "amount_cny": 647.25,
+      "hours": 3.75,
+      "count": 2,
+      "source_sheet": "合作方回执",
+      "source_row": 20
+    },
+    {
+      "source_id": "S0063",
+      "project_id": "0018",
+      "contract_id": "C0018",
+      "month": "2026-08",
+      "name": "清峦项目组05",
+      "amount_cny": 1275.0,
+      "hours": 5.25,
+      "count": 3,
+      "source_sheet": "合作方回执",
+      "source_row": 21
+    },
+    {
+      "source_id": "S0067",
+      "project_id": "0075",
+      "contract_id": "C0075",
+      "month": "2026-09",
+      "name": "清峦项目组06",
+      "amount_cny": 893.75,
+      "hours": 1.0,
+      "count": 4,
+      "source_sheet": "合作方回执",
+      "source_row": 22
+    },
+    {
+      "source_id": "S0071",
+      "project_id": "0113",
+      "contract_id": "C0113",
+      "month": "2026-08",
+      "name": "清峦项目组02",
+      "amount_cny": 1169.25,
+      "hours": 3.0,
+      "count": 2,
+      "source_sheet": "合作方回执",
+      "source_row": 23
+    },
+    {
+      "source_id": "S0075",
+      "project_id": "0079",
+      "contract_id": "C0079",
+      "month": "2026-09",
+      "name": "清峦项目组10",
+      "amount_cny": 922.75,
+      "hours": 2.0,
+      "count": 4,
+      "source_sheet": "合作方回执",
+      "source_row": 24
+    },
+    {
+      "source_id": "S0079",
+      "project_id": "8101",
+      "contract_id": "C0101",
+      "month": "2026-09",
+      "name": "清峦项目组04",
+      "amount_cny": 1082.25,
+      "hours": 3.75,
+      "count": 2,
+      "source_sheet": "合作方回执",
+      "source_row": 25
+    },
+    {
+      "source_id": "S0083",
+      "project_id": "0061",
+      "contract_id": "C0061",
+      "month": "2026-09",
+      "name": "清峦项目组06",
+      "amount_cny": 792.25,
+      "hours": 1.25,
+      "count": 2,
+      "source_sheet": "合作方回执",
+      "source_row": 26
+    },
+    {
+      "source_id": "S0087",
+      "project_id": "0030",
+      "contract_id": "C0030",
+      "month": "2026-09",
+      "name": "清峦项目组03",
+      "amount_cny": 567.5,
+      "hours": 1.0,
+      "count": 3,
+      "source_sheet": "合作方回执",
+      "source_row": 27
+    },
+    {
+      "source_id": "S0091",
+      "project_id": "0057",
+      "contract_id": "C0057",
+      "month": "2026-09",
+      "name": "清峦项目组02",
+      "amount_cny": 763.25,
+      "hours": 4.0,
+      "count": 2,
+      "source_sheet": "合作方回执",
+      "source_row": 28
+    },
+    {
+      "source_id": "S0095",
+      "project_id": "0080",
+      "contract_id": "C0080",
+      "month": "2026-09",
+      "name": "清峦项目组11",
+      "amount_cny": 930.0,
+      "hours": 2.25,
+      "count": 1,
+      "source_sheet": "合作方回执",
+      "source_row": 29
+    },
+    {
+      "source_id": "S0099",
+      "project_id": "7082",
+      "contract_id": "C0082",
+      "month": "2026-09",
+      "name": "清峦项目组13",
+      "amount_cny": 944.5,
+      "hours": 2.75,
+      "count": 3,
+      "source_sheet": "合作方回执",
+      "source_row": 30
+    },
+    {
+      "source_id": "S0103",
+      "project_id": "0078",
+      "contract_id": "C0078",
+      "month": "2026-09",
+      "name": "清峦项目组09",
+      "amount_cny": 915.5,
+      "hours": 1.75,
+      "count": 3,
+      "source_sheet": "合作方回执",
+      "source_row": 31
+    },
+    {
+      "source_id": "S0107",
+      "project_id": null,
+      "contract_id": null,
+      "month": "2026-09",
+      "name": "清峦项目组08",
+      "amount_cny": 1111.25,
+      "hours": 1.0,
+      "count": 2,
+      "source_sheet": "合作方回执",
+      "source_row": 32
+    },
+    {
+      "source_id": "S0111",
+      "project_id": "0120",
+      "contract_id": "C0120",
+      "month": "2026-09",
+      "name": "清峦项目组09",
+      "amount_cny": 0.01,
+      "hours": 0.25,
+      "count": 1,
+      "source_sheet": "合作方回执",
+      "source_row": 33
+    },
+    {
+      "source_id": "S0115",
+      "project_id": "0010",
+      "contract_id": "C0010",
+      "month": "2026-09",
+      "name": "清峦项目组11",
+      "amount_cny": 422.5,
+      "hours": 3.5,
+      "count": 3,
+      "source_sheet": "合作方回执",
+      "source_row": 34
+    },
+    {
+      "source_id": "S0119",
+      "project_id": "0076",
+      "contract_id": "C0076",
+      "month": "2026-09",
+      "name": "清峦项目组07",
+      "amount_cny": 901.0,
+      "hours": 1.25,
+      "count": 1,
+      "source_sheet": "合作方回执",
+      "source_row": 35
+    },
+    {
+      "source_id": "S0123",
+      "project_id": "0035",
+      "contract_id": "C0035",
+      "month": "2026-09",
+      "name": "清峦项目组08",
+      "amount_cny": 603.75,
+      "hours": 2.25,
+      "count": 4,
+      "source_sheet": "合作方回执",
+      "source_row": 36
+    },
+    {
+      "source_id": "S0127",
+      "project_id": "0073",
+      "contract_id": "C0073",
+      "month": "2026-09",
+      "name": "清峦项目组04",
+      "amount_cny": 992.75,
+      "hours": 4.75,
+      "count": 2,
+      "source_sheet": "合作方回执",
+      "source_row": 37
+    },
+    {
+      "source_id": "S0131",
+      "project_id": "0005",
+      "contract_id": "C0005",
+      "month": "2026-09",
+      "name": "清峦项目组06",
+      "amount_cny": 386.25,
+      "hours": 2.25,
+      "count": 2,
+      "source_sheet": "合作方回执",
+      "source_row": 38
+    },
+    {
+      "source_id": "S0135",
+      "project_id": "0079",
+      "contract_id": "C0079",
+      "month": "2026-09",
+      "name": "清峦项目组10",
+      "amount_cny": 1036.25,
+      "hours": 2.5,
+      "count": 4,
+      "source_sheet": "合作方回执",
+      "source_row": 39
+    },
+    {
+      "source_id": "S0139",
+      "project_id": null,
+      "contract_id": null,
+      "month": "2026-09",
+      "name": "清峦项目组10",
+      "amount_cny": 1125.75,
+      "hours": 1.5,
+      "count": 4,
+      "source_sheet": "合作方回执",
+      "source_row": 40
+    },
+    {
+      "source_id": "S0143",
+      "project_id": "0026",
+      "contract_id": "C0026",
+      "month": "2026-09",
+      "name": "清峦项目组13",
+      "amount_cny": 538.5,
+      "hours": 3.75,
+      "count": 3,
+      "source_sheet": "合作方回执",
+      "source_row": 41
+    },
+    {
+      "source_id": "S0004",
+      "project_id": "0056",
+      "contract_id": "C0056",
+      "month": "2026-09",
+      "name": "清峦项目组01",
+      "amount_cny": 756.0,
+      "hours": 3.75,
+      "count": 1,
+      "source_sheet": "补录数据",
+      "source_row": 9
+    },
+    {
+      "source_id": "S0008",
+      "project_id": "0038",
+      "contract_id": "C0038",
+      "month": "2026-09",
+      "name": "清峦项目组11",
+      "amount_cny": 625.5,
+      "hours": 3.0,
+      "count": 3,
+      "source_sheet": "补录数据",
+      "source_row": 10
+    },
+    {
+      "source_id": "S0012",
+      "project_id": "0003",
+      "contract_id": "C0003",
+      "month": "2026-09",
+      "name": "清峦项目组04",
+      "amount_cny": 371.75,
+      "hours": 1.75,
+      "count": 4,
+      "source_sheet": "补录数据",
+      "source_row": 11
+    },
+    {
+      "source_id": "S0016",
+      "project_id": "0053",
+      "contract_id": "C0053",
+      "month": "2026-09",
+      "name": "清峦项目组12",
+      "amount_cny": 734.25,
+      "hours": 3.0,
+      "count": 2,
+      "source_sheet": "补录数据",
+      "source_row": 12
+    },
+    {
+      "source_id": "S0020",
+      "project_id": "0031",
+      "contract_id": "C0031",
+      "month": "2026-09",
+      "name": "清峦项目组04",
+      "amount_cny": 574.75,
+      "hours": 1.25,
+      "count": 4,
+      "source_sheet": "补录数据",
+      "source_row": 13
+    },
+    {
+      "source_id": "S0024",
+      "project_id": "0109",
+      "contract_id": "C0109",
+      "month": "2026-08",
+      "name": "清峦项目组12",
+      "amount_cny": 1140.25,
+      "hours": 2.0,
+      "count": 2,
+      "source_sheet": "补录数据",
+      "source_row": 14
+    },
+    {
+      "source_id": "S0028",
+      "project_id": "8096",
+      "contract_id": "C0096",
+      "month": "2026-09",
+      "name": "清峦项目组13",
+      "amount_cny": 1159.5,
+      "hours": 3.0,
+      "count": 1,
+      "source_sheet": "补录数据",
+      "source_row": 15
+    },
+    {
+      "source_id": "S0032",
+      "project_id": "0030",
+      "contract_id": "C0030",
+      "month": "2026-08",
+      "name": "清峦项目组03",
+      "amount_cny": 1362.0,
+      "hours": 4.5,
+      "count": 3,
+      "source_sheet": "补录数据",
+      "source_row": 16
+    },
+    {
+      "source_id": "S0036",
+      "project_id": "0075",
+      "contract_id": "C0075",
+      "month": "2026-09",
+      "name": "清峦项目组06",
+      "amount_cny": 1007.25,
+      "hours": 1.5,
+      "count": 4,
+      "source_sheet": "补录数据",
+      "source_row": 17
+    },
+    {
+      "source_id": "S0040",
+      "project_id": "0068",
+      "contract_id": "C0068",
+      "month": "2026-09",
+      "name": "清峦项目组13",
+      "amount_cny": 843.0,
+      "hours": 3.0,
+      "count": 1,
+      "source_sheet": "补录数据",
+      "source_row": 18
+    },
+    {
+      "source_id": "S0044",
+      "project_id": "0012",
+      "contract_id": "C0012",
+      "month": "2026-09",
+      "name": "清峦项目组13",
+      "amount_cny": 437.0,
+      "hours": 4.0,
+      "count": 1,
+      "source_sheet": "补录数据",
+      "source_row": 19
+    },
+    {
+      "source_id": "S0048",
+      "project_id": "0066",
+      "contract_id": "C0066",
+      "month": "2026-09",
+      "name": "清峦项目组11",
+      "amount_cny": 828.5,
+      "hours": 2.5,
+      "count": 3,
+      "source_sheet": "补录数据",
+      "source_row": 20
+    },
+    {
+      "source_id": "S0052",
+      "project_id": null,
+      "contract_id": null,
+      "month": "2026-09",
+      "name": "清峦项目组11",
+      "amount_cny": 1133.0,
+      "hours": 1.75,
+      "count": 1,
+      "source_sheet": "补录数据",
+      "source_row": 21
+    },
+    {
+      "source_id": "S0056",
+      "project_id": "0054",
+      "contract_id": "C0054",
+      "month": "2026-09",
+      "name": "清峦项目组13",
+      "amount_cny": 741.5,
+      "hours": 3.25,
+      "count": 3,
+      "source_sheet": "补录数据",
+      "source_row": 22
+    },
+    {
+      "source_id": "S0060",
+      "project_id": "8095",
+      "contract_id": "C0095",
+      "month": "2026-09",
+      "name": "清峦项目组12",
+      "amount_cny": 1152.25,
+      "hours": 2.75,
+      "count": 4,
+      "source_sheet": "补录数据",
+      "source_row": 23
+    },
+    {
+      "source_id": "S0064",
+      "project_id": "0077",
+      "contract_id": "C0077",
+      "month": "2026-09",
+      "name": "清峦项目组08",
+      "amount_cny": 908.25,
+      "hours": 1.5,
+      "count": 2,
+      "source_sheet": "补录数据",
+      "source_row": 24
+    },
+    {
+      "source_id": "S0068",
+      "project_id": "0023",
+      "contract_id": "C0023",
+      "month": "2026-09",
+      "name": "清峦项目组10",
+      "amount_cny": 516.75,
+      "hours": 3.0,
+      "count": 4,
+      "source_sheet": "补录数据",
+      "source_row": 25
+    },
+    {
+      "source_id": "S0072",
+      "project_id": "0006",
+      "contract_id": "C0006",
+      "month": "2026-08",
+      "name": "清峦项目组07",
+      "amount_cny": 1188.0,
+      "hours": 6.0,
+      "count": 3,
+      "source_sheet": "补录数据",
+      "source_row": 26
+    },
+    {
+      "source_id": "S0076",
+      "project_id": "0076",
+      "contract_id": "C0076",
+      "month": "2026-09",
+      "name": "清峦项目组07",
+      "amount_cny": 1014.5,
+      "hours": 1.75,
+      "count": 1,
+      "source_sheet": "补录数据",
+      "source_row": 27
+    },
+    {
+      "source_id": "S0080",
+      "project_id": "0039",
+      "contract_id": "C0039",
+      "month": "2026-09",
+      "name": "清峦项目组12",
+      "amount_cny": 632.75,
+      "hours": 3.25,
+      "count": 4,
+      "source_sheet": "补录数据",
+      "source_row": 28
+    },
+    {
+      "source_id": "S0084",
+      "project_id": "0003",
+      "contract_id": "C0003",
+      "month": "2026-08",
+      "name": "清峦项目组04",
+      "amount_cny": 1166.25,
+      "hours": 5.25,
+      "count": 4,
+      "source_sheet": "补录数据",
+      "source_row": 29
+    },
+    {
+      "source_id": "S0088",
+      "project_id": "0067",
+      "contract_id": "C0067",
+      "month": "2026-09",
+      "name": "清峦项目组12",
+      "amount_cny": 835.75,
+      "hours": 2.75,
+      "count": 4,
+      "source_sheet": "补录数据",
+      "source_row": 30
+    },
+    {
+      "source_id": "S0092",
+      "project_id": "0114",
+      "contract_id": "C0114",
+      "month": "2026-08",
+      "name": "清峦项目组03",
+      "amount_cny": 1176.5,
+      "hours": 3.25,
+      "count": 3,
+      "source_sheet": "补录数据",
+      "source_row": 31
+    },
+    {
+      "source_id": "S0096",
+      "project_id": "0020",
+      "contract_id": "C0020",
+      "month": "2026-09",
+      "name": "清峦项目组07",
+      "amount_cny": 495.0,
+      "hours": 2.25,
+      "count": 1,
+      "source_sheet": "补录数据",
+      "source_row": 32
+    },
+    {
+      "source_id": "S0100",
+      "project_id": "0006",
+      "contract_id": "C0006",
+      "month": "2026-09",
+      "name": "清峦项目组07",
+      "amount_cny": 393.5,
+      "hours": 2.5,
+      "count": 3,
+      "source_sheet": "补录数据",
+      "source_row": 33
+    },
+    {
+      "source_id": "S0104",
+      "project_id": "0021",
+      "contract_id": "C0021",
+      "month": "2026-08",
+      "name": "清峦项目组08",
+      "amount_cny": 1296.75,
+      "hours": 6.0,
+      "count": 2,
+      "source_sheet": "补录数据",
+      "source_row": 34
+    },
+    {
+      "source_id": "S0108",
+      "project_id": null,
+      "contract_id": null,
+      "month": "2026-09",
+      "name": "清峦项目组06",
+      "amount_cny": 1096.75,
+      "hours": 4.25,
+      "count": 4,
+      "source_sheet": "补录数据",
+      "source_row": 35
+    },
+    {
+      "source_id": "S0112",
+      "project_id": "8094",
+      "contract_id": "C0094",
+      "month": "2026-09",
+      "name": "清峦项目组11",
+      "amount_cny": 1145.0,
+      "hours": 2.5,
+      "count": 3,
+      "source_sheet": "补录数据",
+      "source_row": 36
+    },
+    {
+      "source_id": "S0116",
+      "project_id": "0065",
+      "contract_id": "C0065",
+      "month": "2026-09",
+      "name": "清峦项目组10",
+      "amount_cny": 821.25,
+      "hours": 2.25,
+      "count": 2,
+      "source_sheet": "补录数据",
+      "source_row": 37
+    },
+    {
+      "source_id": "S0120",
+      "project_id": "0024",
+      "contract_id": "C0024",
+      "month": "2026-09",
+      "name": "清峦项目组11",
+      "amount_cny": 524.0,
+      "hours": 3.25,
+      "count": 1,
+      "source_sheet": "补录数据",
+      "source_row": 38
+    },
+    {
+      "source_id": "S0124",
+      "project_id": "0072",
+      "contract_id": "C0072",
+      "month": "2026-09",
+      "name": "清峦项目组03",
+      "amount_cny": 872.0,
+      "hours": 4.0,
+      "count": 1,
+      "source_sheet": "补录数据",
+      "source_row": 39
+    },
+    {
+      "source_id": "S0128",
+      "project_id": "0007",
+      "contract_id": "C0007",
+      "month": "2026-09",
+      "name": "清峦项目组08",
+      "amount_cny": 400.75,
+      "hours": 2.75,
+      "count": 4,
+      "source_sheet": "补录数据",
+      "source_row": 40
+    },
+    {
+      "source_id": "S0132",
+      "project_id": "0032",
+      "contract_id": "C0032",
+      "month": "2026-09",
+      "name": "清峦项目组05",
+      "amount_cny": 582.0,
+      "hours": 1.5,
+      "count": 1,
+      "source_sheet": "补录数据",
+      "source_row": 41
+    },
+    {
+      "source_id": "S0136",
+      "project_id": "0071",
+      "contract_id": "C0071",
+      "month": "2026-09",
+      "name": "清峦项目组02",
+      "amount_cny": 978.25,
+      "hours": 4.25,
+      "count": 4,
+      "source_sheet": "补录数据",
+      "source_row": 42
+    },
+    {
+      "source_id": "S0140",
+      "project_id": "0017",
+      "contract_id": "C0017",
+      "month": "2026-09",
+      "name": "清峦项目组04",
+      "amount_cny": 473.25,
+      "hours": 1.5,
+      "count": 2,
+      "source_sheet": "补录数据",
+      "source_row": 43
+    },
+    {
+      "source_id": "S0144",
+      "project_id": "0077",
+      "contract_id": "C0077",
+      "month": "2026-09",
+      "name": "清峦项目组08",
+      "amount_cny": 1021.75,
+      "hours": 2.0,
+      "count": 2,
+      "source_sheet": "补录数据",
+      "source_row": 44
+    }
+  ],
+  "edges": [
+    {
+      "target_id": "T0001",
+      "source_id": "S0051",
+      "match_basis": "project_month"
+    },
+    {
+      "target_id": "T0002",
+      "source_id": "S0097",
+      "match_basis": "project_month"
+    },
+    {
+      "target_id": "T0003",
+      "source_id": "S0012",
+      "match_basis": "project_month"
+    },
+    {
+      "target_id": "T0004",
+      "source_id": "S0013",
+      "match_basis": "project_month"
+    },
+    {
+      "target_id": "T0005",
+      "source_id": "S0131",
+      "match_basis": "project_month"
+    },
+    {
+      "target_id": "T0006",
+      "source_id": "S0100",
+      "match_basis": "project_month"
+    },
+    {
+      "target_id": "T0007",
+      "source_id": "S0128",
+      "match_basis": "project_month"
+    },
+    {
+      "target_id": "T0008",
+      "source_id": "S0134",
+      "match_basis": "project_month"
+    },
+    {
+      "target_id": "T0009",
+      "source_id": "S0011",
+      "match_basis": "project_month"
+    },
+    {
+      "target_id": "T0010",
+      "source_id": "S0115",
+      "match_basis": "project_month"
+    },
+    {
+      "target_id": "T0011",
+      "source_id": "S0101",
+      "match_basis": "project_month"
+    },
+    {
+      "target_id": "T0012",
+      "source_id": "S0044",
+      "match_basis": "project_month"
+    },
+    {
+      "target_id": "T0013",
+      "source_id": "S0003",
+      "match_basis": "project_month"
+    },
+    {
+      "target_id": "T0014",
+      "source_id": "S0061",
+      "match_basis": "project_month"
+    },
+    {
+      "target_id": "T0015",
+      "source_id": "S0002",
+      "match_basis": "project_month"
+    },
+    {
+      "target_id": "T0016",
+      "source_id": "S0069",
+      "match_basis": "project_month"
+    },
+    {
+      "target_id": "T0017",
+      "source_id": "S0140",
+      "match_basis": "project_month"
+    },
+    {
+      "target_id": "T0018",
+      "source_id": "S0007",
+      "match_basis": "project_month"
+    },
+    {
+      "target_id": "T0019",
+      "source_id": "S0093",
+      "match_basis": "project_month"
+    },
+    {
+      "target_id": "T0020",
+      "source_id": "S0096",
+      "match_basis": "project_month"
+    },
+    {
+      "target_id": "T0021",
+      "source_id": "S0054",
+      "match_basis": "project_month"
+    },
+    {
+      "target_id": "T0022",
+      "source_id": "S0023",
+      "match_basis": "project_month"
+    },
+    {
+      "target_id": "T0023",
+      "source_id": "S0068",
+      "match_basis": "project_month"
+    },
+    {
+      "target_id": "T0024",
+      "source_id": "S0120",
+      "match_basis": "project_month"
+    },
+    {
+      "target_id": "T0025",
+      "source_id": "S0053",
+      "match_basis": "project_month"
+    },
+    {
+      "target_id": "T0026",
+      "source_id": "S0143",
+      "match_basis": "project_month"
+    },
+    {
+      "target_id": "T0027",
+      "source_id": "S0005",
+      "match_basis": "project_month"
+    },
+    {
+      "target_id": "T0028",
+      "source_id": "S0039",
+      "match_basis": "project_month"
+    },
+    {
+      "target_id": "T0029",
+      "source_id": "S0121",
+      "match_basis": "project_month"
+    },
+    {
+      "target_id": "T0030",
+      "source_id": "S0087",
+      "match_basis": "project_month"
+    },
+    {
+      "target_id": "T0031",
+      "source_id": "S0020",
+      "match_basis": "project_month"
+    },
+    {
+      "target_id": "T0032",
+      "source_id": "S0132",
+      "match_basis": "project_month"
+    },
+    {
+      "target_id": "T0033",
+      "source_id": "S0133",
+      "match_basis": "project_month"
+    },
+    {
+      "target_id": "T0034",
+      "source_id": "S0146",
+      "match_basis": "project_month"
+    },
+    {
+      "target_id": "T0035",
+      "source_id": "S0123",
+      "match_basis": "project_month"
+    },
+    {
+      "target_id": "T0036",
+      "source_id": "S0109",
+      "match_basis": "project_month"
+    },
+    {
+      "target_id": "T0037",
+      "source_id": "S0025",
+      "match_basis": "project_month"
+    },
+    {
+      "target_id": "T0038",
+      "source_id": "S0008",
+      "match_basis": "project_month"
+    },
+    {
+      "target_id": "T0039",
+      "source_id": "S0080",
+      "match_basis": "project_month"
+    },
+    {
+      "target_id": "T0040",
+      "source_id": "S0045",
+      "match_basis": "project_month"
+    },
+    {
+      "target_id": "T0041",
+      "source_id": "S0059",
+      "match_basis": "project_month"
+    },
+    {
+      "target_id": "T0042",
+      "source_id": "S0022",
+      "match_basis": "project_month"
+    },
+    {
+      "target_id": "T0043",
+      "source_id": "S0029",
+      "match_basis": "project_month"
+    },
+    {
+      "target_id": "T0044",
+      "source_id": "S0066",
+      "match_basis": "project_month"
+    },
+    {
+      "target_id": "T0045",
+      "source_id": "S0074",
+      "match_basis": "project_month"
+    },
+    {
+      "target_id": "T0046",
+      "source_id": "S0110",
+      "match_basis": "project_month"
+    },
+    {
+      "target_id": "T0047",
+      "source_id": "S0027",
+      "match_basis": "project_month"
+    },
+    {
+      "target_id": "T0048",
+      "source_id": "S0125",
+      "match_basis": "project_month"
+    },
+    {
+      "target_id": "T0049",
+      "source_id": "S0047",
+      "match_basis": "project_month"
+    },
+    {
+      "target_id": "T0050",
+      "source_id": "S0113",
+      "match_basis": "project_month"
+    },
+    {
+      "target_id": "T0051",
+      "source_id": "S0006",
+      "match_basis": "project_month"
+    },
+    {
+      "target_id": "T0052",
+      "source_id": "S0145",
+      "match_basis": "project_month"
+    },
+    {
+      "target_id": "T0053",
+      "source_id": "S0016",
+      "match_basis": "project_month"
+    },
+    {
+      "target_id": "T0054",
+      "source_id": "S0056",
+      "match_basis": "project_month"
+    },
+    {
+      "target_id": "T0055",
+      "source_id": "S0055",
+      "match_basis": "project_month"
+    },
+    {
+      "target_id": "T0056",
+      "source_id": "S0004",
+      "match_basis": "project_month"
+    },
+    {
+      "target_id": "T0057",
+      "source_id": "S0091",
+      "match_basis": "project_month"
+    },
+    {
+      "target_id": "T0058",
+      "source_id": "S0050",
+      "match_basis": "project_month"
+    },
+    {
+      "target_id": "T0059",
+      "source_id": "S0026",
+      "match_basis": "project_month"
+    },
+    {
+      "target_id": "T0060",
+      "source_id": "S0021",
+      "match_basis": "project_month"
+    },
+    {
+      "target_id": "T0061",
+      "source_id": "S0083",
+      "match_basis": "project_month"
+    },
+    {
+      "target_id": "T0062",
+      "source_id": "S0105",
+      "match_basis": "project_month"
+    },
+    {
+      "target_id": "T0063",
+      "source_id": "S0098",
+      "match_basis": "project_month"
+    },
+    {
+      "target_id": "T0064",
+      "source_id": "S0137",
+      "match_basis": "project_month"
+    },
+    {
+      "target_id": "T0065",
+      "source_id": "S0116",
+      "match_basis": "project_month"
+    },
+    {
+      "target_id": "T0066",
+      "source_id": "S0048",
+      "match_basis": "project_month"
+    },
+    {
+      "target_id": "T0067",
+      "source_id": "S0088",
+      "match_basis": "project_month"
+    },
+    {
+      "target_id": "T0068",
+      "source_id": "S0040",
+      "match_basis": "project_month"
+    },
+    {
+      "target_id": "T0069",
+      "source_id": "S0070",
+      "match_basis": "project_month"
+    },
+    {
+      "target_id": "T0070",
+      "source_id": "S0117",
+      "match_basis": "project_month"
+    },
+    {
+      "target_id": "T0071",
+      "source_id": "S0086",
+      "match_basis": "project_month"
+    },
+    {
+      "target_id": "T0071",
+      "source_id": "S0136",
+      "match_basis": "project_month"
+    },
+    {
+      "target_id": "T0072",
+      "source_id": "S0038",
+      "match_basis": "project_month"
+    },
+    {
+      "target_id": "T0072",
+      "source_id": "S0124",
+      "match_basis": "project_month"
+    },
+    {
+      "target_id": "T0073",
+      "source_id": "S0010",
+      "match_basis": "project_month"
+    },
+    {
+      "target_id": "T0073",
+      "source_id": "S0127",
+      "match_basis": "project_month"
+    },
+    {
+      "target_id": "T0074",
+      "source_id": "S0014",
+      "match_basis": "project_month"
+    },
+    {
+      "target_id": "T0074",
+      "source_id": "S0073",
+      "match_basis": "project_month"
+    },
+    {
+      "target_id": "T0075",
+      "source_id": "S0036",
+      "match_basis": "project_month"
+    },
+    {
+      "target_id": "T0075",
+      "source_id": "S0067",
+      "match_basis": "project_month"
+    },
+    {
+      "target_id": "T0076",
+      "source_id": "S0076",
+      "match_basis": "project_month"
+    },
+    {
+      "target_id": "T0076",
+      "source_id": "S0119",
+      "match_basis": "project_month"
+    },
+    {
+      "target_id": "T0077",
+      "source_id": "S0064",
+      "match_basis": "project_month"
+    },
+    {
+      "target_id": "T0077",
+      "source_id": "S0144",
+      "match_basis": "project_month"
+    },
+    {
+      "target_id": "T0078",
+      "source_id": "S0015",
+      "match_basis": "project_month"
+    },
+    {
+      "target_id": "T0078",
+      "source_id": "S0103",
+      "match_basis": "project_month"
+    },
+    {
+      "target_id": "T0079",
+      "source_id": "S0075",
+      "match_basis": "project_month"
+    },
+    {
+      "target_id": "T0079",
+      "source_id": "S0135",
+      "match_basis": "project_month"
+    },
+    {
+      "target_id": "T0080",
+      "source_id": "S0095",
+      "match_basis": "project_month"
+    },
+    {
+      "target_id": "T0080",
+      "source_id": "S0129",
+      "match_basis": "project_month"
+    },
+    {
+      "target_id": "T0081",
+      "source_id": "S0049",
+      "match_basis": "contract_month"
+    },
+    {
+      "target_id": "T0082",
+      "source_id": "S0099",
+      "match_basis": "contract_month"
+    },
+    {
+      "target_id": "T0083",
+      "source_id": "S0033",
+      "match_basis": "contract_month"
+    },
+    {
+      "target_id": "T0084",
+      "source_id": "S0142",
+      "match_basis": "contract_month"
+    },
+    {
+      "target_id": "T0085",
+      "source_id": "S0037",
+      "match_basis": "contract_month"
+    },
+    {
+      "target_id": "T0086",
+      "source_id": "S0031",
+      "match_basis": "contract_month"
+    },
+    {
+      "target_id": "T0087",
+      "source_id": "S0122",
+      "match_basis": "contract_month"
+    },
+    {
+      "target_id": "T0088",
+      "source_id": "S0065",
+      "match_basis": "contract_month"
+    },
+    {
+      "target_id": "T0089",
+      "source_id": "S0042",
+      "match_basis": "contract_month"
+    },
+    {
+      "target_id": "T0090",
+      "source_id": "S0041",
+      "match_basis": "contract_month"
+    },
+    {
+      "target_id": "T0091",
+      "source_id": "S0062",
+      "match_basis": "contract_month"
+    },
+    {
+      "target_id": "T0091",
+      "source_id": "S0090",
+      "match_basis": "contract_month"
+    },
+    {
+      "target_id": "T0092",
+      "source_id": "S0046",
+      "match_basis": "contract_month"
+    },
+    {
+      "target_id": "T0092",
+      "source_id": "S0141",
+      "match_basis": "contract_month"
+    },
+    {
+      "target_id": "T0093",
+      "source_id": "S0085",
+      "match_basis": "contract_month"
+    },
+    {
+      "target_id": "T0093",
+      "source_id": "S0130",
+      "match_basis": "contract_month"
+    },
+    {
+      "target_id": "T0094",
+      "source_id": "S0030",
+      "match_basis": "contract_month"
+    },
+    {
+      "target_id": "T0094",
+      "source_id": "S0112",
+      "match_basis": "contract_month"
+    },
+    {
+      "target_id": "T0095",
+      "source_id": "S0060",
+      "match_basis": "contract_month"
+    },
+    {
+      "target_id": "T0095",
+      "source_id": "S0081",
+      "match_basis": "contract_month"
+    },
+    {
+      "target_id": "T0096",
+      "source_id": "S0019",
+      "match_basis": "contract_month"
+    },
+    {
+      "target_id": "T0096",
+      "source_id": "S0028",
+      "match_basis": "contract_month"
+    },
+    {
+      "target_id": "T0115",
+      "source_id": "S0043",
+      "match_basis": "project_month"
+    },
+    {
+      "target_id": "T0116",
+      "source_id": "S0094",
+      "match_basis": "project_month"
+    },
+    {
+      "target_id": "T0117",
+      "source_id": "S0009",
+      "match_basis": "project_month"
+    },
+    {
+      "target_id": "T0118",
+      "source_id": "S0118",
+      "match_basis": "project_month"
+    },
+    {
+      "target_id": "T0119",
+      "source_id": "S0058",
+      "match_basis": "project_month"
+    },
+    {
+      "target_id": "T0120",
+      "source_id": "S0111",
+      "match_basis": "project_month"
+    }
+  ],
+  "unmatched": [
+    {
+      "side": "target",
+      "record_id": "T0097",
+      "reason": "no_match"
+    },
+    {
+      "side": "target",
+      "record_id": "T0098",
+      "reason": "no_match"
+    },
+    {
+      "side": "target",
+      "record_id": "T0099",
+      "reason": "no_match"
+    },
+    {
+      "side": "target",
+      "record_id": "T0100",
+      "reason": "no_match"
+    },
+    {
+      "side": "target",
+      "record_id": "T0101",
+      "reason": "no_match"
+    },
+    {
+      "side": "target",
+      "record_id": "T0102",
+      "reason": "no_match"
+    },
+    {
+      "side": "target",
+      "record_id": "T0103",
+      "reason": "no_key"
+    },
+    {
+      "side": "target",
+      "record_id": "T0104",
+      "reason": "no_key"
+    },
+    {
+      "side": "target",
+      "record_id": "T0105",
+      "reason": "no_key"
+    },
+    {
+      "side": "target",
+      "record_id": "T0106",
+      "reason": "no_key"
+    },
+    {
+      "side": "target",
+      "record_id": "T0107",
+      "reason": "no_key"
+    },
+    {
+      "side": "target",
+      "record_id": "T0108",
+      "reason": "no_key"
+    },
+    {
+      "side": "target",
+      "record_id": "T0109",
+      "reason": "no_match"
+    },
+    {
+      "side": "target",
+      "record_id": "T0110",
+      "reason": "no_match"
+    },
+    {
+      "side": "target",
+      "record_id": "T0111",
+      "reason": "no_match"
+    },
+    {
+      "side": "target",
+      "record_id": "T0112",
+      "reason": "no_match"
+    },
+    {
+      "side": "target",
+      "record_id": "T0113",
+      "reason": "no_match"
+    },
+    {
+      "side": "target",
+      "record_id": "T0114",
+      "reason": "no_match"
+    },
+    {
+      "side": "source",
+      "record_id": "S0001",
+      "reason": "unused_source"
+    },
+    {
+      "side": "source",
+      "record_id": "S0017",
+      "reason": "unused_source"
+    },
+    {
+      "side": "source",
+      "record_id": "S0057",
+      "reason": "unused_source"
+    },
+    {
+      "side": "source",
+      "record_id": "S0077",
+      "reason": "unused_source"
+    },
+    {
+      "side": "source",
+      "record_id": "S0089",
+      "reason": "unused_source"
+    },
+    {
+      "side": "source",
+      "record_id": "S0018",
+      "reason": "unused_source"
+    },
+    {
+      "side": "source",
+      "record_id": "S0034",
+      "reason": "unused_source"
+    },
+    {
+      "side": "source",
+      "record_id": "S0078",
+      "reason": "unused_source"
+    },
+    {
+      "side": "source",
+      "record_id": "S0082",
+      "reason": "unused_source"
+    },
+    {
+      "side": "source",
+      "record_id": "S0102",
+      "reason": "unused_source"
+    },
+    {
+      "side": "source",
+      "record_id": "S0106",
+      "reason": "unused_source"
+    },
+    {
+      "side": "source",
+      "record_id": "S0114",
+      "reason": "unused_source"
+    },
+    {
+      "side": "source",
+      "record_id": "S0126",
+      "reason": "unused_source"
+    },
+    {
+      "side": "source",
+      "record_id": "S0138",
+      "reason": "unused_source"
+    },
+    {
+      "side": "source",
+      "record_id": "S0035",
+      "reason": "unused_source"
+    },
+    {
+      "side": "source",
+      "record_id": "S0063",
+      "reason": "unused_source"
+    },
+    {
+      "side": "source",
+      "record_id": "S0071",
+      "reason": "unused_source"
+    },
+    {
+      "side": "source",
+      "record_id": "S0079",
+      "reason": "unused_source"
+    },
+    {
+      "side": "source",
+      "record_id": "S0107",
+      "reason": "unused_source"
+    },
+    {
+      "side": "source",
+      "record_id": "S0139",
+      "reason": "unused_source"
+    },
+    {
+      "side": "source",
+      "record_id": "S0024",
+      "reason": "unused_source"
+    },
+    {
+      "side": "source",
+      "record_id": "S0032",
+      "reason": "unused_source"
+    },
+    {
+      "side": "source",
+      "record_id": "S0052",
+      "reason": "unused_source"
+    },
+    {
+      "side": "source",
+      "record_id": "S0072",
+      "reason": "unused_source"
+    },
+    {
+      "side": "source",
+      "record_id": "S0084",
+      "reason": "unused_source"
+    },
+    {
+      "side": "source",
+      "record_id": "S0092",
+      "reason": "unused_source"
+    },
+    {
+      "side": "source",
+      "record_id": "S0104",
+      "reason": "unused_source"
+    },
+    {
+      "side": "source",
+      "record_id": "S0108",
+      "reason": "unused_source"
+    }
+  ],
+  "counts": {
+    "matched": 86,
+    "one_to_many": 16,
+    "no_match": 12,
+    "no_key": 6
+  },
+  "tolerance": {
+    "amount_cny": 0.01,
+    "hours": 1e-06,
+    "count": 0
+  },
+  "source_verification": "openpyxl positional contract plus raw ZIP/XML semantic header-group discovery; Decimal and Fraction conversions; indexed join versus SQLite JOIN",
+  "limit": "GT established from native inputs before reference, not a model/Harness score or measured difficulty."
+}

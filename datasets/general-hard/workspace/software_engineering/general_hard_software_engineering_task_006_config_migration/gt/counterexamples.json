@@ -1,0 +1,1614 @@
+{
+  "schema": "h046-boundary-oracle/v1",
+  "cases": [
+    {
+      "id": "N01_zero_all",
+      "group": "boundary",
+      "op": "merge",
+      "layers": [
+        {
+          "network": {
+            "timeout_seconds": 30,
+            "retries": 2,
+            "headers": {
+              "x-mode": "default"
+            }
+          },
+          "cache": {
+            "enabled": true
+          },
+          "pipeline": {
+            "workers": 4
+          },
+          "output": {
+            "directory": "out"
+          },
+          "extensions": {
+            "labels": [
+              "a",
+              "b"
+            ],
+            "threshold": 1
+          }
+        },
+        {
+          "timeout_ms": 0,
+          "retry_count": 0,
+          "workers": 0
+        },
+        {}
+      ],
+      "invalid": false,
+      "expected": {
+        "config": {
+          "network": {
+            "timeout_seconds": 0.0,
+            "retries": 0,
+            "headers": {
+              "x-mode": "default"
+            }
+          },
+          "cache": {
+            "enabled": true
+          },
+          "pipeline": {
+            "workers": 0
+          },
+          "output": {
+            "directory": "out"
+          },
+          "extensions": {
+            "labels": [
+              "a",
+              "b"
+            ],
+            "threshold": 1
+          },
+          "config_version": 2
+        },
+        "sources": {
+          "/config_version": {
+            "layer": "system",
+            "source_path": null
+          },
+          "/network/timeout_seconds": {
+            "layer": "project",
+            "source_path": "/timeout_ms"
+          },
+          "/network/retries": {
+            "layer": "project",
+            "source_path": "/retry_count"
+          },
+          "/cache/enabled": {
+            "layer": "defaults",
+            "source_path": "/cache/enabled"
+          },
+          "/pipeline/workers": {
+            "layer": "project",
+            "source_path": "/workers"
+          },
+          "/output/directory": {
+            "layer": "defaults",
+            "source_path": "/output/directory"
+          },
+          "/extensions/labels": {
+            "layer": "defaults",
+            "source_path": "/extensions/labels"
+          },
+          "/extensions/threshold": {
+            "layer": "defaults",
+            "source_path": "/extensions/threshold"
+          },
+          "/network/headers/x-mode": {
+            "layer": "defaults",
+            "source_path": "/network/headers/x-mode"
+          }
+        },
+        "migrations": [
+          {
+            "layer": "project",
+            "from": "/timeout_ms",
+            "to": "/network/timeout_seconds",
+            "input": 0,
+            "action": "migrated",
+            "output": 0.0
+          },
+          {
+            "layer": "project",
+            "from": "/retry_count",
+            "to": "/network/retries",
+            "input": 0,
+            "action": "migrated",
+            "output": 0
+          },
+          {
+            "layer": "project",
+            "from": "/workers",
+            "to": "/pipeline/workers",
+            "input": 0,
+            "action": "migrated",
+            "output": 0
+          }
+        ]
+      }
+    },
+    {
+      "id": "N02_false_empty_null",
+      "group": "boundary",
+      "op": "merge",
+      "layers": [
+        {
+          "network": {
+            "timeout_seconds": 30,
+            "retries": 2,
+            "headers": {
+              "x-mode": "default"
+            }
+          },
+          "cache": {
+            "enabled": true
+          },
+          "pipeline": {
+            "workers": 4
+          },
+          "output": {
+            "directory": "out"
+          },
+          "extensions": {
+            "labels": [
+              "a",
+              "b"
+            ],
+            "threshold": 1
+          }
+        },
+        {},
+        {
+          "cache_enabled": false,
+          "output_dir": "",
+          "network": {
+            "retries": null
+          }
+        }
+      ],
+      "invalid": false,
+      "expected": {
+        "config": {
+          "network": {
+            "timeout_seconds": 30,
+            "retries": null,
+            "headers": {
+              "x-mode": "default"
+            }
+          },
+          "cache": {
+            "enabled": false
+          },
+          "pipeline": {
+            "workers": 4
+          },
+          "output": {
+            "directory": ""
+          },
+          "extensions": {
+            "labels": [
+              "a",
+              "b"
+            ],
+            "threshold": 1
+          },
+          "config_version": 2
+        },
+        "sources": {
+          "/config_version": {
+            "layer": "system",
+            "source_path": null
+          },
+          "/network/timeout_seconds": {
+            "layer": "defaults",
+            "source_path": "/network/timeout_seconds"
+          },
+          "/network/retries": {
+            "layer": "user",
+            "source_path": "/network/retries"
+          },
+          "/cache/enabled": {
+            "layer": "user",
+            "source_path": "/cache_enabled"
+          },
+          "/pipeline/workers": {
+            "layer": "defaults",
+            "source_path": "/pipeline/workers"
+          },
+          "/output/directory": {
+            "layer": "user",
+            "source_path": "/output_dir"
+          },
+          "/extensions/labels": {
+            "layer": "defaults",
+            "source_path": "/extensions/labels"
+          },
+          "/extensions/threshold": {
+            "layer": "defaults",
+            "source_path": "/extensions/threshold"
+          },
+          "/network/headers/x-mode": {
+            "layer": "defaults",
+            "source_path": "/network/headers/x-mode"
+          }
+        },
+        "migrations": [
+          {
+            "layer": "user",
+            "from": "/cache_enabled",
+            "to": "/cache/enabled",
+            "input": false,
+            "action": "migrated",
+            "output": false
+          },
+          {
+            "layer": "user",
+            "from": "/output_dir",
+            "to": "/output/directory",
+            "input": "",
+            "action": "migrated",
+            "output": ""
+          }
+        ]
+      }
+    },
+    {
+      "id": "N03_explicit_null_alias",
+      "group": "boundary",
+      "op": "merge",
+      "layers": [
+        {
+          "network": {
+            "timeout_seconds": 30,
+            "retries": 2,
+            "headers": {
+              "x-mode": "default"
+            }
+          },
+          "cache": {
+            "enabled": true
+          },
+          "pipeline": {
+            "workers": 4
+          },
+          "output": {
+            "directory": "out"
+          },
+          "extensions": {
+            "labels": [
+              "a",
+              "b"
+            ],
+            "threshold": 1
+          }
+        },
+        {
+          "timeout_ms": null,
+          "cache_enabled": null,
+          "output_dir": null
+        },
+        {}
+      ],
+      "invalid": false,
+      "expected": {
+        "config": {
+          "network": {
+            "timeout_seconds": null,
+            "retries": 2,
+            "headers": {
+              "x-mode": "default"
+            }
+          },
+          "cache": {
+            "enabled": null
+          },
+          "pipeline": {
+            "workers": 4
+          },
+          "output": {
+            "directory": null
+          },
+          "extensions": {
+            "labels": [
+              "a",
+              "b"
+            ],
+            "threshold": 1
+          },
+          "config_version": 2
+        },
+        "sources": {
+          "/config_version": {
+            "layer": "system",
+            "source_path": null
+          },
+          "/network/timeout_seconds": {
+            "layer": "project",
+            "source_path": "/timeout_ms"
+          },
+          "/network/retries": {
+            "layer": "defaults",
+            "source_path": "/network/retries"
+          },
+          "/cache/enabled": {
+            "layer": "project",
+            "source_path": "/cache_enabled"
+          },
+          "/pipeline/workers": {
+            "layer": "defaults",
+            "source_path": "/pipeline/workers"
+          },
+          "/output/directory": {
+            "layer": "project",
+            "source_path": "/output_dir"
+          },
+          "/extensions/labels": {
+            "layer": "defaults",
+            "source_path": "/extensions/labels"
+          },
+          "/extensions/threshold": {
+            "layer": "defaults",
+            "source_path": "/extensions/threshold"
+          },
+          "/network/headers/x-mode": {
+            "layer": "defaults",
+            "source_path": "/network/headers/x-mode"
+          }
+        },
+        "migrations": [
+          {
+            "layer": "project",
+            "from": "/timeout_ms",
+            "to": "/network/timeout_seconds",
+            "input": null,
+            "action": "migrated",
+            "output": null
+          },
+          {
+            "layer": "project",
+            "from": "/cache_enabled",
+            "to": "/cache/enabled",
+            "input": null,
+            "action": "migrated",
+            "output": null
+          },
+          {
+            "layer": "project",
+            "from": "/output_dir",
+            "to": "/output/directory",
+            "input": null,
+            "action": "migrated",
+            "output": null
+          }
+        ]
+      }
+    },
+    {
+      "id": "N04_new_zero_wins",
+      "group": "boundary",
+      "op": "merge",
+      "layers": [
+        {},
+        {},
+        {
+          "timeout_ms": 9000,
+          "network": {
+            "timeout_seconds": 0
+          },
+          "cache_enabled": true,
+          "cache": {
+            "enabled": false
+          }
+        }
+      ],
+      "invalid": false,
+      "expected": {
+        "config": {
+          "network": {
+            "timeout_seconds": 0
+          },
+          "cache": {
+            "enabled": false
+          },
+          "config_version": 2
+        },
+        "sources": {
+          "/config_version": {
+            "layer": "system",
+            "source_path": null
+          },
+          "/network/timeout_seconds": {
+            "layer": "user",
+            "source_path": "/network/timeout_seconds"
+          },
+          "/cache/enabled": {
+            "layer": "user",
+            "source_path": "/cache/enabled"
+          }
+        },
+        "migrations": [
+          {
+            "layer": "user",
+            "from": "/timeout_ms",
+            "to": "/network/timeout_seconds",
+            "input": 9000,
+            "action": "ignored",
+            "reason": "canonical_present"
+          },
+          {
+            "layer": "user",
+            "from": "/cache_enabled",
+            "to": "/cache/enabled",
+            "input": true,
+            "action": "ignored",
+            "reason": "canonical_present"
+          }
+        ]
+      }
+    },
+    {
+      "id": "N05_ancestor_null_wins",
+      "group": "boundary",
+      "op": "merge",
+      "layers": [
+        {
+          "network": {
+            "timeout_seconds": 30,
+            "retries": 2,
+            "headers": {
+              "x-mode": "default"
+            }
+          },
+          "cache": {
+            "enabled": true
+          },
+          "pipeline": {
+            "workers": 4
+          },
+          "output": {
+            "directory": "out"
+          },
+          "extensions": {
+            "labels": [
+              "a",
+              "b"
+            ],
+            "threshold": 1
+          }
+        },
+        {
+          "network": null,
+          "timeout_ms": 8000,
+          "retry_count": 9
+        },
+        {}
+      ],
+      "invalid": false,
+      "expected": {
+        "config": {
+          "network": null,
+          "cache": {
+            "enabled": true
+          },
+          "pipeline": {
+            "workers": 4
+          },
+          "output": {
+            "directory": "out"
+          },
+          "extensions": {
+            "labels": [
+              "a",
+              "b"
+            ],
+            "threshold": 1
+          },
+          "config_version": 2
+        },
+        "sources": {
+          "/network": {
+            "layer": "project",
+            "source_path": "/network"
+          },
+          "/config_version": {
+            "layer": "system",
+            "source_path": null
+          },
+          "/cache/enabled": {
+            "layer": "defaults",
+            "source_path": "/cache/enabled"
+          },
+          "/pipeline/workers": {
+            "layer": "defaults",
+            "source_path": "/pipeline/workers"
+          },
+          "/output/directory": {
+            "layer": "defaults",
+            "source_path": "/output/directory"
+          },
+          "/extensions/labels": {
+            "layer": "defaults",
+            "source_path": "/extensions/labels"
+          },
+          "/extensions/threshold": {
+            "layer": "defaults",
+            "source_path": "/extensions/threshold"
+          }
+        },
+        "migrations": [
+          {
+            "layer": "project",
+            "from": "/timeout_ms",
+            "to": "/network/timeout_seconds",
+            "input": 8000,
+            "action": "ignored",
+            "reason": "canonical_ancestor"
+          },
+          {
+            "layer": "project",
+            "from": "/retry_count",
+            "to": "/network/retries",
+            "input": 9,
+            "action": "ignored",
+            "reason": "canonical_ancestor"
+          }
+        ]
+      }
+    },
+    {
+      "id": "N06_barrier_no_resurrection",
+      "group": "boundary",
+      "op": "merge",
+      "layers": [
+        {
+          "network": {
+            "timeout_seconds": 30,
+            "retries": 2,
+            "headers": {
+              "x-mode": "default"
+            }
+          },
+          "cache": {
+            "enabled": true
+          },
+          "pipeline": {
+            "workers": 4
+          },
+          "output": {
+            "directory": "out"
+          },
+          "extensions": {
+            "labels": [
+              "a",
+              "b"
+            ],
+            "threshold": 1
+          }
+        },
+        {
+          "network": null
+        },
+        {
+          "network": {
+            "retries": 0
+          }
+        }
+      ],
+      "invalid": false,
+      "expected": {
+        "config": {
+          "network": {
+            "retries": 0
+          },
+          "cache": {
+            "enabled": true
+          },
+          "pipeline": {
+            "workers": 4
+          },
+          "output": {
+            "directory": "out"
+          },
+          "extensions": {
+            "labels": [
+              "a",
+              "b"
+            ],
+            "threshold": 1
+          },
+          "config_version": 2
+        },
+        "sources": {
+          "/config_version": {
+            "layer": "system",
+            "source_path": null
+          },
+          "/cache/enabled": {
+            "layer": "defaults",
+            "source_path": "/cache/enabled"
+          },
+          "/pipeline/workers": {
+            "layer": "defaults",
+            "source_path": "/pipeline/workers"
+          },
+          "/output/directory": {
+            "layer": "defaults",
+            "source_path": "/output/directory"
+          },
+          "/extensions/labels": {
+            "layer": "defaults",
+            "source_path": "/extensions/labels"
+          },
+          "/extensions/threshold": {
+            "layer": "defaults",
+            "source_path": "/extensions/threshold"
+          },
+          "/network/retries": {
+            "layer": "user",
+            "source_path": "/network/retries"
+          }
+        },
+        "migrations": []
+      }
+    },
+    {
+      "id": "N07_empty_map_preserves",
+      "group": "boundary",
+      "op": "merge",
+      "layers": [
+        {
+          "network": {
+            "timeout_seconds": 30,
+            "retries": 2,
+            "headers": {
+              "x-mode": "default"
+            }
+          },
+          "cache": {
+            "enabled": true
+          },
+          "pipeline": {
+            "workers": 4
+          },
+          "output": {
+            "directory": "out"
+          },
+          "extensions": {
+            "labels": [
+              "a",
+              "b"
+            ],
+            "threshold": 1
+          }
+        },
+        {},
+        {
+          "network": {}
+        }
+      ],
+      "invalid": false,
+      "expected": {
+        "config": {
+          "network": {
+            "timeout_seconds": 30,
+            "retries": 2,
+            "headers": {
+              "x-mode": "default"
+            }
+          },
+          "cache": {
+            "enabled": true
+          },
+          "pipeline": {
+            "workers": 4
+          },
+          "output": {
+            "directory": "out"
+          },
+          "extensions": {
+            "labels": [
+              "a",
+              "b"
+            ],
+            "threshold": 1
+          },
+          "config_version": 2
+        },
+        "sources": {
+          "/config_version": {
+            "layer": "system",
+            "source_path": null
+          },
+          "/network/timeout_seconds": {
+            "layer": "defaults",
+            "source_path": "/network/timeout_seconds"
+          },
+          "/network/retries": {
+            "layer": "defaults",
+            "source_path": "/network/retries"
+          },
+          "/cache/enabled": {
+            "layer": "defaults",
+            "source_path": "/cache/enabled"
+          },
+          "/pipeline/workers": {
+            "layer": "defaults",
+            "source_path": "/pipeline/workers"
+          },
+          "/output/directory": {
+            "layer": "defaults",
+            "source_path": "/output/directory"
+          },
+          "/extensions/labels": {
+            "layer": "defaults",
+            "source_path": "/extensions/labels"
+          },
+          "/extensions/threshold": {
+            "layer": "defaults",
+            "source_path": "/extensions/threshold"
+          },
+          "/network/headers/x-mode": {
+            "layer": "defaults",
+            "source_path": "/network/headers/x-mode"
+          }
+        },
+        "migrations": []
+      }
+    },
+    {
+      "id": "N08_unknown_second_migration",
+      "group": "boundary",
+      "op": "repeat_migrate",
+      "layers": [
+        {},
+        {},
+        {
+          "config_version": 1,
+          "workers": 0,
+          "unknown": {
+            "a": 0,
+            "b": false,
+            "c": null,
+            "list": [
+              1,
+              2
+            ]
+          }
+        }
+      ],
+      "invalid": false,
+      "expected": {
+        "config": {
+          "unknown": {
+            "a": 0,
+            "b": false,
+            "c": null,
+            "list": [
+              1,
+              2
+            ]
+          },
+          "pipeline": {
+            "workers": 0
+          },
+          "config_version": 2
+        },
+        "sources": {
+          "/config_version": {
+            "layer": "system",
+            "source_path": null
+          },
+          "/unknown/a": {
+            "layer": "user",
+            "source_path": "/unknown/a"
+          },
+          "/unknown/b": {
+            "layer": "user",
+            "source_path": "/unknown/b"
+          },
+          "/unknown/c": {
+            "layer": "user",
+            "source_path": "/unknown/c"
+          },
+          "/unknown/list": {
+            "layer": "user",
+            "source_path": "/unknown/list"
+          },
+          "/pipeline/workers": {
+            "layer": "user",
+            "source_path": "/workers"
+          }
+        },
+        "migrations": [
+          {
+            "layer": "user",
+            "from": "/workers",
+            "to": "/pipeline/workers",
+            "input": 0,
+            "action": "migrated",
+            "output": 0
+          }
+        ]
+      }
+    },
+    {
+      "id": "N09_merge_already_merged",
+      "group": "boundary",
+      "op": "repeat_merge",
+      "layers": [
+        {
+          "network": {
+            "timeout_seconds": 30,
+            "retries": 2,
+            "headers": {
+              "x-mode": "default"
+            }
+          },
+          "cache": {
+            "enabled": true
+          },
+          "pipeline": {
+            "workers": 4
+          },
+          "output": {
+            "directory": "out"
+          },
+          "extensions": {
+            "labels": [
+              "a",
+              "b"
+            ],
+            "threshold": 1
+          }
+        },
+        {
+          "custom": {
+            "p": 0
+          }
+        },
+        {
+          "network": {
+            "timeout_seconds": 0
+          },
+          "custom": {
+            "q": null
+          }
+        }
+      ],
+      "invalid": false,
+      "expected": {
+        "config": {
+          "network": {
+            "timeout_seconds": 0,
+            "retries": 2,
+            "headers": {
+              "x-mode": "default"
+            }
+          },
+          "cache": {
+            "enabled": true
+          },
+          "pipeline": {
+            "workers": 4
+          },
+          "output": {
+            "directory": "out"
+          },
+          "extensions": {
+            "labels": [
+              "a",
+              "b"
+            ],
+            "threshold": 1
+          },
+          "custom": {
+            "p": 0,
+            "q": null
+          },
+          "config_version": 2
+        },
+        "sources": {
+          "/config_version": {
+            "layer": "system",
+            "source_path": null
+          },
+          "/network/timeout_seconds": {
+            "layer": "user",
+            "source_path": "/network/timeout_seconds"
+          },
+          "/network/retries": {
+            "layer": "defaults",
+            "source_path": "/network/retries"
+          },
+          "/cache/enabled": {
+            "layer": "defaults",
+            "source_path": "/cache/enabled"
+          },
+          "/pipeline/workers": {
+            "layer": "defaults",
+            "source_path": "/pipeline/workers"
+          },
+          "/output/directory": {
+            "layer": "defaults",
+            "source_path": "/output/directory"
+          },
+          "/extensions/labels": {
+            "layer": "defaults",
+            "source_path": "/extensions/labels"
+          },
+          "/extensions/threshold": {
+            "layer": "defaults",
+            "source_path": "/extensions/threshold"
+          },
+          "/custom/p": {
+            "layer": "project",
+            "source_path": "/custom/p"
+          },
+          "/custom/q": {
+            "layer": "user",
+            "source_path": "/custom/q"
+          },
+          "/network/headers/x-mode": {
+            "layer": "defaults",
+            "source_path": "/network/headers/x-mode"
+          }
+        },
+        "migrations": []
+      }
+    },
+    {
+      "id": "N10_input_ownership",
+      "group": "boundary",
+      "op": "defensive_copy",
+      "layers": [
+        {
+          "network": {
+            "timeout_seconds": 30,
+            "retries": 2,
+            "headers": {
+              "x-mode": "default"
+            }
+          },
+          "cache": {
+            "enabled": true
+          },
+          "pipeline": {
+            "workers": 4
+          },
+          "output": {
+            "directory": "out"
+          },
+          "extensions": {
+            "labels": [
+              "a",
+              "b"
+            ],
+            "threshold": 1
+          }
+        },
+        {
+          "unknown": {
+            "deep": [
+              {
+                "x": 1
+              }
+            ]
+          }
+        },
+        {
+          "network": {
+            "headers": {
+              "extra": "user"
+            }
+          }
+        }
+      ],
+      "invalid": false,
+      "expected": {
+        "config": {
+          "network": {
+            "timeout_seconds": 30,
+            "retries": 2,
+            "headers": {
+              "x-mode": "default",
+              "extra": "user"
+            }
+          },
+          "cache": {
+            "enabled": true
+          },
+          "pipeline": {
+            "workers": 4
+          },
+          "output": {
+            "directory": "out"
+          },
+          "extensions": {
+            "labels": [
+              "a",
+              "b"
+            ],
+            "threshold": 1
+          },
+          "unknown": {
+            "deep": [
+              {
+                "x": 1
+              }
+            ]
+          },
+          "config_version": 2
+        },
+        "sources": {
+          "/config_version": {
+            "layer": "system",
+            "source_path": null
+          },
+          "/network/timeout_seconds": {
+            "layer": "defaults",
+            "source_path": "/network/timeout_seconds"
+          },
+          "/network/retries": {
+            "layer": "defaults",
+            "source_path": "/network/retries"
+          },
+          "/cache/enabled": {
+            "layer": "defaults",
+            "source_path": "/cache/enabled"
+          },
+          "/pipeline/workers": {
+            "layer": "defaults",
+            "source_path": "/pipeline/workers"
+          },
+          "/output/directory": {
+            "layer": "defaults",
+            "source_path": "/output/directory"
+          },
+          "/extensions/labels": {
+            "layer": "defaults",
+            "source_path": "/extensions/labels"
+          },
+          "/extensions/threshold": {
+            "layer": "defaults",
+            "source_path": "/extensions/threshold"
+          },
+          "/unknown/deep": {
+            "layer": "project",
+            "source_path": "/unknown/deep"
+          },
+          "/network/headers/x-mode": {
+            "layer": "defaults",
+            "source_path": "/network/headers/x-mode"
+          },
+          "/network/headers/extra": {
+            "layer": "user",
+            "source_path": "/network/headers/extra"
+          }
+        },
+        "migrations": []
+      }
+    },
+    {
+      "id": "N11_sources_legacy",
+      "group": "boundary",
+      "op": "trace",
+      "layers": [
+        {
+          "network": {
+            "timeout_seconds": 30,
+            "retries": 2,
+            "headers": {
+              "x-mode": "default"
+            }
+          },
+          "cache": {
+            "enabled": true
+          },
+          "pipeline": {
+            "workers": 4
+          },
+          "output": {
+            "directory": "out"
+          },
+          "extensions": {
+            "labels": [
+              "a",
+              "b"
+            ],
+            "threshold": 1
+          }
+        },
+        {
+          "timeout_ms": 1250
+        },
+        {
+          "workers": 0,
+          "output_dir": ""
+        }
+      ],
+      "invalid": false,
+      "expected": {
+        "config": {
+          "network": {
+            "timeout_seconds": 1.25,
+            "retries": 2,
+            "headers": {
+              "x-mode": "default"
+            }
+          },
+          "cache": {
+            "enabled": true
+          },
+          "pipeline": {
+            "workers": 0
+          },
+          "output": {
+            "directory": ""
+          },
+          "extensions": {
+            "labels": [
+              "a",
+              "b"
+            ],
+            "threshold": 1
+          },
+          "config_version": 2
+        },
+        "sources": {
+          "/config_version": {
+            "layer": "system",
+            "source_path": null
+          },
+          "/network/timeout_seconds": {
+            "layer": "project",
+            "source_path": "/timeout_ms"
+          },
+          "/network/retries": {
+            "layer": "defaults",
+            "source_path": "/network/retries"
+          },
+          "/cache/enabled": {
+            "layer": "defaults",
+            "source_path": "/cache/enabled"
+          },
+          "/pipeline/workers": {
+            "layer": "user",
+            "source_path": "/workers"
+          },
+          "/output/directory": {
+            "layer": "user",
+            "source_path": "/output_dir"
+          },
+          "/extensions/labels": {
+            "layer": "defaults",
+            "source_path": "/extensions/labels"
+          },
+          "/extensions/threshold": {
+            "layer": "defaults",
+            "source_path": "/extensions/threshold"
+          },
+          "/network/headers/x-mode": {
+            "layer": "defaults",
+            "source_path": "/network/headers/x-mode"
+          }
+        },
+        "migrations": [
+          {
+            "layer": "project",
+            "from": "/timeout_ms",
+            "to": "/network/timeout_seconds",
+            "input": 1250,
+            "action": "migrated",
+            "output": 1.25
+          },
+          {
+            "layer": "user",
+            "from": "/workers",
+            "to": "/pipeline/workers",
+            "input": 0,
+            "action": "migrated",
+            "output": 0
+          },
+          {
+            "layer": "user",
+            "from": "/output_dir",
+            "to": "/output/directory",
+            "input": "",
+            "action": "migrated",
+            "output": ""
+          }
+        ]
+      }
+    },
+    {
+      "id": "N12_sources_ignored",
+      "group": "boundary",
+      "op": "trace",
+      "layers": [
+        {},
+        {
+          "timeout_ms": "obsolete-invalid",
+          "network": {
+            "timeout_seconds": 0
+          }
+        },
+        {
+          "cache": null,
+          "cache_enabled": true
+        }
+      ],
+      "invalid": false,
+      "expected": {
+        "config": {
+          "network": {
+            "timeout_seconds": 0
+          },
+          "cache": null,
+          "config_version": 2
+        },
+        "sources": {
+          "/cache": {
+            "layer": "user",
+            "source_path": "/cache"
+          },
+          "/config_version": {
+            "layer": "system",
+            "source_path": null
+          },
+          "/network/timeout_seconds": {
+            "layer": "project",
+            "source_path": "/network/timeout_seconds"
+          }
+        },
+        "migrations": [
+          {
+            "layer": "project",
+            "from": "/timeout_ms",
+            "to": "/network/timeout_seconds",
+            "input": "obsolete-invalid",
+            "action": "ignored",
+            "reason": "canonical_present"
+          },
+          {
+            "layer": "user",
+            "from": "/cache_enabled",
+            "to": "/cache/enabled",
+            "input": true,
+            "action": "ignored",
+            "reason": "canonical_ancestor"
+          }
+        ]
+      }
+    },
+    {
+      "id": "N13_pointer_escape",
+      "group": "boundary",
+      "op": "trace",
+      "layers": [
+        {
+          "x/y": {
+            "~flag": 0
+          }
+        },
+        {
+          "x/y": {
+            "branch": null
+          }
+        },
+        {
+          "x/y": {
+            "~flag": false
+          },
+          "": {}
+        }
+      ],
+      "invalid": false,
+      "expected": {
+        "config": {
+          "x/y": {
+            "~flag": false,
+            "branch": null
+          },
+          "": {},
+          "config_version": 2
+        },
+        "sources": {
+          "/": {
+            "layer": "user",
+            "source_path": "/"
+          },
+          "/config_version": {
+            "layer": "system",
+            "source_path": null
+          },
+          "/x~1y/~0flag": {
+            "layer": "user",
+            "source_path": "/x~1y/~0flag"
+          },
+          "/x~1y/branch": {
+            "layer": "project",
+            "source_path": "/x~1y/branch"
+          }
+        },
+        "migrations": []
+      }
+    },
+    {
+      "id": "N14_sources_empty",
+      "group": "boundary",
+      "op": "trace",
+      "layers": [
+        {
+          "empty": {}
+        },
+        {
+          "empty": {}
+        },
+        {}
+      ],
+      "invalid": false,
+      "expected": {
+        "config": {
+          "empty": {},
+          "config_version": 2
+        },
+        "sources": {
+          "/empty": {
+            "layer": "project",
+            "source_path": "/empty"
+          },
+          "/config_version": {
+            "layer": "system",
+            "source_path": null
+          }
+        },
+        "migrations": []
+      }
+    },
+    {
+      "id": "N15_unrelated_key",
+      "group": "boundary",
+      "op": "merge",
+      "layers": [
+        {
+          "network": {
+            "timeout_seconds": 30,
+            "retries": 2,
+            "headers": {
+              "x-mode": "default"
+            }
+          },
+          "cache": {
+            "enabled": true
+          },
+          "pipeline": {
+            "workers": 4
+          },
+          "output": {
+            "directory": "out"
+          },
+          "extensions": {
+            "labels": [
+              "a",
+              "b"
+            ],
+            "threshold": 1
+          }
+        },
+        {
+          "experiment-46": {
+            "unknown": [
+              null,
+              false,
+              0,
+              ""
+            ]
+          }
+        },
+        {
+          "network": {
+            "retries": 0
+          }
+        }
+      ],
+      "invalid": false,
+      "expected": {
+        "config": {
+          "network": {
+            "timeout_seconds": 30,
+            "retries": 0,
+            "headers": {
+              "x-mode": "default"
+            }
+          },
+          "cache": {
+            "enabled": true
+          },
+          "pipeline": {
+            "workers": 4
+          },
+          "output": {
+            "directory": "out"
+          },
+          "extensions": {
+            "labels": [
+              "a",
+              "b"
+            ],
+            "threshold": 1
+          },
+          "experiment-46": {
+            "unknown": [
+              null,
+              false,
+              0,
+              ""
+            ]
+          },
+          "config_version": 2
+        },
+        "sources": {
+          "/config_version": {
+            "layer": "system",
+            "source_path": null
+          },
+          "/network/timeout_seconds": {
+            "layer": "defaults",
+            "source_path": "/network/timeout_seconds"
+          },
+          "/network/retries": {
+            "layer": "user",
+            "source_path": "/network/retries"
+          },
+          "/cache/enabled": {
+            "layer": "defaults",
+            "source_path": "/cache/enabled"
+          },
+          "/pipeline/workers": {
+            "layer": "defaults",
+            "source_path": "/pipeline/workers"
+          },
+          "/output/directory": {
+            "layer": "defaults",
+            "source_path": "/output/directory"
+          },
+          "/extensions/labels": {
+            "layer": "defaults",
+            "source_path": "/extensions/labels"
+          },
+          "/extensions/threshold": {
+            "layer": "defaults",
+            "source_path": "/extensions/threshold"
+          },
+          "/experiment-46/unknown": {
+            "layer": "project",
+            "source_path": "/experiment-46/unknown"
+          },
+          "/network/headers/x-mode": {
+            "layer": "defaults",
+            "source_path": "/network/headers/x-mode"
+          }
+        },
+        "migrations": []
+      }
+    },
+    {
+      "id": "N16_known_invalid",
+      "group": "boundary",
+      "op": "merge",
+      "layers": [
+        {
+          "network": {
+            "timeout_seconds": 30,
+            "retries": 2,
+            "headers": {
+              "x-mode": "default"
+            }
+          },
+          "cache": {
+            "enabled": true
+          },
+          "pipeline": {
+            "workers": 4
+          },
+          "output": {
+            "directory": "out"
+          },
+          "extensions": {
+            "labels": [
+              "a",
+              "b"
+            ],
+            "threshold": 1
+          }
+        },
+        {},
+        {
+          "pipeline": {
+            "workers": true
+          }
+        }
+      ],
+      "invalid": true,
+      "expected": {
+        "error": "ValueError"
+      }
+    },
+    {
+      "id": "N17_bad_version",
+      "group": "boundary",
+      "op": "migrate",
+      "layers": [
+        {},
+        {},
+        {
+          "config_version": false
+        }
+      ],
+      "invalid": true,
+      "expected": {
+        "error": "ValueError"
+      }
+    },
+    {
+      "id": "N18_bad_unshadowed_alias",
+      "group": "boundary",
+      "op": "migrate",
+      "layers": [
+        {},
+        {},
+        {
+          "timeout_ms": "1500"
+        }
+      ],
+      "invalid": true,
+      "expected": {
+        "error": "ValueError"
+      }
+    },
+    {
+      "id": "N19_bad_group",
+      "group": "boundary",
+      "op": "merge",
+      "layers": [
+        {},
+        {
+          "network": 0
+        },
+        {}
+      ],
+      "invalid": true,
+      "expected": {
+        "error": "ValueError"
+      }
+    },
+    {
+      "id": "N20_missing_layers",
+      "group": "boundary",
+      "op": "merge",
+      "layers": [
+        null,
+        null,
+        null
+      ],
+      "invalid": false,
+      "expected": {
+        "config": {
+          "config_version": 2
+        },
+        "sources": {
+          "/config_version": {
+            "layer": "system",
+            "source_path": null
+          }
+        },
+        "migrations": []
+      }
+    }
+  ]
+}

@@ -1,0 +1,61 @@
+{
+  "status": "authoring_specs_not_yet_executed",
+  "cases": [
+    {
+      "id": "positional_copy",
+      "expected_failure": "Different source column positions and actual-versus-budget header groups must yield correct fields"
+    },
+    {
+      "id": "wrong_header_group",
+      "expected_failure": "Budget same-name leaf columns must not replace actual data"
+    },
+    {
+      "id": "wrong_money_unit",
+      "expected_failure": "Yuan, thousand yuan and ten-thousand yuan must be converted"
+    },
+    {
+      "id": "minutes_as_hours",
+      "expected_failure": "Minute inputs must be divided by sixty"
+    },
+    {
+      "id": "name_join",
+      "expected_failure": "Repeated project display names must not merge distinct keys"
+    },
+    {
+      "id": "project_fallback",
+      "expected_failure": "Nonblank failed project key must not fall back to contract"
+    },
+    {
+      "id": "nearest_month",
+      "expected_failure": "No cross-period lookup"
+    },
+    {
+      "id": "strip_leading_zero",
+      "expected_failure": "Text 0001 must not match target project 1"
+    },
+    {
+      "id": "first_duplicate",
+      "expected_failure": "One-to-many retains all source IDs and leaves main scalar amounts blank"
+    },
+    {
+      "id": "deduplicate_equal_values",
+      "expected_failure": "T0080 has two valid source rows even with equal metrics"
+    },
+    {
+      "id": "drop_unmatched",
+      "expected_failure": "Keep all eighteen unmatched targets and twenty-eight unused source records"
+    },
+    {
+      "id": "blank_as_zero",
+      "expected_failure": "Preserve missing amount/hours/count separately from real zeros"
+    },
+    {
+      "id": "false_trace",
+      "expected_failure": "Audit must bind actual source and output rows"
+    },
+    {
+      "id": "mutated_input",
+      "expected_failure": "Input hashes must remain unchanged"
+    }
+  ]
+}

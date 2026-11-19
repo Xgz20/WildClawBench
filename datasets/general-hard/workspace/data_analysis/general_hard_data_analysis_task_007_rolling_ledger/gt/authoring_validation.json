@@ -1,0 +1,369 @@
+{
+  "schema_version": "h023-authoring-validation/v1",
+  "status": "AUTHOR_RULES_AND_NATIVE_REFERENCE_VERIFIED",
+  "controls": {
+    "status": "PASS",
+    "total": 23,
+    "counts": {
+      "positive": 5,
+      "negative": 14,
+      "infrastructure": 4
+    },
+    "cases": [
+      {
+        "name": "reference",
+        "status": "PASS",
+        "scores": {
+          "business_correctness": 1.0,
+          "boundary_cases": 1.0,
+          "delivery_integrity": 1.0,
+          "evidence_binding": 1.0,
+          "overall_score": 1.0
+        },
+        "infrastructure_error": null,
+        "workspace_unchanged": true,
+        "elapsed_seconds": 20.75,
+        "kind": "positive"
+      },
+      {
+        "name": "renamed_sheets",
+        "status": "PASS",
+        "scores": {
+          "business_correctness": 1.0,
+          "boundary_cases": 1.0,
+          "delivery_integrity": 1.0,
+          "evidence_binding": 1.0,
+          "overall_score": 1.0
+        },
+        "infrastructure_error": null,
+        "workspace_unchanged": true,
+        "elapsed_seconds": 21.661,
+        "kind": "positive"
+      },
+      {
+        "name": "chinese_headers",
+        "status": "PASS",
+        "scores": {
+          "business_correctness": 1.0,
+          "boundary_cases": 1.0,
+          "delivery_integrity": 1.0,
+          "evidence_binding": 1.0,
+          "overall_score": 1.0
+        },
+        "infrastructure_error": null,
+        "workspace_unchanged": true,
+        "elapsed_seconds": 23.196,
+        "kind": "positive"
+      },
+      {
+        "name": "csv_columns_and_rows_reversed",
+        "status": "PASS",
+        "scores": {
+          "business_correctness": 1.0,
+          "boundary_cases": 1.0,
+          "delivery_integrity": 1.0,
+          "evidence_binding": 1.0,
+          "overall_score": 1.0
+        },
+        "infrastructure_error": null,
+        "workspace_unchanged": true,
+        "elapsed_seconds": 22.313,
+        "kind": "positive"
+      },
+      {
+        "name": "static_correct_values",
+        "status": "PASS",
+        "scores": {
+          "business_correctness": 0.5,
+          "boundary_cases": 0.25,
+          "delivery_integrity": 0.0,
+          "evidence_binding": 1.0,
+          "overall_score": 0.3875
+        },
+        "infrastructure_error": null,
+        "workspace_unchanged": true,
+        "elapsed_seconds": 17.339,
+        "kind": "negative"
+      },
+      {
+        "name": "constant_formula_model",
+        "status": "PASS",
+        "scores": {
+          "business_correctness": 0.5,
+          "boundary_cases": 0.25,
+          "delivery_integrity": 0.0,
+          "evidence_binding": 1.0,
+          "overall_score": 0.3875
+        },
+        "infrastructure_error": null,
+        "workspace_unchanged": true,
+        "elapsed_seconds": 17.643,
+        "kind": "negative"
+      },
+      {
+        "name": "wrong_single_balance",
+        "status": "PASS",
+        "scores": {
+          "business_correctness": 0.999911785462,
+          "boundary_cases": 0.25,
+          "delivery_integrity": 0.0,
+          "evidence_binding": 1.0,
+          "overall_score": 0.662451482004
+        },
+        "infrastructure_error": null,
+        "workspace_unchanged": true,
+        "elapsed_seconds": 21.622,
+        "kind": "negative"
+      },
+      {
+        "name": "physical_source_order",
+        "status": "PASS",
+        "scores": {
+          "business_correctness": 0.999911785462,
+          "boundary_cases": 0.25,
+          "delivery_integrity": 0.0,
+          "evidence_binding": 1.0,
+          "overall_score": 0.662451482004
+        },
+        "infrastructure_error": null,
+        "workspace_unchanged": true,
+        "elapsed_seconds": 20.912,
+        "kind": "negative"
+      },
+      {
+        "name": "cross_customer_carry",
+        "status": "PASS",
+        "scores": {
+          "business_correctness": 0.999823570924,
+          "boundary_cases": 0.25,
+          "delivery_integrity": 0.0,
+          "evidence_binding": 1.0,
+          "overall_score": 0.662402964008
+        },
+        "infrastructure_error": null,
+        "workspace_unchanged": true,
+        "elapsed_seconds": 21.788,
+        "kind": "negative"
+      },
+      {
+        "name": "unknown_bank_as_zero",
+        "status": "PASS",
+        "scores": {
+          "business_correctness": 1.0,
+          "boundary_cases": 0.248055555556,
+          "delivery_integrity": 0.0,
+          "evidence_binding": 1.0,
+          "overall_score": 0.662013888889
+        },
+        "infrastructure_error": null,
+        "workspace_unchanged": true,
+        "elapsed_seconds": 21.801,
+        "kind": "negative"
+      },
+      {
+        "name": "wrong_ageing_bucket",
+        "status": "PASS",
+        "scores": {
+          "business_correctness": 0.998245056197,
+          "boundary_cases": 0.25,
+          "delivery_integrity": 0.0,
+          "evidence_binding": 1.0,
+          "overall_score": 0.661534780908
+        },
+        "infrastructure_error": null,
+        "workspace_unchanged": true,
+        "elapsed_seconds": 21.748,
+        "kind": "negative"
+      },
+      {
+        "name": "exception_missing",
+        "status": "PASS",
+        "scores": {
+          "business_correctness": 0.9,
+          "boundary_cases": 1.0,
+          "delivery_integrity": 0.0,
+          "evidence_binding": 0.2,
+          "overall_score": 0.755
+        },
+        "infrastructure_error": null,
+        "workspace_unchanged": true,
+        "elapsed_seconds": 21.95,
+        "kind": "negative"
+      },
+      {
+        "name": "false_source_locator",
+        "status": "PASS",
+        "scores": {
+          "business_correctness": 1.0,
+          "boundary_cases": 1.0,
+          "delivery_integrity": 0.0,
+          "evidence_binding": 0.994117647059,
+          "overall_score": 0.849705882353
+        },
+        "infrastructure_error": null,
+        "workspace_unchanged": true,
+        "elapsed_seconds": 21.918,
+        "kind": "negative"
+      },
+      {
+        "name": "drop_negative_suspense_cash",
+        "status": "PASS",
+        "scores": {
+          "business_correctness": 0.998015873016,
+          "boundary_cases": 1.0,
+          "delivery_integrity": 0.0,
+          "evidence_binding": 1.0,
+          "overall_score": 0.848908730159
+        },
+        "infrastructure_error": null,
+        "workspace_unchanged": true,
+        "elapsed_seconds": 21.928,
+        "kind": "negative"
+      },
+      {
+        "name": "missing_method",
+        "status": "PASS",
+        "scores": {
+          "business_correctness": 1.0,
+          "boundary_cases": 1.0,
+          "delivery_integrity": 0.0,
+          "evidence_binding": 0.8,
+          "overall_score": 0.84
+        },
+        "infrastructure_error": null,
+        "workspace_unchanged": true,
+        "elapsed_seconds": 22.243,
+        "kind": "negative"
+      },
+      {
+        "name": "forged_fully_identified",
+        "status": "PASS",
+        "scores": {
+          "business_correctness": 1.0,
+          "boundary_cases": 1.0,
+          "delivery_integrity": 0.0,
+          "evidence_binding": 0.9875,
+          "overall_score": 0.849375
+        },
+        "infrastructure_error": null,
+        "workspace_unchanged": true,
+        "elapsed_seconds": 22.027,
+        "kind": "negative"
+      },
+      {
+        "name": "malformed_workbook",
+        "status": "PASS",
+        "scores": {
+          "business_correctness": 0.1,
+          "boundary_cases": 0.0,
+          "delivery_integrity": 0.0,
+          "evidence_binding": 1.0,
+          "overall_score": 0.105
+        },
+        "infrastructure_error": null,
+        "workspace_unchanged": true,
+        "elapsed_seconds": 0.092,
+        "kind": "negative"
+      },
+      {
+        "name": "protected_input_changed",
+        "status": "PASS",
+        "scores": {
+          "business_correctness": 0.5,
+          "boundary_cases": 0.0,
+          "delivery_integrity": 0.0,
+          "evidence_binding": 0.0,
+          "overall_score": 0.275
+        },
+        "infrastructure_error": null,
+        "workspace_unchanged": true,
+        "elapsed_seconds": 5.079,
+        "kind": "negative"
+      },
+      {
+        "name": "missing_gt_is_error",
+        "status": "PASS",
+        "scores": null,
+        "infrastructure_error": {
+          "type": "FileNotFoundError",
+          "message": "[Errno 2] No such file or directory: '/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h023/qa/controls-1793162749677332000/missing_gt_is_error/workspace/gt/source_expected.json'"
+        },
+        "workspace_unchanged": true,
+        "elapsed_seconds": 0.015,
+        "kind": "infrastructure"
+      },
+      {
+        "name": "private_helper_drift_is_error",
+        "status": "PASS",
+        "scores": null,
+        "infrastructure_error": {
+          "type": "ValueError",
+          "message": "H023 private scoring drift ledger_io.py"
+        },
+        "workspace_unchanged": true,
+        "elapsed_seconds": 0.015,
+        "kind": "infrastructure"
+      },
+      {
+        "name": "missing_managed_environment_is_error",
+        "status": "PASS",
+        "scores": null,
+        "infrastructure_error": {
+          "type": "RuntimeError",
+          "message": "H023 missing managed runtime GENERAL_E2E_OFFICE_LOCK"
+        },
+        "workspace_unchanged": true,
+        "elapsed_seconds": 0.052,
+        "kind": "infrastructure"
+      },
+      {
+        "name": "engine_identity_drift_is_error",
+        "status": "PASS",
+        "scores": null,
+        "infrastructure_error": {
+          "type": "OfficeRuntimeError",
+          "message": "OFFICE_EXECUTABLE_DRIFT: /Users/gzx/.cache/codex-runtimes/codex-primary-runtime/dependencies/bin/override/soffice"
+        },
+        "workspace_unchanged": true,
+        "elapsed_seconds": 0.055,
+        "kind": "infrastructure"
+      },
+      {
+        "name": "native_iso_date_encoding",
+        "status": "PASS",
+        "scores": {
+          "business_correctness": 1.0,
+          "boundary_cases": 1.0,
+          "delivery_integrity": 1.0,
+          "evidence_binding": 1.0,
+          "overall_score": 1.0
+        },
+        "infrastructure_error": null,
+        "workspace_unchanged": true,
+        "elapsed_seconds": 22.112,
+        "kind": "positive"
+      }
+    ],
+    "logs": [
+      "run-controls-v2.log",
+      "run-controls-v3.log",
+      "run-controls-v4.log"
+    ],
+    "recovery": "First five controls passed before a disposable constant-formula fixture hit an empty cached-string bug. Resume starts at constant_formula_model; two runtime failures and the native-date positive run separately. Grader/IO/private contract were unchanged across all successful controls. No failed fixture or unrun case counted as PASS."
+  },
+  "native_cases": 4,
+  "native_checks": 33086,
+  "raw_iso_exact_checks": 450,
+  "source_rows_verified": 270,
+  "source_truth_checks": 25422,
+  "detached_core": "0.15.2",
+  "detached_worker_reference": 1.0,
+  "detached_evidence_items": 16,
+  "normal_archived_match": true,
+  "reference_sha256": {
+    "exceptions.csv": "ef8abe1bd3f8dc11d558bfc13aa44cf944be0a49a3da60e87e52c1b27c581a7a",
+    "method.md": "1effb5234edda5fa6e70789493526f093c83d16c143a9a63c494038b5280a7ab",
+    "ledger.xlsx": "1d12ca989f64454b98d91a336b5200cbf085a063576c77e4a041e67ad50772d3"
+  },
+  "limit": "Author acceptance only. Formal registration/MD Worker handled separately; real Harness/model scores, accounting expert prose review and measured L4/discrimination remain absent."
+}

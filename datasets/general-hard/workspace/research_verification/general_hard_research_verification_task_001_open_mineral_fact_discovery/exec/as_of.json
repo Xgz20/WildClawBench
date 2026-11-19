@@ -1,0 +1,11 @@
+{
+  "as_of_inclusive": "2026-09-30",
+  "timezone": "Asia/Shanghai",
+  "subject": "USGS稀土年度资料中的世界矿山产量及储量",
+  "edition_rule": "截止日以前公开的最新年度版及上一年度版，各用截止日以前最新公开修订",
+  "live_discovery_required": true,
+  "answer_urls_provided": false,
+  "search_engine_order_frozen": false,
+  "reserves_statistical_year": "若资料没有明确写出，标记未知，不从报告年或产量年份推断",
+  "world_total_rule": "使用原文世界总数并保留约数/上下界，不由国家行机械相加替代"
+}

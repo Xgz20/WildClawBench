@@ -1,0 +1,88 @@
+{
+  "schema_version": "h029-reference-provenance/v1",
+  "reference_version": "v5",
+  "source_precedes_reference": true,
+  "candidate_answer_used_for_truth": false,
+  "reference_answer_is_oracle": false,
+  "reference_pool_is_non_exhaustive": true,
+  "author_only_reference_not_Harness": true,
+  "human_expert": false,
+  "source_truth": "expected.json + source_review_reconciliation.json + provider_identity_oracle.json",
+  "reference_text_authoring": {
+    "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h029/authoring/reference-text-provenance.json",
+    "sha256": "3e54dd49aee3d1b90b3e313fa5f2296e1d83759d6b0e8eeca96554a1f24a68a3",
+    "non_blind_reference_author_stage_disclosed": true
+  },
+  "native_validation": {
+    "initial_v2": {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h029/qa/native-reference-v2/review.json",
+      "sha256": "51174623beeafa395d857d2ae7d1ed32bffcfd1c78e5f7085be9b9202b3aad4a",
+      "checks": 817,
+      "passed": 815,
+      "failed": 2,
+      "failure": "E03/E04 CL-DEDUP reverse association missing"
+    },
+    "final_v3_delta": {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h029/qa/native-reference-v3/review.json",
+      "sha256": "267ee92fdd39fc55e8a4350aec18ddc679380ad5d1557a46c0c6d7b0e9b8c504",
+      "checks": 21,
+      "passed": 21,
+      "failed": 0,
+      "unchanged_Office_source_date_checks_reused": true
+    },
+    "not_817_plus_817_independent_samples": true,
+    "grader_scores_used_as_evidence": false,
+    "source_B_capture_warning": "S13 independently captured bytes differ from source-A capture; exact snapshots not conflated, content/quote/math separately checked.",
+    "final_v5_delta": {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h029/qa/native-reference-v5/review.json",
+      "sha256": "f20b35e63a1cc3888796fe388d375df292635f822e608994d4e41020255ee036",
+      "checks": 47,
+      "passed": 47,
+      "failed": 0,
+      "scope": "exact locator-only JSON differences, actual source links/documentTitle and unchanged native Office/source/date checks reused; not47 new task samples"
+    }
+  },
+  "visual_validation": {
+    "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h029/qa/reference-visual-review.json",
+    "sha256": "b01dc6abca423968367f09601594bbc5a0a495e31661d6fdf52f203c9de3c74e",
+    "status": "PASS_FINAL_V2_VIEWS_REUSED_FOR_UNCHANGED_V5_OFFICE",
+    "DOCX_pages": 1,
+    "XLSX_sheets": 3,
+    "native_office_unchanged_in_v3": true,
+    "native_office_unchanged_in_v5": true
+  },
+  "repairs": {
+    "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h029/authoring/reference-repairs-v3.json",
+    "sha256": "aeacc6d51bf76d208d006d5f467dda6675de99761342118114ac9550eb79991a",
+    "v1_CJK_render_failure_preserved": true,
+    "v2_known_unknown_reason_display_repaired": true,
+    "v2_claim_relation_failure_preserved": true,
+    "v4_C12_locator": {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h029/authoring/reference-repairs-v4.json",
+      "sha256": "d148d533c3bcc25f88e957c0085cd1c8d15f7d1260abc614d660d57f515b1ddd"
+    },
+    "v5_C07_locator": {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h029/authoring/reference-repairs-v5.json",
+      "sha256": "6a3aa7c901fe6fd49431f3808d8394eaf0b7f2e25e32063397b7f8513e8c4781"
+    }
+  },
+  "artifact_sha256": {
+    "event_matrix.xlsx": "25824b78c636452ac031187e4d1206861e37cbf7975d31fb962b5cc916a9f3e5",
+    "source_ledger.json": "a7819ce0d8e8f60e778589e1ea8a04b3bd0ee33a58f573eac07938a742173db1",
+    "brief.docx": "ecd08651c30ec425c315c898e95e5ed19af438b9e3ca4956ef51740fe99ac458"
+  },
+  "source_ledger": {
+    "sources": 13,
+    "citations": 43,
+    "date_observations": 25,
+    "claims": 16,
+    "selected_events": 4,
+    "products": 3,
+    "trends": 2,
+    "action": 1
+  },
+  "full_commercial_source_copied_to_gt": false,
+  "formal_semantic_score": null,
+  "hybrid_total_score": null,
+  "actual_Harness_run": false
+}

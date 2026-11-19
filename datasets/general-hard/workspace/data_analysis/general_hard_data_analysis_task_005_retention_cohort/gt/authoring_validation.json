@@ -1,0 +1,409 @@
+{
+  "schema_version": "h021-authoring-validation/v1",
+  "status": "AUTHOR_CONTROLS_PASS",
+  "actual_full_grader_controls": 25,
+  "actual_full_grader_kinds": {
+    "positive": 10,
+    "negative": 11,
+    "infrastructure_or_unsupported": 4
+  },
+  "controls": [
+    {
+      "mode": "reference",
+      "status": "EXPECTED_TASK_SCORE",
+      "scores": {
+        "business_correctness": 1.0,
+        "boundary_cases": 1.0,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0,
+        "overall_score": 1.0
+      },
+      "candidate_unchanged": true,
+      "result_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/runtime-cases-v3/reference.json",
+      "result_sha256": "0d5b792691b63195319e9423bb90b8c9b5c02918f3225858ba846a6e5be1c1ec"
+    },
+    {
+      "mode": "native_static_equivalent",
+      "status": "EXPECTED_TASK_SCORE",
+      "scores": {
+        "business_correctness": 1.0,
+        "boundary_cases": 1.0,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0,
+        "overall_score": 1.0
+      },
+      "candidate_unchanged": true,
+      "result_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/runtime-cases-v3/native_static_equivalent.json",
+      "result_sha256": "3f50727d42b2c67c9347ebf3659d56b1a8b14ed78a1a784b9e8751046f9a42c8"
+    },
+    {
+      "mode": "native_scalar_formulas",
+      "status": "EXPECTED_TASK_SCORE",
+      "scores": {
+        "business_correctness": 1.0,
+        "boundary_cases": 1.0,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0,
+        "overall_score": 1.0
+      },
+      "candidate_unchanged": true,
+      "result_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/runtime-cases-v3/native_scalar_formulas.json",
+      "result_sha256": "611f7177b6dd2b2ac658f5ba91f28ec904d81ecb42ffd2664117f7b1607773a6"
+    },
+    {
+      "mode": "all_tables_one_sheet",
+      "status": "EXPECTED_TASK_SCORE",
+      "scores": {
+        "business_correctness": 1.0,
+        "boundary_cases": 1.0,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0,
+        "overall_score": 1.0
+      },
+      "candidate_unchanged": true,
+      "result_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/runtime-cases-v3/all_tables_one_sheet.json",
+      "result_sha256": "43f3120e98447f392f8940ff10de6e460a63b334077daa2847e99415346ccd5d"
+    },
+    {
+      "mode": "epoch1904",
+      "status": "EXPECTED_TASK_SCORE",
+      "scores": {
+        "business_correctness": 1.0,
+        "boundary_cases": 1.0,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0,
+        "overall_score": 1.0
+      },
+      "candidate_unchanged": true,
+      "result_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/runtime-cases-v3/epoch1904.json",
+      "result_sha256": "a21bdf1457c6c211be828c96894f6731239c8c35d363cf4f8400e2d55348957c"
+    },
+    {
+      "mode": "svg_equivalent",
+      "status": "EXPECTED_TASK_SCORE",
+      "scores": {
+        "business_correctness": 1.0,
+        "boundary_cases": 1.0,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0,
+        "overall_score": 1.0
+      },
+      "candidate_unchanged": true,
+      "result_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/runtime-cases-v3/svg_equivalent.json",
+      "result_sha256": "192166939527e54393e71a5a4146f81efe6ed7b01841a8d446d75b301450455b"
+    },
+    {
+      "mode": "canvas_equivalent",
+      "status": "EXPECTED_TASK_SCORE",
+      "scores": {
+        "business_correctness": 1.0,
+        "boundary_cases": 1.0,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0,
+        "overall_score": 1.0
+      },
+      "candidate_unchanged": true,
+      "result_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/runtime-cases-v3/canvas_equivalent.json",
+      "result_sha256": "708c530f49809524def81bbe830d2d793bf52c84996752f5c16e7b6052bc7489"
+    },
+    {
+      "mode": "combined_canvas_equivalent",
+      "status": "EXPECTED_TASK_SCORE",
+      "scores": {
+        "business_correctness": 1.0,
+        "boundary_cases": 1.0,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0,
+        "overall_score": 1.0
+      },
+      "candidate_unchanged": true,
+      "result_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/runtime-cases-v3/combined_canvas_equivalent.json",
+      "result_sha256": "d177a59b9eda58cf1d012e0760759fd76246c06e6e1e74ecfbaa36727f962f69"
+    },
+    {
+      "mode": "redundant_witnesses",
+      "status": "EXPECTED_TASK_SCORE",
+      "scores": {
+        "business_correctness": 1.0,
+        "boundary_cases": 1.0,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0,
+        "overall_score": 1.0
+      },
+      "candidate_unchanged": true,
+      "result_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/runtime-cases-v3/redundant_witnesses.json",
+      "result_sha256": "b0199c4b3dfb6a51a6b911fbdd6016a18f01e6d38e15526d440ae63743c8c5d3"
+    },
+    {
+      "mode": "local_input_fetch",
+      "status": "EXPECTED_TASK_SCORE",
+      "scores": {
+        "business_correctness": 1.0,
+        "boundary_cases": 1.0,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0,
+        "overall_score": 1.0
+      },
+      "candidate_unchanged": true,
+      "result_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/runtime-cases-v3/local_input_fetch.json",
+      "result_sha256": "6f65e8c927ac6ad26f7e720a99802546f5a8f5c6b163eda0279b7f44941b190e"
+    },
+    {
+      "mode": "same_counts_wrong_members",
+      "status": "EXPECTED_TASK_SCORE",
+      "scores": {
+        "business_correctness": 0.999299719888,
+        "boundary_cases": 0.998068181818,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0,
+        "overall_score": 0.999131891393
+      },
+      "candidate_unchanged": true,
+      "result_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/runtime-cases-v3/same_counts_wrong_members.json",
+      "result_sha256": "38e418d4ecc9d02dd42fabc7b0bc4deb9ee4dda78429b2926e16ac8368e9aed3"
+    },
+    {
+      "mode": "duplicate_numerator",
+      "status": "EXPECTED_TASK_SCORE",
+      "scores": {
+        "business_correctness": 0.996,
+        "boundary_cases": 0.975714285714,
+        "delivery_integrity": 0.993333333333,
+        "evidence_binding": 1.0,
+        "overall_score": 0.990728571428
+      },
+      "candidate_unchanged": true,
+      "result_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/runtime-cases-v3/duplicate_numerator.json",
+      "result_sha256": "d85d29bd742878a41ad68b149c5a533589f3c7d5b698af596898b18f6fa04e94"
+    },
+    {
+      "mode": "wrong_formula",
+      "status": "EXPECTED_TASK_SCORE",
+      "scores": {
+        "business_correctness": 0.998,
+        "boundary_cases": 0.975714285714,
+        "delivery_integrity": 0.993333333333,
+        "evidence_binding": 1.0,
+        "overall_score": 0.991828571428
+      },
+      "candidate_unchanged": true,
+      "result_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/runtime-cases-v3/wrong_formula.json",
+      "result_sha256": "2bdc5ce73e19ea831fa39f3355fb6d7ffc79817c1953b9265ef94757d58748e1"
+    },
+    {
+      "mode": "wrong_anomaly_source",
+      "status": "EXPECTED_TASK_SCORE",
+      "scores": {
+        "business_correctness": 1.0,
+        "boundary_cases": 1.0,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 0.916666666667,
+        "overall_score": 0.995833333333
+      },
+      "candidate_unchanged": true,
+      "result_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/runtime-cases-v3/wrong_anomaly_source.json",
+      "result_sha256": "a36cd56bfaf32daa74b338c90c7b9456144c9a5722e4b2f2095d7e52db804a20"
+    },
+    {
+      "mode": "wrong_visible_table",
+      "status": "EXPECTED_TASK_SCORE",
+      "scores": {
+        "business_correctness": 1.0,
+        "boundary_cases": 1.0,
+        "delivery_integrity": 0.986666666667,
+        "evidence_binding": 1.0,
+        "overall_score": 0.998
+      },
+      "candidate_unchanged": true,
+      "result_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/runtime-cases-v3/wrong_visible_table.json",
+      "result_sha256": "e79277ba9c9a73faee4f59ff964fcc0bd3798cb35ef6b6ad92e3daf451ec7185"
+    },
+    {
+      "mode": "shifted_actual_curve",
+      "status": "EXPECTED_TASK_SCORE",
+      "scores": {
+        "business_correctness": 0.86,
+        "boundary_cases": 1.0,
+        "delivery_integrity": 0.86,
+        "evidence_binding": 1.0,
+        "overall_score": 0.902
+      },
+      "candidate_unchanged": true,
+      "result_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/runtime-cases-v3/shifted_actual_curve.json",
+      "result_sha256": "4fdfd645e95ac6263082a735b98fc53ad4252c1572a2aea696ad9dab0f975fb1"
+    },
+    {
+      "mode": "dirty_input",
+      "status": "EXPECTED_TASK_SCORE",
+      "scores": {
+        "business_correctness": 0.5,
+        "boundary_cases": 0.0,
+        "delivery_integrity": 0.0,
+        "evidence_binding": 0.0,
+        "overall_score": 0.275
+      },
+      "candidate_unchanged": true,
+      "result_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/runtime-cases-v3/dirty_input.json",
+      "result_sha256": "559940a70e4f16ba5dca2bf89264881710a53067270760b543144da18af053a0"
+    },
+    {
+      "mode": "missing_report",
+      "status": "EXPECTED_TASK_SCORE",
+      "scores": {
+        "business_correctness": 0.8,
+        "boundary_cases": 0.85,
+        "delivery_integrity": 0.133333333333,
+        "evidence_binding": 0.85,
+        "overall_score": 0.715
+      },
+      "candidate_unchanged": true,
+      "result_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/runtime-cases-v3/missing_report.json",
+      "result_sha256": "be0a59c1f0a9833040bc72da12d1cd40206ed8fab43efac06a5bb3431aacf7d6"
+    },
+    {
+      "mode": "empty_delivery",
+      "status": "EXPECTED_TASK_SCORE",
+      "scores": {
+        "business_correctness": 0.0,
+        "boundary_cases": 0.0,
+        "delivery_integrity": 0.0,
+        "evidence_binding": 0.0,
+        "overall_score": 0.0
+      },
+      "candidate_unchanged": true,
+      "result_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/runtime-cases-v3/empty_delivery.json",
+      "result_sha256": "788975cf77673f5b7697ecad308698e8fbf96bc860bc4ee9abbf31879ff7b6c0"
+    },
+    {
+      "mode": "missing_gt",
+      "status": "EXPECTED_EVALUATION_ERROR",
+      "type": "FileNotFoundError",
+      "error": "[Errno 2] No such file or directory: '/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/runtime-cases-v3/missing_gt/workspace/gt/expected.json'",
+      "score": null,
+      "candidate_unchanged": true,
+      "result_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/runtime-cases-v3/missing_gt.json",
+      "result_sha256": "bf9967a8a32fff4c6ab151a15a1271f3548d2e006992783b7a2d178014483b55"
+    },
+    {
+      "mode": "private_drift",
+      "status": "EXPECTED_EVALUATION_ERROR",
+      "type": "RuntimeError",
+      "error": "H021 private source/helper drift: h021_tables.py",
+      "score": null,
+      "candidate_unchanged": true,
+      "result_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/runtime-cases-v3/private_drift.json",
+      "result_sha256": "a8a213b0f2fa5b18924c794b912d6dfe68c5c545682b7a582a99825a0cde9d29"
+    },
+    {
+      "mode": "missing_html_lock",
+      "status": "EXPECTED_EVALUATION_ERROR",
+      "type": "RuntimeError",
+      "error": "H021 managed scoring runtime missing GENERAL_E2E_HTML_LOCK",
+      "score": null,
+      "candidate_unchanged": true,
+      "result_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/runtime-cases-v3/missing_html_lock.json",
+      "result_sha256": "c7eda335061db6325d5c9a5780b4bc9af0871923a640ba659a0f790984b9d63a"
+    },
+    {
+      "mode": "unsupported_image_chart",
+      "status": "EXPECTED_EVALUATION_ERROR",
+      "type": "HtmlUnsupported",
+      "error": "H021_HTML_CHART_UNSUPPORTED: visible date/rate axes and cohort-series binding unresolved",
+      "score": null,
+      "candidate_unchanged": true,
+      "result_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/runtime-cases-v3/unsupported_image_chart.json",
+      "result_sha256": "c6b8c6d6a0fecab4b5fb9acbea45a678e2bbcc7b019ca05c9b831380491997fa"
+    },
+    {
+      "mode": "received_day_as_business_day",
+      "status": "EXPECTED_TASK_SCORE",
+      "scores": {
+        "business_correctness": 0.5,
+        "boundary_cases": 1.0,
+        "delivery_integrity": 0.933333333333,
+        "evidence_binding": 0.994444444444,
+        "overall_score": 0.714722222222
+      },
+      "candidate_unchanged": true,
+      "result_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/runtime-cases-v4/received_day_as_business_day.json",
+      "result_sha256": "f7946ec5b7a768894ad5864032650b022d7bb7ae1ff8751a93d5d7cb2bf75019"
+    },
+    {
+      "mode": "utc_day_as_business_day",
+      "status": "EXPECTED_TASK_SCORE",
+      "scores": {
+        "business_correctness": 0.5,
+        "boundary_cases": 1.0,
+        "delivery_integrity": 0.933333333333,
+        "evidence_binding": 0.9952,
+        "overall_score": 0.71476
+      },
+      "candidate_unchanged": true,
+      "result_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/runtime-cases-v4/utc_day_as_business_day.json",
+      "result_sha256": "2b6f2d80552297f51b3e61a2addc1a948d6a4d85a77924e74446c9ca3a0d633a"
+    }
+  ],
+  "component_ledger_controls": 30,
+  "actual_html_controls": 9,
+  "actual_native_layout_formula_controls": 5,
+  "planned_counterexamples_covered": {
+    "truncated_first_seen": "ledger:first_activity_window_truncated",
+    "wrong_old_denominator": "ledger:wrong_old_denominator",
+    "duplicate_numerator": "runtime:duplicate_numerator",
+    "keep_conflict_first": "ledger:conflict_first_record_retained",
+    "UTC_day": "runtime:utc_day_as_business_day",
+    "received_day": "runtime:received_day_as_business_day",
+    "event_difference": "ledger:subtract_next_day_totals_instead_of_fixed_base_sets",
+    "deactivation_active": "ledger:deactivation_itself_counted_as_activity",
+    "post_deactivation": "ledger:same_second_or_post_deactivation_active",
+    "failed_or_refund_active": "ledger:refund_zero_failure_active",
+    "erase_real_new_spike": "ledger:erase_real_new_spike",
+    "empty_zero_rate": "ledger:empty_rate_as_zero",
+    "unobserved_zero": "ledger:unobserved_numerator_zero",
+    "same_counts_wrong_users": "runtime:same_counts_wrong_members",
+    "graph_correct_ledger_wrong": "runtime:same_counts_wrong_members",
+    "same_shape_same_reason": "ledger:all_anomalies_same_mechanism",
+    "wrong_physical_row": "ledger:correct_id_wrong_physical_row",
+    "unrelated_trace_sample": "runtime:wrong_anomaly_source",
+    "visible_table_wrong": "runtime:wrong_visible_table",
+    "actual_curve_wrong": "runtime:shifted_actual_curve",
+    "remote_resource": "html:remote_dependency",
+    "missing_output": "runtime:missing_report",
+    "input_changed": "runtime:dirty_input",
+    "missing_private_or_browser": "runtime:missing_html_lock"
+  },
+  "private_sha256": {
+    "expected.json": "800c519ab8034ee477620c80d70bb195727b71f71e04f3fb8e93d9b371a6d99f",
+    "protected_sha256.json": "90be66e50968adcfcff5c49812577a4d0419cf516f7956beedf0894b8f4f67e0",
+    "protected_received_v2.json": "8662dca8fc84d9a0d7d4b647d40bbac3f864b869892352c5c44eb72c24f25755",
+    "runtime_contract.json": "6fe844ef8ae5db4f0bd3df212245ec6764043b242dccd0c7486b132bd89b8664",
+    "source_bindings.json": "1c222e823904716ce5b4642e6181622aaa822d5291ce7360edba282649e2c9ce",
+    "office_runtime.py": "7dcb510b0a3a234799c8b4bf44f8fa0c8b2d047b43eded3e6010d239fd1c66ac",
+    "html_runtime_v015.py": "3cbaa4e93bad92d1741a701d577ab8f7d3978d86b13cb46b52b970b112752310",
+    "html_observer.mjs": "392b9e7178cac92e2280e04a291cd29d67a5daf1272961920c634664dd72b961",
+    "xlsx_observations.py": "c8585b2d6ce34401699ae7443000819bfd03eb29b1b2824826a8f0bd9d61d3c1",
+    "h021_tables.py": "0e2fc9d37b326772ddba5c7120e9ccd4eca2a7feb4e023e90c10077083cf1566",
+    "h021_ledger.py": "cc416f540b0102dcca6a7acfcf00da5f752f183b28af6261bcd8e3a413b624e0",
+    "h021_html.py": "cd41fe0825577595799a908d514334256bf4097158d0f55f1cb2cbf73d3ee155",
+    "grader.py": "b9a16f9bd339fc20ae8eac92a27450b4122e7ae8adb25ea50e1d2bfcd73113e1"
+  },
+  "active_input_revision": "received-metadata-v2",
+  "business_truth_and_reference_bytes_unchanged": true,
+  "managed_md_worker": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/managed-task-1793149854011259000/validation.json",
+  "managed_md_worker_sha256": "1446a14f56cada4b332a0e76eb9ea5134e7f06b192e5093751d924414366a710",
+  "managed_md_sha256": "6392c031f66ad9d5a0d7b308f606200771cfc07c750e6e9ef361f901e8d6f6fc",
+  "automatic_reference_score": 1.0,
+  "verified_derived_artifacts": 31,
+  "harness_score": null,
+  "difficulty_status": "L3_design_estimate_unvalidated",
+  "human_expert_review": false,
+  "preliminary_exclusions": [
+    "Initial material-v1 metadata had no received-day difference after correct canonical deduplication. It could not discriminate the received-day-only mistake; not counted as a failed candidate control.",
+    "Received-metadata-v2 changes only12 canonical receipts. Two independent actual-source paths revalidate all13758 checks with byte-identical business truth and reference; v1 assets remain frozen.",
+    "Initial Canvas Path2D discovery considered a preceding canvas without checking its bottom bound; fixed before final full-grader controls.",
+    "First author Office dispatch guessed a nonexistent /Applications path; no ability score was produced. Final controls use the actual locked bundled override.",
+    "The first managed receipt falsely failed3.11 MIME replay after3.12 rendering. Core0.15.1 repairs replay without rewriting receipts; current accepted Worker uses0.15.1.",
+    "Earlier runtime matrices and component observations are retained as intermediate evidence and are not added to the25 full-grader control count."
+  ],
+  "limit": "Author native/paint/set/source controls and a deterministic generator-rendered MD Worker, not actual model/Harness outcomes or empirical L3/discrimination. Formal registration must reproduce the same MD bytes; release remains building until all60 and calibration."
+}

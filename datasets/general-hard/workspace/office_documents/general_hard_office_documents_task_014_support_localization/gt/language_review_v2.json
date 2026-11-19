@@ -1,0 +1,228 @@
+{
+  "status": "accepted_after_authorized_locale_model_reviews",
+  "authorization": {
+    "source": "direct_user_reply",
+    "reply": "允许三名子代理模型复核（推荐）",
+    "question_item_id": "[\"request_user_input_async\",\"call_e0c507202e354469af330fbd787f4714\",0]",
+    "recorded_utc": "2026-10-28T01:16:29.706351+00:00",
+    "scope": "H014 Chinese, English and Vietnamese: one independent model sub-agent per locale, including necessary post-revision rechecks; never human expert review."
+  },
+  "review_type": "independent_model_review",
+  "human_expert_review": false,
+  "reviewers": 3,
+  "latest_reviews": [
+    {
+      "locale": "zh",
+      "round": 2,
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h014/independent-review/v2/zh/reviewer_zh_v2.json",
+      "sha256": "2f40cc71e82eefca3b187a472d6d7444beb2a09e5ea95e8e6a6dba1d1801792f",
+      "source_reading_sha256": "75d29095feca703cf197117bfd5164cc71c3a4396058ee9ee2028a13c20bc694",
+      "input_sha256": {
+        "input/release_notes.md": "f1d6ce2d76230c3af6f6f41ea26dc495908b6d2f749a9dada190d6511a29482c",
+        "input/terms.csv": "701ca9d20e35d376326a88185bacc93f79ec3ce33c27725f263befc5d6885d21",
+        "input/support_cases.csv": "49bb3e68f7c8423b68e2e1dd16903efcd815dca7919e976e41bc176e5aaccf2c",
+        "input/faq_old/zh.md": "4a9b5c7ed0942f425dece37088b91f82f7e89ac306ca7d5178ac70dc075e2436",
+        "proposed/faq_zh.docx": "17421c97720a01bc468ad808a1fa9270dbefd31c84e0bc0816f614c607fa4ab5",
+        "proposed/faq_zh.md": "1a12035b6300dddf0512a91821de11d24566a8817de488d50e1a1f2438a7430f",
+        "proposed/replies_zh.csv": "2fae7b2eb151da3a0fffd35556cbba36ef0641aecfa35fbfe42470fb71e9b446"
+      },
+      "counts": {
+        "accept": 18
+      },
+      "open_records": []
+    },
+    {
+      "locale": "en",
+      "round": 2,
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h014/independent-review/v2/en/reviewer_en_v2.json",
+      "sha256": "bbcb0212738fcf29bf7cea4529a2d5ae643f757ce2628de8ebafe037e6b82b90",
+      "source_reading_sha256": "38f132734bbb4f740a88186cb67863c79571024ae94c9443496520fb158775a0",
+      "input_sha256": {
+        "input/release_notes.md": "f1d6ce2d76230c3af6f6f41ea26dc495908b6d2f749a9dada190d6511a29482c",
+        "input/terms.csv": "701ca9d20e35d376326a88185bacc93f79ec3ce33c27725f263befc5d6885d21",
+        "input/support_cases.csv": "49bb3e68f7c8423b68e2e1dd16903efcd815dca7919e976e41bc176e5aaccf2c",
+        "input/faq_old/en.md": "aa0e7021a682cd94e9b8ba0f1b664b9c48b38929ef3cd50c471cfee5062a1765",
+        "proposed/faq_en.docx": "3570a29d2ff5ff1c5479f3946e559b6e6a197d74d0425bb5e2b1a3cd5b6808ec",
+        "proposed/faq_en.md": "0abddf00509d5ca9fa8c6e17a8d7b150818d0e4a161538a7332c9fc50c9473f5",
+        "proposed/replies_en.csv": "36728c9f85fdadcb607d48825c81aaa0909bab390c75d71b65d0cfa1e1951cb6"
+      },
+      "counts": {
+        "accept": 18
+      },
+      "open_records": []
+    },
+    {
+      "locale": "vi",
+      "round": 3,
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h014/independent-review/v3/vi/reviewer_vi_v3.json",
+      "sha256": "361b9f1e93929cc75d65f41a8162f9f5bdd781b3447245658c85916c0cc2d69e",
+      "source_reading_sha256": "9a55989b3c681ca82c82dce1c827768c64cc224b99c181f1b3c2f83c16dddb50",
+      "input_sha256": {
+        "input/release_notes.md": "f1d6ce2d76230c3af6f6f41ea26dc495908b6d2f749a9dada190d6511a29482c",
+        "input/terms.csv": "701ca9d20e35d376326a88185bacc93f79ec3ce33c27725f263befc5d6885d21",
+        "input/support_cases.csv": "49bb3e68f7c8423b68e2e1dd16903efcd815dca7919e976e41bc176e5aaccf2c",
+        "input/faq_old/vi.md": "87b6af91eaf91232801f17ae494f2972b9b6ecfcff47947a76c6b370643f3937",
+        "proposed/faq_vi.docx": "c3d4715a9d921608a4a729e8a7115bf1282aa80b813d3dab96a85ba25cbb7268",
+        "proposed/faq_vi.md": "02fc9bee975fab9e23ecd4af9873db1d6a65a26467d571d298c96ca9bc67fbc2",
+        "proposed/replies_vi.csv": "8fd956a780df1f695ac5c6239893f069d924258c374c61cc0502aacb18f5667b"
+      },
+      "counts": {
+        "accept": 18
+      },
+      "open_records": []
+    }
+  ],
+  "history": [
+    {
+      "locale": "zh",
+      "round": 1,
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h014/independent-review/zh/reviewer_zh.json",
+      "sha256": "b10799d659fa7f8c7461a7fe0d54b4a1c6f730d973669a1bb1b4f9da83788c62",
+      "source_reading_sha256": "75d29095feca703cf197117bfd5164cc71c3a4396058ee9ee2028a13c20bc694",
+      "input_sha256": {
+        "input/release_notes.md": "f1d6ce2d76230c3af6f6f41ea26dc495908b6d2f749a9dada190d6511a29482c",
+        "input/terms.csv": "701ca9d20e35d376326a88185bacc93f79ec3ce33c27725f263befc5d6885d21",
+        "input/support_cases.csv": "49bb3e68f7c8423b68e2e1dd16903efcd815dca7919e976e41bc176e5aaccf2c",
+        "input/faq_old/zh.md": "4a9b5c7ed0942f425dece37088b91f82f7e89ac306ca7d5178ac70dc075e2436",
+        "proposed/faq_zh.docx": "61d855cee653510f106211a7779b903bd74f43391570e5749600e5e127de64d4",
+        "proposed/faq_zh.md": "5ba054ee6d57812c51f36090d14eea2868c96e0d8c7a184e1598ef43a978dfd1",
+        "proposed/replies_zh.csv": "2fae7b2eb151da3a0fffd35556cbba36ef0641aecfa35fbfe42470fb71e9b446"
+      },
+      "counts": {
+        "accept": 17,
+        "uncertain": 1
+      },
+      "open_records": [
+        "K07"
+      ]
+    },
+    {
+      "locale": "zh",
+      "round": 2,
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h014/independent-review/v2/zh/reviewer_zh_v2.json",
+      "sha256": "2f40cc71e82eefca3b187a472d6d7444beb2a09e5ea95e8e6a6dba1d1801792f",
+      "source_reading_sha256": "75d29095feca703cf197117bfd5164cc71c3a4396058ee9ee2028a13c20bc694",
+      "input_sha256": {
+        "input/release_notes.md": "f1d6ce2d76230c3af6f6f41ea26dc495908b6d2f749a9dada190d6511a29482c",
+        "input/terms.csv": "701ca9d20e35d376326a88185bacc93f79ec3ce33c27725f263befc5d6885d21",
+        "input/support_cases.csv": "49bb3e68f7c8423b68e2e1dd16903efcd815dca7919e976e41bc176e5aaccf2c",
+        "input/faq_old/zh.md": "4a9b5c7ed0942f425dece37088b91f82f7e89ac306ca7d5178ac70dc075e2436",
+        "proposed/faq_zh.docx": "17421c97720a01bc468ad808a1fa9270dbefd31c84e0bc0816f614c607fa4ab5",
+        "proposed/faq_zh.md": "1a12035b6300dddf0512a91821de11d24566a8817de488d50e1a1f2438a7430f",
+        "proposed/replies_zh.csv": "2fae7b2eb151da3a0fffd35556cbba36ef0641aecfa35fbfe42470fb71e9b446"
+      },
+      "counts": {
+        "accept": 18
+      },
+      "open_records": []
+    },
+    {
+      "locale": "en",
+      "round": 1,
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h014/independent-review/en/reviewer_en.json",
+      "sha256": "318e296bb5097c921e1d4586ec9d86213d4026ed32f2e9570af5d0cc2cdaad09",
+      "source_reading_sha256": "38f132734bbb4f740a88186cb67863c79571024ae94c9443496520fb158775a0",
+      "input_sha256": {
+        "input/release_notes.md": "f1d6ce2d76230c3af6f6f41ea26dc495908b6d2f749a9dada190d6511a29482c",
+        "input/terms.csv": "701ca9d20e35d376326a88185bacc93f79ec3ce33c27725f263befc5d6885d21",
+        "input/support_cases.csv": "49bb3e68f7c8423b68e2e1dd16903efcd815dca7919e976e41bc176e5aaccf2c",
+        "input/faq_old/en.md": "aa0e7021a682cd94e9b8ba0f1b664b9c48b38929ef3cd50c471cfee5062a1765",
+        "proposed/faq_en.docx": "0eb6f861584ae45e545b228aaeb7187930b668703b6592309d187226bc624198",
+        "proposed/faq_en.md": "5a89396e70b1986b6a38673e6adf011d8a23b587cd4ed80557aed0cbb5cc8121",
+        "proposed/replies_en.csv": "36728c9f85fdadcb607d48825c81aaa0909bab390c75d71b65d0cfa1e1951cb6"
+      },
+      "counts": {
+        "accept": 17,
+        "uncertain": 1
+      },
+      "open_records": [
+        "K11"
+      ]
+    },
+    {
+      "locale": "en",
+      "round": 2,
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h014/independent-review/v2/en/reviewer_en_v2.json",
+      "sha256": "bbcb0212738fcf29bf7cea4529a2d5ae643f757ce2628de8ebafe037e6b82b90",
+      "source_reading_sha256": "38f132734bbb4f740a88186cb67863c79571024ae94c9443496520fb158775a0",
+      "input_sha256": {
+        "input/release_notes.md": "f1d6ce2d76230c3af6f6f41ea26dc495908b6d2f749a9dada190d6511a29482c",
+        "input/terms.csv": "701ca9d20e35d376326a88185bacc93f79ec3ce33c27725f263befc5d6885d21",
+        "input/support_cases.csv": "49bb3e68f7c8423b68e2e1dd16903efcd815dca7919e976e41bc176e5aaccf2c",
+        "input/faq_old/en.md": "aa0e7021a682cd94e9b8ba0f1b664b9c48b38929ef3cd50c471cfee5062a1765",
+        "proposed/faq_en.docx": "3570a29d2ff5ff1c5479f3946e559b6e6a197d74d0425bb5e2b1a3cd5b6808ec",
+        "proposed/faq_en.md": "0abddf00509d5ca9fa8c6e17a8d7b150818d0e4a161538a7332c9fc50c9473f5",
+        "proposed/replies_en.csv": "36728c9f85fdadcb607d48825c81aaa0909bab390c75d71b65d0cfa1e1951cb6"
+      },
+      "counts": {
+        "accept": 18
+      },
+      "open_records": []
+    },
+    {
+      "locale": "vi",
+      "round": 1,
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h014/independent-review/vi/reviewer_vi.json",
+      "sha256": "1a368b2a9449b8484bd48cc87be0eff7a7bc6166660e96303151991a3c208f95",
+      "source_reading_sha256": "9a55989b3c681ca82c82dce1c827768c64cc224b99c181f1b3c2f83c16dddb50",
+      "input_sha256": {
+        "input/release_notes.md": "f1d6ce2d76230c3af6f6f41ea26dc495908b6d2f749a9dada190d6511a29482c",
+        "input/terms.csv": "701ca9d20e35d376326a88185bacc93f79ec3ce33c27725f263befc5d6885d21",
+        "input/support_cases.csv": "49bb3e68f7c8423b68e2e1dd16903efcd815dca7919e976e41bc176e5aaccf2c",
+        "input/faq_old/vi.md": "87b6af91eaf91232801f17ae494f2972b9b6ecfcff47947a76c6b370643f3937",
+        "proposed/faq_vi.docx": "2503e04756ae868c9706c0d8b4d31bb0a27ced23ce6922e4fc8c180ea74bf6b3",
+        "proposed/faq_vi.md": "14166ef953df8e288b6bba057343a9965c0f5f80e3bf336803537d48d3a0e4ce",
+        "proposed/replies_vi.csv": "8d426c6f33ac433cfb0bf5d66c37b8025c19f29e8ba4d400b753c6637d02bf16"
+      },
+      "counts": {
+        "accept": 18
+      },
+      "open_records": []
+    },
+    {
+      "locale": "vi",
+      "round": 2,
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h014/independent-review/v2/vi/reviewer_vi_v2.json",
+      "sha256": "39aef1775644f92d65d2b8f8800f554b77ddc2f33fdcbf7b554d3c959ce3b304",
+      "source_reading_sha256": "9a55989b3c681ca82c82dce1c827768c64cc224b99c181f1b3c2f83c16dddb50",
+      "input_sha256": {
+        "input/release_notes.md": "f1d6ce2d76230c3af6f6f41ea26dc495908b6d2f749a9dada190d6511a29482c",
+        "input/terms.csv": "701ca9d20e35d376326a88185bacc93f79ec3ce33c27725f263befc5d6885d21",
+        "input/support_cases.csv": "49bb3e68f7c8423b68e2e1dd16903efcd815dca7919e976e41bc176e5aaccf2c",
+        "input/faq_old/vi.md": "87b6af91eaf91232801f17ae494f2972b9b6ecfcff47947a76c6b370643f3937",
+        "proposed/faq_vi.docx": "c3d4715a9d921608a4a729e8a7115bf1282aa80b813d3dab96a85ba25cbb7268",
+        "proposed/faq_vi.md": "02fc9bee975fab9e23ecd4af9873db1d6a65a26467d571d298c96ca9bc67fbc2",
+        "proposed/replies_vi.csv": "8d426c6f33ac433cfb0bf5d66c37b8025c19f29e8ba4d400b753c6637d02bf16"
+      },
+      "counts": {
+        "accept": 17,
+        "uncertain": 1
+      },
+      "open_records": [
+        "C17"
+      ]
+    },
+    {
+      "locale": "vi",
+      "round": 3,
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h014/independent-review/v3/vi/reviewer_vi_v3.json",
+      "sha256": "361b9f1e93929cc75d65f41a8162f9f5bdd781b3447245658c85916c0cc2d69e",
+      "source_reading_sha256": "9a55989b3c681ca82c82dce1c827768c64cc224b99c181f1b3c2f83c16dddb50",
+      "input_sha256": {
+        "input/release_notes.md": "f1d6ce2d76230c3af6f6f41ea26dc495908b6d2f749a9dada190d6511a29482c",
+        "input/terms.csv": "701ca9d20e35d376326a88185bacc93f79ec3ce33c27725f263befc5d6885d21",
+        "input/support_cases.csv": "49bb3e68f7c8423b68e2e1dd16903efcd815dca7919e976e41bc176e5aaccf2c",
+        "input/faq_old/vi.md": "87b6af91eaf91232801f17ae494f2972b9b6ecfcff47947a76c6b370643f3937",
+        "proposed/faq_vi.docx": "c3d4715a9d921608a4a729e8a7115bf1282aa80b813d3dab96a85ba25cbb7268",
+        "proposed/faq_vi.md": "02fc9bee975fab9e23ecd4af9873db1d6a65a26467d571d298c96ca9bc67fbc2",
+        "proposed/replies_vi.csv": "8fd956a780df1f695ac5c6239893f069d924258c374c61cc0502aacb18f5667b"
+      },
+      "counts": {
+        "accept": 18
+      },
+      "open_records": []
+    }
+  ],
+  "open_records": [],
+  "limit": "One model reviewer per locale, not a human expert or double annotation for every language; correlated model errors remain possible. Reference authoring review is not a candidate semantic score."
+}

@@ -1,0 +1,820 @@
+{
+  "as_of": "2026-10-02",
+  "decision_status": "proposed_pending_approval",
+  "selected_option": "C",
+  "conclusions": [
+    {
+      "conclusion_id": "G01-a",
+      "claim": "四渠道收入全部同比增长",
+      "state": "refuted",
+      "reason": "经销收入2000000降至1800000，同比-10%。公司合计+17%不能外推每个渠道。",
+      "sources": [
+        {
+          "file": "operations.xlsx",
+          "locator": "Operations!A12:H14; A24:H26"
+        },
+        {
+          "file": "interviews.docx",
+          "locator": "I01",
+          "excerpt": "本季度所有渠道都增长了，经销渠道也一样。"
+        },
+        {
+          "file": "interviews.docx",
+          "locator": "I02",
+          "excerpt": "经销渠道同比下降，不能用公司总收入增长代表每个渠道都在增长。"
+        }
+      ],
+      "deliverables": [
+        {
+          "file": "memo.docx",
+          "locator": "六组访谈的证据判断 / G01"
+        },
+        {
+          "file": "deck.pptx",
+          "locator": "slide 3"
+        }
+      ]
+    },
+    {
+      "conclusion_id": "G01-b",
+      "claim": "经销收入同比下降10%",
+      "state": "supported",
+      "reason": "两个年度相同季度、相同渠道可比。",
+      "sources": [
+        {
+          "file": "operations.xlsx",
+          "locator": "Operations!A12:H14; A24:H26"
+        },
+        {
+          "file": "interviews.docx",
+          "locator": "I02",
+          "excerpt": "经销渠道同比下降，不能用公司总收入增长代表每个渠道都在增长。"
+        }
+      ],
+      "deliverables": [
+        {
+          "file": "memo.docx",
+          "locator": "六组访谈的证据判断 / G01"
+        },
+        {
+          "file": "deck.pptx",
+          "locator": "slide 3"
+        }
+      ]
+    },
+    {
+      "conclusion_id": "G02-a",
+      "claim": "2026年Q3平台毛利率至少30%",
+      "state": "refuted",
+      "reason": "平台收入4500000、毛利675000，比率15%。",
+      "sources": [
+        {
+          "file": "operations.xlsx",
+          "locator": "Operations!A5:H29; Definitions!A6:C6"
+        },
+        {
+          "file": "interviews.docx",
+          "locator": "I03",
+          "excerpt": "平台毛利率至少30%，整体毛利率也在提升，可以沿用去年利润率估算。"
+        }
+      ],
+      "deliverables": [
+        {
+          "file": "memo.docx",
+          "locator": "六组访谈的证据判断 / G02"
+        },
+        {
+          "file": "deck.pptx",
+          "locator": "slide 2"
+        }
+      ]
+    },
+    {
+      "conclusion_id": "G02-b",
+      "claim": "整体加权毛利率提升",
+      "state": "refuted",
+      "reason": "2025为34%，2026为27.82051282%，下降6.17948718个百分点。不能平均渠道比率。",
+      "sources": [
+        {
+          "file": "operations.xlsx",
+          "locator": "Operations!A5:H29; Definitions!A6:C6"
+        },
+        {
+          "file": "interviews.docx",
+          "locator": "I03",
+          "excerpt": "平台毛利率至少30%，整体毛利率也在提升，可以沿用去年利润率估算。"
+        }
+      ],
+      "deliverables": [
+        {
+          "file": "memo.docx",
+          "locator": "六组访谈的证据判断 / G02"
+        },
+        {
+          "file": "deck.pptx",
+          "locator": "slide 2"
+        }
+      ]
+    },
+    {
+      "conclusion_id": "G02-c",
+      "claim": "平台毛利率15%且公司毛利额同比下降",
+      "state": "supported",
+      "reason": "公司毛利3400000降至3255000，减少145000元。",
+      "sources": [
+        {
+          "file": "operations.xlsx",
+          "locator": "Operations!A5:H29; Definitions!A6:C6"
+        },
+        {
+          "file": "interviews.docx",
+          "locator": "I04",
+          "excerpt": "按季度收入减销售成本，平台毛利率是15%，公司整体毛利额比去年同期少。"
+        }
+      ],
+      "deliverables": [
+        {
+          "file": "memo.docx",
+          "locator": "六组访谈的证据判断 / G02"
+        },
+        {
+          "file": "deck.pptx",
+          "locator": "slide 2"
+        }
+      ]
+    },
+    {
+      "conclusion_id": "G03-a",
+      "claim": "2026年10月10日预计120000元一定到账",
+      "state": "unknown",
+      "reason": "只有预计陈述，未对账也无付款承诺。不计基线不等于确定不会到账。",
+      "sources": [
+        {
+          "file": "decision_constraints.md",
+          "locator": "D04-D07; D11-D12"
+        },
+        {
+          "file": "interviews.docx",
+          "locator": "I05",
+          "excerpt": "客户说预计10月10日会来12万元，这笔钱肯定到账，可以先用来覆盖平台扩投。"
+        },
+        {
+          "file": "interviews.docx",
+          "locator": "I06",
+          "excerpt": "这12万元尚未对账、没有付款承诺。专项账户只把给定已确认排期作为基线，到账和批准情况需另核。"
+        }
+      ],
+      "deliverables": [
+        {
+          "file": "memo.docx",
+          "locator": "六组访谈的证据判断 / G03"
+        },
+        {
+          "file": "deck.pptx",
+          "locator": "slide 5"
+        }
+      ]
+    },
+    {
+      "conclusion_id": "G03-b",
+      "claim": "可将未确认120000元纳入确定性基线覆盖B",
+      "state": "refuted",
+      "reason": "D05明确排除未确认回款。",
+      "sources": [
+        {
+          "file": "decision_constraints.md",
+          "locator": "D04-D07; D11-D12"
+        },
+        {
+          "file": "interviews.docx",
+          "locator": "I05",
+          "excerpt": "客户说预计10月10日会来12万元，这笔钱肯定到账，可以先用来覆盖平台扩投。"
+        }
+      ],
+      "deliverables": [
+        {
+          "file": "memo.docx",
+          "locator": "六组访谈的证据判断 / G03"
+        },
+        {
+          "file": "deck.pptx",
+          "locator": "slide 5"
+        }
+      ]
+    },
+    {
+      "conclusion_id": "G03-c",
+      "claim": "排除未确认款后按给定专项账户排期比较",
+      "state": "supported",
+      "reason": "只用D11、D12，不能挪入公司历史季度收款。",
+      "sources": [
+        {
+          "file": "decision_constraints.md",
+          "locator": "D04-D07; D11-D12"
+        },
+        {
+          "file": "interviews.docx",
+          "locator": "I06",
+          "excerpt": "这12万元尚未对账、没有付款承诺。专项账户只把给定已确认排期作为基线，到账和批准情况需另核。"
+        }
+      ],
+      "deliverables": [
+        {
+          "file": "memo.docx",
+          "locator": "六组访谈的证据判断 / G03"
+        },
+        {
+          "file": "deck.pptx",
+          "locator": "slide 5"
+        }
+      ]
+    },
+    {
+      "conclusion_id": "G04-a",
+      "claim": "有原因记录中价格提及为6/8等于75%",
+      "state": "supported",
+      "reason": "仅在已填写原因的8条记录中描述提及，允许多选。",
+      "sources": [
+        {
+          "file": "operations.xlsx",
+          "locator": "LostDeals!A5:D23; Definitions!A8:C8"
+        },
+        {
+          "file": "interviews.docx",
+          "locator": "I07",
+          "excerpt": "8条有原因记录里6条提到价格，6除以8是75%，所以全部流失的75%由价格造成。"
+        },
+        {
+          "file": "interviews.docx",
+          "locator": "I08",
+          "excerpt": "这份窗口日志共18条，10条没填原因，原因允许多选。6除以8的算术没错，但外推全部失单及因果不成立。"
+        }
+      ],
+      "deliverables": [
+        {
+          "file": "memo.docx",
+          "locator": "六组访谈的证据判断 / G04"
+        },
+        {
+          "file": "deck.pptx",
+          "locator": "slide 3"
+        }
+      ]
+    },
+    {
+      "conclusion_id": "G04-b",
+      "claim": "公司全部失单75%由价格造成",
+      "state": "unknown",
+      "reason": "缺失10条、非全量窗口、允许多选且无干预对照。总体份额和因果效应未知。",
+      "sources": [
+        {
+          "file": "operations.xlsx",
+          "locator": "LostDeals!A5:D23; Definitions!A8:C8"
+        },
+        {
+          "file": "interviews.docx",
+          "locator": "I07",
+          "excerpt": "8条有原因记录里6条提到价格，6除以8是75%，所以全部流失的75%由价格造成。"
+        }
+      ],
+      "deliverables": [
+        {
+          "file": "memo.docx",
+          "locator": "六组访谈的证据判断 / G04"
+        },
+        {
+          "file": "deck.pptx",
+          "locator": "slide 3"
+        }
+      ]
+    },
+    {
+      "conclusion_id": "G04-c",
+      "claim": "18条日志中10条原因缺失",
+      "state": "supported",
+      "reason": "覆盖8/18=44.4444%，已记录价格提及占全部日志6/18=33.3333%，均非因果率。",
+      "sources": [
+        {
+          "file": "operations.xlsx",
+          "locator": "LostDeals!A5:D23; Definitions!A8:C8"
+        },
+        {
+          "file": "interviews.docx",
+          "locator": "I08",
+          "excerpt": "这份窗口日志共18条，10条没填原因，原因允许多选。6除以8的算术没错，但外推全部失单及因果不成立。"
+        }
+      ],
+      "deliverables": [
+        {
+          "file": "memo.docx",
+          "locator": "六组访谈的证据判断 / G04"
+        },
+        {
+          "file": "deck.pptx",
+          "locator": "slide 3"
+        }
+      ]
+    },
+    {
+      "conclusion_id": "G04-d",
+      "claim": "原因缺失的10条全部未提到价格",
+      "state": "unknown",
+      "reason": "缺失表示未知，不能确认全部未提价，也不能反向确认其中一定有提价。",
+      "sources": [
+        {
+          "file": "operations.xlsx",
+          "locator": "LostDeals!A5:D23; Definitions!A8:C8"
+        },
+        {
+          "file": "interviews.docx",
+          "locator": "I08",
+          "excerpt": "这份窗口日志共18条，10条没填原因，原因允许多选。6除以8的算术没错，但外推全部失单及因果不成立。"
+        }
+      ],
+      "deliverables": [
+        {
+          "file": "memo.docx",
+          "locator": "六组访谈的证据判断 / G04"
+        },
+        {
+          "file": "deck.pptx",
+          "locator": "slide 3"
+        }
+      ]
+    },
+    {
+      "conclusion_id": "G05-a",
+      "claim": "主动报名10家中8家有试用兴趣",
+      "state": "supported",
+      "reason": "80%描述该便利样本的试用兴趣，不能改成购买。",
+      "sources": [
+        {
+          "file": "market_notes.pdf",
+          "locator": "page 1 M01-M03"
+        },
+        {
+          "file": "interviews.docx",
+          "locator": "I09",
+          "excerpt": "10家中8家愿意试用就是80%的大盘会购买，下一季我们市场份额至少增加10个百分点。"
+        },
+        {
+          "file": "interviews.docx",
+          "locator": "I10",
+          "excerpt": "这10家主动报名且只回答试用兴趣，没有真实订单和市场总体分母，不能推大盘购买率或份额增长。"
+        }
+      ],
+      "deliverables": [
+        {
+          "file": "memo.docx",
+          "locator": "六组访谈的证据判断 / G05"
+        },
+        {
+          "file": "deck.pptx",
+          "locator": "slide 3"
+        }
+      ]
+    },
+    {
+      "conclusion_id": "G05-b",
+      "claim": "总体80%会购买",
+      "state": "unknown",
+      "reason": "非随机、只有意向、无真实订单与总体分母。",
+      "sources": [
+        {
+          "file": "market_notes.pdf",
+          "locator": "page 1 M01-M03"
+        },
+        {
+          "file": "interviews.docx",
+          "locator": "I09",
+          "excerpt": "10家中8家愿意试用就是80%的大盘会购买，下一季我们市场份额至少增加10个百分点。"
+        }
+      ],
+      "deliverables": [
+        {
+          "file": "memo.docx",
+          "locator": "六组访谈的证据判断 / G05"
+        },
+        {
+          "file": "deck.pptx",
+          "locator": "slide 3"
+        }
+      ]
+    },
+    {
+      "conclusion_id": "G05-c",
+      "claim": "下季市场份额至少增加10个百分点",
+      "state": "unknown",
+      "reason": "没有市场总量和下一季销售结果。",
+      "sources": [
+        {
+          "file": "market_notes.pdf",
+          "locator": "page 1 M01-M03"
+        },
+        {
+          "file": "interviews.docx",
+          "locator": "I09",
+          "excerpt": "10家中8家愿意试用就是80%的大盘会购买，下一季我们市场份额至少增加10个百分点。"
+        }
+      ],
+      "deliverables": [
+        {
+          "file": "memo.docx",
+          "locator": "六组访谈的证据判断 / G05"
+        },
+        {
+          "file": "deck.pptx",
+          "locator": "slide 3"
+        }
+      ]
+    },
+    {
+      "conclusion_id": "G05-d",
+      "claim": "两份资料覆盖30家互不重复的客户",
+      "state": "unknown",
+      "reason": "M02没有与M01重叠名单，答卷也不等同唯一客户。",
+      "sources": [
+        {
+          "file": "market_notes.pdf",
+          "locator": "page 1 M01-M03"
+        }
+      ],
+      "deliverables": [
+        {
+          "file": "memo.docx",
+          "locator": "六组访谈的证据判断 / G05"
+        },
+        {
+          "file": "deck.pptx",
+          "locator": "slide 3"
+        }
+      ]
+    },
+    {
+      "conclusion_id": "G06-a",
+      "claim": "只需检查月末现金即可满足约束",
+      "state": "refuted",
+      "reason": "D04要求每事件节点，A原排期月末均大于50000但12月5日只有25000。",
+      "sources": [
+        {
+          "file": "decision_constraints.md",
+          "locator": "D04-D07; D11-D12"
+        },
+        {
+          "file": "interviews.docx",
+          "locator": "I11",
+          "excerpt": "只要每个月月末余额高于5万元就够。平台扩投的合同付款日我们可以自己后移。"
+        },
+        {
+          "file": "interviews.docx",
+          "locator": "I12",
+          "excerpt": "约束要求检查每个给定事件节点。平台扩投是固定合同日期，材料没有书面变更授权。"
+        }
+      ],
+      "deliverables": [
+        {
+          "file": "memo.docx",
+          "locator": "六组访谈的证据判断 / G06"
+        },
+        {
+          "file": "deck.pptx",
+          "locator": "slide 4"
+        }
+      ]
+    },
+    {
+      "conclusion_id": "G06-b",
+      "claim": "可自行后移B固定合同付款日",
+      "state": "refuted",
+      "reason": "D07及D12没有此权限。",
+      "sources": [
+        {
+          "file": "decision_constraints.md",
+          "locator": "D04-D07; D11-D12"
+        },
+        {
+          "file": "interviews.docx",
+          "locator": "I11",
+          "excerpt": "只要每个月月末余额高于5万元就够。平台扩投的合同付款日我们可以自己后移。"
+        },
+        {
+          "file": "interviews.docx",
+          "locator": "I12",
+          "excerpt": "约束要求检查每个给定事件节点。平台扩投是固定合同日期，材料没有书面变更授权。"
+        }
+      ],
+      "deliverables": [
+        {
+          "file": "memo.docx",
+          "locator": "六组访谈的证据判断 / G06"
+        },
+        {
+          "file": "deck.pptx",
+          "locator": "slide 4"
+        }
+      ]
+    },
+    {
+      "conclusion_id": "G06-c",
+      "claim": "存在多种满足现金底线的允许建议",
+      "state": "supported",
+      "reason": "C最低60000、A仅首阶段最低55000、A延期版最低55000。后两者仍保留相应批准和到账条件。",
+      "sources": [
+        {
+          "file": "decision_constraints.md",
+          "locator": "D04-D07; D11-D12"
+        },
+        {
+          "file": "interviews.docx",
+          "locator": "I12",
+          "excerpt": "约束要求检查每个给定事件节点。平台扩投是固定合同日期，材料没有书面变更授权。"
+        }
+      ],
+      "deliverables": [
+        {
+          "file": "memo.docx",
+          "locator": "六组访谈的证据判断 / G06"
+        },
+        {
+          "file": "deck.pptx",
+          "locator": "slide 4"
+        }
+      ]
+    },
+    {
+      "conclusion_id": "U01",
+      "claim": "经营利润、净利润及其同比变化",
+      "state": "unknown",
+      "reason": "可计算毛利，不能把毛利变化直接叫净利润变化。",
+      "sources": [
+        {
+          "file": "operations.xlsx",
+          "locator": "Operations!A5:H29; Definitions!A6:C6"
+        }
+      ],
+      "deliverables": [
+        {
+          "file": "memo.docx",
+          "locator": "未知事项与后续检查 / U01"
+        },
+        {
+          "file": "deck.pptx",
+          "locator": "slide 6"
+        }
+      ]
+    },
+    {
+      "conclusion_id": "U02",
+      "claim": "价格或投放对失单及新增收入的因果效应",
+      "state": "unknown",
+      "reason": "提及和观察不能识别因果，不能据此保证ROI或销量。",
+      "sources": [
+        {
+          "file": "operations.xlsx",
+          "locator": "LostDeals!A5:D23; Definitions!A8:C8"
+        },
+        {
+          "file": "decision_constraints.md",
+          "locator": "D06"
+        }
+      ],
+      "deliverables": [
+        {
+          "file": "memo.docx",
+          "locator": "未知事项与后续检查 / U02"
+        },
+        {
+          "file": "deck.pptx",
+          "locator": "slide 6"
+        }
+      ]
+    },
+    {
+      "conclusion_id": "U03",
+      "claim": "大盘购买率、市场总规模和未来份额",
+      "state": "unknown",
+      "reason": "试用兴趣和主观感知只支持其样本范围。",
+      "sources": [
+        {
+          "file": "market_notes.pdf",
+          "locator": "page 1 M01-M03"
+        }
+      ],
+      "deliverables": [
+        {
+          "file": "memo.docx",
+          "locator": "未知事项与后续检查 / U03"
+        },
+        {
+          "file": "deck.pptx",
+          "locator": "slide 6"
+        }
+      ]
+    },
+    {
+      "conclusion_id": "U04",
+      "claim": "逾期坏账率及公司完整现金或融资能力",
+      "state": "unknown",
+      "reason": "期间收款收入比、专项计划模型各有口径，不能互换或外推。",
+      "sources": [
+        {
+          "file": "operations.xlsx",
+          "locator": "Definitions!A7:C7"
+        },
+        {
+          "file": "decision_constraints.md",
+          "locator": "D04-D07"
+        }
+      ],
+      "deliverables": [
+        {
+          "file": "memo.docx",
+          "locator": "未知事项与后续检查 / U04"
+        },
+        {
+          "file": "deck.pptx",
+          "locator": "slide 6"
+        }
+      ]
+    },
+    {
+      "conclusion_id": "CASH-A",
+      "claim": "A最低25000元、期末85000元、首次违规2026-12-05",
+      "state": "supported",
+      "reason": "排除未确认款，合并D11与D12逐事件复算；A变体只用D12允许调整。",
+      "sources": [
+        {
+          "file": "decision_constraints.md",
+          "locator": "D04-D07 D11-D12"
+        }
+      ],
+      "deliverables": [
+        {
+          "file": "memo.docx",
+          "locator": "专项账户现金与方案比较"
+        },
+        {
+          "file": "options.xlsx",
+          "locator": "Decision case_id A; Cash case_id A"
+        },
+        {
+          "file": "deck.pptx",
+          "locator": "slide 5"
+        }
+      ]
+    },
+    {
+      "conclusion_id": "CASH-B",
+      "claim": "B最低-55000元、期末5000元、首次违规2026-10-12",
+      "state": "supported",
+      "reason": "排除未确认款，合并D11与D12逐事件复算；A变体只用D12允许调整。",
+      "sources": [
+        {
+          "file": "decision_constraints.md",
+          "locator": "D04-D07 D11-D12"
+        }
+      ],
+      "deliverables": [
+        {
+          "file": "memo.docx",
+          "locator": "专项账户现金与方案比较"
+        },
+        {
+          "file": "options.xlsx",
+          "locator": "Decision case_id B; Cash case_id B"
+        },
+        {
+          "file": "deck.pptx",
+          "locator": "slide 5"
+        }
+      ]
+    },
+    {
+      "conclusion_id": "CASH-C",
+      "claim": "C最低60000元、期末125000元、首次违规None",
+      "state": "supported",
+      "reason": "排除未确认款，合并D11与D12逐事件复算；A变体只用D12允许调整。",
+      "sources": [
+        {
+          "file": "decision_constraints.md",
+          "locator": "D04-D07 D11-D12"
+        }
+      ],
+      "deliverables": [
+        {
+          "file": "memo.docx",
+          "locator": "专项账户现金与方案比较"
+        },
+        {
+          "file": "options.xlsx",
+          "locator": "Decision case_id C; Cash case_id C"
+        },
+        {
+          "file": "deck.pptx",
+          "locator": "slide 5"
+        }
+      ]
+    },
+    {
+      "conclusion_id": "CASH-A_phase1",
+      "claim": "A_phase1最低55000元、期末120000元、首次违规None",
+      "state": "supported",
+      "reason": "排除未确认款，合并D11与D12逐事件复算；A变体只用D12允许调整。",
+      "sources": [
+        {
+          "file": "decision_constraints.md",
+          "locator": "D04-D07 D11-D12"
+        }
+      ],
+      "deliverables": [
+        {
+          "file": "memo.docx",
+          "locator": "专项账户现金与方案比较"
+        },
+        {
+          "file": "options.xlsx",
+          "locator": "Decision case_id A_phase1; Cash case_id A_phase1"
+        },
+        {
+          "file": "deck.pptx",
+          "locator": "slide 5"
+        }
+      ]
+    },
+    {
+      "conclusion_id": "CASH-A_deferred",
+      "claim": "A_deferred最低55000元、期末85000元、首次违规None",
+      "state": "supported",
+      "reason": "排除未确认款，合并D11与D12逐事件复算；A变体只用D12允许调整。",
+      "sources": [
+        {
+          "file": "decision_constraints.md",
+          "locator": "D04-D07 D11-D12"
+        }
+      ],
+      "deliverables": [
+        {
+          "file": "memo.docx",
+          "locator": "专项账户现金与方案比较"
+        },
+        {
+          "file": "options.xlsx",
+          "locator": "Decision case_id A_deferred; Cash case_id A_deferred"
+        },
+        {
+          "file": "deck.pptx",
+          "locator": "slide 5"
+        }
+      ]
+    },
+    {
+      "conclusion_id": "REC-C",
+      "claim": "本轮拟议C，允许A首阶段或条件延期作为替代，不主张唯一ROI最优",
+      "state": "supported",
+      "reason": "C满足当前专项账户现金底线，补证据目标合理；收益未知，支出待审批。",
+      "sources": [
+        {
+          "file": "decision_constraints.md",
+          "locator": "D06-D08 D12"
+        },
+        {
+          "file": "operations.xlsx",
+          "locator": "Definitions!A8:C8"
+        }
+      ],
+      "deliverables": [
+        {
+          "file": "memo.docx",
+          "locator": "本轮拟议选择"
+        },
+        {
+          "file": "options.xlsx",
+          "locator": "Decision!A14:B19"
+        },
+        {
+          "file": "deck.pptx",
+          "locator": "slide 1; slide 5"
+        }
+      ]
+    }
+  ],
+  "source_files": {
+    "decision_constraints.md": {
+      "sha256": "09bc116d89d9805c529bbd24a83e4e4c5d2ab13bd9ed68633d44cb031c1d4c4a",
+      "size": 4180
+    },
+    "interviews.docx": {
+      "sha256": "05a38f678a00af4787c27f880e4b29e2d965da78eae951aeebefadc6dba3afde",
+      "size": 38766
+    },
+    "market_notes.pdf": {
+      "sha256": "26deda06edf616c91aced8426997a3c579249fbda6a1492c88accfc9f1685666",
+      "size": 84392
+    },
+    "operations.xlsx": {
+      "sha256": "4910837cd166a0268558079704465d48ea413ad43b704563376cf8c5d87e254d",
+      "size": 7845
+    }
+  },
+  "scope": "仅给定材料，离线纸面建议；未知、未批准、未到账均保留原状态"
+}

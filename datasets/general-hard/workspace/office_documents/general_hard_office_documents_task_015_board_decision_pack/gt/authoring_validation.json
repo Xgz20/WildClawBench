@@ -1,0 +1,439 @@
+{
+  "status": "AUTHOR_CONTROLS_PASS",
+  "schema_version": "h015-authoring-validation/v1",
+  "date_local": "2026-10-28",
+  "control_count": 51,
+  "positive_count": 15,
+  "negative_count": 25,
+  "infrastructure_count": 5,
+  "semantic_only_count": 6,
+  "control_scope_summary": "完整48项矩阵与3项定向补充通过，关键评分源码摘要一致：15个合法表达正例、25个候选负例、5个基础设施门禁、6个规则满分但须独立语义裁判处理的反例。静态结果与有效常量公式的三个真实依赖响应均0分；缺交或不可见内容的完整性分为0，明确选择原A/B违反现金底线限制业务分。此前9项等价探针的一次延期误拒及首轮46项矩阵另存原始版本；未把它们冒充最终同一源码的验收。",
+  "matrices": [
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h015/qa/candidate-controls-1793118457477247000/validation.json",
+      "sha256": "ebfb92abbfb97035f01c4ad3db6443528b09b06af4b7a301a1145f0793ca716e",
+      "source_binding_sha256": "3e04269683f9ecabfefb986c1af285b055439cf63957f48a3f712735f095ca64"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h015/qa/candidate-controls-boundary-followups/validation.json",
+      "sha256": "214bd36593c76a4156b36265ea16b7a8e91bee724325b960ac5ef9d067c3bce0",
+      "source_binding_sha256": "c37e397d770a279f2f38f2bf2ff310f155994548735a46b5f478b2a4dd67df6a"
+    }
+  ],
+  "runtime_scoring_sha256": {
+    "expected.json": "2e8cf1a6d5911f170d7a98959aa56bb0ff37e0fc0aade1aa850e6366614dd667",
+    "business_oracle.json": "3272dfbebfa2c1292bc7f34c4f865e77030f59899bb13c879ee066cdb6eeba51",
+    "protected_sha256.json": "79c7b21e90b1269a1e5655d54eb26734fd62c087e3017f2dd5634ac3389e3f28",
+    "artifact_contract.json": "83400bcee397bb0f86c21d8316a00ee279895cfbd55e9e24bc60e2647a355ca0",
+    "evidence_requirements.json": "b073008123bd5c46155b7f1e8a36a55ae2996bac2eaee61ae29ce44e7090c0d3",
+    "office_runtime.py": "e789f06be15587ff28f280a67887f083f7dd473694b6f3059ce9da6cdca22534",
+    "native_text.py": "c92f7367c026497bc1594fc58b7e46809d0b163f9a930064fbfb027dacd5eb79",
+    "word_model.py": "01a8167879e075dd18c1af435acb97328c042b394e42014b039e4ec5ad07ba33",
+    "render_checks.py": "6d6fbf5923732ff5010517303ce8067e78bd9f5c2687c270095e5e9af5876a6d",
+    "artifact_io.py": "0d7d198261be293259009dd17f000e5e6730bae914e99c4ae8d9ab8b02ac2f8b",
+    "business_model.py": "7de3368f668749e333605193c53dd9823bd57d5aef480b91964fff0041ffc8cf",
+    "business_checks.py": "f7faec9ccf26b3bfbbcfcfca0ab12ee3a300eb94dd621a79bd4f0b300b89b509",
+    "prose_observations.py": "e74ed9f69890f7cfed3bc26da920f6a972af41e1f96aa59fb5239fdb3174e29b",
+    "scoring_contract.json": "f36bc3b1566a3e1c5e6fc8cbf62d920443c2e82a2d6b6583897704d9b847a79f",
+    "grader.py": "a003d05754b720071e823bb1f6b7156d9eeb9f7e6df4a4d52e63fa99aa3cecdb"
+  },
+  "controls": [
+    {
+      "name": "reference",
+      "expected": "one",
+      "kind": "scores",
+      "score": 1.0,
+      "workspace_unchanged": true
+    },
+    {
+      "name": "renamed_sheets",
+      "expected": "one",
+      "kind": "scores",
+      "score": 1.0,
+      "workspace_unchanged": true
+    },
+    {
+      "name": "shifted_grid",
+      "expected": "one",
+      "kind": "scores",
+      "score": 1.0,
+      "workspace_unchanged": true
+    },
+    {
+      "name": "chinese_headers",
+      "expected": "one",
+      "kind": "scores",
+      "score": 1.0,
+      "workspace_unchanged": true
+    },
+    {
+      "name": "equivalent_formulas",
+      "expected": "one",
+      "kind": "scores",
+      "score": 1.0,
+      "workspace_unchanged": true
+    },
+    {
+      "name": "A_phase1",
+      "expected": "one",
+      "kind": "scores",
+      "score": 1.0,
+      "workspace_unchanged": true
+    },
+    {
+      "name": "A_deferred",
+      "expected": "one",
+      "kind": "scores",
+      "score": 1.0,
+      "workspace_unchanged": true
+    },
+    {
+      "name": "reordered_word_rows",
+      "expected": "one",
+      "kind": "scores",
+      "score": 1.0,
+      "workspace_unchanged": true
+    },
+    {
+      "name": "index_layout_and_nonprivate_ids",
+      "expected": "one",
+      "kind": "scores",
+      "score": 1.0,
+      "workspace_unchanged": true
+    },
+    {
+      "name": "word_cash_prose",
+      "expected": "one",
+      "kind": "scores",
+      "score": 1.0,
+      "workspace_unchanged": true
+    },
+    {
+      "name": "input_units_wan",
+      "expected": "one",
+      "kind": "scores",
+      "score": 1.0,
+      "workspace_unchanged": true
+    },
+    {
+      "name": "english_choice",
+      "expected": "one",
+      "kind": "scores",
+      "score": 1.0,
+      "workspace_unchanged": true
+    },
+    {
+      "name": "wide_cash_nodes",
+      "expected": "one",
+      "kind": "scores",
+      "score": 1.0,
+      "workspace_unchanged": true
+    },
+    {
+      "name": "word_history_prose",
+      "expected": "one",
+      "kind": "scores",
+      "score": 1.0,
+      "workspace_unchanged": true
+    },
+    {
+      "name": "quoted_unsafe_discussion",
+      "expected": "one",
+      "kind": "scores",
+      "score": 1.0,
+      "workspace_unchanged": true
+    },
+    {
+      "name": "wrong_weighted_margin",
+      "expected": "less_than_one",
+      "kind": "scores",
+      "score": 0.9963333333333334,
+      "workspace_unchanged": true
+    },
+    {
+      "name": "profit_scope_wrong",
+      "expected": "less_than_one",
+      "kind": "scores",
+      "score": 0.9682222222222222,
+      "workspace_unchanged": true
+    },
+    {
+      "name": "wrong_period",
+      "expected": "less_than_one",
+      "kind": "scores",
+      "score": 0.9083333333333333,
+      "workspace_unchanged": true
+    },
+    {
+      "name": "A_end_balance_as_minimum",
+      "expected": "less_than_one",
+      "kind": "scores",
+      "score": 0.9740635671132126,
+      "workspace_unchanged": true
+    },
+    {
+      "name": "unconfirmed_120000_to_B",
+      "expected": "less_than_one",
+      "kind": "scores",
+      "score": 0.8393932402914299,
+      "workspace_unchanged": true
+    },
+    {
+      "name": "monthly_only_nodes",
+      "expected": "less_than_one",
+      "kind": "scores",
+      "score": 0.3259606956714087,
+      "workspace_unchanged": true
+    },
+    {
+      "name": "wrong_formula_old_cache",
+      "expected": "less_than_one",
+      "kind": "scores",
+      "score": 0.8768472896188462,
+      "workspace_unchanged": true
+    },
+    {
+      "name": "hardcoded_floor",
+      "expected": "less_than_one",
+      "kind": "scores",
+      "score": 0.8916666666666667,
+      "workspace_unchanged": true
+    },
+    {
+      "name": "static_workbook",
+      "expected": "less_than_one",
+      "kind": "scores",
+      "score": 0.8375,
+      "workspace_unchanged": true
+    },
+    {
+      "name": "constant_formulas",
+      "expected": "less_than_one",
+      "kind": "scores",
+      "score": 0.8375,
+      "workspace_unchanged": true
+    },
+    {
+      "name": "unsafe_A_original",
+      "expected": "less_than_one",
+      "kind": "scores",
+      "score": 0.725,
+      "workspace_unchanged": true
+    },
+    {
+      "name": "deck_disagrees_recommendation",
+      "expected": "less_than_one",
+      "kind": "scores",
+      "score": 0.725,
+      "workspace_unchanged": true
+    },
+    {
+      "name": "deck_safe_choice_disagrees",
+      "expected": "less_than_one",
+      "kind": "scores",
+      "score": 0.8625,
+      "workspace_unchanged": true
+    },
+    {
+      "name": "deck_five_pages",
+      "expected": "less_than_one",
+      "kind": "scores",
+      "score": 0.8493333333333334,
+      "workspace_unchanged": true
+    },
+    {
+      "name": "deck_hidden_comparison",
+      "expected": "less_than_one",
+      "kind": "scores",
+      "score": 0.8255555555555557,
+      "workspace_unchanged": true
+    },
+    {
+      "name": "word_hidden_content",
+      "expected": "less_than_one",
+      "kind": "scores",
+      "score": 0.8500000000000001,
+      "workspace_unchanged": true
+    },
+    {
+      "name": "missing_word",
+      "expected": "less_than_one",
+      "kind": "scores",
+      "score": 0.6908888888888889,
+      "workspace_unchanged": true
+    },
+    {
+      "name": "missing_workbook",
+      "expected": "less_than_one",
+      "kind": "scores",
+      "score": 0.23205555555555557,
+      "workspace_unchanged": true
+    },
+    {
+      "name": "missing_deck",
+      "expected": "less_than_one",
+      "kind": "scores",
+      "score": 0.806388888888889,
+      "workspace_unchanged": true
+    },
+    {
+      "name": "missing_evidence",
+      "expected": "less_than_one",
+      "kind": "scores",
+      "score": 0.7890000000000001,
+      "workspace_unchanged": true
+    },
+    {
+      "name": "missing_all",
+      "expected": "less_than_one",
+      "kind": "scores",
+      "score": 0.0,
+      "workspace_unchanged": true
+    },
+    {
+      "name": "invalid_evidence",
+      "expected": "less_than_one",
+      "kind": "scores",
+      "score": 0.7890000000000001,
+      "workspace_unchanged": true
+    },
+    {
+      "name": "invalid_source_locator",
+      "expected": "less_than_one",
+      "kind": "scores",
+      "score": 0.8445416666666667,
+      "workspace_unchanged": true
+    },
+    {
+      "name": "changed_protected_input",
+      "expected": "less_than_one",
+      "kind": "scores",
+      "score": 0.55,
+      "workspace_unchanged": true
+    },
+    {
+      "name": "unauthorized_B_delay",
+      "expected": "less_than_one",
+      "kind": "scores",
+      "score": 0.827001264982788,
+      "workspace_unchanged": true
+    },
+    {
+      "name": "semantic_price_causality",
+      "expected": "one",
+      "kind": "scores",
+      "score": 1.0,
+      "workspace_unchanged": true
+    },
+    {
+      "name": "semantic_missing_as_none",
+      "expected": "one",
+      "kind": "scores",
+      "score": 1.0,
+      "workspace_unchanged": true
+    },
+    {
+      "name": "semantic_already_approved",
+      "expected": "one",
+      "kind": "scores",
+      "score": 1.0,
+      "workspace_unchanged": true
+    },
+    {
+      "name": "semantic_irrelevant_existing_source",
+      "expected": "one",
+      "kind": "scores",
+      "score": 1.0,
+      "workspace_unchanged": true
+    },
+    {
+      "name": "semantic_sample_purchase",
+      "expected": "one",
+      "kind": "scores",
+      "score": 1.0,
+      "workspace_unchanged": true
+    },
+    {
+      "name": "semantic_benefits_known_zero",
+      "expected": "one",
+      "kind": "scores",
+      "score": 1.0,
+      "workspace_unchanged": true
+    },
+    {
+      "name": "missing_gt",
+      "expected": "exception",
+      "kind": "exception",
+      "score": null,
+      "workspace_unchanged": true
+    },
+    {
+      "name": "missing_helper",
+      "expected": "exception",
+      "kind": "exception",
+      "score": null,
+      "workspace_unchanged": true
+    },
+    {
+      "name": "private_helper_drift",
+      "expected": "exception",
+      "kind": "exception",
+      "score": null,
+      "workspace_unchanged": true
+    },
+    {
+      "name": "missing_engine",
+      "expected": "exception",
+      "kind": "exception",
+      "score": null,
+      "workspace_unchanged": true
+    },
+    {
+      "name": "font_drift",
+      "expected": "exception",
+      "kind": "exception",
+      "score": null,
+      "workspace_unchanged": true
+    }
+  ],
+  "case_control_map": {
+    "weighted_margin": [
+      "wrong_weighted_margin"
+    ],
+    "end_balance_only": [
+      "A_end_balance_as_minimum"
+    ],
+    "monthly_only": [
+      "monthly_only_nodes"
+    ],
+    "unconfirmed_inflow": [
+      "unconfirmed_120000_to_B"
+    ],
+    "missing_is_zero": [
+      "semantic_missing_as_none",
+      "semantic_price_causality"
+    ],
+    "sample_purchase": [
+      "semantic_sample_purchase"
+    ],
+    "benefit_unknown": [
+      "semantic_benefits_known_zero"
+    ],
+    "unique_choice": [
+      "A_phase1",
+      "A_deferred"
+    ],
+    "unauthorized_B_change": [
+      "unauthorized_B_delay"
+    ],
+    "cross_artifact_conflict": [
+      "deck_disagrees_recommendation",
+      "deck_safe_choice_disagrees"
+    ]
+  },
+  "prior_139_material_bindings_unchanged": true,
+  "independent_semantic_score": null,
+  "harness_score": null,
+  "difficulty_status": "design_estimate_unvalidated",
+  "limit": "author controls only; no full task correctness, semantic or Harness score inferred from rule 1.0"
+}

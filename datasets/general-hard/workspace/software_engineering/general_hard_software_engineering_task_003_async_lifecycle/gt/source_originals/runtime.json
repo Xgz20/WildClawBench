@@ -1,0 +1,8 @@
+{
+  "language": "Python",
+  "minimum_version": "3.11",
+  "dependencies": "standard_library_only",
+  "network": "offline",
+  "providers": "in_memory_only",
+  "installation_required": false
+}

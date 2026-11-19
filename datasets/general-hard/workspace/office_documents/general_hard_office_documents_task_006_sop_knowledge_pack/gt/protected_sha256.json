@@ -1,0 +1,10 @@
+{
+  "manuals/01_customer.docx": "0a79cf4249adf73fe150774a65979ddfdab54adf00cc690c8fef99a594d4aa7a",
+  "manuals/02_warehouse.docx": "e1e936b50b4eac600e5f1f499d0c3c5deb9898441800ef570dc1a12ea7704bd1",
+  "manuals/03_quality.docx": "de09c6829ded6802a8b3c4869f756026250f1003f6d79be9e0ec57e98217ab16",
+  "manuals/04_finance.docx": "fac147fe9b5fcf963fd8982dd89a39625fa29b5e0a1e766cf2ca012ee86b332a",
+  "manuals/05_operations.docx": "89d10ba8702ea5ae71d38984607511bed1c1c81bcbf0e5969f10f77edaba14ce",
+  "manuals/06_compliance.docx": "b95381a5f56c2dfca1bc687170a85996b5fef47cac07ba7af175270b97383521",
+  "authority.yaml": "af9d5f29a0a342c6c2224b77993629a95e83da4c5bf1730c1df64bdf0dc3a85a",
+  "incidents.csv": "ae0e1d647ceab4c402f5626f394a652c0854f1141c3232da471cfc422436cc5d"
+}

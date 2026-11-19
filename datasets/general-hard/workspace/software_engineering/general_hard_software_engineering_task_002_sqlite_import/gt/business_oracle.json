@@ -1,0 +1,21 @@
+{
+  "phase_order": [
+    "injection_config",
+    "batch_schema",
+    "zero_injection",
+    "people",
+    "rooms",
+    "bookings"
+  ],
+  "row_order": [
+    "row_shape",
+    "field_types",
+    "id_conflict",
+    "person_reference",
+    "room_reference",
+    "aggregate_capacity",
+    "insert_failure_injection"
+  ],
+  "state_basis": "Set equality of ordered SQL rows and independent-connection visibility; caller-owned transaction state remains explicit.",
+  "schema_basis": "Trusted scorer reopens the persisted DB read-only and inspects PRAGMA/sqlite_master in a separate process from the candidate; candidate-reported schema probes are not authoritative."
+}

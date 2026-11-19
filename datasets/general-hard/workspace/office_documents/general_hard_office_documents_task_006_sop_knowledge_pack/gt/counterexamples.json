@@ -1,0 +1,109 @@
+{
+  "groups": [
+    {
+      "key": "approval_execution_boundary",
+      "ids": [
+        "I02",
+        "I10"
+      ],
+      "fields": [
+        "csv.approval_owner",
+        "csv.execution_owner",
+        "supervisor.approval_owner",
+        "supervisor.execution_owner"
+      ]
+    },
+    {
+      "key": "receipt_not_inspection",
+      "ids": [
+        "I04"
+      ],
+      "fields": [
+        "csv.route",
+        "csv.clock_state",
+        "csv.inspection_workdays",
+        "csv.path",
+        "operator.route"
+      ]
+    },
+    {
+      "key": "independent_risk_clearances",
+      "ids": [
+        "I05",
+        "I06",
+        "I07"
+      ],
+      "fields": [
+        "csv.route",
+        "csv.clearance_roles",
+        "csv.path",
+        "operator.route",
+        "supervisor.clearance_roles"
+      ]
+    },
+    {
+      "key": "separate_continuing_clocks",
+      "ids": [
+        "I05",
+        "I06",
+        "I07",
+        "I08",
+        "I09",
+        "I10"
+      ],
+      "fields": [
+        "csv.ack_hours",
+        "csv.payment_workdays",
+        "csv.clock_state",
+        "supervisor.ack_hours",
+        "supervisor.payment_workdays",
+        "operator.clock_state"
+      ]
+    },
+    {
+      "key": "duplicate_link_without_restart",
+      "ids": [
+        "I08"
+      ],
+      "fields": [
+        "csv.route",
+        "csv.path",
+        "csv.forbidden",
+        "operator.route"
+      ]
+    },
+    {
+      "key": "withdrawal_and_current_bank",
+      "ids": [
+        "I09",
+        "I10"
+      ],
+      "fields": [
+        "csv.route",
+        "csv.next_owner",
+        "csv.clearance_roles",
+        "csv.path",
+        "csv.forbidden",
+        "supervisor.clearance_roles"
+      ]
+    },
+    {
+      "key": "step_partial_order",
+      "ids": [
+        "I01",
+        "I02",
+        "I03",
+        "I04",
+        "I05",
+        "I06",
+        "I07",
+        "I08",
+        "I09",
+        "I10"
+      ],
+      "fields": [
+        "csv.path"
+      ]
+    }
+  ]
+}

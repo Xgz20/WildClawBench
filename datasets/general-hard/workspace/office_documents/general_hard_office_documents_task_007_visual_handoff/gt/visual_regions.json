@@ -1,0 +1,193 @@
+{
+  "schema_version": "h007-reviewed-visual-regions/v1",
+  "status": "approved",
+  "images": [
+    {
+      "image": "page_01.png",
+      "width": 1600,
+      "height": 1300,
+      "sha256": "bc96cdb69201b0c0c3322e966c22c9f5f9407b58866056ce37d2deb62e9f3465",
+      "bytes": 232467
+    },
+    {
+      "image": "page_02.png",
+      "width": 1600,
+      "height": 1300,
+      "sha256": "db80ec3f35de875cf0cc85430e11551bfab306a8d04800583777fb6640fcf954",
+      "bytes": 191123
+    },
+    {
+      "image": "page_03.png",
+      "width": 1600,
+      "height": 1300,
+      "sha256": "b14f12865a2ba51078a768b57cba6cff1ebbf6773ddbf17e7924dcf75fef1f76",
+      "bytes": 128461
+    }
+  ],
+  "regions": [
+    {
+      "id": "V01",
+      "image": "page_01.png",
+      "coordinate_space": "pixel_xyxy",
+      "annotation_bbox": [
+        1175,
+        385,
+        1405,
+        430
+      ],
+      "target_bbox": [
+        246,
+        568,
+        374,
+        597
+      ],
+      "region_basis": "Union of two retained independent pixel annotations after author pixel review; not generation geometry."
+    },
+    {
+      "id": "V02",
+      "image": "page_01.png",
+      "coordinate_space": "pixel_xyxy",
+      "annotation_bbox": [
+        1174,
+        602,
+        1450,
+        652
+      ],
+      "target_bbox": [
+        85,
+        634,
+        355,
+        664
+      ],
+      "region_basis": "Union of two retained independent pixel annotations after author pixel review; not generation geometry."
+    },
+    {
+      "id": "V03",
+      "image": "page_01.png",
+      "coordinate_space": "pixel_xyxy",
+      "annotation_bbox": [
+        1174,
+        830,
+        1398,
+        876
+      ],
+      "target_bbox": [
+        84,
+        700,
+        430,
+        730
+      ],
+      "region_basis": "Union of two retained independent pixel annotations after author pixel review; not generation geometry."
+    },
+    {
+      "id": "V04",
+      "image": "page_02.png",
+      "coordinate_space": "pixel_xyxy",
+      "annotation_bbox": [
+        1175,
+        508,
+        1324,
+        552
+      ],
+      "target_bbox": [
+        488,
+        401,
+        552,
+        433
+      ],
+      "region_basis": "Union of two retained independent pixel annotations after author pixel review; not generation geometry."
+    },
+    {
+      "id": "V05",
+      "image": "page_02.png",
+      "coordinate_space": "pixel_xyxy",
+      "annotation_bbox": [
+        1175,
+        710,
+        1374,
+        791
+      ],
+      "target_bbox": [
+        88,
+        450,
+        1070,
+        518
+      ],
+      "region_basis": "Union of two retained independent pixel annotations after author pixel review; not generation geometry."
+    },
+    {
+      "id": "V06",
+      "image": "page_02.png",
+      "coordinate_space": "pixel_xyxy",
+      "annotation_bbox": [
+        1175,
+        958,
+        1484,
+        1038
+      ],
+      "target_bbox": [
+        87,
+        557,
+        497,
+        589
+      ],
+      "region_basis": "Union of two retained independent pixel annotations after author pixel review; not generation geometry."
+    },
+    {
+      "id": "V07",
+      "image": "page_03.png",
+      "coordinate_space": "pixel_xyxy",
+      "annotation_bbox": [
+        1175,
+        307,
+        1367,
+        390
+      ],
+      "target_bbox": [
+        85,
+        348,
+        271,
+        379
+      ],
+      "region_basis": "Union of two retained independent pixel annotations after author pixel review; not generation geometry.",
+      "landing_bbox": [
+        77,
+        249,
+        404,
+        280
+      ],
+      "arrow_polyline": [
+        [
+          85,
+          265
+        ]
+      ],
+      "arrow_geometry_scope": "Observed insertion tip only, not a reconstructed full route; reviewer B and author pixel view agree."
+    },
+    {
+      "id": "V08",
+      "image": "page_03.png",
+      "coordinate_space": "pixel_xyxy",
+      "annotation_bbox": [
+        1175,
+        817,
+        1343,
+        863
+      ],
+      "target_bbox": [
+        85,
+        527,
+        702,
+        557
+      ],
+      "region_basis": "Union of two retained independent pixel annotations after author pixel review; not generation geometry."
+    }
+  ],
+  "review_kind": "two_independent_model_annotations_with_author_reconciliation",
+  "human_expert": false,
+  "annotators": [
+    "reviewer_a",
+    "reviewer_b"
+  ],
+  "limit": "Same-model visual reviews may share errors. Not human expert labels, independent semantic grading, Harness validation or calibration."
+}

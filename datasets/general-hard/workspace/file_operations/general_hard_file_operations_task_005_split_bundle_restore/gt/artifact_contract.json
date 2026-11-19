@@ -1,0 +1,37 @@
+{
+  "deliverables": [
+    "results/restored/",
+    "results/restore_audit.json",
+    "results/handoff.md"
+  ],
+  "inputs": 11,
+  "same_release_parts": 3,
+  "old_distractors": 1,
+  "release_members": 40,
+  "original_notes": 6,
+  "restored_files": 46,
+  "resource_edges": 69,
+  "scoring_ownership": {
+    "business_correctness": "internal .75 actual release byte preservation (any placement for independent content credit; layout owned by boundary) + .25 actual selected-part SHA eligibility and top release/version fields",
+    "boundary_cases": "internal .40 original note bytes/path preservation + .40 single-root exact-case fixed paths and all intact-source graph edges + .20 recorded exact/casefold conflict routing. Changed-byte sources own their missing graph edges to avoid cascade; an extra wrapper preserves independent note-byte credit; v2 additionally binds every present original release byte to its required target, so a permutation cannot pass. Missing original byte checks remain owned by business content.",
+    "delivery_integrity": "internal .60 input SHA/member protection + .15 native audit JSON + .10 native handoff summary + .15 six summary facts",
+    "evidence_binding": "internal .40 original member hashes/sizes/nonempty subset of valid source part IDs + .20 original note provenance + .20 actual resource relation identity + .10 input hashes + .10 old-release exclusion identity/reason; v2 binds reported member/note target paths to actual restored SHA. Canonical targets affected by an already-scored artifact mismatch are explicitly not_assessed (neutral), not verified. A fabricated alternate path fails; reporting the actual path of a misplaced wrapper remains valid provenance and layout loses separately."
+  },
+  "usability_boundary": "Actual authored-reference local browser tests exist outside candidate delivery. Candidate grading is original byte preservation plus independently parsed local dependency/fragment graph; it does not claim candidate app launch, source execution or real Harness behavior. Never execute arbitrary changed candidate script to inspect static restoration.",
+  "equivalence": [
+    "JSON/BOM/order and Chinese aliases",
+    "valid subset of identical duplicate member sources",
+    "flat or source-grouped resource relations",
+    "NFC paths, hex/integer and version v representations",
+    "free handoff wording with auditable six-field summary"
+  ],
+  "infrastructure": "Missing/drift GT/helper is evaluation exception; candidate missing/corrupt payload, note loss, mixed selected metadata, nested root, wrong case or malformed delivery loses corresponding obligations.",
+  "schema_version": "h039.artifact-contract/v2",
+  "v2_review_remedy": {
+    "original_v1_grader_sha256": "04f0ed09006aa1a5e8a2620b31f15186d926c3199051e1648e42cffc854f55a3",
+    "v1_snapshot": "qa/root-review-v1/frozen-v1/snapshot.json",
+    "source_oracle_public_inputs_and_reference_changed": false,
+    "observation_receipt": "worker/derived/path-byte-target-bindings.json",
+    "candidate_code_execution": false
+  }
+}

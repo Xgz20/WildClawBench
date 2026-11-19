@@ -1,0 +1,48 @@
+{
+  "shared_cleanable_group": [
+    "F001",
+    "F002"
+  ],
+  "shared_with_protected": [
+    "F021",
+    "F022",
+    "F023",
+    "F024",
+    "F041"
+  ],
+  "external_pinned_group": [
+    "F005",
+    "F006"
+  ],
+  "unknown_files": [
+    "F064",
+    "F065",
+    "F066",
+    "F067"
+  ],
+  "basename_collision": [
+    "F022",
+    "F033",
+    "F041",
+    "F068"
+  ],
+  "active_locked_files": [
+    "F056",
+    "F057",
+    "F058",
+    "F059"
+  ],
+  "external_shortcuts": [
+    "F075",
+    "F076",
+    "F077",
+    "F078",
+    "F079",
+    "F080"
+  ],
+  "path_component_trap": "sandbox_tree/cache2",
+  "unicode_identity": [
+    "F021",
+    "F052"
+  ]
+}

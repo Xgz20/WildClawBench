@@ -1,0 +1,711 @@
+{
+  "schema_version": "h026-independent-author-reference-review/v1",
+  "reviewer_id": "reference-reviewer-c",
+  "review_type": "independent_model_author_reference_review",
+  "human_expert": false,
+  "formal_semantic_score": null,
+  "verdict": "PASS",
+  "verdict_label": "作者参考核验PASS",
+  "conclusion": "在给定合成规则及限定输入范围内，未发现三份作者参考产物的实质语义、数值、来源绑定或核心可读性问题。原图状态/更正、18行逐笔动作、9组归组、7条待审批建议与未决边界相互一致。此PASS仅为独立模型对作者参考产物的有限核验，不是人工财务专家意见、正式语义Judge结果或Harness成绩。",
+  "reviewed_at": "2026-10-28T15:28:00.427953+08:00",
+  "root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h026",
+  "scope": {
+    "inputs_and_reference_files": [
+      {
+        "file": "exec/policy.md",
+        "sha256": "0d0151d5f228d9d3462a44381cfb0d97328583421f90d62879a0dea66409f070"
+      },
+      {
+        "file": "exec/ledger.csv",
+        "sha256": "260b03a3dfa49ce38d596c4b28313bb0e48cd61359e2323583d65938329c68c0"
+      },
+      {
+        "file": "gt/reference/results/voucher_match.xlsx",
+        "sha256": "a89db6141ec72cb0e57f5fee996676e66b7b37d4232797fde81f7f1b1091f168"
+      },
+      {
+        "file": "gt/reference/results/adjustment_proposal.json",
+        "sha256": "2d7ba7b0fec68740f0115a3a7f15b4a4306f5895aae6ae187b7fbf55c1982d2b"
+      },
+      {
+        "file": "gt/reference/results/visual_evidence.json",
+        "sha256": "81cc2fc7898991b1db241c2f78b7f955b3b72cbc8338ab917483006175d0172f"
+      }
+    ],
+    "original_image_file_count": 12,
+    "unique_original_pixel_reads": 11,
+    "original_image_coverage_count": 12,
+    "preview_count": 7,
+    "network_used": false,
+    "other_agents_spawned": false,
+    "read_gt_expected": false,
+    "read_other_ground_truth_or_original_annotations": false,
+    "read_author_composition_code": false,
+    "read_parent_chat_history": false,
+    "modified_inputs_or_reference": false,
+    "core_file_hashes_unchanged_from_first_observation": true,
+    "only_new_written_file": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h026/qa/reference-reviewer-c/review.json"
+  },
+  "actual_read_evidence": {
+    "policy": "完整读取exec/policy.md P1至P6，以本题合成核对规则作为验收依据。",
+    "ledger": "完整读取exec/ledger.csv的10字段、18行及原物理顺序，使用utf-8-sig处理BOM。",
+    "original_images": [
+      {
+        "file": "exec/vouchers/voucher_01.png",
+        "sha256": "38cef001b47ebfddedc4416502fce0eb14dc3344b076957d8029c3bc2e7d6024",
+        "width": 1400,
+        "height": 1000,
+        "pixel_read": "view_image(detail=original)",
+        "pixel_source": "exec/vouchers/voucher_01.png",
+        "observed_fields_verified_against_native_xlsx": {
+          "voucher_no": "NF-260910-018",
+          "counterparty_id": "CP-001",
+          "counterparty_name": "青禾示例服务",
+          "business_date": "2026-09-10",
+          "currency": "CNY",
+          "direction": "expense",
+          "printed_amount": 1280,
+          "has_handwritten_correction": false,
+          "handwritten_amount": null,
+          "status_selection": "valid",
+          "approval_location": "general",
+          "approval_crossed_out": false,
+          "correction_status": "none"
+        }
+      },
+      {
+        "file": "exec/vouchers/voucher_02.png",
+        "sha256": "f02a9596b35e247882c567c66f4f15514706835445362fd55570af308ee61c54",
+        "width": 1400,
+        "height": 1000,
+        "pixel_read": "view_image(detail=original)",
+        "pixel_source": "exec/vouchers/voucher_02.png",
+        "observed_fields_verified_against_native_xlsx": {
+          "voucher_no": "NF-260910-018",
+          "counterparty_id": "CP-001",
+          "counterparty_name": "青禾示例服务",
+          "business_date": "2026-09-10",
+          "currency": "CNY",
+          "direction": "expense",
+          "printed_amount": 1280,
+          "has_handwritten_correction": false,
+          "handwritten_amount": null,
+          "status_selection": "void",
+          "approval_location": "general",
+          "approval_crossed_out": false,
+          "correction_status": "none"
+        }
+      },
+      {
+        "file": "exec/vouchers/voucher_03.png",
+        "sha256": "10202bded9197d6ddd5a346fe2578d233f68049f8be6832d78c3ef6285d681d2",
+        "width": 1400,
+        "height": 1000,
+        "pixel_read": "view_image(detail=original)",
+        "pixel_source": "exec/vouchers/voucher_03.png",
+        "observed_fields_verified_against_native_xlsx": {
+          "voucher_no": "NF-260912-004",
+          "counterparty_id": "CP-002",
+          "counterparty_name": "澄星示例供应",
+          "business_date": "2026-09-12",
+          "currency": "CNY",
+          "direction": "expense",
+          "printed_amount": 860.5,
+          "has_handwritten_correction": false,
+          "handwritten_amount": null,
+          "status_selection": "valid",
+          "approval_location": "general",
+          "approval_crossed_out": false,
+          "correction_status": "none"
+        }
+      },
+      {
+        "file": "exec/vouchers/voucher_04.png",
+        "sha256": "10202bded9197d6ddd5a346fe2578d233f68049f8be6832d78c3ef6285d681d2",
+        "width": 1400,
+        "height": 1000,
+        "pixel_read": "SHA256-identical mapping to voucher_03.png; no separate pixel call",
+        "pixel_source": "exec/vouchers/voucher_03.png",
+        "observed_fields_verified_against_native_xlsx": {
+          "voucher_no": "NF-260912-004",
+          "counterparty_id": "CP-002",
+          "counterparty_name": "澄星示例供应",
+          "business_date": "2026-09-12",
+          "currency": "CNY",
+          "direction": "expense",
+          "printed_amount": 860.5,
+          "has_handwritten_correction": false,
+          "handwritten_amount": null,
+          "status_selection": "valid",
+          "approval_location": "general",
+          "approval_crossed_out": false,
+          "correction_status": "none"
+        }
+      },
+      {
+        "file": "exec/vouchers/voucher_05.png",
+        "sha256": "bc1dc075b70b395198f2cb05c8205064b29051d1d5b2c56b8ff7f2d6cc7bd879",
+        "width": 1400,
+        "height": 1000,
+        "pixel_read": "view_image(detail=original)",
+        "pixel_source": "exec/vouchers/voucher_05.png",
+        "observed_fields_verified_against_native_xlsx": {
+          "voucher_no": "NF-260914-027",
+          "counterparty_id": "CP-003",
+          "counterparty_name": "溪桥示例设备",
+          "business_date": "2026-09-14",
+          "currency": "CNY",
+          "direction": "expense",
+          "printed_amount": 2400,
+          "has_handwritten_correction": true,
+          "handwritten_amount": 2140,
+          "status_selection": "valid",
+          "approval_location": "correction",
+          "approval_crossed_out": false,
+          "correction_status": "approved"
+        }
+      },
+      {
+        "file": "exec/vouchers/voucher_06.png",
+        "sha256": "b8a12a8027fc52e49da160f9ff49c02625323fd582061fbb9d7380859dcaefa3",
+        "width": 1400,
+        "height": 1000,
+        "pixel_read": "view_image(detail=original)",
+        "pixel_source": "exec/vouchers/voucher_06.png",
+        "observed_fields_verified_against_native_xlsx": {
+          "voucher_no": "NF-260914-027",
+          "counterparty_id": "CP-003",
+          "counterparty_name": "溪桥示例设备",
+          "business_date": "2026-09-14",
+          "currency": "CNY",
+          "direction": "expense",
+          "printed_amount": 2400,
+          "has_handwritten_correction": true,
+          "handwritten_amount": 2140,
+          "status_selection": "valid",
+          "approval_location": "general",
+          "approval_crossed_out": false,
+          "correction_status": "unapproved"
+        }
+      },
+      {
+        "file": "exec/vouchers/voucher_07.png",
+        "sha256": "6efd35de4be34c1afadb5de1a7bb9e083af6bc26f3c91f6c0e539883eb14b8c3",
+        "width": 1400,
+        "height": 1000,
+        "pixel_read": "view_image(detail=original)",
+        "pixel_source": "exec/vouchers/voucher_07.png",
+        "observed_fields_verified_against_native_xlsx": {
+          "voucher_no": "NF-260916-108",
+          "counterparty_id": "CP-004",
+          "counterparty_name": "远杉示例用品",
+          "business_date": "2026-09-16",
+          "currency": "CNY",
+          "direction": "expense",
+          "printed_amount": 510.2,
+          "has_handwritten_correction": false,
+          "handwritten_amount": null,
+          "status_selection": "valid",
+          "approval_location": "general",
+          "approval_crossed_out": false,
+          "correction_status": "none"
+        }
+      },
+      {
+        "file": "exec/vouchers/voucher_08.png",
+        "sha256": "d1268cf1160bf87c2398016c1792dcbd8d458cf02cdb7c5d3622bb53993f14d1",
+        "width": 1400,
+        "height": 1000,
+        "pixel_read": "view_image(detail=original)",
+        "pixel_source": "exec/vouchers/voucher_08.png",
+        "observed_fields_verified_against_native_xlsx": {
+          "voucher_no": "NF-260916-1O8",
+          "counterparty_id": "CP-004",
+          "counterparty_name": "远杉示例用品",
+          "business_date": "2026-09-16",
+          "currency": "CNY",
+          "direction": "expense",
+          "printed_amount": 510.2,
+          "has_handwritten_correction": false,
+          "handwritten_amount": null,
+          "status_selection": "valid",
+          "approval_location": "general",
+          "approval_crossed_out": false,
+          "correction_status": "none"
+        }
+      },
+      {
+        "file": "exec/vouchers/voucher_09.png",
+        "sha256": "4a023e86420dab73b7b79dc3a2d67e9d11e14fb9cbb75900176d1c9f58005ee8",
+        "width": 1400,
+        "height": 1000,
+        "pixel_read": "view_image(detail=original)",
+        "pixel_source": "exec/vouchers/voucher_09.png",
+        "observed_fields_verified_against_native_xlsx": {
+          "voucher_no": "NF-260918-036",
+          "counterparty_id": "CP-005",
+          "counterparty_name": "明川示例支持",
+          "business_date": "2026-09-18",
+          "currency": "CNY",
+          "direction": "expense",
+          "printed_amount": 780,
+          "has_handwritten_correction": false,
+          "handwritten_amount": null,
+          "status_selection": "pending",
+          "approval_location": "general",
+          "approval_crossed_out": false,
+          "correction_status": "none"
+        }
+      },
+      {
+        "file": "exec/vouchers/voucher_10.png",
+        "sha256": "d7e33886797fb46efe246f0a1bdc542e8c9b9dee43000294780776afccfbb498",
+        "width": 1400,
+        "height": 1000,
+        "pixel_read": "view_image(detail=original)",
+        "pixel_source": "exec/vouchers/voucher_10.png",
+        "observed_fields_verified_against_native_xlsx": {
+          "voucher_no": "NF-260920-052",
+          "counterparty_id": "CP-006",
+          "counterparty_name": "安桐示例耗材",
+          "business_date": "2026-09-20",
+          "currency": "CNY",
+          "direction": "expense",
+          "printed_amount": 0,
+          "has_handwritten_correction": false,
+          "handwritten_amount": null,
+          "status_selection": "valid",
+          "approval_location": "general",
+          "approval_crossed_out": false,
+          "correction_status": "none"
+        }
+      },
+      {
+        "file": "exec/vouchers/voucher_11.png",
+        "sha256": "bd89a4ec0c9456e3813c37db4815af82f8f5b209dc5707c9606363a506d5ffdf",
+        "width": 1400,
+        "height": 1000,
+        "pixel_read": "view_image(detail=original)",
+        "pixel_source": "exec/vouchers/voucher_11.png",
+        "observed_fields_verified_against_native_xlsx": {
+          "voucher_no": "NF-260922-062",
+          "counterparty_id": "CP-007",
+          "counterparty_name": "泉屿示例租赁",
+          "business_date": "2026-09-22",
+          "currency": "CNY",
+          "direction": "expense",
+          "printed_amount": 460,
+          "has_handwritten_correction": false,
+          "handwritten_amount": null,
+          "status_selection": "valid",
+          "approval_location": "general",
+          "approval_crossed_out": false,
+          "correction_status": "none"
+        }
+      },
+      {
+        "file": "exec/vouchers/voucher_12.png",
+        "sha256": "374ce07608e155d4167176553e60e6001a8e3ec0ac9872da23015146be1b75bf",
+        "width": 1400,
+        "height": 1000,
+        "pixel_read": "view_image(detail=original)",
+        "pixel_source": "exec/vouchers/voucher_12.png",
+        "observed_fields_verified_against_native_xlsx": {
+          "voucher_no": "NF-260924-080",
+          "counterparty_id": "CP-013",
+          "counterparty_name": "启明示例物流",
+          "business_date": "2026-09-24",
+          "currency": "CNY",
+          "direction": "expense",
+          "printed_amount": 1020,
+          "has_handwritten_correction": true,
+          "handwritten_amount": 1200,
+          "status_selection": "valid",
+          "approval_location": "correction",
+          "approval_crossed_out": true,
+          "correction_status": "unapproved"
+        }
+      }
+    ],
+    "xlsx": {
+      "file": "gt/reference/results/voucher_match.xlsx",
+      "sha256": "a89db6141ec72cb0e57f5fee996676e66b7b37d4232797fde81f7f1b1091f168",
+      "python_executable": "/Users/gzx/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+      "reader": "openpyxl",
+      "reader_version": "3.1.5",
+      "read_only": true,
+      "data_only": false,
+      "save_called": false,
+      "all_sheets_rows_and_native_values_read": true,
+      "total_rows_including_blanks": 98,
+      "total_nonempty_cells": 765,
+      "sheets": [
+        {
+          "sheet": "核对汇总",
+          "all_rows_read_including_blank_rows": 21,
+          "max_columns_read": 7,
+          "nonempty_cells": 41,
+          "native_types": {
+            "str": 25,
+            "int": 8,
+            "float": 5,
+            "bool": 3
+          },
+          "formula_count": 0,
+          "all_native_values_sha256": "a6f7b6ed84064e2b42178e01ed03a7a461a2ab1c5204ce59d50aa26029016b29",
+          "data_rows": "C5:D21 plus G6/G8/G10/G12/G14 notes"
+        },
+        {
+          "sheet": "逐笔核对",
+          "all_rows_read_including_blank_rows": 23,
+          "max_columns_read": 17,
+          "nonempty_cells": 261,
+          "native_types": {
+            "str": 223,
+            "int": 23,
+            "float": 15
+          },
+          "formula_count": 0,
+          "all_native_values_sha256": "da2da58979becbdce6c591b62a2281cc39c07d5fc92f549ed95b1d739f11094f",
+          "data_rows": "C5:Q23 (18 ledger rows)"
+        },
+        {
+          "sheet": "凭据归组",
+          "all_rows_read_including_blank_rows": 14,
+          "max_columns_read": 12,
+          "nonempty_cells": 96,
+          "native_types": {
+            "str": 89,
+            "int": 4,
+            "float": 3
+          },
+          "formula_count": 0,
+          "all_native_values_sha256": "aaf14b9b0ba00ceb551ff4e9757145471fd17d9e2694872332f13ba41276ae2a",
+          "data_rows": "C5:L14 (9 groups)"
+        },
+        {
+          "sheet": "原图判读",
+          "all_rows_read_including_blank_rows": 17,
+          "max_columns_read": 16,
+          "nonempty_cells": 175,
+          "native_types": {
+            "str": 136,
+            "int": 11,
+            "bool": 24,
+            "float": 4
+          },
+          "formula_count": 0,
+          "all_native_values_sha256": "37fa2e5a6f8652e57da548040c898fc47dcccacb0e0bb0132f45af52bdda546b",
+          "data_rows": "C5:P17 (12 image rows)"
+        },
+        {
+          "sheet": "原账底稿",
+          "all_rows_read_including_blank_rows": 23,
+          "max_columns_read": 12,
+          "nonempty_cells": 192,
+          "native_types": {
+            "str": 174,
+            "int": 8,
+            "float": 10
+          },
+          "formula_count": 0,
+          "all_native_values_sha256": "501194d09698ddfb3ddef7d3923e4efb464bd3926b9bc946ac53f6b08777a083",
+          "data_rows": "C5:L23 (18 original ledger rows)"
+        }
+      ],
+      "selected_native_values": {
+        "逐笔核对!N16:O17": "L011/L012 targets and deltas are None, not numeric 0",
+        "逐笔核对!N20:O21": "L015/L016 targets and deltas are None, not numeric 0",
+        "逐笔核对!N10:O10,N13:O13,N22:O23": "excluded row targets/deltas are None",
+        "逐笔核对!N19:O19": [
+          0,
+          0
+        ],
+        "原图判读!J15": 0,
+        "原图判读!K10:L11": "05/06 native bool True and numeric 2140",
+        "原图判读!O17": true,
+        "核对汇总!D19:D21": [
+          false,
+          false,
+          true
+        ]
+      },
+      "method_note": "对每张Sheet的每一行实际迭代并输出原生值及cell data_type；再次读取后核验全部图像行、全部账目行、全部归组行、汇总及原账保留。内容SHA为未补齐尾部空单元格的原生行数组compact JSON(ensure_ascii=False,separators comma/colon)的SHA256。工作簿无公式，本次不声称验证了原生Excel计算引擎。"
+    },
+    "json": [
+      {
+        "file": "gt/reference/results/adjustment_proposal.json",
+        "sha256": "2d7ba7b0fec68740f0115a3a7f15b4a4306f5895aae6ae187b7fbf55c1982d2b",
+        "read": "完整文本读取并json.loads解析全部内容",
+        "schema_version": "h026-proposals/v1",
+        "proposal_count": 7,
+        "pending_item_count": 5,
+        "coverage": "7条建议的键、entry_id、action、target、delta、source_files、reason及审批字段逐条核验；5条未决事项及全部汇总字段核验。"
+      },
+      {
+        "file": "gt/reference/results/visual_evidence.json",
+        "sha256": "81cc2fc7898991b1db241c2f78b7f955b3b72cbc8338ab917483006175d0172f",
+        "read": "完整文本读取并json.loads解析全部内容",
+        "schema_version": "h026-visual-evidence/v1",
+        "image_count": 12,
+        "observation_count": 60,
+        "coverage": "12图SHA/尺寸全匹配；每图5种区域观察全部检查，bbox为图内像素坐标；结合原图像素核验身份、日期/币种/方向、金额、状态中心落格和局部复核/划销文字。"
+      }
+    ],
+    "previews": [
+      {
+        "file": "qa/reference-v1/核对汇总.png",
+        "sha256": "90aab73a808a765bbd588a2cf8576ea363f5e8e804195828755cd462330709d3",
+        "dimensions": [
+          1127,
+          716
+        ],
+        "viewed_with": "view_image(detail=original)",
+        "use": "visual_layout_only",
+        "assessment": "汇总数字、空白/0说明、未应用和待核边界可读；布尔值在预览显示复选框，原生值已另读为bool。"
+      },
+      {
+        "file": "qa/reference-v1/逐笔核对.png",
+        "sha256": "9457f465993cf726602e3139b8b89e6b48136844b45285be80ac08f83fafc1af",
+        "dimensions": [
+          1630,
+          728
+        ],
+        "viewed_with": "view_image(detail=original)",
+        "use": "visual_layout_only",
+        "assessment": "C:L及顶部7条记录可读；此图是局部范围，未显示后续行不意味着原生表缺行。"
+      },
+      {
+        "file": "qa/reference-v1/逐笔核对-actions.png",
+        "sha256": "44a0093477e7208fb265e92e92f0ecf59c5742dad308a95f320add1ba2569f89",
+        "dimensions": [
+          1995,
+          604
+        ],
+        "viewed_with": "view_image(detail=original)",
+        "use": "visual_layout_only",
+        "assessment": "I:Q局部范围的动作、目标、差额、来源和理由可读。需与左侧entry_id/原生表联合定位。"
+      },
+      {
+        "file": "qa/reference-v1/凭据归组.png",
+        "sha256": "7aafafb0561ace74c17b1f3cbc8b2944fa31d4921357f8e728a3f302d084bf51",
+        "dimensions": [
+          2235,
+          900
+        ],
+        "viewed_with": "view_image(detail=original)",
+        "use": "visual_layout_only",
+        "assessment": "9组均可读，已确认0.00与待核空白区分明确，末列理由换行。"
+      },
+      {
+        "file": "qa/reference-v1/原图判读.png",
+        "sha256": "526542b5997f97280676a5b2e9dabcb9c9d87612b6307fa899f4593afdd7297e",
+        "dimensions": [
+          1420,
+          538
+        ],
+        "viewed_with": "view_image(detail=original)",
+        "use": "visual_layout_only",
+        "assessment": "身份及印刷金额列可读；该局部预览止于09，10至12已通过原生行和另一预览核对。"
+      },
+      {
+        "file": "qa/reference-v1/原图判读-status.png",
+        "sha256": "f2b1caa8f54f5721be72d11db5f879dbe2267d36e4e8c5832487aeb184886976",
+        "dimensions": [
+          1135,
+          528
+        ],
+        "viewed_with": "view_image(detail=original)",
+        "use": "visual_layout_only",
+        "assessment": "12张图的手写值、状态、章位置、划销和更正状态均可读；复选框与原生bool一致。"
+      },
+      {
+        "file": "qa/reference-v1/原账底稿.png",
+        "sha256": "f7eaa5884888a860c81a0d1a38d94ae16746d2ed9ae22fc653faae76d0572fe4",
+        "dimensions": [
+          1720,
+          526
+        ],
+        "viewed_with": "view_image(detail=original)",
+        "use": "visual_layout_only",
+        "assessment": "原字段、金额及ISO时点可读；局部预览并未包含全部18行，原生工作簿已完整读取。"
+      }
+    ]
+  },
+  "decision_points": [
+    {
+      "topic": "状态章与作废优先",
+      "result": "PASS",
+      "evidence": "01核验章中心约(905,235)在有效格，02中心约(1075,235)在作废格；均不是凭预印文字判定。相同五字段键整组作废，L001/L002各reverse_void -1280.00，未叠加reverse_duplicate。",
+      "references": [
+        "exec/vouchers/voucher_01.png",
+        "exec/vouchers/voucher_02.png",
+        "逐笔核对!C6:Q7",
+        "adjustment_proposal.json proposals L001/L002"
+      ]
+    },
+    {
+      "topic": "副本去重与排除后选首笔",
+      "result": "PASS",
+      "evidence": "03/04字节相同，只支持860.50一个事项。L003 10:00早于L004 10:05，L005 draft及10月业务日L018排除。L003 keep、L004 reverse_duplicate -860.50。",
+      "references": [
+        "exec/vouchers/voucher_03.png",
+        "exec/vouchers/voucher_04.png",
+        "exec/ledger.csv",
+        "逐笔核对!C8:Q10",
+        "逐笔核对!C23:Q23"
+      ]
+    },
+    {
+      "topic": "获批更正与一般复核差异",
+      "result": "PASS",
+      "evidence": "05/06均将原2400.00划线并手写2140.00。05独立复核章在更正复核格约(930,795)，未划销；06在一般复核格约(1200,795)。依P4，05的获批更正可支持该组2140.00。L006 11:00为首笔correct_amount -260.00；L007 11:10重复全额-2140.00；已reversed且更早的L008排除。",
+      "references": [
+        "exec/vouchers/voucher_05.png",
+        "exec/vouchers/voucher_06.png",
+        "凭据归组!C8:L8",
+        "逐笔核对!C11:Q13"
+      ]
+    },
+    {
+      "topic": "相似编号与往来方严格键",
+      "result": "PASS",
+      "evidence": "07编号NF-260916-108中的0与08 NF-260916-1O8中的大写O有像素差异，分别匹配L009/L010；10B的L016不猜配。12原图CP-013与同名账目L015 CP-031不同，不能归并；USD L017另行排除。",
+      "references": [
+        "exec/vouchers/voucher_07.png",
+        "exec/vouchers/voucher_08.png",
+        "exec/vouchers/voucher_12.png",
+        "逐笔核对!C14:Q15",
+        "逐笔核对!C20:Q22"
+      ]
+    },
+    {
+      "topic": "待核状态不产生零/冲销",
+      "result": "PASS",
+      "evidence": "09状态章中心约(1245,235)明确在待核格；780.00读数不等于金额确认。L011 780.00和L012 785.00均hold，原生目标/差额为None，不互冲重复。",
+      "references": [
+        "exec/vouchers/voucher_09.png",
+        "逐笔核对!C16:Q17",
+        "adjustment_proposal.json pending_items L011/L012"
+      ]
+    },
+    {
+      "topic": "真实零及时间首笔",
+      "result": "PASS",
+      "evidence": "10是有效且无手写更正的真实0.00。L014 14:00早于L013 14:05，原生目标/差额为0/0并keep L014，L013 reverse_duplicate -9.99，未因编号较小改选首笔。",
+      "references": [
+        "exec/vouchers/voucher_10.png",
+        "逐笔核对!C18:Q19",
+        "原图判读!J15"
+      ]
+    },
+    {
+      "topic": "缺账已确认组与被划销更正",
+      "result": "PASS",
+      "evidence": "11有效、无更正、460.00且18行无完整键，create entry_id=null +460.00。12有效状态没有批准金额：原1020.00划线、手写1200.00，更正复核章有明显交叉划销，故CP-013组金额未决且未入账待核，不取1200.00、不退回1020.00、不以0补账。",
+      "references": [
+        "exec/vouchers/voucher_11.png",
+        "exec/vouchers/voucher_12.png",
+        "凭据归组!C13:L14",
+        "adjustment_proposal.json create and unbooked_pending"
+      ]
+    },
+    {
+      "topic": "审批及执行边界",
+      "result": "PASS",
+      "evidence": "顶层与7条金额建议全部approval_required=true、approval_status=pending、applied=false；keep/hold/excluded未制造金额分录。每条建议有完整五字段键、源图、理由和唯一原账entry_id，create为null。产物未宣称已入账、已付款或已审批。"
+    },
+    {
+      "topic": "理由与原图来源足以复核",
+      "result": "PASS",
+      "evidence": "visual_evidence的60个观察保留原图SHA、1400x1000尺寸及5类完整上下文bbox，状态框包含标签/三格边界，局部复核框包含两格边界。XLSX和建议JSON的source_files/理由能回到对应原图和账目；非匹配行source_files为空并解释禁止猜配。"
+    }
+  ],
+  "independent_numeric_reconciliation": {
+    "method": "将实际读图观察手工转写后，按policy P1-P6在内存独立确定归组、范围、按ISO时点/entry_id选首笔、逐笔目标和差额，并用Decimal重算；与原生XLSX和两个JSON逐项比较。未读取gt/expected或作者实现。",
+    "comparison_mismatch_count": 0,
+    "eligible_entry_ids": [
+      "L001",
+      "L002",
+      "L003",
+      "L004",
+      "L006",
+      "L007",
+      "L009",
+      "L010",
+      "L011",
+      "L012",
+      "L013",
+      "L014",
+      "L015",
+      "L016"
+    ],
+    "excluded_entry_ids_and_reason": {
+      "L005": "draft",
+      "L008": "reversed",
+      "L017": "USD",
+      "L018": "business_date 2026-10-01"
+    },
+    "proposal_deltas": {
+      "L001": "-1280.00",
+      "L002": "-1280.00",
+      "L004": "-860.50",
+      "L006": "-260.00",
+      "L007": "-2140.00",
+      "L013": "-9.99",
+      "create CP-007/NF-260922-062": "460.00"
+    },
+    "eligible_book_amount": "12946.59",
+    "proposed_delta_sum": "-5370.49",
+    "book_amount_after_proposals": "7576.10",
+    "unresolved_book_amount": "3095.20",
+    "unresolved_entry_ids": [
+      "L011",
+      "L012",
+      "L015",
+      "L016"
+    ],
+    "unresolved_entry_count": 4,
+    "unbooked_pending_group_count": 1,
+    "unbooked_pending_key": {
+      "voucher_no": "NF-260924-080",
+      "counterparty_id": "CP-013",
+      "business_date": "2026-09-24",
+      "currency": "CNY",
+      "direction": "expense"
+    },
+    "unbooked_pending_amount": null,
+    "confirmed_voucher_target_sum": "4480.90",
+    "identity": "12946.59 + (-5370.49) = 7576.10 = 4480.90 + 3095.20",
+    "interpretation": "7576.10是全部已列建议获批的假设测算，含3095.20未核当前账面保留额；4480.90为已确认有效凭据金额合计（包含未入账的460.00 create），不是全面核清后的最终净额。另有未入账CP-013组金额未决，不能计为0。",
+    "fully_reconciled": false
+  },
+  "readability": {
+    "result": "PASS within the seven supplied preview ranges",
+    "core_tables_readable": true,
+    "headers_and_amounts_readable": true,
+    "reason_text_readable": true,
+    "observed_preview_native_value_conflicts": [],
+    "notes": [
+      "七张预览用于布局检查，金额、标志、行数与空值结论均以实际原生单元格另行核验。",
+      "预览中的布尔值显示为复选框，读取的原生值是bool；不是缺值。",
+      "局部预览不覆盖所有列/所有行，完整内容存在于已读取的五张Sheet中；不据局部截图判定缺行或缺列。",
+      "表格较宽，逐笔核对分左侧/动作区域预览；原生表能按entry_id联合定位。本次不据截图声称验证原生Excel全工作表打印分页或交互行为。"
+    ]
+  },
+  "issues": [],
+  "issue_summary": {
+    "blocking": 0,
+    "major": 0,
+    "minor": 0,
+    "statement": "未发现需要修改的具体问题；不为凑数制造问题。"
+  },
+  "limitations": [
+    "human_expert=false；审查者是独立模型，未做人工财务专家复核。",
+    "formal_semantic_score=null；本结论不构成正式语义Judge评分、Harness执行结果或模型能力成绩。",
+    "只覆盖明确列出的合成规则、18行ledger、12个原图文件、三份参考产物及七张视觉预览，不推断真实财务、税务或支付有效性。",
+    "原图03/04经实际字节SHA256校验一致，04沿用03像素观察；其余11个不同像素原图均以view_image(detail=original)实际查看。",
+    "工作簿为静态数值与文本，读取与复算通过不证明原生Excel交互或未来输入变动后的动态计算。",
+    "审批仅待处理，未对ledger或参考产物应用任何调整。"
+  ]
+}

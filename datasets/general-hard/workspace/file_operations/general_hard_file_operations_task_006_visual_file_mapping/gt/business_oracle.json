@@ -1,0 +1,6 @@
+{
+  "selected_reference_count": 5,
+  "unique_selected_file_count": 5,
+  "business_correctness": "Mean of mapping-reference identity recall and actual selected byte-object recall. Candidate file names/layout may vary. Source identity requires full path, scene ID, true source SHA and matching regular target bytes.",
+  "rule": "Expected objects originate from source-first A/B reconciliation, never from reference output."
+}

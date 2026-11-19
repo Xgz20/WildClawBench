@@ -1,0 +1,94 @@
+{
+  "schema_version": "h005-scoring-dependencies/v1",
+  "required_imports": [
+    "pdfplumber",
+    "pypdf"
+  ],
+  "validated_environment": "Dedicated Python 3.12 virtualenv sharing existing Codex-managed dependencies, real probe and snapshot retained outside task workspace.",
+  "provisioning_limit": "Not the stock Python3.11 bootstrap profile; operator must supply and freeze a matching real runtime. No candidate Env/library installation is required by this scoring-only contract.",
+  "python": {
+    "major": 3,
+    "minor": 12
+  },
+  "validated_packages": [
+    {
+      "distribution": "cffi",
+      "version": "2.1.1",
+      "import_roots": [
+        "_cffi_backend",
+        "cffi"
+      ],
+      "runtime_assets": []
+    },
+    {
+      "distribution": "charset-normalizer",
+      "version": "3.5.2",
+      "import_roots": [
+        "charset_normalizer"
+      ],
+      "runtime_assets": []
+    },
+    {
+      "distribution": "cryptography",
+      "version": "48.0.1",
+      "import_roots": [
+        "cryptography"
+      ],
+      "runtime_assets": []
+    },
+    {
+      "distribution": "pdfminer.six",
+      "version": "20251230",
+      "import_roots": [
+        "pdfminer"
+      ],
+      "runtime_assets": []
+    },
+    {
+      "distribution": "pdfplumber",
+      "version": "0.11.9",
+      "import_roots": [
+        "pdfplumber"
+      ],
+      "runtime_assets": []
+    },
+    {
+      "distribution": "pillow",
+      "version": "12.3.0",
+      "import_roots": [
+        "PIL"
+      ],
+      "runtime_assets": []
+    },
+    {
+      "distribution": "pycparser",
+      "version": "3.11",
+      "import_roots": [
+        "pycparser"
+      ],
+      "runtime_assets": []
+    },
+    {
+      "distribution": "pypdf",
+      "version": "6.10.0",
+      "import_roots": [
+        "pypdf"
+      ],
+      "runtime_assets": []
+    },
+    {
+      "distribution": "pypdfium2",
+      "version": "5.14.0",
+      "import_roots": [
+        "pypdfium2",
+        "pypdfium2_cfg",
+        "pypdfium2_cli",
+        "pypdfium2_raw"
+      ],
+      "runtime_assets": []
+    }
+  ],
+  "in_virtualenv": true,
+  "shares_existing_managed_site_packages": true,
+  "stock_bootstrap_profile": false
+}

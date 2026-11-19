@@ -1,0 +1,8 @@
+{
+  "schema_version": "h019-evidence/v1",
+  "change_bindings": 5,
+  "verification_rows": 36,
+  "change_source": "Actual original/finished formulas or name reference; exact rule_id and target.",
+  "limits": "Markdown tool claims do not prove execution; author/native evidence and actual candidate trajectory remain separate.",
+  "private_runtime_derivatives": "Managed Office cache-cleared baseline and five exact replayed numeric interventions outside frozen Workspace."
+}

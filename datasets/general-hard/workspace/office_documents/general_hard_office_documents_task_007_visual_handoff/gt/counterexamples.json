@@ -1,0 +1,41 @@
+{
+  "schema_version": "h007-counterexamples/v1",
+  "boundary_groups": [
+    "same_window_text",
+    "owner_not_backup",
+    "delete_only_selected_sentence",
+    "cross_row_arrow",
+    "cancelled_proposal_not_applied",
+    "insert_at_selected_note",
+    "real_order_and_numbering",
+    "scope_beats_outside_proposal"
+  ],
+  "positives": [
+    "normalized coordinates",
+    "explicit xywh and polygons",
+    "native source bookmarks optional",
+    "inline appended warning",
+    "native automatic list numbering",
+    "explicit default page properties",
+    "null for deleted after text"
+  ],
+  "negatives": [
+    "correct record but untouched native Word",
+    "global same-text replacement",
+    "backup modified together with primary",
+    "whole paragraph deletion",
+    "nearest wrong table row",
+    "cancelled suggestion applied",
+    "similar wrong paragraph insertion",
+    "order unchanged or numbering stale",
+    "out-of-scope deletion",
+    "wrong image/hash/region/destination",
+    "delivery missing or damaged",
+    "protected input changed"
+  ],
+  "infrastructure": [
+    "missing private contract/helper",
+    "independent annotations pending",
+    "approved flag without actual review records"
+  ]
+}

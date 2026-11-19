@@ -1,0 +1,677 @@
+{
+  "schema_version": "general-hard-h010-reviewed-authoring/v1",
+  "date_local": "2026-10-27",
+  "task_id": "general_hard_office_documents_task_010_capex_packet",
+  "status": "registered_author_validation_pass",
+  "canonical_task_registered": true,
+  "completed_dataset_task_count": 12,
+  "remaining_dataset_tasks": 48,
+  "repository_root": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard",
+  "branch": "feat/general-hard",
+  "base_commit_before_task": "b878c0ea160b11704e1b9763c6e4327997bb41f0",
+  "source": {
+    "exec_file_count": 6,
+    "native_quote_pdf_pages": 3,
+    "asset_rows": 12,
+    "logical_phases": 2,
+    "source_combinations_enumerated": 81,
+    "independent_arithmetic_paths": [
+      "Decimal per-group rounding",
+      "integer cents with Fraction"
+    ],
+    "recommended_case": "AABB",
+    "recommended_total_cash": "178012.15",
+    "input_unchanged": true,
+    "reference_sha256": {
+      "assumptions.json": "437f996ea1f9658435d95741f4fe26a6ac72af5fd630a5175b85ef2fee13472e",
+      "budget.xlsx": "9716c616edca7f3dc1848db1861395e3d0da69a924af46b4d66cbc4b5deadf6d",
+      "application.docx": "7e81723cc3303e6bd4d40f0381e67e97014897c0a75dc87a52a8079b894b5fdf",
+      "plan.html": "c1ac1de4eb88c9371d6b5d9319b4c3527303349d489499494476dcd404f98603"
+    },
+    "origin_prototype": "ACQ-0b80aedac35e4cab",
+    "scope": "Source truth and actual PDF/table extraction precede reference. Production shape adapted into fully synthetic attachments."
+  },
+  "author_controls": {
+    "status": "AUTHOR_CONTROLS_PASS",
+    "count": 49,
+    "positive_count": 9,
+    "candidate_negative_count": 35,
+    "infrastructure_error_count": 5,
+    "positive_cases": [
+      "renamed_sheets",
+      "reference",
+      "alternate_valid_schedule",
+      "shifted_columns",
+      "chinese_html_headers_and_cell_paragraphs",
+      "combined_recommended_alternative_tables",
+      "absolute_canonical_source_refs",
+      "linked_numeric_driver",
+      "html_spans_and_header_rows"
+    ],
+    "rule_scores": {
+      "renamed_sheets": 1.0,
+      "reference": 1.0,
+      "alternate_valid_schedule": 1.0,
+      "shifted_columns": 1.0,
+      "chinese_html_headers_and_cell_paragraphs": 1.0,
+      "combined_recommended_alternative_tables": 1.0,
+      "absolute_canonical_source_refs": 1.0,
+      "linked_numeric_driver": 1.0,
+      "html_spans_and_header_rows": 1.0,
+      "double_tax_B": 0.8181250000000001,
+      "cross_phase_tier": 0.8617613636363637,
+      "duplicate_freight": 0.8713068181818182,
+      "missing_p2_freight": 0.8599431818181819,
+      "training_capitalized": 0.8713068181818182,
+      "expired_C_as_firm": 0.8832435064935066,
+      "contingency_truncated": 0.8599431818181819,
+      "nonminimal_valid_selection": 0.9124756493506494,
+      "wrong_word_budget_ledger_correct": 0.9850892857142858,
+      "wrong_html_budget_ledger_correct": 0.9850892857142858,
+      "wrong_actual_budget_node": 0.9968750000000001,
+      "wrong_actual_word_node": 0.9968750000000001,
+      "wrong_source_quote": 0.9968750000000001,
+      "overlapping_shared_crew": 0.96875,
+      "blackout_date": 0.984375,
+      "weekend_date": 0.984375,
+      "unknown_zero": 0.9964285714285714,
+      "gate_confirmed": 0.9964285714285714,
+      "unsupported_word_savings": 0.9750000000000001,
+      "unsupported_html_payback": 0.9750000000000001,
+      "duplicate_json_key": 0.7791964285714286,
+      "static_cached_values": 0.8656250000000001,
+      "wrong_formula_correct_old_cache": 0.8665340909090908,
+      "hardcoded_tier_threshold": 0.9886363636363636,
+      "hidden_html_budget": 0.9608035714285714,
+      "missing_budget": 0.25491071428571427,
+      "empty_word": 0.9099702380952381,
+      "missing_word": 0.8949702380952381,
+      "missing_html": 0.9174702380952381,
+      "missing_ledger": 0.7791964285714286,
+      "damaged_budget": 0.25491071428571427,
+      "all_missing": 0.0,
+      "damaged_word": 0.8949702380952381,
+      "extra_unauthorized_phase": 0.9925,
+      "missing_gt": null,
+      "missing_helper": null,
+      "missing_render_lock": null,
+      "engine_unavailable": null,
+      "font_drift": null,
+      "input_modified": 0.55
+    },
+    "runtime_errors": {
+      "missing_gt": {
+        "type": "FileNotFoundError",
+        "message": "[Errno 2] No such file or directory: '/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/author-controls-003/missing_gt/workspace/gt/expected.json'"
+      },
+      "missing_helper": {
+        "type": "FileNotFoundError",
+        "message": "[Errno 2] No such file or directory: '/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/author-controls-003/missing_helper/workspace/gt/budget_checks.py'"
+      },
+      "missing_render_lock": {
+        "type": "FileNotFoundError",
+        "message": "[Errno 2] No such file or directory: '/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/author-controls-003/missing_render_lock/absent-render-lock.json'"
+      },
+      "engine_unavailable": {
+        "type": "OfficeRuntimeError",
+        "message": "OFFICE_EXECUTABLE_UNAVAILABLE: /Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/author-controls-003/engine_unavailable/absent-soffice"
+      },
+      "font_drift": {
+        "type": "OfficeRuntimeError",
+        "message": "OFFICE_RENDER_FONT_DRIFT: /Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/author-controls-003/font_drift/changed-font.ttf"
+      }
+    },
+    "report_root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/author-controls-003",
+    "current_gt_and_source_bindings_verified": true,
+    "history": "44 initial controls passed; 48 after combined-table/path/input aliases passed; 49 final controls reran current GT after HTML spans/body-row support. Earlier reports retained, not promoted to current bindings."
+  },
+  "managed_worker": {
+    "status": "PASS",
+    "root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/managed-worker-1793078489975302000",
+    "core_version": "0.11.0",
+    "runtime_python": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h005/qa/existing-worker/venv/bin/python",
+    "task_sha256": "61bef35308b37df704056dce7d9f1e0ee7b69fa42d274f5505b8e5ea6bb7c049",
+    "rule_score": 1.0,
+    "workspace_unchanged": true,
+    "input_response_count": 11,
+    "normal_and_archived_evidence_match": true,
+    "verified_artifact_count": 51,
+    "verified_artifacts": [
+      {
+        "path": "worker/office-runtime.json",
+        "sha256": "db4ec7e53a47f31b709febaadd76c677008df6d3046e0d56d10d6739c5fe1cf5"
+      },
+      {
+        "path": "worker/office-render-runtime.json",
+        "sha256": "5c16e8d424e6bf392964b4b5bc6b4c944390c5a3aa53a6434fcb915be53bd6db"
+      },
+      {
+        "path": "worker/derived/application/render-audit.json",
+        "sha256": "e7c560c0f198453a54bd1e84c4a379ac3c26c1a49127b2c85d5aed6c16f64b50",
+        "size": 16807
+      },
+      {
+        "path": "worker/derived/application/rendered.pdf",
+        "sha256": "cffffd9a3214aab7dfc110e422470a463a3517aab2c72b5a67d803c67b5965ff",
+        "size": 176120
+      },
+      {
+        "path": "worker/derived/baseline-budget/office-audit.json",
+        "sha256": "6fe1384040dda5077111d385f0031d47610e4e57246c73122841cce6d9bef268",
+        "size": 1118
+      },
+      {
+        "path": "worker/derived/baseline-budget/recalculated.xlsx",
+        "sha256": "8db6764ff527ed5822ae23c3c34f241b13e7e5b2a446bbb242f15f11c06e38c8",
+        "size": 13129
+      },
+      {
+        "path": "worker/derived/h010-analysis.json",
+        "sha256": "fe9d5149c0100a673998b30f0f2c85a629ad71f1843547f0dbcfa00ee5f72aac",
+        "size": 55234
+      },
+      {
+        "path": "worker/derived/input-response/contingency_rounding/calculated/office-audit.json",
+        "sha256": "ccfd0091006b7e5db70954f49334d4d87033b67d583025364ad0bc0a9657ace4",
+        "size": 1118
+      },
+      {
+        "path": "worker/derived/input-response/contingency_rounding/calculated/recalculated.xlsx",
+        "sha256": "ba2265d2eac3bcccd7340d94ad7c88bc987ce26bc35aa72b14e109cc2e4cfab7",
+        "size": 13128
+      },
+      {
+        "path": "worker/derived/input-response/contingency_rounding/variant/counterfactual-audit.json",
+        "sha256": "4d1021dc3cdf37586cf3d18a986f96e21eda763edf43a90d3369d0c6858dea42",
+        "size": 460
+      },
+      {
+        "path": "worker/derived/input-response/contingency_rounding/variant/prepared.xlsx",
+        "sha256": "4d865de1f287c1dddae159def614837ad10311f389ad5ceb23e9384a4c320b73",
+        "size": 9292
+      },
+      {
+        "path": "worker/derived/input-response/equipment_tax/calculated/office-audit.json",
+        "sha256": "7adb706e1dbef64f1fc619ae7a615c7b53ea633fb661c5c0b5e2b9fb35fb5119",
+        "size": 1118
+      },
+      {
+        "path": "worker/derived/input-response/equipment_tax/calculated/recalculated.xlsx",
+        "sha256": "0d5f13a3e1c9f0f97a093c5700613b4c81a9c01c32486cc54259ceab1b5bf37c",
+        "size": 13129
+      },
+      {
+        "path": "worker/derived/input-response/equipment_tax/variant/counterfactual-audit.json",
+        "sha256": "16fc3cf2cdeb923559e8a31ea5dd0a729444c5ceb10a728c39190d461aee4c91",
+        "size": 457
+      },
+      {
+        "path": "worker/derived/input-response/equipment_tax/variant/prepared.xlsx",
+        "sha256": "b4a3ec00eb4122835c0164b699c01194190c83997f9423b84d5fa5f190aecf85",
+        "size": 9301
+      },
+      {
+        "path": "worker/derived/input-response/equipment_unit_price/calculated/office-audit.json",
+        "sha256": "697e059dd287ff58db5821dc2c7167c4eddfca4b6b65df86b1792056355141b8",
+        "size": 1118
+      },
+      {
+        "path": "worker/derived/input-response/equipment_unit_price/calculated/recalculated.xlsx",
+        "sha256": "eafa73af9bfd401763ceddd0fa9d35c8e6f43f28ce2d2b49389cf99be99ed12c",
+        "size": 13133
+      },
+      {
+        "path": "worker/derived/input-response/equipment_unit_price/variant/counterfactual-audit.json",
+        "sha256": "24a48ea0979749f2e74b0022f335f841becf34cb2242c7e50a77c712a0d4de58",
+        "size": 462
+      },
+      {
+        "path": "worker/derived/input-response/equipment_unit_price/variant/prepared.xlsx",
+        "sha256": "6e911c0516a84b1a67ebe596b52a710e6881775985d7b3f52981e92a4364d5cd",
+        "size": 9302
+      },
+      {
+        "path": "worker/derived/input-response/installation_rate/calculated/office-audit.json",
+        "sha256": "29893eca02a8de98b42836a2a025aa554693ef57c69986ee516adcafc8bb4a85",
+        "size": 1118
+      },
+      {
+        "path": "worker/derived/input-response/installation_rate/calculated/recalculated.xlsx",
+        "sha256": "9dc424a69be038c444b30bf41e4980bcde8a72257ac44146456e54db18e61f0a",
+        "size": 13142
+      },
+      {
+        "path": "worker/derived/input-response/installation_rate/variant/counterfactual-audit.json",
+        "sha256": "64fb0cd937ca9e969c1befaa52e411c61aa5924e03bc30f34770eb3c2bcaf3b4",
+        "size": 458
+      },
+      {
+        "path": "worker/derived/input-response/installation_rate/variant/prepared.xlsx",
+        "sha256": "992ac1301331bb65a1719d44912d32a2231fe43ade58bd4b392259cf809c7368",
+        "size": 9301
+      },
+      {
+        "path": "worker/derived/input-response/installation_tax/calculated/office-audit.json",
+        "sha256": "8d5e5e1bc8b86e99ac7023581be4568d2716072ba728f4bfdad861158d85d617",
+        "size": 1118
+      },
+      {
+        "path": "worker/derived/input-response/installation_tax/calculated/recalculated.xlsx",
+        "sha256": "4169b2ba89eaf2620264c9549b30fe9b756f1e4272ff02a2803a4d06299cc2b4",
+        "size": 13131
+      },
+      {
+        "path": "worker/derived/input-response/installation_tax/variant/counterfactual-audit.json",
+        "sha256": "44807c8c701b4466183f758ad76a665cf1e982ed5b1ab779123268e7b8f381cd",
+        "size": 457
+      },
+      {
+        "path": "worker/derived/input-response/installation_tax/variant/prepared.xlsx",
+        "sha256": "fadb4af29ca620e28607b760f31a0c8a64cc37c9c858db2202742067c3d62538",
+        "size": 9303
+      },
+      {
+        "path": "worker/derived/input-response/maintenance_rate/calculated/office-audit.json",
+        "sha256": "e01ce8f5ae3a145d2add43fc48767e22f1df915c2e71024c02fa3f865f60c973",
+        "size": 1118
+      },
+      {
+        "path": "worker/derived/input-response/maintenance_rate/calculated/recalculated.xlsx",
+        "sha256": "fa215b79a87eb0a8e328b03ee439caca3044950912eb068aa921077ef039ef24",
+        "size": 13129
+      },
+      {
+        "path": "worker/derived/input-response/maintenance_rate/variant/counterfactual-audit.json",
+        "sha256": "777dda164b21a28213f8fd6feadaf2058ffa5e7c98607a9f79534f8972dc2288",
+        "size": 455
+      },
+      {
+        "path": "worker/derived/input-response/maintenance_rate/variant/prepared.xlsx",
+        "sha256": "e5167dfabd514ec9503f1ab2013f95ed69e5823043ff9d2b6acae2246e95a35a",
+        "size": 9300
+      },
+      {
+        "path": "worker/derived/input-response/maintenance_tax/calculated/office-audit.json",
+        "sha256": "bff9b1773f775e51480b4b2072b34aebc5b773cc0abedb07bd38447420f28170",
+        "size": 1118
+      },
+      {
+        "path": "worker/derived/input-response/maintenance_tax/calculated/recalculated.xlsx",
+        "sha256": "8a305c52fcab38a3946eb40eda98a6f18d8a0c0fed9efe4499fea19133cd9513",
+        "size": 13132
+      },
+      {
+        "path": "worker/derived/input-response/maintenance_tax/variant/counterfactual-audit.json",
+        "sha256": "d056bac10e86a2575b22bf9419a0edf03a7041f6b2540de1e31cad6ddd3ec743",
+        "size": 457
+      },
+      {
+        "path": "worker/derived/input-response/maintenance_tax/variant/prepared.xlsx",
+        "sha256": "4126e5e4f93d081b455882e1e02b7f00ebf194c1357bf67ee4b3868fe6271be5",
+        "size": 9301
+      },
+      {
+        "path": "worker/derived/input-response/p1_quantity_tier/calculated/office-audit.json",
+        "sha256": "df0f527723bb05b0a3bbfac5d82ef7e4784acd7689c774eaca58fee5f6b0eb17",
+        "size": 1118
+      },
+      {
+        "path": "worker/derived/input-response/p1_quantity_tier/calculated/recalculated.xlsx",
+        "sha256": "c144bddb8295fe798dc8e68fa8d512bff785633a2b0a7dc9d548cd68b9b19d8d",
+        "size": 13124
+      },
+      {
+        "path": "worker/derived/input-response/p1_quantity_tier/variant/counterfactual-audit.json",
+        "sha256": "a36da0cd069e06b3c81fda48364a7699c333a4dace385d0760805f430d97f136",
+        "size": 451
+      },
+      {
+        "path": "worker/derived/input-response/p1_quantity_tier/variant/prepared.xlsx",
+        "sha256": "f0ec48bd02895f3edd5951ed0b3ada3b4e5133f6faf21d370ad2e5040f04ed55",
+        "size": 9299
+      },
+      {
+        "path": "worker/derived/input-response/p2_quantity_tier/calculated/office-audit.json",
+        "sha256": "8dfb737c52baeb19aa09ce43e8ba3c7456452969adbc2c6cc1aa47afba0ecda9",
+        "size": 1118
+      },
+      {
+        "path": "worker/derived/input-response/p2_quantity_tier/calculated/recalculated.xlsx",
+        "sha256": "0c6d413f6ac28246dbb7ba3e301b04815adc079e06b0ebeda9b9b7b04de414e9",
+        "size": 13127
+      },
+      {
+        "path": "worker/derived/input-response/p2_quantity_tier/variant/counterfactual-audit.json",
+        "sha256": "e08aeaf98dbfdee884f9602949c21bda7e78769aef46241833bc29f3a5d52a36",
+        "size": 451
+      },
+      {
+        "path": "worker/derived/input-response/p2_quantity_tier/variant/prepared.xlsx",
+        "sha256": "34cb8e9bf8e040d7d3ac28adf0898f4aefdabbd2db36876e90a76673904fa30a",
+        "size": 9299
+      },
+      {
+        "path": "worker/derived/input-response/phase_freight/calculated/office-audit.json",
+        "sha256": "5e0ccdbb394478fded2202b64fd11ca991181cbaf913bf04e3e4fd79bedd31d4",
+        "size": 1118
+      },
+      {
+        "path": "worker/derived/input-response/phase_freight/calculated/recalculated.xlsx",
+        "sha256": "a4a6287082b9aa405b34fe807ba3c84413b22f4225dad21162d53541ed06bb2f",
+        "size": 13131
+      },
+      {
+        "path": "worker/derived/input-response/phase_freight/variant/counterfactual-audit.json",
+        "sha256": "1152b5302ac0daf2e44a309b095edfe16bd3c22688d3fa9068f6d4ac37bbeeeb",
+        "size": 459
+      },
+      {
+        "path": "worker/derived/input-response/phase_freight/variant/prepared.xlsx",
+        "sha256": "011f61977f6c5b0d5b9dd71b84e99543996aad1b87c86d3940974e452d1badab",
+        "size": 9293
+      },
+      {
+        "path": "worker/derived/input-response/price_tier_threshold/calculated/office-audit.json",
+        "sha256": "b1ecc600a984af1a55c2686cf2954dd31dd067169d224aec7d7dd16ee537e537",
+        "size": 1118
+      },
+      {
+        "path": "worker/derived/input-response/price_tier_threshold/calculated/recalculated.xlsx",
+        "sha256": "01b855d4687c472157f9210ba17b931a8b1ccf9b211a6284187914f569ae5526",
+        "size": 13126
+      },
+      {
+        "path": "worker/derived/input-response/price_tier_threshold/variant/counterfactual-audit.json",
+        "sha256": "5efb5e498401a2b4d342cf292f4ed23b2740dabaeea36b31533b8dcfeaf0a507",
+        "size": 451
+      },
+      {
+        "path": "worker/derived/input-response/price_tier_threshold/variant/prepared.xlsx",
+        "sha256": "dc7df72ef090deab7abc7b6779f262b4eac23a67613ff4f9ae42deea78a5801d",
+        "size": 9299
+      }
+    ],
+    "undeclared_pdf_dependency": {
+      "component": {
+        "status": "evaluation_error",
+        "code": "RULE_EXECUTION_FAILED",
+        "cause": "RUNTIME_DEPENDENCY_UNDECLARED",
+        "message": "RULE_EXECUTION_FAILED: RUNTIME_DEPENDENCY_UNDECLARED: ['pdfplumber', 'pypdf']",
+        "score": null
+      },
+      "worker_started": false,
+      "score_created": false
+    }
+  },
+  "visual_equivalence": {
+    "word_combined_table_three_pages_reviewed": true,
+    "html_span_table_actual_iab_review": {
+      "kind": "author HTML span equivalence visual check",
+      "html_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/author-controls-003/html_spans_and_header_rows/workspace/results/plan.html",
+      "html_sha256": "ddf19170d26a4d4435cf3710fc00eff36239fa848ddd68b6e258171797b343ab",
+      "observations": [
+        "Actual IAB accessibility tree and full-page screenshot read",
+        "Two header rows, colspan5 and two rowspan2 plan labels displayed correctly",
+        "Recommended and alternative phase/cash values visible and separated"
+      ],
+      "screenshot_retention": "conversation tool output only",
+      "temporary_tab_closed": true,
+      "localhost_server_stopped": true,
+      "limit": "Author variant review only; not formal four-client evidence or independent semantic score."
+    },
+    "limit": "Author variant visual review; formal per-client observation and independent Judge remain pending.",
+    "reviewed_word_variant_source_same_as_final_control": true
+  },
+  "static_gate": {
+    "single_task": "PASS",
+    "whole_release": "FAIL",
+    "remaining_issue_codes": {
+      "TASK_ID_NOT_FOUND": 48
+    }
+  },
+  "regression": {
+    "observed_tool_session_id": 25842,
+    "test_count": 57,
+    "exit_code": 0,
+    "modules": [
+      "test_dataset_catalog",
+      "test_dataset_bundle",
+      "test_general_release_prepare",
+      "test_wildclawbench_case_generator"
+    ]
+  },
+  "bound_files": [
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/tasks/office_documents/general_hard_office_documents_task_010_capex_packet.md",
+      "sha256": "61bef35308b37df704056dce7d9f1e0ee7b69fa42d274f5505b8e5ea6bb7c049",
+      "size": 10336
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/workspace/office_documents/general_hard_office_documents_task_010_capex_packet/gt/budget_checks.py",
+      "sha256": "71f540df967f3610cc7d7e52129c24424d4f70711ca10c5108025fc153a64ade",
+      "size": 11407
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/workspace/office_documents/general_hard_office_documents_task_010_capex_packet/gt/evidence_requirements.json",
+      "sha256": "08564c6ebe06efe02cd18241db7b5b71f6e3dac03e937e822f3983db18a7086d",
+      "size": 502
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/workspace/office_documents/general_hard_office_documents_task_010_capex_packet/gt/business_oracle.json",
+      "sha256": "b00404a3e3402843765b6da4894727307969ca7336a9a303f3a3ea0fc43977f1",
+      "size": 773
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/workspace/office_documents/general_hard_office_documents_task_010_capex_packet/gt/protected_sha256.json",
+      "sha256": "b843723b2aee957a7b218f481f76dc2d33094f7a27f732e4b5a6a2036c1b5667",
+      "size": 541
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/workspace/office_documents/general_hard_office_documents_task_010_capex_packet/gt/office_runtime.py",
+      "sha256": "f03a57190986d78eed8da3378d91e1a44896e43f870c7a5940513e2f6446cdd0",
+      "size": 49123
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/workspace/office_documents/general_hard_office_documents_task_010_capex_packet/gt/grader.py",
+      "sha256": "5a869b7e772d09606b3f00ea407c9e542458cfa72af2b3649258eeb724319bf3",
+      "size": 7597
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/workspace/office_documents/general_hard_office_documents_task_010_capex_packet/gt/expected.json",
+      "sha256": "9c354ddd677e7623ccfa1cd21284be5939dad6b677dbd00b255a370973824801",
+      "size": 267954
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/workspace/office_documents/general_hard_office_documents_task_010_capex_packet/gt/html_grid.py",
+      "sha256": "18ee7055acb9c09077e5a9968bc334434ed6b3b41c509695dcba82647e786179",
+      "size": 2115
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/workspace/office_documents/general_hard_office_documents_task_010_capex_packet/gt/handoff_checks.py",
+      "sha256": "7529f0e3f1d866b628a7dcca4507d4e86afbf077e7fe7e53e7cffe69684a60fa",
+      "size": 10793
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/workspace/office_documents/general_hard_office_documents_task_010_capex_packet/gt/reference_native_verification.json",
+      "sha256": "14f0eb15c811fbfa5f55725081e102ee9d15c9298d00bb9149eb87e093a74154",
+      "size": 1958
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/workspace/office_documents/general_hard_office_documents_task_010_capex_packet/gt/counterexamples.json",
+      "sha256": "b0005438e3515b765d0ef631c26eab8efe4c54d6868302d3e49ec100da2fa59a",
+      "size": 1233
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/workspace/office_documents/general_hard_office_documents_task_010_capex_packet/gt/render_checks.py",
+      "sha256": "498e5e4929b72495e44e11e604ee0981f9f7781b1c38ab2f84cfa1795dcafe0c",
+      "size": 1465
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/workspace/office_documents/general_hard_office_documents_task_010_capex_packet/gt/artifact_io.py",
+      "sha256": "d4756ed8a9ce6e559433f8c649d0e45ba15a7f10ba107b7768273fc21f02d8b2",
+      "size": 14741
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/workspace/office_documents/general_hard_office_documents_task_010_capex_packet/gt/word_model.py",
+      "sha256": "01a8167879e075dd18c1af435acb97328c042b394e42014b039e4ec5ad07ba33",
+      "size": 11963
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/workspace/office_documents/general_hard_office_documents_task_010_capex_packet/gt/authoring_validation.json",
+      "sha256": "db1cb39834411fbf455efadb094e684647f23f88c956c7e758e4effb33ef161f",
+      "size": 33622
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/workspace/office_documents/general_hard_office_documents_task_010_capex_packet/gt/artifact_contract.json",
+      "sha256": "53319236bdb2dcadbef16d0e5c4398935029471489c0edf1966354d1882ef525",
+      "size": 2334
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/workspace/office_documents/general_hard_office_documents_task_010_capex_packet/gt/validate_authoring.py",
+      "sha256": "edcaf4260842abe62a94024455a5181ac693723592d7b5b9508bcd8391798514",
+      "size": 22085
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/workspace/office_documents/general_hard_office_documents_task_010_capex_packet/gt/native_text.py",
+      "sha256": "c92f7367c026497bc1594fc58b7e46809d0b163f9a930064fbfb027dacd5eb79",
+      "size": 39711
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/workspace/office_documents/general_hard_office_documents_task_010_capex_packet/gt/source_verification.json",
+      "sha256": "2cfd2155388f15dac42c2f189b71e8023d25c37deaa60d47752f608b975bdf16",
+      "size": 4797
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/workspace/office_documents/general_hard_office_documents_task_010_capex_packet/gt/reference/results/assumptions.json",
+      "sha256": "437f996ea1f9658435d95741f4fe26a6ac72af5fd630a5175b85ef2fee13472e",
+      "size": 3445
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/workspace/office_documents/general_hard_office_documents_task_010_capex_packet/gt/reference/results/budget.xlsx",
+      "sha256": "9716c616edca7f3dc1848db1861395e3d0da69a924af46b4d66cbc4b5deadf6d",
+      "size": 9284
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/workspace/office_documents/general_hard_office_documents_task_010_capex_packet/gt/reference/results/application.docx",
+      "sha256": "7e81723cc3303e6bd4d40f0381e67e97014897c0a75dc87a52a8079b894b5fdf",
+      "size": 40306
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/workspace/office_documents/general_hard_office_documents_task_010_capex_packet/gt/reference/results/plan.html",
+      "sha256": "c1ac1de4eb88c9371d6b5d9319b4c3527303349d489499494476dcd404f98603",
+      "size": 3469
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/workspace/office_documents/general_hard_office_documents_task_010_capex_packet/exec/approval.docx",
+      "sha256": "c59233ed40d34ed86a6cfa82744c89e98fd2456017ca35eb3d8298c260726c35",
+      "size": 37384
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/workspace/office_documents/general_hard_office_documents_task_010_capex_packet/exec/baseline.xlsx",
+      "sha256": "840e4c987eea88016f1830fe79fc5da26f0fec2971a9a50ebc1c16e3c311287a",
+      "size": 5906
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/workspace/office_documents/general_hard_office_documents_task_010_capex_packet/exec/constraints.md",
+      "sha256": "f23c13920c760a89b322df8140ce42cfc787605857eb42b358319655a94f3d45",
+      "size": 7282
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/workspace/office_documents/general_hard_office_documents_task_010_capex_packet/exec/quotes/quote_A.pdf",
+      "sha256": "2a09f48efd2df86493cdfcba65c3b3bf2bd5e2d8471dcad849174df58657034c",
+      "size": 64065
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/workspace/office_documents/general_hard_office_documents_task_010_capex_packet/exec/quotes/quote_C.pdf",
+      "sha256": "ff52ba00bcebebb35fd032eb2f110493e8343eb989a04a8a1d6b3fa2ba79187d",
+      "size": 64132
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/workspace/office_documents/general_hard_office_documents_task_010_capex_packet/exec/quotes/quote_B.pdf",
+      "sha256": "9c908322842335072ad1d4b46af1eb6b6edc1b3d50518fa9653594352382e682",
+      "size": 65372
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/static-task-final/20261027T052131Z_a84c36ecbc/report.json",
+      "sha256": "6011680e35f28ac679383ea4c1e49987cc85dc41e37a006de4ca44c980f134de",
+      "size": 1206
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/static-release-final/20261027T052133Z_01ad1e7ec0/report.json",
+      "sha256": "1d68a7c1f7955b03e326a3436756e03e07ec936885292cc0072d1203357e3025",
+      "size": 38684
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/managed-worker-1793078489975302000/validation.json",
+      "sha256": "bd1fe6fb4597bdce176475f41e1a62499880fd149538a45d6aad50564fe59e3e",
+      "size": 19974
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/business-validation-review.json",
+      "sha256": "130122e900f8edae05220860dbab4e585e89969c5db56a4a9b21482f6b185ce3",
+      "size": 589
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/author-controls-003/validation.json",
+      "sha256": "db1cb39834411fbf455efadb094e684647f23f88c956c7e758e4effb33ef161f",
+      "size": 33622
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/html-span-visual-check.json",
+      "sha256": "fccc5299fe68e5b2a7dff7798cf5350fd532d719d139e97cdcf7cb67cf855c03",
+      "size": 808
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/run_managed_worker_worktree.py",
+      "sha256": "a5f1e4d42ce99f19f1800382b00d4b1a4294685716753a1b74cd9783cf3387d1",
+      "size": 6222
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/authoring/finalize_business_validation.py",
+      "sha256": "435e5b0a7fbcbdc5c384a52b8165be7f36b30b68b16fee65182732f3772e8327",
+      "size": 3457
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/authoring/prepare_case_spec.py",
+      "sha256": "ef157b01c57454547638a714d33ed7816dfe3d05f51d3e51a5122795826d52ba",
+      "size": 10510
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/author-controls-002/combined_recommended_alternative_tables/workspace/results/application.docx",
+      "sha256": "0f44604bf9255e8ee089edec4889daebacff38eedfb708c8e2bbad04fc031b03",
+      "size": 40335
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/author-controls-003/combined_recommended_alternative_tables/workspace/results/application.docx",
+      "sha256": "0f44604bf9255e8ee089edec4889daebacff38eedfb708c8e2bbad04fc031b03",
+      "size": 40335
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/author-controls-002/combined_recommended_alternative_tables/derived/application/rendered.pdf",
+      "sha256": "a0893a5e44d4f0b2928a1da4de9af6ba5dded28ff10946d793775edec996d60f",
+      "size": 176354
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/combined-table-visual/page-1.png",
+      "sha256": "718acedffb39e05a3e24e59d451d537a1a58576a350495844a70690528a6db55",
+      "size": 193537
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/combined-table-visual/page-2.png",
+      "sha256": "2b64aa7e4e370678b7387862aa1c687eb0a04b1bc377e7c40a8e752aa6d5e812",
+      "size": 113192
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/combined-table-visual/page-3.png",
+      "sha256": "6a9715c896b88bff2d82c56527b3b0d4ed64e90c7ed59e9ba8b0ffc881a16919",
+      "size": 219845
+    }
+  ],
+  "limits": [
+    "Author rule validation, not hybrid final score; independent 25 percent semantic Judge not run.",
+    "Rules use actual native records, input responses, locked Writer text/page bounds and conservative static HTML; full visual/prose semantics require independent Judge.",
+    "No actual four-client Harness run, measured L4/discrimination/stability or 12-task calibration yet.",
+    "general-hard-v1 remains building with no frozen release manifest.",
+    "Author business controls and visual reviews are not independent human expert review."
+  ]
+}

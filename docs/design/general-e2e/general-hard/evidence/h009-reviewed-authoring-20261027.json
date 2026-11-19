@@ -1,0 +1,290 @@
+{
+  "schema_version": "general-hard-h009-reviewed-authoring/v1",
+  "date_local": "2026-10-27",
+  "task_id": "general_hard_office_documents_task_009_pdf_to_docx",
+  "status": "registered_author_validation_pass",
+  "completed_dataset_task_count": 11,
+  "remaining_dataset_tasks": 49,
+  "repository_root": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard",
+  "branch": "feat/general-hard",
+  "base_commit_before_task": "ce9f189a46de754596b17b9b5bbf3652f7f6e14a",
+  "source": {
+    "pdf_pages": 6,
+    "native_text": true,
+    "page_images": 0,
+    "logical_tables": 4,
+    "table_fragments": 5,
+    "business_rows": 38,
+    "text_units": 22,
+    "footnotes": 6,
+    "audit_units": 32,
+    "truth_order": "Original facts then independent real source PDF verification then reference Word; source GT not inferred from reference.",
+    "source_sha256": "1d1e5af01f4b05c2b38af9aeaf6553a946502f72c65cb27036333e24bc94b2bf",
+    "reference_docx_sha256": "1b6c64614372d8f79b671fcb4ef9b7391a315281b4093f96e4273c29e2e8d926"
+  },
+  "author_controls": {
+    "status": "AUTHOR_CONTROLS_PASS",
+    "count": 36,
+    "canonical_gt_matches_current_report": true,
+    "rule_scores": {
+      "reference": 1.0,
+      "csv_bom_aliases_ranges": 1.0,
+      "native_continuation_tables": 1.0,
+      "arbitrary_note_package_ids": 1.0,
+      "finer_column_grid": 1.0,
+      "paragraph_split_and_merge": 1.0,
+      "row_local_column_widths": 1.0,
+      "one_local_split_preserves_other_rows": 0.9968967592592592,
+      "same_text_wrong_numeric_columns": 0.8595333333333334,
+      "same_price_wrong_note_row": 0.9794791666666667,
+      "same_amount_wrong_note_paragraph": 0.9794791666666667,
+      "text_right_horizontal_merge_lost": 0.9919196428571428,
+      "plain_note_list": 0.8728125000000001,
+      "source_paragraph_order": 0.9975754310344828,
+      "wrong_single_amount": 0.9952712966237101,
+      "unknown_not_zero": 0.9979281250000002,
+      "audit_wrong_actual_node": 0.9994791666666667,
+      "audit_one_piece_not_whole_table": 0.9997395833333333,
+      "wrong_source_page": 0.9994791666666667,
+      "wrong_source_locator": 0.9994791666666667,
+      "too_small_price": 0.9580056716237101,
+      "table_outside_page": 0.8999973258486563,
+      "page_images_not_native": 0.06333333333333332,
+      "native_text_hidden": 0.268326470205274,
+      "missing_native_opc": 0.06333333333333332,
+      "missing_audit_target_header": 0.9458333333333334,
+      "missing_word": 0.06333333333333332,
+      "damaged_word": 0.06333333333333332,
+      "missing_csv": 0.89,
+      "all_missing": 0.0,
+      "input_modified": 0.55,
+      "missing_gt": null,
+      "missing_helper": null,
+      "missing_render_lock": null,
+      "engine_unavailable": null,
+      "font_drift": null
+    },
+    "reports": [
+      "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/qa/author-controls-003/validation.json",
+      "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/qa/runtime-failures-final/validation.json"
+    ]
+  },
+  "managed_worker": {
+    "status": "PASS",
+    "root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/qa/managed-worker-1793071895967392000",
+    "core_version": "0.10.0",
+    "runtime_python": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h005/qa/existing-worker/venv/bin/python",
+    "task_sha256": "ad066904259731941f2183dfbd77298266f5cf2d983193d7d051c62120b39ef7",
+    "rule_score": 1.0,
+    "workspace_unchanged": true,
+    "normal_and_archived_evidence_match": true,
+    "verified_artifacts": [
+      {
+        "path": "worker/office-runtime.json",
+        "sha256": "db4ec7e53a47f31b709febaadd76c677008df6d3046e0d56d10d6739c5fe1cf5"
+      },
+      {
+        "path": "worker/office-render-runtime.json",
+        "sha256": "5c16e8d424e6bf392964b4b5bc6b4c944390c5a3aa53a6434fcb915be53bd6db"
+      },
+      {
+        "path": "worker/derived/h009-analysis.json",
+        "sha256": "c207e76fe0669722594efb7f5826a06eb6b4c2cdf2e9773f64124c6e4935c6f4",
+        "size": 45705
+      },
+      {
+        "path": "worker/derived/word/render-audit.json",
+        "sha256": "ceb27b949122aff381bd7c51344c5a127c5f8a58c57462ff21feca8b977ce5b2",
+        "size": 16808
+      },
+      {
+        "path": "worker/derived/word/rendered.pdf",
+        "sha256": "3056be63cf83f28eb71d0ec20316c9865f8d1a0dcb9f65595af98f4d4f698f2f",
+        "size": 314767
+      }
+    ],
+    "undeclared_pdf_dependency": {
+      "component": {
+        "status": "evaluation_error",
+        "code": "RULE_EXECUTION_FAILED",
+        "cause": "RUNTIME_DEPENDENCY_UNDECLARED",
+        "message": "RULE_EXECUTION_FAILED: RUNTIME_DEPENDENCY_UNDECLARED: ['pdfplumber', 'pypdf']",
+        "score": null
+      },
+      "worker_started": false,
+      "score_created": false
+    },
+    "qa_script_correction": "Initial negative-probe harness expected a return value; run_rules correctly raised GradingCoreError. Resumed same retained successful Worker without repeating conversion; recorded expected rejection."
+  },
+  "static_gate": {
+    "single_task": "PASS",
+    "whole_release": "FAIL",
+    "remaining_issue_codes": {
+      "TASK_ID_NOT_FOUND": 49
+    }
+  },
+  "regression": {
+    "observed_tool_session_id": 53545,
+    "test_count": 57,
+    "exit_code": 0,
+    "modules": [
+      "test_dataset_catalog",
+      "test_dataset_bundle",
+      "test_general_release_prepare",
+      "test_wildclawbench_case_generator"
+    ]
+  },
+  "bound_files": [
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/tasks/office_documents/general_hard_office_documents_task_009_pdf_to_docx.md",
+      "sha256": "ad066904259731941f2183dfbd77298266f5cf2d983193d7d051c62120b39ef7",
+      "size": 8982
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/workspace/office_documents/general_hard_office_documents_task_009_pdf_to_docx/exec/layout_contract.json",
+      "sha256": "f260742a107ffbe41fd382746dced0c6b79c8eea689dc01a7f79afbdd5ea6dbd",
+      "size": 5835
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/workspace/office_documents/general_hard_office_documents_task_009_pdf_to_docx/exec/source.pdf",
+      "sha256": "1d1e5af01f4b05c2b38af9aeaf6553a946502f72c65cb27036333e24bc94b2bf",
+      "size": 171833
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/workspace/office_documents/general_hard_office_documents_task_009_pdf_to_docx/gt/artifact_contract.json",
+      "sha256": "67d961cfaefa7b894eeddee17f5350017c6f8c95405465c49a02068d7f628c4a",
+      "size": 283
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/workspace/office_documents/general_hard_office_documents_task_009_pdf_to_docx/gt/audit_checks.py",
+      "sha256": "386af250612fc72ff9263a9322b1ec3372fe0a4a46eb6c29877a6bf8f7ca5170",
+      "size": 6038
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/workspace/office_documents/general_hard_office_documents_task_009_pdf_to_docx/gt/authoring_validation.json",
+      "sha256": "23a9efea4fa41f456be5a7de9cb5b27e59580403fd7200a1659587f5d318a1ea",
+      "size": 49919
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/workspace/office_documents/general_hard_office_documents_task_009_pdf_to_docx/gt/business_oracle.json",
+      "sha256": "686adc5f51314e21d93c5364de608a105d715e668fe86092b93c3f084627c456",
+      "size": 555
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/workspace/office_documents/general_hard_office_documents_task_009_pdf_to_docx/gt/counterexamples.json",
+      "sha256": "c8b1ed75590b8dc3f027ecd0511d04b7b81da6aff3be4a3aae0f204bebd42114",
+      "size": 853
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/workspace/office_documents/general_hard_office_documents_task_009_pdf_to_docx/gt/evidence_requirements.json",
+      "sha256": "635603dfb400834bb4c2c1f639321bc8f670558bde2388d7eb13a438db461b2f",
+      "size": 427
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/workspace/office_documents/general_hard_office_documents_task_009_pdf_to_docx/gt/expected.json",
+      "sha256": "941260c3b104b2d7d582db4f4f2d384fb296b8034f5fbad535ca89975d38ed85",
+      "size": 56753
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/workspace/office_documents/general_hard_office_documents_task_009_pdf_to_docx/gt/grader.py",
+      "sha256": "282485119e6bfd911f9a93ab8b8f534efba40b1203da1a1b576ab8a7c8e3a718",
+      "size": 6927
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/workspace/office_documents/general_hard_office_documents_task_009_pdf_to_docx/gt/native_checks.py",
+      "sha256": "d5070c9466943e14c8b2eca25b648577d9584c549f03e64077bee89576d62a34",
+      "size": 20250
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/workspace/office_documents/general_hard_office_documents_task_009_pdf_to_docx/gt/office_runtime.py",
+      "sha256": "7cdb1cc362b992c49d2e71207fb352d527f2acbd2c393ca89eb675ec872e9cb7",
+      "size": 39917
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/workspace/office_documents/general_hard_office_documents_task_009_pdf_to_docx/gt/protected_sha256.json",
+      "sha256": "10c66f579e85b11c63a695d3382c02f43faa8899db5165f5ce86b438c69b7764",
+      "size": 181
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/workspace/office_documents/general_hard_office_documents_task_009_pdf_to_docx/gt/reference/results/conversion_audit.csv",
+      "sha256": "fa5faa8b15406dddb79102540e36ce3a5c400a76fbcbdeaa2604650fed2f34a1",
+      "size": 1748
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/workspace/office_documents/general_hard_office_documents_task_009_pdf_to_docx/gt/reference/results/converted.docx",
+      "sha256": "1b6c64614372d8f79b671fcb4ef9b7391a315281b4093f96e4273c29e2e8d926",
+      "size": 45858
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/workspace/office_documents/general_hard_office_documents_task_009_pdf_to_docx/gt/reference_native_verification.json",
+      "sha256": "c75cd26317cb97100654807ee062b3a2f1737a0ea8511eac79098c756f21e73b",
+      "size": 3479
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/workspace/office_documents/general_hard_office_documents_task_009_pdf_to_docx/gt/render_checks.py",
+      "sha256": "da2df84e3f165ac125e827cafaf4b8b682f588e00353d33785ba8ac1384f85c3",
+      "size": 6520
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/workspace/office_documents/general_hard_office_documents_task_009_pdf_to_docx/gt/source_evidence_index.json",
+      "sha256": "37e6f1f07cf0737602962ac8618fe8bbf3b0803c6985960dcc5affa86e225fc7",
+      "size": 5498
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/workspace/office_documents/general_hard_office_documents_task_009_pdf_to_docx/gt/source_verification.json",
+      "sha256": "114f68b6240c3b98333162bfaaf2aa30142def6f10eb8c79f0cad7ca053ad62c",
+      "size": 4357
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/workspace/office_documents/general_hard_office_documents_task_009_pdf_to_docx/gt/validate_authoring.py",
+      "sha256": "1daaecc623c2bccacc906a088633ff50b7173006c2bc04fa9ab299d8cb747dce",
+      "size": 18948
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/workspace/office_documents/general_hard_office_documents_task_009_pdf_to_docx/gt/validate_runtime_failures.py",
+      "sha256": "b32dac2fa08c069844b555d033714f95cd055c57813d1ee025acfcb64a306a14",
+      "size": 2886
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/workspace/office_documents/general_hard_office_documents_task_009_pdf_to_docx/gt/word_model.py",
+      "sha256": "01a8167879e075dd18c1af435acb97328c042b394e42014b039e4ec5ad07ba33",
+      "size": 11963
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/qa/static-task-final/20261027T033147Z_2ed27a4832/report.json",
+      "sha256": "2b87c5946fc6ea02ada55a9e32ddbdfcefb92d74982cee7b9e4c2caeadee3d50",
+      "size": 1203
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/qa/static-release-final/20261027T033148Z_31bdab7abf/report.json",
+      "sha256": "2dc5834761ad2bb8848d35bc23370c82f7295a94d40b4e4acbdd1c9dafc09f4e",
+      "size": 39033
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/qa/author-controls-003/validation.json",
+      "sha256": "8501e9b0efaad57e1b3a705a5e0bf8b153fb68b4fa842fcc9a78e9286fcffb30",
+      "size": 48392
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/qa/runtime-failures-final/validation.json",
+      "sha256": "5d89a1bedce57915da7acb2e72544be2bbbadba7c19d3bb79ca2c806920153d0",
+      "size": 1233
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/qa/managed-worker-1793071895967392000/validation.json",
+      "sha256": "11dfaedd252afae06e101bf51f5cd144aff210e7e91a25d9786e321443eb8fb6",
+      "size": 9748
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/qa/run_managed_worker_worktree.py",
+      "sha256": "4d1c5c2ad4d8167fcde9deb0c31b1bbae34f8a87241bd03a6474a45f6a18d6a0",
+      "size": 6303
+    }
+  ],
+  "limits": [
+    "Author rule scores only; 25 percent semantic Judge not run.",
+    "Complete visual occlusion, contrast, semantic fidelity and usability require independent Judge.",
+    "No Harness execution record, four-client execution, measured difficulty or discrimination.",
+    "general-hard-v1 remains building; no release manifest."
+  ]
+}

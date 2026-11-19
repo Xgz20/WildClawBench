@@ -1,0 +1,33 @@
+{
+  "schema": "h058-expected/v1",
+  "theme_ids": [
+    "T1",
+    "T2",
+    "T3"
+  ],
+  "content_ids": [
+    "P11",
+    "P12",
+    "P13",
+    "P21",
+    "P22",
+    "P23",
+    "P31",
+    "P32",
+    "P33"
+  ],
+  "weights": {
+    "business_correctness": 0.55,
+    "boundary_cases": 0.25,
+    "delivery_integrity": 0.15,
+    "evidence_binding": 0.05
+  },
+  "business_denominator": 43,
+  "boundary_denominator": 48,
+  "evidence_denominator": 18,
+  "hybrid": {
+    "automated": 0.65,
+    "llm_judge": 0.35
+  },
+  "overall_score_is": "automated A only; production scorer combines .65A+.35S; author control does not run semantic Judge"
+}

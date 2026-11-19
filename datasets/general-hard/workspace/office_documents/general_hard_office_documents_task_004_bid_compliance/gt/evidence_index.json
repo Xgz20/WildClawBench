@@ -1,0 +1,1069 @@
+{
+  "schema_version": "h004-evidence-index/v1",
+  "records": {
+    "R001": {
+      "source": "requirements.docx",
+      "source_sha256": "00292a275239c3b1186f9010b2f9d15dce069c0eca868f3e0963cf2aff116ac7",
+      "locators": [
+        "paragraph:4",
+        "paragraph:5"
+      ],
+      "text": "R001 物理计算核心 [必须]\n要求：提供至少32个物理核心，不能用逻辑线程数替代物理核心数。",
+      "text_sha256": "8cb184315561dc8c0e0bd45585a8b023f2de2a7ddc0e1f00898ca3da56a9e33c"
+    },
+    "R002": {
+      "source": "requirements.docx",
+      "source_sha256": "00292a275239c3b1186f9010b2f9d15dce069c0eca868f3e0963cf2aff116ac7",
+      "locators": [
+        "paragraph:6",
+        "paragraph:7"
+      ],
+      "text": "R002 内存与校验 [必须]\n要求：提供至少128GB内存并支持ECC校验，两个条件均需材料支持。",
+      "text_sha256": "ac9968fa2620e7dd160462c24e6b9ccf4ea54f43819253ead8535d70d869b17c"
+    },
+    "R003": {
+      "source": "requirements.docx",
+      "source_sha256": "00292a275239c3b1186f9010b2f9d15dce069c0eca868f3e0963cf2aff116ac7",
+      "locators": [
+        "paragraph:8",
+        "paragraph:9"
+      ],
+      "text": "R003 可用存储容量 [必须]\n要求：可用容量不少于8TB，以冗余后的可用容量为准，不按原始总容量判断。",
+      "text_sha256": "254bbe983ba6de8b2ad6f7576b60c2d82312161f2394a68d1ae90999fd26b112"
+    },
+    "R004": {
+      "source": "requirements.docx",
+      "source_sha256": "00292a275239c3b1186f9010b2f9d15dce069c0eca868f3e0963cf2aff116ac7",
+      "locators": [
+        "paragraph:10",
+        "paragraph:11"
+      ],
+      "text": "R004 独立网络接口 [必须]\n要求：提供2个独立10GbE业务口，1Gb管理口不能替代业务口。",
+      "text_sha256": "42a6d392ab685b4d2c1281ab34f38996e6a8b2f9f19d239c61da084484bdf14f"
+    },
+    "R005": {
+      "source": "requirements.docx",
+      "source_sha256": "00292a275239c3b1186f9010b2f9d15dce069c0eca868f3e0963cf2aff116ac7",
+      "locators": [
+        "paragraph:12",
+        "paragraph:13"
+      ],
+      "text": "R005 电源维护能力 [建议]\n要求：建议同时具有冗余电源和不停机热插拔能力，两个能力分别说明。",
+      "text_sha256": "0f994b0745db85afdc7e1431e02d1b10d5cf66602984c53fc1d50c05e40c254a"
+    },
+    "R006": {
+      "source": "requirements.docx",
+      "source_sha256": "00292a275239c3b1186f9010b2f9d15dce069c0eca868f3e0963cf2aff116ac7",
+      "locators": [
+        "paragraph:14",
+        "paragraph:15"
+      ],
+      "text": "R006 工作温度范围 [建议]\n要求：建议在0至40摄氏度范围稳定工作，不能拿存放温度作为工作温度。",
+      "text_sha256": "a18693867b9a32b54a872ef3353ab868db7b0d706c022dc8604a3b2b6ec7fb8c"
+    },
+    "R007": {
+      "source": "requirements.docx",
+      "source_sha256": "00292a275239c3b1186f9010b2f9d15dce069c0eca868f3e0963cf2aff116ac7",
+      "locators": [
+        "paragraph:16",
+        "paragraph:17"
+      ],
+      "text": "R007 文件名与字节保真 [必须]\n要求：中文及其它UTF-8文件名可导入，且文件内容保持原始字节，不经转码改写。",
+      "text_sha256": "bb5fca4c3c53a90af080cadd6270c0ffce5038582daa8593e221326ca58f5729"
+    },
+    "R008": {
+      "source": "requirements.docx",
+      "source_sha256": "00292a275239c3b1186f9010b2f9d15dce069c0eca868f3e0963cf2aff116ac7",
+      "locators": [
+        "paragraph:19",
+        "paragraph:20"
+      ],
+      "text": "R008 已确认数据持久化 [必须]\n要求：单节点重启后，已向用户确认的数据仍可恢复，不能只证明进程能够再次启动。",
+      "text_sha256": "6e9dcd62f2ab8d0f86caefeead83708cd6e3f2ae2995379d59ebf7b0ef2320ae"
+    },
+    "R009": {
+      "source": "requirements.docx",
+      "source_sha256": "00292a275239c3b1186f9010b2f9d15dce069c0eca868f3e0963cf2aff116ac7",
+      "locators": [
+        "paragraph:21",
+        "paragraph:22"
+      ],
+      "text": "R009 离线安装材料 [建议]\n要求：建议提供离线安装包、版本清单和校验信息，不依赖现场联网下载。",
+      "text_sha256": "fe5e1811ae3b0f33e35d49d5fcc6c11793cf8acfd0f0354f0cf71653750ddb93"
+    },
+    "R010": {
+      "source": "requirements.docx",
+      "source_sha256": "00292a275239c3b1186f9010b2f9d15dce069c0eca868f3e0963cf2aff116ac7",
+      "locators": [
+        "paragraph:23",
+        "paragraph:24"
+      ],
+      "text": "R010 两种架构兼容 [必须]\n要求：同时支持指定Debian12的x86-64与arm64环境，不能仅说明操作系统名称相同。",
+      "text_sha256": "48b7d1bdc86e91ce8ae037f0392c5df60865429feb2320d7c5b7e5c450845134"
+    },
+    "R011": {
+      "source": "requirements.docx",
+      "source_sha256": "00292a275239c3b1186f9010b2f9d15dce069c0eca868f3e0963cf2aff116ac7",
+      "locators": [
+        "paragraph:25",
+        "paragraph:26"
+      ],
+      "text": "R011 项目隔离 [必须]\n要求：不同项目的数据不可互读，需有项目级隔离依据，不能仅用服务器数量解释。",
+      "text_sha256": "9a64fa9a89723ecc42dd67634970658f4e0db0a16cf26f6a20b41b71f2cf99e7"
+    },
+    "R012": {
+      "source": "requirements.docx",
+      "source_sha256": "00292a275239c3b1186f9010b2f9d15dce069c0eca868f3e0963cf2aff116ac7",
+      "locators": [
+        "paragraph:27",
+        "paragraph:28"
+      ],
+      "text": "R012 两类本地检索 [建议]\n要求：建议支持记录ID精确查找和字段内容检索，二者分别保留结果。",
+      "text_sha256": "47b7ed2ef7706bbcb6fe9e9881532dc50a05512252fa0f2c7e0073a31415e5e1"
+    },
+    "R013": {
+      "source": "requirements.docx",
+      "source_sha256": "00292a275239c3b1186f9010b2f9d15dce069c0eca868f3e0963cf2aff116ac7",
+      "locators": [
+        "paragraph:29",
+        "paragraph:30"
+      ],
+      "text": "R013 账户停用后授权 [建议]\n要求：建议停用账户后拒绝新会话并吊销现有令牌，不以隐藏账户按钮替代。",
+      "text_sha256": "865eda9b6d2ac3a7b2e3b70ffa0ee2bdae4df5b6273a4265223d470eedd14aa3"
+    },
+    "R014": {
+      "source": "requirements.docx",
+      "source_sha256": "00292a275239c3b1186f9010b2f9d15dce069c0eca868f3e0963cf2aff116ac7",
+      "locators": [
+        "paragraph:31",
+        "paragraph:32"
+      ],
+      "text": "R014 角色及记录范围 [必须]\n要求：授权须同时支持岗位角色与记录级数据范围，只有角色菜单不能认定全部覆盖。",
+      "text_sha256": "8afdc3865cc9c8a08305bda73e3a925e39be0d0c5c388bb354d19d252e29c6d9"
+    },
+    "R015": {
+      "source": "requirements.docx",
+      "source_sha256": "00292a275239c3b1186f9010b2f9d15dce069c0eca868f3e0963cf2aff116ac7",
+      "locators": [
+        "paragraph:34",
+        "paragraph:35"
+      ],
+      "text": "R015 导出权限一致 [必须]\n要求：导出应遵循现有访问权限，不能因转成文件而绕过权限校验。",
+      "text_sha256": "4c939151eee5a8b0a538f8a783ce0059ea0eab6a6d1ab04f03610219523bd280"
+    },
+    "R016": {
+      "source": "requirements.docx",
+      "source_sha256": "00292a275239c3b1186f9010b2f9d15dce069c0eca868f3e0963cf2aff116ac7",
+      "locators": [
+        "paragraph:36",
+        "paragraph:37"
+      ],
+      "text": "R016 版本追踪与恢复 [建议]\n要求：建议能查历史版本并恢复指定版本，只有最后修改时间不够。",
+      "text_sha256": "026f586e5617ea36a00bbeb13f41de21323d00e4ae27d8fe197c96553d867c08"
+    },
+    "R017": {
+      "source": "requirements.docx",
+      "source_sha256": "00292a275239c3b1186f9010b2f9d15dce069c0eca868f3e0963cf2aff116ac7",
+      "locators": [
+        "paragraph:38",
+        "paragraph:39"
+      ],
+      "text": "R017 失败子项重试 [必须]\n要求：批量处理应有逐项结果，并允许只重试失败子项，不能用整批重试代替。",
+      "text_sha256": "862a1218d91002cebdd2103479dcad72bf779172d983269d82a4773d3e383319"
+    },
+    "R018": {
+      "source": "requirements.docx",
+      "source_sha256": "00292a275239c3b1186f9010b2f9d15dce069c0eca868f3e0963cf2aff116ac7",
+      "locators": [
+        "paragraph:40",
+        "paragraph:41"
+      ],
+      "text": "R018 传输通道保护 [必须]\n要求：传输通道使用TLS1.2或更高版本，并有当前配置依据；此项不覆盖静态备份加密。",
+      "text_sha256": "66da260c6beb726be190222ca7e02e72094ea40df0d414eee4cf10cd6e403ac6"
+    },
+    "R019": {
+      "source": "requirements.docx",
+      "source_sha256": "00292a275239c3b1186f9010b2f9d15dce069c0eca868f3e0963cf2aff116ac7",
+      "locators": [
+        "paragraph:42",
+        "paragraph:43"
+      ],
+      "text": "R019 静态备份加密 [必须]\n要求：本地备份文件应具有产品内置的静态加密，外部尚未部署的磁盘加密方案不能算现有能力。",
+      "text_sha256": "39b8d4aae707efa3202bb9e9ee8b0d306b21c27ae98c4d414cce4d95ec4d353b"
+    },
+    "R020": {
+      "source": "requirements.docx",
+      "source_sha256": "00292a275239c3b1186f9010b2f9d15dce069c0eca868f3e0963cf2aff116ac7",
+      "locators": [
+        "paragraph:44",
+        "paragraph:45"
+      ],
+      "text": "R020 审计字段与留存 [必须]\n要求：审计记录应含操作者、时间、对象，并可留存至少180天，各条件分别有依据。",
+      "text_sha256": "b21510ffbf8ac4924c6885fef3bcd4371c339cfc421df230a397c97fe9fdff86"
+    },
+    "R021": {
+      "source": "requirements.docx",
+      "source_sha256": "00292a275239c3b1186f9010b2f9d15dce069c0eca868f3e0963cf2aff116ac7",
+      "locators": [
+        "paragraph:46",
+        "paragraph:47"
+      ],
+      "text": "R021 CSV基础格式 [建议]\n要求：建议CSV导出支持UTF-8及引号、换行转义；基础格式不能代替稳定ID与续传能力。",
+      "text_sha256": "be4ee400bd679f29bf0ccadde8c11dc8460a88d0cea6ba4736cebdcfcc47c351"
+    },
+    "R022": {
+      "source": "requirements.docx",
+      "source_sha256": "00292a275239c3b1186f9010b2f9d15dce069c0eca868f3e0963cf2aff116ac7",
+      "locators": [
+        "paragraph:49",
+        "paragraph:50"
+      ],
+      "text": "R022 稳定ID及续页导出 [必须]\n要求：导出需保留稳定记录ID，并支持按已确认页继续导出；仅有CSV格式或大内存不够。",
+      "text_sha256": "2d7d8feea70a780c762b36a03e6d407e0ed3e9e195be837475873f9de311b969"
+    },
+    "R023": {
+      "source": "requirements.docx",
+      "source_sha256": "00292a275239c3b1186f9010b2f9d15dce069c0eca868f3e0963cf2aff116ac7",
+      "locators": [
+        "paragraph:51",
+        "paragraph:52"
+      ],
+      "text": "R023 上传大小边界 [建议]\n要求：建议对多文件上传总大小和单文件大小均给出明确限制与错误返回。",
+      "text_sha256": "22f04a4401fe67cf8431cf6e2afe604163ffa7109d7bc640feee357e3dfe8a5f"
+    },
+    "R024": {
+      "source": "requirements.docx",
+      "source_sha256": "00292a275239c3b1186f9010b2f9d15dce069c0eca868f3e0963cf2aff116ac7",
+      "locators": [
+        "paragraph:53",
+        "paragraph:54"
+      ],
+      "text": "R024 浏览器覆盖 [建议]\n要求：建议覆盖Windows Chrome、Windows Edge与macOS Safari16，不能以系统能开网页作为兼容依据。",
+      "text_sha256": "73ec1d593aabd694b97789ed179fc2f6f78e27568eb9cfda3d59a4725cfcc042"
+    },
+    "R025": {
+      "source": "requirements.docx",
+      "source_sha256": "00292a275239c3b1186f9010b2f9d15dce069c0eca868f3e0963cf2aff116ac7",
+      "locators": [
+        "paragraph:55",
+        "paragraph:56"
+      ],
+      "text": "R025 API版本及错误码 [建议]\n要求：建议明确API版本和稳定错误码，并能追踪版本变化。",
+      "text_sha256": "015aee64148dbc5da944ed664ace68d050d9258c81b7b7fcecfc08b2fed37f92"
+    },
+    "R026": {
+      "source": "requirements.docx",
+      "source_sha256": "00292a275239c3b1186f9010b2f9d15dce069c0eca868f3e0963cf2aff116ac7",
+      "locators": [
+        "paragraph:57",
+        "paragraph:58"
+      ],
+      "text": "R026 偏移续传与校验 [必须]\n要求：断线后应按已确认字节偏移继续上传，并在完成后校验文件；仅重新连接后整文件重传不算续传。",
+      "text_sha256": "f26092d835281b5413b77f1482e9efd8289d1d140176c988105b41a749b319a1"
+    },
+    "R027": {
+      "source": "requirements.docx",
+      "source_sha256": "00292a275239c3b1186f9010b2f9d15dce069c0eca868f3e0963cf2aff116ac7",
+      "locators": [
+        "paragraph:59",
+        "paragraph:60"
+      ],
+      "text": "R027 质量管理证明 [建议]\n要求：质量管理证明作为建议项，持证主体应为本次投标人，且在投标截止日有效。",
+      "text_sha256": "2e320cec6cd2176e76cac95fcfad26486abc973ce8148dd9c594ce692a9a0e1f"
+    },
+    "R028": {
+      "source": "requirements.docx",
+      "source_sha256": "00292a275239c3b1186f9010b2f9d15dce069c0eca868f3e0963cf2aff116ac7",
+      "locators": [
+        "paragraph:61",
+        "paragraph:62"
+      ],
+      "text": "R028 当前软件使用授权 [建议]\n要求：建议提供LCSoft2.4版本使用授权，主体、版本与有效期均应适用。",
+      "text_sha256": "aa8c46cdcda8804a6510e7c0e103b2ffbbe400a7f16bfd8402999991efcde5e7"
+    },
+    "R029": {
+      "source": "requirements.docx",
+      "source_sha256": "00292a275239c3b1186f9010b2f9d15dce069c0eca868f3e0963cf2aff116ac7",
+      "locators": [
+        "paragraph:64",
+        "paragraph:65"
+      ],
+      "text": "R029 设备安全证明 [必须]\n要求：必须有适用于LC-G2的设备安全证明，投标截止日仍有效，不能按编稿日期判断。",
+      "text_sha256": "6809a620f77724edb27cdbcf6427614f30c3d5408d6290689d796576735406f7"
+    },
+    "R030": {
+      "source": "requirements.docx",
+      "source_sha256": "00292a275239c3b1186f9010b2f9d15dce069c0eca868f3e0963cf2aff116ac7",
+      "locators": [
+        "paragraph:66",
+        "paragraph:67"
+      ],
+      "text": "R030 主体信息安全证明 [必须]\n要求：必须有投标人同主体的信息安全管理证明，并在投标截止日有效。",
+      "text_sha256": "bfcb7ce29b988e41476fb2e059f366950626d35a87afd27b9434b221e6d2e37a"
+    },
+    "R031": {
+      "source": "requirements.docx",
+      "source_sha256": "00292a275239c3b1186f9010b2f9d15dce069c0eca868f3e0963cf2aff116ac7",
+      "locators": [
+        "paragraph:68",
+        "paragraph:69"
+      ],
+      "text": "R031 本型号环保证明 [必须]\n要求：必须提供LC-G2型号环保检测证明，系列简称或上一代型号不能自动覆盖本型号。",
+      "text_sha256": "4a8edb322fe7e06c7c076c4173707a721ce49dd0d311c513cf4bb2592e3b227a"
+    },
+    "R032": {
+      "source": "requirements.docx",
+      "source_sha256": "00292a275239c3b1186f9010b2f9d15dce069c0eca868f3e0963cf2aff116ac7",
+      "locators": [
+        "paragraph:70",
+        "paragraph:71"
+      ],
+      "text": "R032 密码模块符合性 [建议]\n要求：建议提供LC-CM1模块在LC-G2平台适用的符合性报告，截止日当日仍在有效期也可采用。",
+      "text_sha256": "b3cc71591ba979335a5934a270c83b5e1300546660132b53b82c8368f36645ba"
+    },
+    "R033": {
+      "source": "requirements.docx",
+      "source_sha256": "00292a275239c3b1186f9010b2f9d15dce069c0eca868f3e0963cf2aff116ac7",
+      "locators": [
+        "paragraph:72",
+        "paragraph:73"
+      ],
+      "text": "R033 可编辑交付与来源 [必须]\n要求：交付应同时含原生可编辑文档、源资料及差异说明，只有最终PDF不足。",
+      "text_sha256": "e029dda70caee3796f89aab90922d6cda522632a987a3b90a5b6d8b0f670d570"
+    },
+    "R034": {
+      "source": "requirements.docx",
+      "source_sha256": "00292a275239c3b1186f9010b2f9d15dce069c0eca868f3e0963cf2aff116ac7",
+      "locators": [
+        "paragraph:74",
+        "paragraph:75"
+      ],
+      "text": "R034 支持响应口径 [建议]\n要求：建议工作时段4小时内确认问题及下一步；响应不等于所有问题4小时修复。",
+      "text_sha256": "020b1a1c493b29088907e064dc0859963cade8355b1ee1421f12e41de17624ba"
+    },
+    "R035": {
+      "source": "requirements.docx",
+      "source_sha256": "00292a275239c3b1186f9010b2f9d15dce069c0eca868f3e0963cf2aff116ac7",
+      "locators": [
+        "paragraph:76",
+        "paragraph:77"
+      ],
+      "text": "R035 跨版本限制说明 [建议]\n要求：建议保留版本对应关系、已知限制及未确认项，不以文件更新时间代替版本依据。",
+      "text_sha256": "424442a44f4def92d92ef27b8f35f1f62c6f31444da3ddc7f6eaf246101fe80c"
+    },
+    "D001": {
+      "source": "response.docx",
+      "source_sha256": "caf464129817e016a610518fffb40ee7223ee5c02e58963e26aa9f11929deb2a",
+      "locators": [
+        "paragraph:4",
+        "paragraph:5"
+      ],
+      "text": "D001 对应R001 物理计算核心\n现有材料支持该项：LC-G2为2颗16核处理器，共32物理核心、64逻辑线程；物理核与线程分开登记。",
+      "text_sha256": "ea8f1e252a2790220766204e7d9cad89373db5d8c257bead82da820ff1b98ed1"
+    },
+    "D002": {
+      "source": "response.docx",
+      "source_sha256": "caf464129817e016a610518fffb40ee7223ee5c02e58963e26aa9f11929deb2a",
+      "locators": [
+        "paragraph:6",
+        "paragraph:7"
+      ],
+      "text": "D002 对应R002 内存与校验\n现有材料支持该项：交付配置为128GB ECC内存；配置核验卡已经复核容量与ECC开关。",
+      "text_sha256": "aec0322596b5b58820e2812e06435ae99ff855e7fcccb14e73d07de6255746ae"
+    },
+    "D003": {
+      "source": "response.docx",
+      "source_sha256": "caf464129817e016a610518fffb40ee7223ee5c02e58963e26aa9f11929deb2a",
+      "locators": [
+        "paragraph:8",
+        "paragraph:9"
+      ],
+      "text": "D003 对应R003 可用存储容量\n现有材料支持该项：4块4TB盘，原始16TB；RAID10后的可用容量8TB，未把16TB写为可用容量。",
+      "text_sha256": "93a8b4021d4cecf7d45af9223052dceeacf3c49e662b86425e04b90364e88e0c"
+    },
+    "D004": {
+      "source": "response.docx",
+      "source_sha256": "caf464129817e016a610518fffb40ee7223ee5c02e58963e26aa9f11929deb2a",
+      "locators": [
+        "paragraph:10",
+        "paragraph:11"
+      ],
+      "text": "D004 对应R004 独立网络接口\n现有材料支持该项：配置有2个独立10GbE业务口，另有1个1Gb管理口；业务口规格已在配置卡核对。",
+      "text_sha256": "9e40d7aa6b53fb1760fe9deba509e47e2f772c2455b0819dd809969f8ea92023"
+    },
+    "D005": {
+      "source": "response.docx",
+      "source_sha256": "caf464129817e016a610518fffb40ee7223ee5c02e58963e26aa9f11929deb2a",
+      "locators": [
+        "paragraph:12",
+        "paragraph:13"
+      ],
+      "text": "D005 对应R005 电源维护能力\n目前只有双电源冗余，不支持不停机热插拔；本项只具备部分能力。",
+      "text_sha256": "367b5dc8defbad0babaee93142ebebdd9bd8c49582909bbf4e99088c0baab683"
+    },
+    "D006": {
+      "source": "response.docx",
+      "source_sha256": "caf464129817e016a610518fffb40ee7223ee5c02e58963e26aa9f11929deb2a",
+      "locators": [
+        "paragraph:14",
+        "paragraph:15"
+      ],
+      "text": "D006 对应R006 工作温度范围\n现有材料支持该项：工作温度为0至40摄氏度，存放温度为负20至60摄氏度；两项没有混用。",
+      "text_sha256": "ddbcc459b02ee8e0abb4161d2470c1f4a008b06bbbcdf42a53db8d8372b68928"
+    },
+    "D008": {
+      "source": "response.docx",
+      "source_sha256": "caf464129817e016a610518fffb40ee7223ee5c02e58963e26aa9f11929deb2a",
+      "locators": [
+        "paragraph:16",
+        "paragraph:17"
+      ],
+      "text": "D008 对应R008 已确认数据持久化\n现有材料支持该项：已确认写入经过日志落盘；节点重启的离线记录确认数据可恢复，不只是重新启动进程。",
+      "text_sha256": "bed76af1d32ace4770dd106907451da6d94ca82351ff0e552f6422bce57a38cb"
+    },
+    "D009": {
+      "source": "response.docx",
+      "source_sha256": "caf464129817e016a610518fffb40ee7223ee5c02e58963e26aa9f11929deb2a",
+      "locators": [
+        "paragraph:18",
+        "paragraph:19"
+      ],
+      "text": "D009 对应R009 离线安装材料\n现有材料支持该项：已准备离线包、版本清单和SHA清单；安装过程不要求连接外部下载站点。",
+      "text_sha256": "27e43a70cbc213bd97021edafda83bf6a2afde2aa5fee15e70142d8a6dce5b9f"
+    },
+    "D010": {
+      "source": "response.docx",
+      "source_sha256": "caf464129817e016a610518fffb40ee7223ee5c02e58963e26aa9f11929deb2a",
+      "locators": [
+        "paragraph:20",
+        "paragraph:21"
+      ],
+      "text": "D010 对应R010 两种架构兼容\n现有材料支持该项：LCSoft2.4有Debian12 x86-64和arm64两个独立构建，兼容记录已覆盖两种架构。",
+      "text_sha256": "7ea1c991f4e3c2e351d19f573ffd0ebe19431187d6e1747ac882faa5799de205"
+    },
+    "D011": {
+      "source": "response.docx",
+      "source_sha256": "caf464129817e016a610518fffb40ee7223ee5c02e58963e26aa9f11929deb2a",
+      "locators": [
+        "paragraph:22",
+        "paragraph:23"
+      ],
+      "text": "D011 对应R011 项目隔离\n现有材料支持该项：项目命名空间和访问校验已隔离，跨项目读取被拒绝；依据是应用访问记录，不是两台机器的数量。",
+      "text_sha256": "89d23aa80d3261b8e0dcc77f53dcc3d733a27378f8834b08b929f669d4bceb90"
+    },
+    "D012": {
+      "source": "response.docx",
+      "source_sha256": "caf464129817e016a610518fffb40ee7223ee5c02e58963e26aa9f11929deb2a",
+      "locators": [
+        "paragraph:24",
+        "paragraph:25"
+      ],
+      "text": "D012 对应R012 两类本地检索\n现有材料支持该项：支持记录ID精确查找与字段内容包含检索，两类接口和结果样例均已核验。",
+      "text_sha256": "eb1a73f19a5971e1d2eadff783c0ac06c82cf958d4bd10d7c41322a09ce297f9"
+    },
+    "D013": {
+      "source": "response.docx",
+      "source_sha256": "caf464129817e016a610518fffb40ee7223ee5c02e58963e26aa9f11929deb2a",
+      "locators": [
+        "paragraph:27",
+        "paragraph:28"
+      ],
+      "text": "D013 对应R013 账户停用后授权\n现有材料支持该项：账户停用会拒绝新会话并吊销现有令牌，已用请求记录核对。",
+      "text_sha256": "9fc3a7d99ae0ba6ebbf156739405e3e0aa3b67bb85f58a5e602312d04af21045"
+    },
+    "D015": {
+      "source": "response.docx",
+      "source_sha256": "caf464129817e016a610518fffb40ee7223ee5c02e58963e26aa9f11929deb2a",
+      "locators": [
+        "paragraph:29",
+        "paragraph:30"
+      ],
+      "text": "D015 对应R015 导出权限一致\n现有材料支持该项：导出沿用现有访问校验，未授权项目不能导出；本卡不声称拥有F014没有的记录级权限。",
+      "text_sha256": "76c7c89f7505ffd2cdc01b88f316ed576a317398bd21b3c1b510248d1823fb3f"
+    },
+    "D016": {
+      "source": "response.docx",
+      "source_sha256": "caf464129817e016a610518fffb40ee7223ee5c02e58963e26aa9f11929deb2a",
+      "locators": [
+        "paragraph:31",
+        "paragraph:32"
+      ],
+      "text": "D016 对应R016 版本追踪与恢复\n现有材料支持该项：历史版本ID可查询并能恢复指定版本，恢复记录保留源版本与结果版本。",
+      "text_sha256": "a463fd228151c2827b68669deda7b018b7f7cbd323f82e81b7afc0d5f8b2d1ae"
+    },
+    "D017": {
+      "source": "response.docx",
+      "source_sha256": "caf464129817e016a610518fffb40ee7223ee5c02e58963e26aa9f11929deb2a",
+      "locators": [
+        "paragraph:33",
+        "paragraph:34"
+      ],
+      "text": "D017 对应R017 失败子项重试\n有逐项结果清单，但目前只支持整批重试，失败子项单独重试不在现版本能力内。",
+      "text_sha256": "3bd3a06a84583c74dd5f9a00301d3e5eb260c8260822398c83a97e7cdd66572f"
+    },
+    "D018": {
+      "source": "response.docx",
+      "source_sha256": "caf464129817e016a610518fffb40ee7223ee5c02e58963e26aa9f11929deb2a",
+      "locators": [
+        "paragraph:35",
+        "paragraph:36"
+      ],
+      "text": "D018 对应R018 传输通道保护\n现有材料支持该项：当前通道启用TLS1.2及TLS1.3，配置记录可核对；该记录仅证明传输保护。",
+      "text_sha256": "92da37f65f05f825076d83da1877043638107f12050d81f2cbcc41c6ab910b3e"
+    },
+    "D019": {
+      "source": "response.docx",
+      "source_sha256": "caf464129817e016a610518fffb40ee7223ee5c02e58963e26aa9f11929deb2a",
+      "locators": [
+        "paragraph:37",
+        "paragraph:38"
+      ],
+      "text": "D019 对应R019 静态备份加密\n所有数据与备份均已经加密，传输TLS配置即可证明本地备份也全面受保护。",
+      "text_sha256": "0e2cd1fe08505109b9883280ccf11e75ced46fdd80278c67bb23db225a55af50"
+    },
+    "D020": {
+      "source": "response.docx",
+      "source_sha256": "caf464129817e016a610518fffb40ee7223ee5c02e58963e26aa9f11929deb2a",
+      "locators": [
+        "paragraph:39",
+        "paragraph:40"
+      ],
+      "text": "D020 对应R020 审计字段与留存\n现有材料支持该项：记录含操作者ID、带时区时间和对象ID，留存策略为180天；配置及样例已核对。",
+      "text_sha256": "760a1450c5068107a5f23aaf1ccf605068dfd2597e16b0ed00e74ddedbd190df"
+    },
+    "D021": {
+      "source": "response.docx",
+      "source_sha256": "caf464129817e016a610518fffb40ee7223ee5c02e58963e26aa9f11929deb2a",
+      "locators": [
+        "paragraph:41",
+        "paragraph:42"
+      ],
+      "text": "D021 对应R021 CSV基础格式\n现有材料支持该项：CSV导出为UTF-8，字段引号与换行正确转义；本卡仅证明基础格式，不证明F022的未知能力。",
+      "text_sha256": "934afbe3ca6bfb77e9c9f602be653773689ca8e33ef165f9b1fc4b0cae8b3e6c"
+    },
+    "D023": {
+      "source": "response.docx",
+      "source_sha256": "caf464129817e016a610518fffb40ee7223ee5c02e58963e26aa9f11929deb2a",
+      "locators": [
+        "paragraph:43",
+        "paragraph:44"
+      ],
+      "text": "D023 对应R023 上传大小边界\n现有材料支持该项：单文件和总大小均校验，超限返回明确错误码；样例包括恰好到上限和超过上限。",
+      "text_sha256": "4008a1b51e6721d0381b973fe09e3a2a9bc89e86e631a07f04755624ae69191e"
+    },
+    "D024": {
+      "source": "response.docx",
+      "source_sha256": "caf464129817e016a610518fffb40ee7223ee5c02e58963e26aa9f11929deb2a",
+      "locators": [
+        "paragraph:45",
+        "paragraph:46"
+      ],
+      "text": "D024 对应R024 浏览器覆盖\n已覆盖Windows Chrome和Edge，Safari16尚不支持，当前仅部分覆盖浏览器范围。",
+      "text_sha256": "b064f6e50c9fb30650c123da1d0b874c397261ca84bee7e18d081bd8a173df7c"
+    },
+    "D025": {
+      "source": "response.docx",
+      "source_sha256": "caf464129817e016a610518fffb40ee7223ee5c02e58963e26aa9f11929deb2a",
+      "locators": [
+        "paragraph:47",
+        "paragraph:48"
+      ],
+      "text": "D025 对应R025 API版本及错误码\n现有材料支持该项：API v2.4版本号、稳定错误码及变更记录均可提供；错误码不只写在聊天解释中。",
+      "text_sha256": "29fcb2e4ec25ea2d00904ba2ffda5e6c79de2ccd113017a3987fefc391f365d8"
+    },
+    "D026": {
+      "source": "response.docx",
+      "source_sha256": "caf464129817e016a610518fffb40ee7223ee5c02e58963e26aa9f11929deb2a",
+      "locators": [
+        "paragraph:50",
+        "paragraph:51"
+      ],
+      "text": "D026 对应R026 偏移续传与校验\n支持无缝断点续传，重连后自动从已确认字节偏移继续，完成校验。",
+      "text_sha256": "bd3ac25bdf84a3a5361947c948cacce57a8bf267ac1ff66fd553f16950aebecb"
+    },
+    "D027": {
+      "source": "response.docx",
+      "source_sha256": "caf464129817e016a610518fffb40ee7223ee5c02e58963e26aa9f11929deb2a",
+      "locators": [
+        "paragraph:52",
+        "paragraph:53"
+      ],
+      "text": "D027 对应R027 质量管理证明\n现有材料支持该项：F027登记投标人为临川数联技术有限公司，质量管理证明使用C01，不借用其它主体证书。",
+      "text_sha256": "f1df8a9d5ed5af37c0b6eed84ab9ec4390f600c9a317e263aa12ae0471da0ea0"
+    },
+    "D028": {
+      "source": "response.docx",
+      "source_sha256": "caf464129817e016a610518fffb40ee7223ee5c02e58963e26aa9f11929deb2a",
+      "locators": [
+        "paragraph:54",
+        "paragraph:55"
+      ],
+      "text": "D028 对应R028 当前软件使用授权\n现有材料支持该项：当前交付软件为LCSoft2.4，使用授权使用C05；不是其它版本通用说明。",
+      "text_sha256": "12e9b135a69c983f619a466773284604fbf8f4d73d0fdcdae7d672e2751b06ed"
+    },
+    "D029": {
+      "source": "response.docx",
+      "source_sha256": "caf464129817e016a610518fffb40ee7223ee5c02e58963e26aa9f11929deb2a",
+      "locators": [
+        "paragraph:56",
+        "paragraph:57"
+      ],
+      "text": "D029 对应R029 设备安全证明\nLC-G2设备安全证明已经齐备且当前有效，见C02，可直接作合格证明。",
+      "text_sha256": "d198d5daa58c7187903ebc9ba4afaee0cdd04101fd4bce5e37e1a50685ce2ba6"
+    },
+    "D030": {
+      "source": "response.docx",
+      "source_sha256": "caf464129817e016a610518fffb40ee7223ee5c02e58963e26aa9f11929deb2a",
+      "locators": [
+        "paragraph:58",
+        "paragraph:59"
+      ],
+      "text": "D030 对应R030 主体信息安全证明\n投标人信息安全管理证明已具备且有效，见C03，无需补充材料。",
+      "text_sha256": "458a754e2f6930f656d6ceeb8939e84cf775822e7ae66a2ee4df09cdcef9ebfe"
+    },
+    "D031": {
+      "source": "response.docx",
+      "source_sha256": "caf464129817e016a610518fffb40ee7223ee5c02e58963e26aa9f11929deb2a",
+      "locators": [
+        "paragraph:60",
+        "paragraph:61"
+      ],
+      "text": "D031 对应R031 本型号环保证明\n沿用C06的LC-G系列环保证明即可覆盖LC-G2，当前型号已经全面满足。",
+      "text_sha256": "333cf10e13ab3de7847e5343036046c563b855f9a4f00d8a5b1103397c0e8386"
+    },
+    "D032": {
+      "source": "response.docx",
+      "source_sha256": "caf464129817e016a610518fffb40ee7223ee5c02e58963e26aa9f11929deb2a",
+      "locators": [
+        "paragraph:62",
+        "paragraph:63"
+      ],
+      "text": "D032 对应R032 密码模块符合性\n现有材料支持该项：当前配置为LC-CM1模块配LC-G2平台，符合性报告为C04；适用范围需与两者对应。",
+      "text_sha256": "d5ba3f9816e3835ec99e9ac392d983ced680f8dcf4d6b149a8e5729e7a7892f9"
+    },
+    "D034": {
+      "source": "response.docx",
+      "source_sha256": "caf464129817e016a610518fffb40ee7223ee5c02e58963e26aa9f11929deb2a",
+      "locators": [
+        "paragraph:64",
+        "paragraph:65"
+      ],
+      "text": "D034 对应R034 支持响应口径\n现有材料支持该项：支持台可在工作时段4小时内确认问题并说明下一步；没有承诺全部问题4小时完成修复。",
+      "text_sha256": "242f723cd8f5a07b0b7a763db6a78a6d8e9b61c5554766b4f23255f4aa71321e"
+    },
+    "D035": {
+      "source": "response.docx",
+      "source_sha256": "caf464129817e016a610518fffb40ee7223ee5c02e58963e26aa9f11929deb2a",
+      "locators": [
+        "paragraph:66",
+        "paragraph:67"
+      ],
+      "text": "D035 对应R035 跨版本限制说明\n现有材料支持该项：版本表会记录输入版本、输出版本、已知限制与未确认项，更新日期只作为时间信息。",
+      "text_sha256": "4f476d720e1202dd167bc4a903dfacff7809527be6c81b69cfdc0e50d76971d4"
+    },
+    "F001": {
+      "source": "response.docx",
+      "source_sha256": "caf464129817e016a610518fffb40ee7223ee5c02e58963e26aa9f11929deb2a",
+      "locators": [
+        "paragraph:70",
+        "paragraph:71"
+      ],
+      "text": "F001 物理计算核心\nLC-G2为2颗16核处理器，共32物理核心、64逻辑线程；物理核与线程分开登记。",
+      "text_sha256": "f94a8b7a2004e2de15c4c37877cf4729eec0e0eaaeb46bc1bc0c91d437dc789f"
+    },
+    "F002": {
+      "source": "response.docx",
+      "source_sha256": "caf464129817e016a610518fffb40ee7223ee5c02e58963e26aa9f11929deb2a",
+      "locators": [
+        "paragraph:72",
+        "paragraph:73"
+      ],
+      "text": "F002 内存与校验\n交付配置为128GB ECC内存；配置核验卡已经复核容量与ECC开关。",
+      "text_sha256": "f5b070e9b547fa75fae620f9076ed84335b58f8394b52efe9d28114f6f27a4f5"
+    },
+    "F003": {
+      "source": "response.docx",
+      "source_sha256": "caf464129817e016a610518fffb40ee7223ee5c02e58963e26aa9f11929deb2a",
+      "locators": [
+        "paragraph:74",
+        "paragraph:75"
+      ],
+      "text": "F003 可用存储容量\n4块4TB盘，原始16TB；RAID10后的可用容量8TB，未把16TB写为可用容量。",
+      "text_sha256": "1901dde865f87274c2c39e9da64c820081429660c8021383cfdcd9da0f31fdc5"
+    },
+    "F004": {
+      "source": "response.docx",
+      "source_sha256": "caf464129817e016a610518fffb40ee7223ee5c02e58963e26aa9f11929deb2a",
+      "locators": [
+        "paragraph:76",
+        "paragraph:77"
+      ],
+      "text": "F004 独立网络接口\n配置有2个独立10GbE业务口，另有1个1Gb管理口；业务口规格已在配置卡核对。",
+      "text_sha256": "f1c8933bd34bb2246e94cd868d598034efb7797412959f5a9e411844e0ea694f"
+    },
+    "F005": {
+      "source": "response.docx",
+      "source_sha256": "caf464129817e016a610518fffb40ee7223ee5c02e58963e26aa9f11929deb2a",
+      "locators": [
+        "paragraph:78",
+        "paragraph:79"
+      ],
+      "text": "F005 电源维护能力\n具有双电源冗余；当前机箱不支持不停机热插拔，维护需要停机。",
+      "text_sha256": "1b9a4444c32e85a14187992ff6e45e977e3054c02887a3d700b2be080c77c461"
+    },
+    "F006": {
+      "source": "response.docx",
+      "source_sha256": "caf464129817e016a610518fffb40ee7223ee5c02e58963e26aa9f11929deb2a",
+      "locators": [
+        "paragraph:80",
+        "paragraph:81"
+      ],
+      "text": "F006 工作温度范围\n工作温度为0至40摄氏度，存放温度为负20至60摄氏度；两项没有混用。",
+      "text_sha256": "814655bff71bf7325c0746bc7346279dd9441cdd9ccc9866a5777437b182f512"
+    },
+    "F007": {
+      "source": "response.docx",
+      "source_sha256": "caf464129817e016a610518fffb40ee7223ee5c02e58963e26aa9f11929deb2a",
+      "locators": [
+        "paragraph:82",
+        "paragraph:83"
+      ],
+      "text": "F007 文件名与字节保真\nLCSoft2.4支持UTF-8中文路径，文件按字节透传，输入输出SHA一致；不是仅有主机名显示中文。",
+      "text_sha256": "1f5ace2cf394d83578904f24ee19ef6f88d0d85713643d2871d1678ca40aa3f4"
+    },
+    "F008": {
+      "source": "response.docx",
+      "source_sha256": "caf464129817e016a610518fffb40ee7223ee5c02e58963e26aa9f11929deb2a",
+      "locators": [
+        "paragraph:85",
+        "paragraph:86"
+      ],
+      "text": "F008 已确认数据持久化\n已确认写入经过日志落盘；节点重启的离线记录确认数据可恢复，不只是重新启动进程。",
+      "text_sha256": "563bfcbc65b6026c259c4e00c836160e495f81fc7c10b1035c72808109c194d8"
+    },
+    "F009": {
+      "source": "response.docx",
+      "source_sha256": "caf464129817e016a610518fffb40ee7223ee5c02e58963e26aa9f11929deb2a",
+      "locators": [
+        "paragraph:87",
+        "paragraph:88"
+      ],
+      "text": "F009 离线安装材料\n已准备离线包、版本清单和SHA清单；安装过程不要求连接外部下载站点。",
+      "text_sha256": "62a2558072c6600a343c6ed48240c91b30bbf1e64db03527aec73df01b8efe4c"
+    },
+    "F010": {
+      "source": "response.docx",
+      "source_sha256": "caf464129817e016a610518fffb40ee7223ee5c02e58963e26aa9f11929deb2a",
+      "locators": [
+        "paragraph:89",
+        "paragraph:90"
+      ],
+      "text": "F010 两种架构兼容\nLCSoft2.4有Debian12 x86-64和arm64两个独立构建，兼容记录已覆盖两种架构。",
+      "text_sha256": "ac4365f1fd429a353532e96bdfda20ddb9686675892597cea25c7784d88b1c48"
+    },
+    "F011": {
+      "source": "response.docx",
+      "source_sha256": "caf464129817e016a610518fffb40ee7223ee5c02e58963e26aa9f11929deb2a",
+      "locators": [
+        "paragraph:91",
+        "paragraph:92"
+      ],
+      "text": "F011 项目隔离\n项目命名空间和访问校验已隔离，跨项目读取被拒绝；依据是应用访问记录，不是两台机器的数量。",
+      "text_sha256": "d7e86d395b841760ec524d699a9337192820704a5594936a650df6e3964f4264"
+    },
+    "F012": {
+      "source": "response.docx",
+      "source_sha256": "caf464129817e016a610518fffb40ee7223ee5c02e58963e26aa9f11929deb2a",
+      "locators": [
+        "paragraph:93",
+        "paragraph:94"
+      ],
+      "text": "F012 两类本地检索\n支持记录ID精确查找与字段内容包含检索，两类接口和结果样例均已核验。",
+      "text_sha256": "457fe305ade749330066546c25f66f5401bdeb7b3dee1cedd2380218a35f679a"
+    },
+    "F013": {
+      "source": "response.docx",
+      "source_sha256": "caf464129817e016a610518fffb40ee7223ee5c02e58963e26aa9f11929deb2a",
+      "locators": [
+        "paragraph:95",
+        "paragraph:96"
+      ],
+      "text": "F013 账户停用后授权\n账户停用会拒绝新会话并吊销现有令牌，已用请求记录核对。",
+      "text_sha256": "d5a2e387091a77e2f4e37dfa6c71600cf5ce2d645949700340795721479eabbc"
+    },
+    "F014": {
+      "source": "response.docx",
+      "source_sha256": "caf464129817e016a610518fffb40ee7223ee5c02e58963e26aa9f11929deb2a",
+      "locators": [
+        "paragraph:97",
+        "paragraph:98"
+      ],
+      "text": "F014 角色及记录范围\n现版本支持角色授权，但没有记录级范围配置；项目隔离不等于同一项目内记录级权限。",
+      "text_sha256": "73c33ff84be1bc51855a47f319f493ef41302ae4f57be7d54bd5601c22bfd60b"
+    },
+    "F015": {
+      "source": "response.docx",
+      "source_sha256": "caf464129817e016a610518fffb40ee7223ee5c02e58963e26aa9f11929deb2a",
+      "locators": [
+        "paragraph:100",
+        "paragraph:101"
+      ],
+      "text": "F015 导出权限一致\n导出沿用现有访问校验，未授权项目不能导出；本卡不声称拥有F014没有的记录级权限。",
+      "text_sha256": "2e5381a9c5e597ecff1b62dfcfd56e9f137a54e012441ae3227331070e00177e"
+    },
+    "F016": {
+      "source": "response.docx",
+      "source_sha256": "caf464129817e016a610518fffb40ee7223ee5c02e58963e26aa9f11929deb2a",
+      "locators": [
+        "paragraph:102",
+        "paragraph:103"
+      ],
+      "text": "F016 版本追踪与恢复\n历史版本ID可查询并能恢复指定版本，恢复记录保留源版本与结果版本。",
+      "text_sha256": "eb0d6e5a7c5a700b07a3b53142a8a5af1af53e89f733951f638e7f27735c2fda"
+    },
+    "F017": {
+      "source": "response.docx",
+      "source_sha256": "caf464129817e016a610518fffb40ee7223ee5c02e58963e26aa9f11929deb2a",
+      "locators": [
+        "paragraph:104",
+        "paragraph:105"
+      ],
+      "text": "F017 失败子项重试\n提供逐项失败清单；现版本只能整批重试，不能仅重试失败子项。",
+      "text_sha256": "c4f378ae4d97052c81df7e591aabcee5a97a35c3335ea85dd2c654e27b40b097"
+    },
+    "F018": {
+      "source": "response.docx",
+      "source_sha256": "caf464129817e016a610518fffb40ee7223ee5c02e58963e26aa9f11929deb2a",
+      "locators": [
+        "paragraph:106",
+        "paragraph:107"
+      ],
+      "text": "F018 传输通道保护\n当前通道启用TLS1.2及TLS1.3，配置记录可核对；该记录仅证明传输保护。",
+      "text_sha256": "f4599c3c4595a452199eb567fff42fcd44504939fbf7714a176cec389c9e3b80"
+    },
+    "F019": {
+      "source": "response.docx",
+      "source_sha256": "caf464129817e016a610518fffb40ee7223ee5c02e58963e26aa9f11929deb2a",
+      "locators": [
+        "paragraph:108",
+        "paragraph:109"
+      ],
+      "text": "F019 静态备份加密\nLCSoft2.4当前备份以明文保存，没有内置静态备份加密；可另行研究外部磁盘加密，但尚未部署。",
+      "text_sha256": "708241e94ae11bf1b04845152b3c94a404f05ae4e037e54cd9559bca705165e4"
+    },
+    "F020": {
+      "source": "response.docx",
+      "source_sha256": "caf464129817e016a610518fffb40ee7223ee5c02e58963e26aa9f11929deb2a",
+      "locators": [
+        "paragraph:110",
+        "paragraph:111"
+      ],
+      "text": "F020 审计字段与留存\n记录含操作者ID、带时区时间和对象ID，留存策略为180天；配置及样例已核对。",
+      "text_sha256": "6ebc5c34931ffa89bc195394f8fe4e8c423bf685feccb528e475d2bfef5ce0df"
+    },
+    "F021": {
+      "source": "response.docx",
+      "source_sha256": "caf464129817e016a610518fffb40ee7223ee5c02e58963e26aa9f11929deb2a",
+      "locators": [
+        "paragraph:112",
+        "paragraph:113"
+      ],
+      "text": "F021 CSV基础格式\nCSV导出为UTF-8，字段引号与换行正确转义；本卡仅证明基础格式，不证明F022的未知能力。",
+      "text_sha256": "33ce07661b3a26d8030d36a1cf24de5f1df9e10d0d9f5d740324f9d2a2b9367d"
+    },
+    "F022": {
+      "source": "response.docx",
+      "source_sha256": "caf464129817e016a610518fffb40ee7223ee5c02e58963e26aa9f11929deb2a",
+      "locators": [
+        "paragraph:115",
+        "paragraph:116"
+      ],
+      "text": "F022 稳定ID及续页导出\n本次材料未提供稳定记录ID及续页导出的核验记录，能力是否具备尚未确认；不能据F021或硬件配置推定。",
+      "text_sha256": "13c57a01f9849fac8e2af2114b22e73fffff1efce8c82095c20ebce54dd6c5f0"
+    },
+    "F023": {
+      "source": "response.docx",
+      "source_sha256": "caf464129817e016a610518fffb40ee7223ee5c02e58963e26aa9f11929deb2a",
+      "locators": [
+        "paragraph:117",
+        "paragraph:118"
+      ],
+      "text": "F023 上传大小边界\n单文件和总大小均校验，超限返回明确错误码；样例包括恰好到上限和超过上限。",
+      "text_sha256": "73ef22f45e5a4735facc4446b342ce11a29dc5d2bde869275d1d0ed50d319cb1"
+    },
+    "F024": {
+      "source": "response.docx",
+      "source_sha256": "caf464129817e016a610518fffb40ee7223ee5c02e58963e26aa9f11929deb2a",
+      "locators": [
+        "paragraph:119",
+        "paragraph:120"
+      ],
+      "text": "F024 浏览器覆盖\n已支持Windows Chrome与Edge；Safari16当前不支持，不能把未实现项写为已验证。",
+      "text_sha256": "ddb59c71f96e6f84ac64f3541343f236a0fa754831cb591d3379524b4a906f40"
+    },
+    "F025": {
+      "source": "response.docx",
+      "source_sha256": "caf464129817e016a610518fffb40ee7223ee5c02e58963e26aa9f11929deb2a",
+      "locators": [
+        "paragraph:121",
+        "paragraph:122"
+      ],
+      "text": "F025 API版本及错误码\nAPI v2.4版本号、稳定错误码及变更记录均可提供；错误码不只写在聊天解释中。",
+      "text_sha256": "de0a87dcebb55ad4e8732e6930a094d8f6ad31e8d95ae8e57f52699fc12e188c"
+    },
+    "F026": {
+      "source": "response.docx",
+      "source_sha256": "caf464129817e016a610518fffb40ee7223ee5c02e58963e26aa9f11929deb2a",
+      "locators": [
+        "paragraph:123",
+        "paragraph:124"
+      ],
+      "text": "F026 偏移续传与校验\n当前能重连并对整文件传完后的SHA校验，但不保存已确认偏移，只能整文件重传。",
+      "text_sha256": "c8f093cdb696c6fdb07e18836d289fe5b9110fd3286a98099d8b0c89dccf03b7"
+    },
+    "F027": {
+      "source": "response.docx",
+      "source_sha256": "caf464129817e016a610518fffb40ee7223ee5c02e58963e26aa9f11929deb2a",
+      "locators": [
+        "paragraph:125",
+        "paragraph:126"
+      ],
+      "text": "F027 质量管理证明\nF027登记投标人为临川数联技术有限公司，质量管理证明使用C01，不借用其它主体证书。",
+      "text_sha256": "88022355bfd592b6a73fac682c3cefcd985597847aa54c24cf14f912ff9ee2d3"
+    },
+    "F028": {
+      "source": "response.docx",
+      "source_sha256": "caf464129817e016a610518fffb40ee7223ee5c02e58963e26aa9f11929deb2a",
+      "locators": [
+        "paragraph:127",
+        "paragraph:128"
+      ],
+      "text": "F028 当前软件使用授权\n当前交付软件为LCSoft2.4，使用授权使用C05；不是其它版本通用说明。",
+      "text_sha256": "cf2e558f5f562e605d8a851d0e8b8c9c47272a2f0bc1ccff2f595853db6645fb"
+    },
+    "F029": {
+      "source": "response.docx",
+      "source_sha256": "caf464129817e016a610518fffb40ee7223ee5c02e58963e26aa9f11929deb2a",
+      "locators": [
+        "paragraph:130",
+        "paragraph:131"
+      ],
+      "text": "F029 设备安全证明\n设备型号为LC-G2，材料中设备安全证明仅提供C02，未随附续证材料。",
+      "text_sha256": "8cd6fa5c9f3c87339b06895f3839ac2132c1e47e98873fd96e9b2d9ca26e268a"
+    },
+    "F030": {
+      "source": "response.docx",
+      "source_sha256": "caf464129817e016a610518fffb40ee7223ee5c02e58963e26aa9f11929deb2a",
+      "locators": [
+        "paragraph:132",
+        "paragraph:133"
+      ],
+      "text": "F030 主体信息安全证明\n信息安全管理证明仅有C03，主体为临川数联技术有限公司；未提供更新证明。",
+      "text_sha256": "791206da5f13e8a05004f63d8013f0858795aae5e60169c91d4f6ab7f3916862"
+    },
+    "F031": {
+      "source": "response.docx",
+      "source_sha256": "caf464129817e016a610518fffb40ee7223ee5c02e58963e26aa9f11929deb2a",
+      "locators": [
+        "paragraph:134",
+        "paragraph:135"
+      ],
+      "text": "F031 本型号环保证明\n本项目选型LC-G2；C06只列LC-G1，未列LC-G2，未提供本型号环保证明。",
+      "text_sha256": "6fcca004776ed51e7b2844aba440765bc84a4545af6a2ee7d1d016188754d7a0"
+    },
+    "F032": {
+      "source": "response.docx",
+      "source_sha256": "caf464129817e016a610518fffb40ee7223ee5c02e58963e26aa9f11929deb2a",
+      "locators": [
+        "paragraph:136",
+        "paragraph:137"
+      ],
+      "text": "F032 密码模块符合性\n当前配置为LC-CM1模块配LC-G2平台，符合性报告为C04；适用范围需与两者对应。",
+      "text_sha256": "7810c10354001ea581744657b87cacbedce02b4711457950138c23ecba6a5835"
+    },
+    "F033": {
+      "source": "response.docx",
+      "source_sha256": "caf464129817e016a610518fffb40ee7223ee5c02e58963e26aa9f11929deb2a",
+      "locators": [
+        "paragraph:138",
+        "paragraph:139"
+      ],
+      "text": "F033 可编辑交付与来源\n交付清单包含DOCX、XLSX原生文档、源资料目录和差异清单；不只提供PDF。",
+      "text_sha256": "5d4104e97768a9ad99b8361083d185c21b56e70c78bd07ab226677192c293dd9"
+    },
+    "F034": {
+      "source": "response.docx",
+      "source_sha256": "caf464129817e016a610518fffb40ee7223ee5c02e58963e26aa9f11929deb2a",
+      "locators": [
+        "paragraph:140",
+        "paragraph:141"
+      ],
+      "text": "F034 支持响应口径\n支持台可在工作时段4小时内确认问题并说明下一步；没有承诺全部问题4小时完成修复。",
+      "text_sha256": "914f3be556a17e9bbf7b038729d9d892c738bb4f8ee3e67da8c98d4e8e90af53"
+    },
+    "F035": {
+      "source": "response.docx",
+      "source_sha256": "caf464129817e016a610518fffb40ee7223ee5c02e58963e26aa9f11929deb2a",
+      "locators": [
+        "paragraph:142",
+        "paragraph:143"
+      ],
+      "text": "F035 跨版本限制说明\n版本表会记录输入版本、输出版本、已知限制与未确认项，更新日期只作为时间信息。",
+      "text_sha256": "e357ca197e05fec0398d191a7c7c3314b4268df9a666506a06c271a01d11794e"
+    },
+    "C01": {
+      "source": "certificates.pdf",
+      "source_sha256": "34a2b746be3feea5dcf25b8f177cd8c53e8bd928710d3221fe18aa6b9d424566",
+      "locators": [
+        "page:1"
+      ],
+      "text": "C01 质量管理证明\n材料编号 LC-QA-A101\n持证/授权主体 临川数联技术有限公司\n适用范围 ORG\n有效起始 2024-06-01 有效截止 2027-05-31\n范围说明 ORG表示仅对上述公司主体的管理体系证明，不代替具体产品功能或型号证明。\n",
+      "text_sha256": "918cadca40c0962b24d09a2ce3f178ded32f766f0ecf0940aaeacda82df9b362"
+    },
+    "C02": {
+      "source": "certificates.pdf",
+      "source_sha256": "34a2b746be3feea5dcf25b8f177cd8c53e8bd928710d3221fe18aa6b9d424566",
+      "locators": [
+        "page:1"
+      ],
+      "text": "C02 设备安全证明\n材料编号 LC-SF-B202\n持证/授权主体 临川数联技术有限公司\n适用范围 LC-G2\n有效起始 2025-01-01 有效截止 2026-11-04\n范围说明 本条明确列LC-G2，不能仅凭编号推定截止日仍有效。\n",
+      "text_sha256": "d2121ff7fa17817a8617ec3b9d593c46f54a529e7a1977784a9fff68a7ac9c39"
+    },
+    "C03": {
+      "source": "certificates.pdf",
+      "source_sha256": "34a2b746be3feea5dcf25b8f177cd8c53e8bd928710d3221fe18aa6b9d424566",
+      "locators": [
+        "page:1"
+      ],
+      "text": "C03 信息安全管理证明\n材料编号 LC-IS-C303\n持证/授权主体 临川数联技术有限公司\n适用范围 ORG\n有效起始 2023-10-01 有效截止 2026-10-31\n范围说明 ORG表示仅对上述公司主体的管理体系证明，不代替具体产品功能或型号证明。\n",
+      "text_sha256": "188123a8f3c7c5c1251f52c9249543de6e68a498208ffd6042c01b2ce5dd9d94"
+    },
+    "C04": {
+      "source": "certificates.pdf",
+      "source_sha256": "34a2b746be3feea5dcf25b8f177cd8c53e8bd928710d3221fe18aa6b9d424566",
+      "locators": [
+        "page:2"
+      ],
+      "text": "C04 密码模块符合性报告\n材料编号 LC-CM-D404\n持证/授权主体 临川数联技术有限公司\n适用范围 LC-CM1@LC-G2\n有效起始 2025-11-05 有效截止 2026-11-05\n范围说明 适用LC-CM1模块在LC-G2平台的使用；截止当日仍在含首尾的日期范围内。\n",
+      "text_sha256": "8ab9f1f9bf5e4172bdf2408d0e75db9a0a784bc6106f5f0721940bc7992fc049"
+    },
+    "C05": {
+      "source": "certificates.pdf",
+      "source_sha256": "34a2b746be3feea5dcf25b8f177cd8c53e8bd928710d3221fe18aa6b9d424566",
+      "locators": [
+        "page:2"
+      ],
+      "text": "C05 软件使用授权\n材料编号 LC-LI-E505\n持证/授权主体 临川数联技术有限公司\n适用范围 LCSoft2.4\n有效起始 2026-01-01 有效截止 2028-01-01\n范围说明 仅覆盖LCSoft2.4版本的本次使用授权。\n",
+      "text_sha256": "f6d91c21ee5c150efae495cc666f1998ca9ab3e665636132dc637e3ddaab6761"
+    },
+    "C06": {
+      "source": "certificates.pdf",
+      "source_sha256": "34a2b746be3feea5dcf25b8f177cd8c53e8bd928710d3221fe18aa6b9d424566",
+      "locators": [
+        "page:2"
+      ],
+      "text": "C06 设备环保检测证明\n材料编号 LC-EN-F606\n持证/授权主体 临川数联技术有限公司\n适用范围 LC-G1\n有效起始 2026-02-01 有效截止 2027-02-01\n范围说明 仅列LC-G1，未列LC-G2；不能依据LC-G系列简称扩展到其它型号。\n",
+      "text_sha256": "4e9296ba476ca9e696cce652a046304396f7bde57e084da689128cfe449d8683"
+    }
+  }
+}

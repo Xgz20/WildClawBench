@@ -1,0 +1,472 @@
+{
+  "schema_version": "h004-model-validation/v1",
+  "status": "PASS",
+  "case_count": 35,
+  "comparisons": [
+    {
+      "req_id": "R001",
+      "fields": {
+        "mandatory": true,
+        "draft_status": true,
+        "coverage": true,
+        "certificate_status": true
+      },
+      "predicates": [
+        true
+      ]
+    },
+    {
+      "req_id": "R002",
+      "fields": {
+        "mandatory": true,
+        "draft_status": true,
+        "coverage": true,
+        "certificate_status": true
+      },
+      "predicates": [
+        true,
+        true
+      ]
+    },
+    {
+      "req_id": "R003",
+      "fields": {
+        "mandatory": true,
+        "draft_status": true,
+        "coverage": true,
+        "certificate_status": true
+      },
+      "predicates": [
+        true
+      ]
+    },
+    {
+      "req_id": "R004",
+      "fields": {
+        "mandatory": true,
+        "draft_status": true,
+        "coverage": true,
+        "certificate_status": true
+      },
+      "predicates": [
+        true
+      ]
+    },
+    {
+      "req_id": "R005",
+      "fields": {
+        "mandatory": true,
+        "draft_status": true,
+        "coverage": true,
+        "certificate_status": true
+      },
+      "predicates": [
+        true,
+        false
+      ]
+    },
+    {
+      "req_id": "R006",
+      "fields": {
+        "mandatory": true,
+        "draft_status": true,
+        "coverage": true,
+        "certificate_status": true
+      },
+      "predicates": [
+        true,
+        true
+      ]
+    },
+    {
+      "req_id": "R007",
+      "fields": {
+        "mandatory": true,
+        "draft_status": true,
+        "coverage": true,
+        "certificate_status": true
+      },
+      "predicates": [
+        true,
+        true
+      ]
+    },
+    {
+      "req_id": "R008",
+      "fields": {
+        "mandatory": true,
+        "draft_status": true,
+        "coverage": true,
+        "certificate_status": true
+      },
+      "predicates": [
+        true,
+        true
+      ]
+    },
+    {
+      "req_id": "R009",
+      "fields": {
+        "mandatory": true,
+        "draft_status": true,
+        "coverage": true,
+        "certificate_status": true
+      },
+      "predicates": [
+        true,
+        true,
+        true
+      ]
+    },
+    {
+      "req_id": "R010",
+      "fields": {
+        "mandatory": true,
+        "draft_status": true,
+        "coverage": true,
+        "certificate_status": true
+      },
+      "predicates": [
+        true,
+        true
+      ]
+    },
+    {
+      "req_id": "R011",
+      "fields": {
+        "mandatory": true,
+        "draft_status": true,
+        "coverage": true,
+        "certificate_status": true
+      },
+      "predicates": [
+        true
+      ]
+    },
+    {
+      "req_id": "R012",
+      "fields": {
+        "mandatory": true,
+        "draft_status": true,
+        "coverage": true,
+        "certificate_status": true
+      },
+      "predicates": [
+        true,
+        true
+      ]
+    },
+    {
+      "req_id": "R013",
+      "fields": {
+        "mandatory": true,
+        "draft_status": true,
+        "coverage": true,
+        "certificate_status": true
+      },
+      "predicates": [
+        true,
+        true
+      ]
+    },
+    {
+      "req_id": "R014",
+      "fields": {
+        "mandatory": true,
+        "draft_status": true,
+        "coverage": true,
+        "certificate_status": true
+      },
+      "predicates": [
+        true,
+        false
+      ]
+    },
+    {
+      "req_id": "R015",
+      "fields": {
+        "mandatory": true,
+        "draft_status": true,
+        "coverage": true,
+        "certificate_status": true
+      },
+      "predicates": [
+        true
+      ]
+    },
+    {
+      "req_id": "R016",
+      "fields": {
+        "mandatory": true,
+        "draft_status": true,
+        "coverage": true,
+        "certificate_status": true
+      },
+      "predicates": [
+        true,
+        true
+      ]
+    },
+    {
+      "req_id": "R017",
+      "fields": {
+        "mandatory": true,
+        "draft_status": true,
+        "coverage": true,
+        "certificate_status": true
+      },
+      "predicates": [
+        true,
+        false
+      ]
+    },
+    {
+      "req_id": "R018",
+      "fields": {
+        "mandatory": true,
+        "draft_status": true,
+        "coverage": true,
+        "certificate_status": true
+      },
+      "predicates": [
+        true,
+        true
+      ]
+    },
+    {
+      "req_id": "R019",
+      "fields": {
+        "mandatory": true,
+        "draft_status": true,
+        "coverage": true,
+        "certificate_status": true
+      },
+      "predicates": [
+        false
+      ]
+    },
+    {
+      "req_id": "R020",
+      "fields": {
+        "mandatory": true,
+        "draft_status": true,
+        "coverage": true,
+        "certificate_status": true
+      },
+      "predicates": [
+        true,
+        true,
+        true,
+        true
+      ]
+    },
+    {
+      "req_id": "R021",
+      "fields": {
+        "mandatory": true,
+        "draft_status": true,
+        "coverage": true,
+        "certificate_status": true
+      },
+      "predicates": [
+        true,
+        true,
+        true
+      ]
+    },
+    {
+      "req_id": "R022",
+      "fields": {
+        "mandatory": true,
+        "draft_status": true,
+        "coverage": true,
+        "certificate_status": true
+      },
+      "predicates": [
+        null,
+        null
+      ]
+    },
+    {
+      "req_id": "R023",
+      "fields": {
+        "mandatory": true,
+        "draft_status": true,
+        "coverage": true,
+        "certificate_status": true
+      },
+      "predicates": [
+        true,
+        true,
+        true
+      ]
+    },
+    {
+      "req_id": "R024",
+      "fields": {
+        "mandatory": true,
+        "draft_status": true,
+        "coverage": true,
+        "certificate_status": true
+      },
+      "predicates": [
+        true,
+        true,
+        false
+      ]
+    },
+    {
+      "req_id": "R025",
+      "fields": {
+        "mandatory": true,
+        "draft_status": true,
+        "coverage": true,
+        "certificate_status": true
+      },
+      "predicates": [
+        true,
+        true,
+        true
+      ]
+    },
+    {
+      "req_id": "R026",
+      "fields": {
+        "mandatory": true,
+        "draft_status": true,
+        "coverage": true,
+        "certificate_status": true
+      },
+      "predicates": [
+        false,
+        true
+      ]
+    },
+    {
+      "req_id": "R027",
+      "fields": {
+        "mandatory": true,
+        "draft_status": true,
+        "coverage": true,
+        "certificate_status": true
+      },
+      "predicates": [
+        true
+      ]
+    },
+    {
+      "req_id": "R028",
+      "fields": {
+        "mandatory": true,
+        "draft_status": true,
+        "coverage": true,
+        "certificate_status": true
+      },
+      "predicates": [
+        true
+      ]
+    },
+    {
+      "req_id": "R029",
+      "fields": {
+        "mandatory": true,
+        "draft_status": true,
+        "coverage": true,
+        "certificate_status": true
+      },
+      "predicates": [
+        false
+      ]
+    },
+    {
+      "req_id": "R030",
+      "fields": {
+        "mandatory": true,
+        "draft_status": true,
+        "coverage": true,
+        "certificate_status": true
+      },
+      "predicates": [
+        false
+      ]
+    },
+    {
+      "req_id": "R031",
+      "fields": {
+        "mandatory": true,
+        "draft_status": true,
+        "coverage": true,
+        "certificate_status": true
+      },
+      "predicates": [
+        false
+      ]
+    },
+    {
+      "req_id": "R032",
+      "fields": {
+        "mandatory": true,
+        "draft_status": true,
+        "coverage": true,
+        "certificate_status": true
+      },
+      "predicates": [
+        true
+      ]
+    },
+    {
+      "req_id": "R033",
+      "fields": {
+        "mandatory": true,
+        "draft_status": true,
+        "coverage": true,
+        "certificate_status": true
+      },
+      "predicates": [
+        true,
+        true,
+        true
+      ]
+    },
+    {
+      "req_id": "R034",
+      "fields": {
+        "mandatory": true,
+        "draft_status": true,
+        "coverage": true,
+        "certificate_status": true
+      },
+      "predicates": [
+        true,
+        true
+      ]
+    },
+    {
+      "req_id": "R035",
+      "fields": {
+        "mandatory": true,
+        "draft_status": true,
+        "coverage": true,
+        "certificate_status": true
+      },
+      "predicates": [
+        true,
+        true,
+        true
+      ]
+    }
+  ],
+  "mandatory_gap_ids": [
+    "R014",
+    "R017",
+    "R019",
+    "R022",
+    "R026",
+    "R029",
+    "R030",
+    "R031"
+  ],
+  "model_sha256": "c68d1b8a17919226617bb2a4537f67ff71e81dfac295ef91aaa9bf2628a30fa1",
+  "source_facts_sha256": "2ada9f8e2c0c58d9b7d43e262814ceff4666efc00fe50b95c9228e03268ce47e",
+  "limit": "Independent computation over author source annotations; not independent expert semantic annotation, candidate or reference output."
+}

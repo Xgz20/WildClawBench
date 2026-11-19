@@ -1,0 +1,284 @@
+{
+  "schema_version": "h013-business-oracle/v1",
+  "expected_sha256": "23c2b9447ec3540e432c46047196e3e1e1611369eb570732e7dc7453539f9279",
+  "checkpoint_weights": {
+    "business_correctness": 0.55,
+    "boundary_cases": 0.25,
+    "delivery_integrity": 0.15,
+    "evidence_binding": 0.05
+  },
+  "recommendations": {
+    "S1": {
+      "option_id": "A",
+      "status": "feasible",
+      "pair": "S1-A"
+    },
+    "S2": {
+      "option_id": "B",
+      "status": "feasible",
+      "pair": "S2-B"
+    },
+    "S3": {
+      "option_id": "A",
+      "status": "conditional",
+      "pair": "S3-A"
+    }
+  },
+  "state_counts": {
+    "feasible": 2,
+    "infeasible": 5,
+    "conditional": 2
+  },
+  "exceptions": [
+    {
+      "site_id": "S1",
+      "option_id": "B",
+      "rule_id": "REPLACEMENT",
+      "status": "fail",
+      "observed": false,
+      "limit": true,
+      "accepted_source_anchors": [
+        "customer_requirements.docx#S1/replacement_allowed"
+      ],
+      "rule_anchor": "technical_notes.pdf#T04"
+    },
+    {
+      "site_id": "S1",
+      "option_id": "B",
+      "rule_id": "BUDGET",
+      "status": "fail",
+      "observed": "425113.55",
+      "limit": "315000",
+      "accepted_source_anchors": [
+        "customer_requirements.docx#S1/budget_gross_cny"
+      ],
+      "rule_anchor": "technical_notes.pdf#T08"
+    },
+    {
+      "site_id": "S1",
+      "option_id": "C",
+      "rule_id": "BUDGET",
+      "status": "fail",
+      "observed": "326910.35",
+      "limit": "315000",
+      "accepted_source_anchors": [
+        "customer_requirements.docx#S1/budget_gross_cny"
+      ],
+      "rule_anchor": "technical_notes.pdf#T08"
+    },
+    {
+      "site_id": "S2",
+      "option_id": "A",
+      "rule_id": "LOAD",
+      "status": "fail",
+      "observed": "30",
+      "limit": "25",
+      "accepted_source_anchors": [
+        "customer_requirements.docx#S2/verified_load_kg_m2",
+        "customer_requirements.docx#S2/load_status"
+      ],
+      "rule_anchor": "technical_notes.pdf#T03"
+    },
+    {
+      "site_id": "S2",
+      "option_id": "C",
+      "rule_id": "AREA",
+      "status": "fail",
+      "observed": "324",
+      "limit": "250",
+      "accepted_source_anchors": [
+        "customer_requirements.docx#S2/usable_area_m2"
+      ],
+      "rule_anchor": "technical_notes.pdf#T03"
+    },
+    {
+      "site_id": "S3",
+      "option_id": "A",
+      "rule_id": "LOAD",
+      "status": "unknown",
+      "observed": "14",
+      "limit": null,
+      "accepted_source_anchors": [
+        "customer_requirements.docx#S3/verified_load_kg_m2",
+        "customer_requirements.docx#S3/load_status"
+      ],
+      "rule_anchor": "technical_notes.pdf#T03"
+    },
+    {
+      "site_id": "S3",
+      "option_id": "A",
+      "rule_id": "CORROSION",
+      "status": "unknown",
+      "observed": "unverified",
+      "limit": "verified",
+      "accepted_source_anchors": [
+        "customer_requirements.docx#S3/corrosion_evidence"
+      ],
+      "rule_anchor": "technical_notes.pdf#T07"
+    },
+    {
+      "site_id": "S3",
+      "option_id": "A",
+      "rule_id": "REPAIR_SCOPE",
+      "status": "unknown",
+      "observed": null,
+      "limit": "confirmed_scope_and_cost",
+      "accepted_source_anchors": [
+        "customer_requirements.docx#S3/roof_repair_cost"
+      ],
+      "rule_anchor": "technical_notes.pdf#T12"
+    },
+    {
+      "site_id": "S3",
+      "option_id": "B",
+      "rule_id": "LOAD",
+      "status": "unknown",
+      "observed": "18",
+      "limit": null,
+      "accepted_source_anchors": [
+        "customer_requirements.docx#S3/verified_load_kg_m2",
+        "customer_requirements.docx#S3/load_status"
+      ],
+      "rule_anchor": "technical_notes.pdf#T03"
+    },
+    {
+      "site_id": "S3",
+      "option_id": "B",
+      "rule_id": "REPLACEMENT",
+      "status": "fail",
+      "observed": false,
+      "limit": true,
+      "accepted_source_anchors": [
+        "customer_requirements.docx#S3/replacement_allowed"
+      ],
+      "rule_anchor": "technical_notes.pdf#T04"
+    },
+    {
+      "site_id": "S3",
+      "option_id": "B",
+      "rule_id": "BUDGET",
+      "status": "fail",
+      "observed": "273098.10",
+      "limit": "215000",
+      "accepted_source_anchors": [
+        "customer_requirements.docx#S3/budget_gross_cny"
+      ],
+      "rule_anchor": "technical_notes.pdf#T08"
+    },
+    {
+      "site_id": "S3",
+      "option_id": "B",
+      "rule_id": "CORROSION",
+      "status": "unknown",
+      "observed": "unverified",
+      "limit": "verified",
+      "accepted_source_anchors": [
+        "customer_requirements.docx#S3/corrosion_evidence"
+      ],
+      "rule_anchor": "technical_notes.pdf#T07"
+    },
+    {
+      "site_id": "S3",
+      "option_id": "B",
+      "rule_id": "REPAIR_SCOPE",
+      "status": "unknown",
+      "observed": null,
+      "limit": "confirmed_scope_and_cost",
+      "accepted_source_anchors": [
+        "customer_requirements.docx#S3/roof_repair_cost"
+      ],
+      "rule_anchor": "technical_notes.pdf#T12"
+    },
+    {
+      "site_id": "S3",
+      "option_id": "C",
+      "rule_id": "LOAD",
+      "status": "unknown",
+      "observed": "4.5",
+      "limit": null,
+      "accepted_source_anchors": [
+        "customer_requirements.docx#S3/verified_load_kg_m2",
+        "customer_requirements.docx#S3/load_status"
+      ],
+      "rule_anchor": "technical_notes.pdf#T03"
+    },
+    {
+      "site_id": "S3",
+      "option_id": "C",
+      "rule_id": "ADHESION",
+      "status": "unknown",
+      "observed": "unverified",
+      "limit": "verified",
+      "accepted_source_anchors": [
+        "customer_requirements.docx#S3/adhesion_evidence"
+      ],
+      "rule_anchor": "technical_notes.pdf#T09"
+    },
+    {
+      "site_id": "S3",
+      "option_id": "C",
+      "rule_id": "CORROSION",
+      "status": "unknown",
+      "observed": "unverified",
+      "limit": "verified",
+      "accepted_source_anchors": [
+        "customer_requirements.docx#S3/corrosion_evidence"
+      ],
+      "rule_anchor": "technical_notes.pdf#T07"
+    },
+    {
+      "site_id": "S3",
+      "option_id": "C",
+      "rule_id": "REPAIR_SCOPE",
+      "status": "unknown",
+      "observed": null,
+      "limit": "confirmed_scope_and_cost",
+      "accepted_source_anchors": [
+        "customer_requirements.docx#S3/roof_repair_cost"
+      ],
+      "rule_anchor": "technical_notes.pdf#T12"
+    }
+  ],
+  "exception_count": 17,
+  "minimum_module_inequalities_verified": 9,
+  "numeric_fields": [
+    "module_count",
+    "dc_kwp",
+    "area_m2",
+    "design_load_kg_m2",
+    "annual_energy_kwh",
+    "inverter_count",
+    "replacement_area_m2",
+    "cost_module",
+    "cost_inverter",
+    "cost_cable",
+    "cost_isolation",
+    "cost_mounting",
+    "cost_installation",
+    "cost_replacement",
+    "cost_drainage",
+    "cost_design",
+    "cost_inspection",
+    "cost_adhesion",
+    "cost_corrosion",
+    "subtotal_goods",
+    "subtotal_construction",
+    "subtotal_services",
+    "tax_goods",
+    "tax_construction",
+    "tax_services",
+    "gross_total",
+    "budget_margin"
+  ],
+  "status_fields": [
+    "AREA",
+    "LOAD",
+    "GRID",
+    "REPLACEMENT",
+    "BUDGET",
+    "ADHESION",
+    "CORROSION",
+    "REPAIR_SCOPE"
+  ],
+  "limit": "Independent native-source oracle; author acceptance and generated-MD Worker receipts are recorded separately."
+}

@@ -1,0 +1,62 @@
+{
+  "schema_version": "h032-local-rule-runtime/v1",
+  "status": "model_review_implementation_candidate_synthetic_controls_only",
+  "human_expert": false,
+  "grading_type": "hybrid",
+  "semantic_judge_required": true,
+  "automatic_weight": 0.75,
+  "semantic_weight": 0.25,
+  "checkpoint_weights": {
+    "business_correctness": 0.55,
+    "boundary_cases": 0.25,
+    "delivery_integrity": 0.15,
+    "evidence_binding": 0.05
+  },
+  "semantic_weights": {
+    "decision_grounding": 0.7,
+    "usable_handoff": 0.3
+  },
+  "actual_scientific_semantics_automatic_complete": false,
+  "scientific_pending": "Unsupported but legal clear comparison/condition semantics is NEEDS_INDEPENDENT_SCIENTIFIC_REVIEW, not candidate0 or implicit full score.",
+  "sources": "Independent frozen source_originals copies of11 adopted input bytes; actual pypdf physical-page extraction and79 registered short-quote rechecks. No candidate source snapshot or provenance absolute path used.",
+  "outer_runtime": "No network/research-source GET collector. Trusted office capability may be provided in outer contract; private artifact_contract is not this gate.",
+  "office": "Static values accepted. Any formula needs actual locked bundled Office cache clearing/recalculation on separate derivative, preserving original. No cached fallback.",
+  "office_executable": "/Users/gzx/.cache/codex-runtimes/codex-primary-runtime/dependencies/bin/override/soffice",
+  "PDF_extractor": "pypdf actual import/version/module and Python-package tree hashes in derived source receipt; missing extractor/original/GT/helper is evaluator error.",
+  "source_truth_freeze_receipt_sha256": "db2f60cee1ee109013100e1e27cf29e53d84a7a759583eb33f73fc5cd868d8ab",
+  "source_first_GT8_sha256": {
+    "artifact_contract.json": "008046b9b56289cf8ba4375cdf99bc10d98d1c6a036e1adfffefbdb34b96b902",
+    "scoring_design.json": "11b32164ebbaddbc85c0db6b8f7e3e415108ac48acb686f7c092c5491ad61a6c",
+    "expected.json": "2c92282f35d010ce78f979341060338b3d43e9ce528bd1d0ecb9514fdfdd8acf",
+    "business_oracle.json": "871b7c27b7f8ba7dd33f39de657ae3ee0cb9ec4137b0ba385c82f58d09043720",
+    "reference_source_manifest.json": "7889e97bd1ab373a2273b70832cfe053b9452f11856db87efa3769416b28987c",
+    "evidence_requirements.json": "fe581408efba82883e36e8978ce7363df23af0abd366957460414b63aed1aedd",
+    "protected_sha256.json": "7060958f28427789d82dd5e69ed959c869a88ec3af72a8c76990bc612c17c605",
+    "source_review_reconciliation.json": "0c7deb5c586908eee5695333b97d6f26d8cc8246ad98d160483f4f3adc19c156"
+  },
+  "fixed_opportunities": {
+    "business_correctness": 5,
+    "boundary_cases": 7,
+    "evidence_binding": 12
+  },
+  "core_machine_subweights": {
+    "verdict_route": 0.25,
+    "observable_atoms": 0.35,
+    "conditions_and_roles": 0.2,
+    "independent_source_context": 0.2
+  },
+  "error_ownership": "One core opportunity/error per original input in its data-defined owner, no cross-owner label/value/reason repeat. Actual native transfer/protection and citation geometry separately evidenced.",
+  "actual_reading_causality_interpretation_and_usable_handoff": "Independent Judge; no keyword/string/label or source quote alone proves these.",
+  "network": false,
+  "candidate_code_execution": false,
+  "mutates_candidate_GT_or_sources": false,
+  "formula_or_Office_Harness_Judge_acceptance_this_phase": false,
+  "native_semantic_headers": {
+    "coverage": "Native-only ordinary semantic aliases, safe current/final prefixes/suffixes, bilingual equivalent verdict labels, combined human headings retaining full values",
+    "historical": "Explicit old/original/draft verdict headings remain historical, never current final labels",
+    "auxiliary": "Quantity/source/derived rows retain auxiliary role; no extra claim denominator or override of main decisions",
+    "conflicts": "Contradictory current verdict labels/columns/rows retain actual observations; no first/last wins",
+    "nonblind_phase": "Authorized actual v3 workbook/header inspection for parser coverage only; no candidate-derived source truth or source criteria changes",
+    "unknown": "Clear unhandled labels/layouts remain typed review; native-only conflicting final verdicts need independent review"
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "business_area": "finance",
+  "document_id": "FIN-ACCRUAL",
+  "version": "1.9",
+  "state": "approved",
+  "issued_at": "2026-09-15T00:00:00Z",
+  "body": "Original fictional H036 finance revision A. No operational instructions."
+}

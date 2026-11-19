@@ -1,0 +1,51 @@
+{
+  "schema": "h048-expected/v1",
+  "task_id": "general_hard_software_engineering_task_008_sse_state",
+  "weights": {
+    "business_correctness": 0.55,
+    "boundary_cases": 0.25,
+    "delivery_integrity": 0.15,
+    "evidence_binding": 0.05
+  },
+  "case_ids": {
+    "business": [
+      "B01_basic",
+      "B02_channels",
+      "B03_multiline_data",
+      "B04_markdown",
+      "B05_utf8_every_byte",
+      "B06_many_in_chunk",
+      "B07_eof_incomplete",
+      "B08_error",
+      "B09_out_of_order",
+      "B10_other_request",
+      "B11_cancel",
+      "B12_bom_crlf"
+    ],
+    "boundary": [
+      "N01_replay_resume",
+      "N02_pending_duplicate",
+      "N03_future_done",
+      "N04_partial_record_disconnect",
+      "N05_partial_utf8_disconnect",
+      "N06_sticky_sse_id",
+      "N07_same_id_conflict",
+      "N08_same_seq_new_id",
+      "N09_same_seq_conflict",
+      "N10_error_sticky",
+      "N11_success_sticky",
+      "N12_cancel_sticky",
+      "N13_invalid_json",
+      "N14_invalid_bool_seq",
+      "N15_unknown_kind",
+      "N16_prefix_retention",
+      "N17_cr_singlebyte",
+      "N18_empty_data",
+      "N19_foreign_id_isolation",
+      "N20_gap_interrupted"
+    ]
+  },
+  "source_first": true,
+  "prefixes_mandatory": true,
+  "fixed_denominators": true
+}

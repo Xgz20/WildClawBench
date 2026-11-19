@@ -1,0 +1,29 @@
+{
+  "schema_version": "h031-facts-free-counterexamples/v1",
+  "scope": "Synthetic in-memory mechanism cases only, no task reference, real source package, runtime proof or scientific answers.",
+  "mechanisms": [
+    "fixed_25_capability_12_claim_floor",
+    "public_string_object_array_equivalence",
+    "no_global_ID_namespace",
+    "RFC6901_blocks_leaves_multitarget_reorder",
+    "unknown_no_fabricated_citation",
+    "date_precision_timezone_and_cutoff",
+    "priority_finite_budget_rank_external_DAG",
+    "native_Chinese_long_wide_split_transpose_merged_headers",
+    "generic_CSS_XPath_XML_same_node_lineage",
+    "generic_JSON_actual_fields_and_roles",
+    "strict_content_API_base64_Git_blob_SHA_original_lines_bytes",
+    "missing_GT_source_Office_raises",
+    "generic_HTML_inert_JSON_string_array_script_pointer_original_lines_bytes_and_identity_binding",
+    "generic_XPath_and_literal_predicates_quote_nested_boundary_unknown_or_typed"
+  ],
+  "not_executed": [
+    "actual_H031_source_acquisition",
+    "actual_H031_native_reference_authoring",
+    "actual_Office_recalculation",
+    "authoring_markers",
+    "Harness",
+    "independent_Judge",
+    "finalize"
+  ]
+}

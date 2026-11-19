@@ -1,0 +1,22 @@
+{
+  "schema_version": "h023-reference-provenance/v1",
+  "status": "AUTHOR_REFERENCE_V4_NATIVE_AND_INPUT_FAITHFULNESS_VERIFIED",
+  "authoring": "Artifact Tool; one eight-sheet native dynamic model; canonical Excel 1900 numeric date encoding with native date formats, raw ISO text written with Text format before values",
+  "sources_precede_reference": true,
+  "independent_truth": [
+    "Decimal grouped events/sequential FIFO",
+    "SQLite integer cents/window aggregates"
+  ],
+  "source_truth_checks": 25422,
+  "actual_office_checks": 33086,
+  "raw_iso_exact_checks": 450,
+  "complete_native_source_rows": 270,
+  "reference_sha256": {
+    "exceptions.csv": "ef8abe1bd3f8dc11d558bfc13aa44cf944be0a49a3da60e87e52c1b27c581a7a",
+    "method.md": "1effb5234edda5fa6e70789493526f093c83d16c143a9a63c494038b5280a7ab",
+    "ledger.xlsx": "1d12ca989f64454b98d91a336b5200cbf085a063576c77e4a041e67ad50772d3"
+  },
+  "human_expert_review": false,
+  "source_model_review": false,
+  "earlier_versions": "v1/v2/v3 retained externally; ISO raw-text and 24 shifted refund entered-at values corrected before canonical registration. No input/GT truth was altered to fit a candidate."
+}

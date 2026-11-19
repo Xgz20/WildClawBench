@@ -309,3 +309,37 @@ async def capture_visual(page, screenshot_dir):
     issues = validate_document(parse_task_document(task), repo)
 
     assert "WEBSITE_EVAL_FIXTURE_MISSING" in {issue.code for issue in issues}
+
+
+def test_runtime_fixture_paths_resolve_to_exec_and_keep_legacy_root_support(tmp_path):
+    repo = tmp_path / "repo"
+    task = _write(repo / "tasks/c/c_task_001.md", """---
+id: c_task_001
+category: c
+difficulty: L2
+modality: pure-text
+timeout_seconds: 300
+grading_type: automated
+---
+## Prompt
+Read /tmp_workspace/fixtures/batch.json and write /tmp_workspace/results/audit.json.
+## Workspace Path
+workspace/c
+## Skills
+## Env
+## Warmup
+## Automated Checks
+```python
+def grade(**kwargs):
+    return {"checked": 1.0, "overall_score": 1.0}
+```
+""")
+    execution = _write(repo / "workspace/c/exec/fixtures/batch.json", "{}")
+    issues = validate_document(parse_task_document(task), repo)
+    assert "WORKSPACE_RESOURCE_MISSING" not in {issue.code for issue in issues}
+    execution.unlink()
+    issues = validate_document(parse_task_document(task), repo)
+    assert "WORKSPACE_RESOURCE_MISSING" in {issue.code for issue in issues}
+    _write(repo / "workspace/c/fixtures/batch.json", "{}")
+    issues = validate_document(parse_task_document(task), repo)
+    assert "WORKSPACE_RESOURCE_MISSING" not in {issue.code for issue in issues}

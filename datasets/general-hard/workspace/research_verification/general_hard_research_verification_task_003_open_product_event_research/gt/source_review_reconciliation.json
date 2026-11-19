@@ -1,0 +1,39 @@
+{
+  "schema_version": "h029-source-review-reconciliation/v1",
+  "source_precedes_reference": true,
+  "candidate_answer_used_for_truth": false,
+  "review_steps": [
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h029/qa/source-review-a/review.json",
+      "sha256": "045b374850450813438f59e112ca4b2d81540669de782f64c4884fe09a40f6ac",
+      "kind": "independent open discovery"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h029/qa/source-review-b/review.json",
+      "sha256": "54eb0a4175dcf4f030cabc323fa432c5f0d8601fd300a1105d30d142c994d971",
+      "kind": "independent open discovery"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h029/qa/targeted-review-a/review.json",
+      "sha256": "152ba198c624ff5503d91e58419c2b081e45f767df27e9f25e3c8d212227a9d2",
+      "kind": "two initial independent open discovery reviews; separate targeted URL cross-check for final four examples"
+    }
+  ],
+  "final_reference_events": 4,
+  "distinct_products": 3,
+  "source_review_A_initial_pool_events": 4,
+  "source_review_A_initial_pool_products": 4,
+  "initial_discovery_and_targeted_crosscheck_not_conflated": true,
+  "same_Google_product_two_distinct_changes": true,
+  "reference_pool_is_non_exhaustive": true,
+  "adjustments": [
+    "Do not force Google visible calendar date to equal UTC metadata converted Shanghai date.",
+    "Search Live actual rollout day not verified from current revised article.",
+    "YouTube shopping scope cannot borrow Custom Feeds restrictions.",
+    "Doubao month precision and unknown official publication/GA/day preserved.",
+    "Provider domicile differs from product availability and Global brand."
+  ],
+  "complete_commercial_source_copied_to_gt": false,
+  "human_expert": false,
+  "formal_semantic_score": null
+}

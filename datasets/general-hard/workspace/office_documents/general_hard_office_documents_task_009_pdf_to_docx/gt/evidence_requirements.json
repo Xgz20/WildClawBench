@@ -1,0 +1,8 @@
+{
+  "schema_version": "h009-evidence-contract/v1",
+  "required_audit_units": 32,
+  "source_pdf_sha256": "1d1e5af01f4b05c2b38af9aeaf6553a946502f72c65cb27036333e24bc94b2bf",
+  "physical_target_nodes_required": true,
+  "continuation_coverage": "All actual native pieces/row-column fields of a logical table must be covered.",
+  "render": "Frozen DOCX source, explicit Writer/font lock, actual PDF and immutable render receipt."
+}

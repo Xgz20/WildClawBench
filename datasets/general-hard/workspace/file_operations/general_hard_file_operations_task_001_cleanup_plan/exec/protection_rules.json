@@ -1,0 +1,71 @@
+{
+  "schema": "h035.protection/v1",
+  "scan_root": "sandbox_tree",
+  "snapshot_id": "H035-USAGE-20261026T080000Z",
+  "cleanup_roots": [
+    "sandbox_tree/cache",
+    "sandbox_tree/downloads"
+  ],
+  "rules": [
+    {
+      "rule_id": "R01",
+      "priority": 1,
+      "condition": "external_shortcut",
+      "decision": "must_keep",
+      "reason": "快捷方式只盘点其文件本身，目标不在扫描边界，禁止打开、联网或跟随。"
+    },
+    {
+      "rule_id": "R02",
+      "priority": 2,
+      "condition": "component_prefix",
+      "prefixes": [
+        "sandbox_tree/records",
+        "sandbox_tree/projects/live"
+      ],
+      "decision": "must_keep",
+      "reason": "受保护业务路径，包括其子目录。"
+    },
+    {
+      "rule_id": "R03",
+      "priority": 3,
+      "condition": "active_lock_or_target",
+      "decision": "must_keep",
+      "reason": "快照中的active锁文件及其target_file_id均保留；不按进程名或当前机器状态猜测。"
+    },
+    {
+      "rule_id": "R04",
+      "priority": 4,
+      "condition": "outside_cleanup_roots",
+      "decision": "must_keep",
+      "reason": "在扫描根内但不在允许清理根内；按路径组件判断，cache2不是cache。"
+    },
+    {
+      "rule_id": "R05",
+      "priority": 5,
+      "condition": "incomplete_allocation",
+      "decision": "needs_confirmation",
+      "reason": "块bytes=null，未知不是0，先补齐占用证据。"
+    },
+    {
+      "rule_id": "R06",
+      "priority": 6,
+      "condition": "cache_regenerable_true_age_at_least_30",
+      "decision": "cleanable",
+      "reason": "允许根cache内，可再生且age_days>=30；只是候选，仍需用户选择和确认。"
+    },
+    {
+      "rule_id": "R07",
+      "priority": 7,
+      "condition": "otherwise",
+      "decision": "needs_confirmation",
+      "reason": "近期缓存、可再生性未知或下载文件需用户核对。"
+    }
+  ],
+  "execution_policy": {
+    "confirmation": "pending",
+    "executed": false,
+    "selected_file_ids": [],
+    "delete_or_move": false
+  },
+  "allocation_policy": "快照为固定合成业务占用，非本机stat/du事实。块按block_id去重。仅当已知块全部holders都在给定集合且external_pin=false时，该块可由该集合释放；未知块保留unknown，不计0。快捷方式目标占用未知，不进入本地块汇总。"
+}

@@ -1,0 +1,16 @@
+{
+  "schema_version": "h019-artifacts/v1",
+  "outputs": [
+    "results/leave_model_repaired.xlsx",
+    "results/formula_changes.md"
+  ],
+  "max_each_bytes": 5242880,
+  "inputs_read_only": [
+    "leave_model.xlsx",
+    "policy.md",
+    "cases.csv"
+  ],
+  "modified_cells": "Leave!E6:H17 plus optional Leave!J5:O17; AsOfDate to Control!$B$3",
+  "protected": "Template semantic cell values, other formulas, style records, row/column layout, sheet order/names and existing names; parameter and employee values unchanged.",
+  "visual_limit": "Basic cell visibility and actual author previews; no full visual aesthetic assessment."
+}

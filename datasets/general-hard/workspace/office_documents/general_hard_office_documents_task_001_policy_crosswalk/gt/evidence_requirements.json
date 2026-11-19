@@ -1,0 +1,15 @@
+{
+  "schema_version": "h001-evidence/v1",
+  "protected_inputs": [
+    "cases.csv",
+    "policies/v1.docx",
+    "policies/v2.pdf"
+  ],
+  "locator_syntax": "policies/v1.docx#V1-03 or policies/v2.pdf#V2-T01",
+  "automated_scope": "Resolve each declared clause against frozen actual source identity; require at least one relevant decision clause. Semantic judge assesses sufficient support and reasoning.",
+  "semantic_required": [
+    "Version/transition explanations and exclusions",
+    "Pending actions and missing facts",
+    "Cross-file consistency and usable handoff"
+  ]
+}

@@ -1,0 +1,4443 @@
+{
+  "status": "DRAFT_FOR_ROOT",
+  "stage": "non-blind reconciliation and source-truth proposal authoring",
+  "author_role": "Model annotator A, now a non-blind reconciliation author; not a third independent annotator, human expert, Harness executor or formal Judge.",
+  "review_state": "Pending root review; no operational GT publication, scoring, semantic score, or label-frequency rule.",
+  "source_boundary": "Only the isolated seven-file source package and the two frozen A/B annotation directories were read. No author arrays, private SVG, plotting code, construction geometry or other tasks were accessed.",
+  "schema": "h034-reconciled-source-truth-proposal/v1",
+  "lineage": {
+    "initial_phase": "A/B each viewed all originals and saved raw observations before claims, independently; original freezes retained.",
+    "current_phase": "Explicitly non-blind author reconciliation after reading both frozen records; no independent-third-model/expert claim.",
+    "preserved_records": "preserved_record_manifest.json",
+    "region_lineage": "source_region_lineage.json"
+  },
+  "numeric_policy": "Visual anchors are approximate, except exact arithmetic on printed labels. Conservative hulls retain both model intervals; compatibility intersections do not narrow the approved read range. Public tolerance remains the outer reading policy, never hidden source-array precision.",
+  "figures": [
+    {
+      "figure": "F01",
+      "file": "figures/F01_budget.png",
+      "axes": {
+        "x": {
+          "label": "Total tool-call budget per task",
+          "labeled_ticks_or_categories": [
+            1,
+            10,
+            100
+          ],
+          "normalized_scale": "logarithmic",
+          "annotation_A_description": "Multiplicative ticks 1,10,100 are equally spaced; logarithmic budget axis.",
+          "annotation_B_description": "logarithmic inferred from decade ticks at equal horizontal intervals",
+          "labels_and_tick_values_match": true,
+          "scale_semantically_compatible": true
+        },
+        "y": {
+          "label": "Mean target pass (%)",
+          "labeled_ticks_or_categories": [
+            40,
+            50,
+            60,
+            70,
+            80,
+            90
+          ],
+          "normalized_scale": "linear",
+          "annotation_A_description": "Linear; 10 percentage-point intervals equally spaced.",
+          "annotation_B_description": "linear; displayed lower limit 40, top extends above 90",
+          "labels_and_tick_values_match": true,
+          "scale_semantically_compatible": true
+        }
+      },
+      "series_bindings": [
+        {
+          "series": "Method A",
+          "binding": "blue hollow circle and line",
+          "region_ref": "R-F01-legend-A"
+        },
+        {
+          "series": "Method B",
+          "binding": "orange solid square and line",
+          "region_ref": "R-F01-legend-B"
+        }
+      ],
+      "binding_compatibility": "Both annotators identify the same color, marker and group/method mapping.",
+      "observation_count_A": 6,
+      "observation_count_B": 6,
+      "point_ids": [
+        "F01-A-1",
+        "F01-B-1",
+        "F01-A-10",
+        "F01-B-10",
+        "F01-A-100",
+        "F01-B-100"
+      ],
+      "observed_directions_A": [
+        "Both series rise from budget 1 to 10 to 100.",
+        "At budget 1, B is above A. At budgets 10 and 100, A is above B.",
+        "A gains roughly 17 percentage points from 1 to 10; B gains roughly 6 points in that interval."
+      ],
+      "observed_directions_B": [
+        "Both series increase from budget 1 to 10 to 100.",
+        "At 1 the orange mean is above blue; at 10 and 100 the blue mean is above orange.",
+        "Blue increases by about 17 percentage points from 1 to 10 and about 12 from 10 to 100; orange increases by about 6 then 14 percentage points."
+      ],
+      "text_method_paragraph": "E01",
+      "error_type": "SD: method paragraph only; not printed in PNG",
+      "public_tolerance": {
+        "mean_target_pass_absolute_percentage_points": 2,
+        "budget_ticks": "Read actual labeled tick values and scale; do not infer linear increments from pixel spacing."
+      }
+    },
+    {
+      "figure": "F02",
+      "file": "figures/F02_intervals.png",
+      "axes": {
+        "x": {
+          "label": "Method",
+          "labeled_ticks_or_categories": [
+            "Method A",
+            "Method B"
+          ],
+          "normalized_scale": "categorical",
+          "annotation_A_description": "categorical labels",
+          "annotation_B_description": "categorical",
+          "labels_and_tick_values_match": true,
+          "scale_semantically_compatible": true
+        },
+        "y": {
+          "label": "Mean target pass (%)",
+          "labeled_ticks_or_categories": [
+            60,
+            65,
+            70,
+            75,
+            80,
+            85,
+            90,
+            95
+          ],
+          "normalized_scale": "linear",
+          "annotation_A_description": "Linear, 5 percentage-point intervals; visible bars start at 60, not zero.",
+          "annotation_B_description": "linear, baseline displayed at 60",
+          "labels_and_tick_values_match": true,
+          "scale_semantically_compatible": true
+        }
+      },
+      "series_bindings": [
+        {
+          "series": "Method A",
+          "binding": "blue hollow circle, left pale blue bar",
+          "region_ref": "R-F02-binding-A"
+        },
+        {
+          "series": "Method B",
+          "binding": "orange solid square, right pale orange bar",
+          "region_ref": "R-F02-binding-B"
+        }
+      ],
+      "binding_compatibility": "Both annotators identify the same color, marker and group/method mapping.",
+      "observation_count_A": 2,
+      "observation_count_B": 2,
+      "point_ids": [
+        "F02-A",
+        "F02-B"
+      ],
+      "observed_directions_A": [
+        "B mean is about 4 percentage points above A.",
+        "The displayed SD spans overlap; visual shared span is approximately 81 to 86 percent."
+      ],
+      "observed_directions_B": [
+        "B mean is about 4 percentage points above A.",
+        "A displayed SD span is about 74 to 86; B about 81 to 87. Their vertical ranges overlap approximately 81 to 86.",
+        "A error bar is visibly longer than B."
+      ],
+      "text_method_paragraph": "E02",
+      "error_type": "SD, printed in PNG and E02",
+      "public_tolerance": {
+        "mean_and_SD_endpoint_absolute_percentage_points": 2,
+        "interval_overlap": "Evaluate visually resolvable order/overlap only; statistical significance/equivalence requires separate evidence."
+      }
+    },
+    {
+      "figure": "F03",
+      "file": "figures/F03_latency.png",
+      "axes": {
+        "x": {
+          "label": "Concurrent workers",
+          "labeled_ticks_or_categories": [
+            1,
+            2,
+            4,
+            8,
+            16
+          ],
+          "normalized_scale": "linear",
+          "annotation_A_description": "Linear worker axis: distances increase with successive tick gaps 1,2,4,8.",
+          "annotation_B_description": "linear: spacing grows in proportion to numeric differences",
+          "labels_and_tick_values_match": true,
+          "scale_semantically_compatible": true
+        },
+        "y": {
+          "label": "Elapsed time (ms)",
+          "labeled_ticks_or_categories": [
+            100,
+            300,
+            1000,
+            3000,
+            10000
+          ],
+          "normalized_scale": "logarithmic",
+          "annotation_A_description": "Logarithmic elapsed-time axis; numeric ratios, not vertical distances, determine speed/time ratios.",
+          "annotation_B_description": "logarithmic; 100-to-1000 and 1000-to-10000 have equal vertical distance",
+          "labels_and_tick_values_match": true,
+          "scale_semantically_compatible": true
+        }
+      },
+      "series_bindings": [
+        {
+          "series": "Method A",
+          "binding": "blue hollow circle and line",
+          "region_ref": "R-F03-legend-A"
+        },
+        {
+          "series": "Method B",
+          "binding": "orange solid square and line",
+          "region_ref": "R-F03-legend-B"
+        }
+      ],
+      "binding_compatibility": "Both annotators identify the same color, marker and group/method mapping.",
+      "observation_count_A": 10,
+      "observation_count_B": 10,
+      "point_ids": [
+        "F03-A-1",
+        "F03-A-2",
+        "F03-A-4",
+        "F03-A-8",
+        "F03-A-16",
+        "F03-B-1",
+        "F03-B-2",
+        "F03-B-4",
+        "F03-B-8",
+        "F03-B-16"
+      ],
+      "observed_directions_A": [
+        "A decreases with more workers across all five visible settings.",
+        "B increases with more workers across all five visible settings.",
+        "At one worker B is below A; at two or more workers A is below B."
+      ],
+      "observed_directions_B": [
+        "A elapsed time decreases with workers; B elapsed time increases.",
+        "B is below A at 1 worker, above A at all later plotted settings.",
+        "At 8 workers the blue point lies on the 300 ms gridline and orange on the 3000 ms gridline, giving approximately a tenfold B-to-A time ratio."
+      ],
+      "text_method_paragraph": "E03",
+      "error_type": "No error bars visible",
+      "public_tolerance": {
+        "individual_elapsed_relative_tolerance": 0.15,
+        "ratio_relative_tolerance": 0.2,
+        "unit": "Read original axis unit; preserve logarithmic/linear role."
+      }
+    },
+    {
+      "figure": "F04",
+      "file": "figures/F04_grouping.png",
+      "axes": {
+        "x": {
+          "label": "Mean planning length (steps)",
+          "labeled_ticks_or_categories": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12
+          ],
+          "normalized_scale": "linear",
+          "annotation_A_description": "Linear; one-step ticks equally spaced.",
+          "annotation_B_description": "linear",
+          "labels_and_tick_values_match": true,
+          "scale_semantically_compatible": true
+        },
+        "y": {
+          "label": "Observed target pass (%)",
+          "labeled_ticks_or_categories": [
+            65,
+            70,
+            75,
+            80,
+            85,
+            90,
+            95,
+            100
+          ],
+          "normalized_scale": "linear",
+          "annotation_A_description": "Linear; 5 percentage-point ticks equally spaced.",
+          "annotation_B_description": "linear",
+          "labels_and_tick_values_match": true,
+          "scale_semantically_compatible": true
+        }
+      },
+      "series_bindings": [
+        {
+          "series": "G1",
+          "binding": "blue hollow circles",
+          "region_ref": "R-F04-legend-G1"
+        },
+        {
+          "series": "G2",
+          "binding": "orange solid squares",
+          "region_ref": "R-F04-legend-G2"
+        }
+      ],
+      "binding_compatibility": "Both annotators identify the same color, marker and group/method mapping.",
+      "observation_count_A": 10,
+      "observation_count_B": 10,
+      "point_ids": [
+        "F04-G1-1",
+        "F04-G1-2",
+        "F04-G1-3",
+        "F04-G1-4",
+        "F04-G1-5",
+        "F04-G2-8",
+        "F04-G2-9",
+        "F04-G2-10",
+        "F04-G2-11",
+        "F04-G2-12"
+      ],
+      "observed_directions_A": [
+        "Within G1, pass decreases as planning steps increase from 1 through 5.",
+        "Within G2, pass decreases as planning steps increase from 8 through 12.",
+        "Across pooled cloud, high-x G2 has higher pass values than low-x G1, giving an overall positive between-cluster direction. This does not make each within-group direction positive."
+      ],
+      "observed_directions_B": [
+        "Within G1, pass decreases from about 80% at 1 step to about 72% at 5 steps.",
+        "Within G2, pass decreases from about 95% at 8 steps to about 87% at 12 steps.",
+        "G2 points occupy larger x and higher y than all G1 points, so the pooled point cloud has a positive between-group direction while each group trends downward."
+      ],
+      "text_method_paragraph": "E04",
+      "error_type": "No error bars visible",
+      "public_tolerance": {
+        "point_success_absolute_percentage_points": 1,
+        "group_direction": "Assess each legend group separately and pooled relation; no causal parameter is observed."
+      }
+    }
+  ],
+  "point_readings": [
+    {
+      "point_id": "F01-A-1",
+      "figure": "F01",
+      "file": "figures/F01_budget.png",
+      "annotation_A_x": 1,
+      "annotation_B_x": 1,
+      "x_unit": "tool calls/task",
+      "value": {
+        "annotation_A_interval": [
+          54.5,
+          55.7
+        ],
+        "annotation_B_interval": [
+          54.5,
+          56.0
+        ],
+        "intervals_compatible": true,
+        "overlap_for_compatibility_only": [
+          54.5,
+          55.7
+        ],
+        "consensus_readable_interval": [
+          54.5,
+          56.0
+        ],
+        "consensus_rule": "conservative hull of actual model pixel intervals; overlap is not used to claim extra precision",
+        "unit": "% target pass",
+        "approximate_visual_anchor": 55,
+        "anchor_is_not_hidden_exact_value": true
+      },
+      "region_refs": [
+        "R-F01-A-1-mean",
+        "R-F01-A-1-error"
+      ],
+      "public_tolerance_ref": "F01",
+      "error_endpoints": {
+        "lower": {
+          "annotation_A_interval": [
+            52.6,
+            53.6
+          ],
+          "annotation_B_interval": [
+            52.5,
+            54.0
+          ],
+          "intervals_compatible": true,
+          "overlap_for_compatibility_only": [
+            52.6,
+            53.6
+          ],
+          "consensus_readable_interval": [
+            52.5,
+            54.0
+          ],
+          "consensus_rule": "conservative hull of actual model pixel intervals; overlap is not used to claim extra precision",
+          "unit": "percentage points on pass axis"
+        },
+        "upper": {
+          "annotation_A_interval": [
+            56.6,
+            57.6
+          ],
+          "annotation_B_interval": [
+            56.5,
+            58.0
+          ],
+          "intervals_compatible": true,
+          "overlap_for_compatibility_only": [
+            56.6,
+            57.6
+          ],
+          "consensus_readable_interval": [
+            56.5,
+            58.0
+          ],
+          "consensus_rule": "conservative hull of actual model pixel intervals; overlap is not used to claim extra precision",
+          "unit": "percentage points on pass axis"
+        }
+      }
+    },
+    {
+      "point_id": "F01-B-1",
+      "figure": "F01",
+      "file": "figures/F01_budget.png",
+      "annotation_A_x": 1,
+      "annotation_B_x": 1,
+      "x_unit": "tool calls/task",
+      "value": {
+        "annotation_A_interval": [
+          57.5,
+          58.7
+        ],
+        "annotation_B_interval": [
+          57.4,
+          58.8
+        ],
+        "intervals_compatible": true,
+        "overlap_for_compatibility_only": [
+          57.5,
+          58.7
+        ],
+        "consensus_readable_interval": [
+          57.4,
+          58.8
+        ],
+        "consensus_rule": "conservative hull of actual model pixel intervals; overlap is not used to claim extra precision",
+        "unit": "% target pass",
+        "approximate_visual_anchor": 58,
+        "anchor_is_not_hidden_exact_value": true
+      },
+      "region_refs": [
+        "R-F01-B-1-mean",
+        "R-F01-B-1-error"
+      ],
+      "public_tolerance_ref": "F01",
+      "error_endpoints": {
+        "lower": {
+          "annotation_A_interval": [
+            54.6,
+            55.6
+          ],
+          "annotation_B_interval": [
+            54.5,
+            55.8
+          ],
+          "intervals_compatible": true,
+          "overlap_for_compatibility_only": [
+            54.6,
+            55.6
+          ],
+          "consensus_readable_interval": [
+            54.5,
+            55.8
+          ],
+          "consensus_rule": "conservative hull of actual model pixel intervals; overlap is not used to claim extra precision",
+          "unit": "percentage points on pass axis"
+        },
+        "upper": {
+          "annotation_A_interval": [
+            60.6,
+            61.6
+          ],
+          "annotation_B_interval": [
+            60.4,
+            61.8
+          ],
+          "intervals_compatible": true,
+          "overlap_for_compatibility_only": [
+            60.6,
+            61.6
+          ],
+          "consensus_readable_interval": [
+            60.4,
+            61.8
+          ],
+          "consensus_rule": "conservative hull of actual model pixel intervals; overlap is not used to claim extra precision",
+          "unit": "percentage points on pass axis"
+        }
+      }
+    },
+    {
+      "point_id": "F01-A-10",
+      "figure": "F01",
+      "file": "figures/F01_budget.png",
+      "annotation_A_x": 10,
+      "annotation_B_x": 10,
+      "x_unit": "tool calls/task",
+      "value": {
+        "annotation_A_interval": [
+          71.5,
+          72.6
+        ],
+        "annotation_B_interval": [
+          71.3,
+          72.7
+        ],
+        "intervals_compatible": true,
+        "overlap_for_compatibility_only": [
+          71.5,
+          72.6
+        ],
+        "consensus_readable_interval": [
+          71.3,
+          72.7
+        ],
+        "consensus_rule": "conservative hull of actual model pixel intervals; overlap is not used to claim extra precision",
+        "unit": "% target pass",
+        "approximate_visual_anchor": 72,
+        "anchor_is_not_hidden_exact_value": true
+      },
+      "region_refs": [
+        "R-F01-A-10-mean",
+        "R-F01-A-10-error"
+      ],
+      "public_tolerance_ref": "F01",
+      "error_endpoints": {
+        "lower": {
+          "annotation_A_interval": [
+            68.5,
+            69.5
+          ],
+          "annotation_B_interval": [
+            68.4,
+            69.7
+          ],
+          "intervals_compatible": true,
+          "overlap_for_compatibility_only": [
+            68.5,
+            69.5
+          ],
+          "consensus_readable_interval": [
+            68.4,
+            69.7
+          ],
+          "consensus_rule": "conservative hull of actual model pixel intervals; overlap is not used to claim extra precision",
+          "unit": "percentage points on pass axis"
+        },
+        "upper": {
+          "annotation_A_interval": [
+            74.5,
+            75.5
+          ],
+          "annotation_B_interval": [
+            74.3,
+            75.7
+          ],
+          "intervals_compatible": true,
+          "overlap_for_compatibility_only": [
+            74.5,
+            75.5
+          ],
+          "consensus_readable_interval": [
+            74.3,
+            75.7
+          ],
+          "consensus_rule": "conservative hull of actual model pixel intervals; overlap is not used to claim extra precision",
+          "unit": "percentage points on pass axis"
+        }
+      }
+    },
+    {
+      "point_id": "F01-B-10",
+      "figure": "F01",
+      "file": "figures/F01_budget.png",
+      "annotation_A_x": 10,
+      "annotation_B_x": 10,
+      "x_unit": "tool calls/task",
+      "value": {
+        "annotation_A_interval": [
+          63.6,
+          64.7
+        ],
+        "annotation_B_interval": [
+          63.4,
+          64.8
+        ],
+        "intervals_compatible": true,
+        "overlap_for_compatibility_only": [
+          63.6,
+          64.7
+        ],
+        "consensus_readable_interval": [
+          63.4,
+          64.8
+        ],
+        "consensus_rule": "conservative hull of actual model pixel intervals; overlap is not used to claim extra precision",
+        "unit": "% target pass",
+        "approximate_visual_anchor": 64,
+        "anchor_is_not_hidden_exact_value": true
+      },
+      "region_refs": [
+        "R-F01-B-10-mean",
+        "R-F01-B-10-error"
+      ],
+      "public_tolerance_ref": "F01",
+      "error_endpoints": {
+        "lower": {
+          "annotation_A_interval": [
+            59.6,
+            60.6
+          ],
+          "annotation_B_interval": [
+            59.5,
+            60.8
+          ],
+          "intervals_compatible": true,
+          "overlap_for_compatibility_only": [
+            59.6,
+            60.6
+          ],
+          "consensus_readable_interval": [
+            59.5,
+            60.8
+          ],
+          "consensus_rule": "conservative hull of actual model pixel intervals; overlap is not used to claim extra precision",
+          "unit": "percentage points on pass axis"
+        },
+        "upper": {
+          "annotation_A_interval": [
+            67.6,
+            68.6
+          ],
+          "annotation_B_interval": [
+            67.4,
+            68.8
+          ],
+          "intervals_compatible": true,
+          "overlap_for_compatibility_only": [
+            67.6,
+            68.6
+          ],
+          "consensus_readable_interval": [
+            67.4,
+            68.8
+          ],
+          "consensus_rule": "conservative hull of actual model pixel intervals; overlap is not used to claim extra precision",
+          "unit": "percentage points on pass axis"
+        }
+      }
+    },
+    {
+      "point_id": "F01-A-100",
+      "figure": "F01",
+      "file": "figures/F01_budget.png",
+      "annotation_A_x": 100,
+      "annotation_B_x": 100,
+      "x_unit": "tool calls/task",
+      "value": {
+        "annotation_A_interval": [
+          83.2,
+          84.4
+        ],
+        "annotation_B_interval": [
+          83.1,
+          84.5
+        ],
+        "intervals_compatible": true,
+        "overlap_for_compatibility_only": [
+          83.2,
+          84.4
+        ],
+        "consensus_readable_interval": [
+          83.1,
+          84.5
+        ],
+        "consensus_rule": "conservative hull of actual model pixel intervals; overlap is not used to claim extra precision",
+        "unit": "% target pass",
+        "approximate_visual_anchor": 84,
+        "anchor_is_not_hidden_exact_value": true
+      },
+      "region_refs": [
+        "R-F01-A-100-mean",
+        "R-F01-A-100-error"
+      ],
+      "public_tolerance_ref": "F01",
+      "error_endpoints": {
+        "lower": {
+          "annotation_A_interval": [
+            81.3,
+            82.3
+          ],
+          "annotation_B_interval": [
+            81.1,
+            82.5
+          ],
+          "intervals_compatible": true,
+          "overlap_for_compatibility_only": [
+            81.3,
+            82.3
+          ],
+          "consensus_readable_interval": [
+            81.1,
+            82.5
+          ],
+          "consensus_rule": "conservative hull of actual model pixel intervals; overlap is not used to claim extra precision",
+          "unit": "percentage points on pass axis"
+        },
+        "upper": {
+          "annotation_A_interval": [
+            85.3,
+            86.3
+          ],
+          "annotation_B_interval": [
+            85.1,
+            86.5
+          ],
+          "intervals_compatible": true,
+          "overlap_for_compatibility_only": [
+            85.3,
+            86.3
+          ],
+          "consensus_readable_interval": [
+            85.1,
+            86.5
+          ],
+          "consensus_rule": "conservative hull of actual model pixel intervals; overlap is not used to claim extra precision",
+          "unit": "percentage points on pass axis"
+        }
+      }
+    },
+    {
+      "point_id": "F01-B-100",
+      "figure": "F01",
+      "file": "figures/F01_budget.png",
+      "annotation_A_x": 100,
+      "annotation_B_x": 100,
+      "x_unit": "tool calls/task",
+      "value": {
+        "annotation_A_interval": [
+          77.4,
+          78.6
+        ],
+        "annotation_B_interval": [
+          77.3,
+          78.7
+        ],
+        "intervals_compatible": true,
+        "overlap_for_compatibility_only": [
+          77.4,
+          78.6
+        ],
+        "consensus_readable_interval": [
+          77.3,
+          78.7
+        ],
+        "consensus_rule": "conservative hull of actual model pixel intervals; overlap is not used to claim extra precision",
+        "unit": "% target pass",
+        "approximate_visual_anchor": 78,
+        "anchor_is_not_hidden_exact_value": true
+      },
+      "region_refs": [
+        "R-F01-B-100-mean",
+        "R-F01-B-100-error"
+      ],
+      "public_tolerance_ref": "F01",
+      "error_endpoints": {
+        "lower": {
+          "annotation_A_interval": [
+            74.5,
+            75.5
+          ],
+          "annotation_B_interval": [
+            74.3,
+            75.7
+          ],
+          "intervals_compatible": true,
+          "overlap_for_compatibility_only": [
+            74.5,
+            75.5
+          ],
+          "consensus_readable_interval": [
+            74.3,
+            75.7
+          ],
+          "consensus_rule": "conservative hull of actual model pixel intervals; overlap is not used to claim extra precision",
+          "unit": "percentage points on pass axis"
+        },
+        "upper": {
+          "annotation_A_interval": [
+            80.5,
+            81.5
+          ],
+          "annotation_B_interval": [
+            80.3,
+            81.7
+          ],
+          "intervals_compatible": true,
+          "overlap_for_compatibility_only": [
+            80.5,
+            81.5
+          ],
+          "consensus_readable_interval": [
+            80.3,
+            81.7
+          ],
+          "consensus_rule": "conservative hull of actual model pixel intervals; overlap is not used to claim extra precision",
+          "unit": "percentage points on pass axis"
+        }
+      }
+    },
+    {
+      "point_id": "F02-A",
+      "figure": "F02",
+      "file": "figures/F02_intervals.png",
+      "annotation_A_x": "Method A",
+      "annotation_B_x": "Method A",
+      "x_unit": "method category",
+      "value": {
+        "annotation_A_interval": [
+          79.5,
+          80.5
+        ],
+        "annotation_B_interval": [
+          79.5,
+          80.5
+        ],
+        "intervals_compatible": true,
+        "overlap_for_compatibility_only": [
+          79.5,
+          80.5
+        ],
+        "consensus_readable_interval": [
+          79.5,
+          80.5
+        ],
+        "consensus_rule": "conservative hull of actual model pixel intervals; overlap is not used to claim extra precision",
+        "unit": "% target pass",
+        "approximate_visual_anchor": 80,
+        "anchor_is_not_hidden_exact_value": true
+      },
+      "region_refs": [
+        "R-F02-A-mean",
+        "R-F02-A-error"
+      ],
+      "public_tolerance_ref": "F02",
+      "error_endpoints": {
+        "lower": {
+          "annotation_A_interval": [
+            73.5,
+            74.5
+          ],
+          "annotation_B_interval": [
+            73.4,
+            74.6
+          ],
+          "intervals_compatible": true,
+          "overlap_for_compatibility_only": [
+            73.5,
+            74.5
+          ],
+          "consensus_readable_interval": [
+            73.4,
+            74.6
+          ],
+          "consensus_rule": "conservative hull of actual model pixel intervals; overlap is not used to claim extra precision",
+          "unit": "percentage points on pass axis"
+        },
+        "upper": {
+          "annotation_A_interval": [
+            85.5,
+            86.5
+          ],
+          "annotation_B_interval": [
+            85.4,
+            86.6
+          ],
+          "intervals_compatible": true,
+          "overlap_for_compatibility_only": [
+            85.5,
+            86.5
+          ],
+          "consensus_readable_interval": [
+            85.4,
+            86.6
+          ],
+          "consensus_rule": "conservative hull of actual model pixel intervals; overlap is not used to claim extra precision",
+          "unit": "percentage points on pass axis"
+        }
+      }
+    },
+    {
+      "point_id": "F02-B",
+      "figure": "F02",
+      "file": "figures/F02_intervals.png",
+      "annotation_A_x": "Method B",
+      "annotation_B_x": "Method B",
+      "x_unit": "method category",
+      "value": {
+        "annotation_A_interval": [
+          83.5,
+          84.5
+        ],
+        "annotation_B_interval": [
+          83.5,
+          84.5
+        ],
+        "intervals_compatible": true,
+        "overlap_for_compatibility_only": [
+          83.5,
+          84.5
+        ],
+        "consensus_readable_interval": [
+          83.5,
+          84.5
+        ],
+        "consensus_rule": "conservative hull of actual model pixel intervals; overlap is not used to claim extra precision",
+        "unit": "% target pass",
+        "approximate_visual_anchor": 84,
+        "anchor_is_not_hidden_exact_value": true
+      },
+      "region_refs": [
+        "R-F02-B-mean",
+        "R-F02-B-error"
+      ],
+      "public_tolerance_ref": "F02",
+      "error_endpoints": {
+        "lower": {
+          "annotation_A_interval": [
+            80.5,
+            81.5
+          ],
+          "annotation_B_interval": [
+            80.4,
+            81.6
+          ],
+          "intervals_compatible": true,
+          "overlap_for_compatibility_only": [
+            80.5,
+            81.5
+          ],
+          "consensus_readable_interval": [
+            80.4,
+            81.6
+          ],
+          "consensus_rule": "conservative hull of actual model pixel intervals; overlap is not used to claim extra precision",
+          "unit": "percentage points on pass axis"
+        },
+        "upper": {
+          "annotation_A_interval": [
+            86.5,
+            87.5
+          ],
+          "annotation_B_interval": [
+            86.4,
+            87.6
+          ],
+          "intervals_compatible": true,
+          "overlap_for_compatibility_only": [
+            86.5,
+            87.5
+          ],
+          "consensus_readable_interval": [
+            86.4,
+            87.6
+          ],
+          "consensus_rule": "conservative hull of actual model pixel intervals; overlap is not used to claim extra precision",
+          "unit": "percentage points on pass axis"
+        }
+      }
+    },
+    {
+      "point_id": "F03-A-1",
+      "figure": "F03",
+      "file": "figures/F03_latency.png",
+      "annotation_A_x": 1,
+      "annotation_B_x": 1,
+      "x_unit": "workers",
+      "value": {
+        "annotation_A_interval": [
+          1420,
+          1580
+        ],
+        "annotation_B_interval": [
+          1400,
+          1600
+        ],
+        "intervals_compatible": true,
+        "overlap_for_compatibility_only": [
+          1420,
+          1580
+        ],
+        "consensus_readable_interval": [
+          1400,
+          1600
+        ],
+        "consensus_rule": "conservative hull of actual model pixel intervals; overlap is not used to claim extra precision",
+        "unit": "ms",
+        "approximate_visual_anchor": 1500,
+        "anchor_is_not_hidden_exact_value": true
+      },
+      "region_refs": [
+        "R-F03-A-1-point"
+      ],
+      "public_tolerance_ref": "F03"
+    },
+    {
+      "point_id": "F03-A-2",
+      "figure": "F03",
+      "file": "figures/F03_latency.png",
+      "annotation_A_x": 2,
+      "annotation_B_x": 2,
+      "x_unit": "workers",
+      "value": {
+        "annotation_A_interval": [
+          860,
+          950
+        ],
+        "annotation_B_interval": [
+          850,
+          950
+        ],
+        "intervals_compatible": true,
+        "overlap_for_compatibility_only": [
+          860,
+          950
+        ],
+        "consensus_readable_interval": [
+          850,
+          950
+        ],
+        "consensus_rule": "conservative hull of actual model pixel intervals; overlap is not used to claim extra precision",
+        "unit": "ms",
+        "approximate_visual_anchor": 900,
+        "anchor_is_not_hidden_exact_value": true
+      },
+      "region_refs": [
+        "R-F03-A-2-point"
+      ],
+      "public_tolerance_ref": "F03"
+    },
+    {
+      "point_id": "F03-A-4",
+      "figure": "F03",
+      "file": "figures/F03_latency.png",
+      "annotation_A_x": 4,
+      "annotation_B_x": 4,
+      "x_unit": "workers",
+      "value": {
+        "annotation_A_interval": [
+          520,
+          580
+        ],
+        "annotation_B_interval": [
+          510,
+          590
+        ],
+        "intervals_compatible": true,
+        "overlap_for_compatibility_only": [
+          520,
+          580
+        ],
+        "consensus_readable_interval": [
+          510,
+          590
+        ],
+        "consensus_rule": "conservative hull of actual model pixel intervals; overlap is not used to claim extra precision",
+        "unit": "ms",
+        "approximate_visual_anchor": 550,
+        "anchor_is_not_hidden_exact_value": true
+      },
+      "region_refs": [
+        "R-F03-A-4-point"
+      ],
+      "public_tolerance_ref": "F03"
+    },
+    {
+      "point_id": "F03-A-8",
+      "figure": "F03",
+      "file": "figures/F03_latency.png",
+      "annotation_A_x": 8,
+      "annotation_B_x": 8,
+      "x_unit": "workers",
+      "value": {
+        "annotation_A_interval": [
+          290,
+          310
+        ],
+        "annotation_B_interval": [
+          280,
+          320
+        ],
+        "intervals_compatible": true,
+        "overlap_for_compatibility_only": [
+          290,
+          310
+        ],
+        "consensus_readable_interval": [
+          280,
+          320
+        ],
+        "consensus_rule": "conservative hull of actual model pixel intervals; overlap is not used to claim extra precision",
+        "unit": "ms",
+        "approximate_visual_anchor": 300,
+        "anchor_is_not_hidden_exact_value": true
+      },
+      "region_refs": [
+        "R-F03-A-8-point"
+      ],
+      "public_tolerance_ref": "F03"
+    },
+    {
+      "point_id": "F03-A-16",
+      "figure": "F03",
+      "file": "figures/F03_latency.png",
+      "annotation_A_x": 16,
+      "annotation_B_x": 16,
+      "x_unit": "workers",
+      "value": {
+        "annotation_A_interval": [
+          210,
+          230
+        ],
+        "annotation_B_interval": [
+          205,
+          235
+        ],
+        "intervals_compatible": true,
+        "overlap_for_compatibility_only": [
+          210,
+          230
+        ],
+        "consensus_readable_interval": [
+          205,
+          235
+        ],
+        "consensus_rule": "conservative hull of actual model pixel intervals; overlap is not used to claim extra precision",
+        "unit": "ms",
+        "approximate_visual_anchor": 220,
+        "anchor_is_not_hidden_exact_value": true
+      },
+      "region_refs": [
+        "R-F03-A-16-point"
+      ],
+      "public_tolerance_ref": "F03"
+    },
+    {
+      "point_id": "F03-B-1",
+      "figure": "F03",
+      "file": "figures/F03_latency.png",
+      "annotation_A_x": 1,
+      "annotation_B_x": 1,
+      "x_unit": "workers",
+      "value": {
+        "annotation_A_interval": [
+          1140,
+          1270
+        ],
+        "annotation_B_interval": [
+          1120,
+          1280
+        ],
+        "intervals_compatible": true,
+        "overlap_for_compatibility_only": [
+          1140,
+          1270
+        ],
+        "consensus_readable_interval": [
+          1120,
+          1280
+        ],
+        "consensus_rule": "conservative hull of actual model pixel intervals; overlap is not used to claim extra precision",
+        "unit": "ms",
+        "approximate_visual_anchor": 1200,
+        "anchor_is_not_hidden_exact_value": true
+      },
+      "region_refs": [
+        "R-F03-B-1-point"
+      ],
+      "public_tolerance_ref": "F03"
+    },
+    {
+      "point_id": "F03-B-2",
+      "figure": "F03",
+      "file": "figures/F03_latency.png",
+      "annotation_A_x": 2,
+      "annotation_B_x": 2,
+      "x_unit": "workers",
+      "value": {
+        "annotation_A_interval": [
+          1230,
+          1370
+        ],
+        "annotation_B_interval": [
+          1220,
+          1380
+        ],
+        "intervals_compatible": true,
+        "overlap_for_compatibility_only": [
+          1230,
+          1370
+        ],
+        "consensus_readable_interval": [
+          1220,
+          1380
+        ],
+        "consensus_rule": "conservative hull of actual model pixel intervals; overlap is not used to claim extra precision",
+        "unit": "ms",
+        "approximate_visual_anchor": 1300,
+        "anchor_is_not_hidden_exact_value": true
+      },
+      "region_refs": [
+        "R-F03-B-2-point"
+      ],
+      "public_tolerance_ref": "F03"
+    },
+    {
+      "point_id": "F03-B-4",
+      "figure": "F03",
+      "file": "figures/F03_latency.png",
+      "annotation_A_x": 4,
+      "annotation_B_x": 4,
+      "x_unit": "workers",
+      "value": {
+        "annotation_A_interval": [
+          1710,
+          1900
+        ],
+        "annotation_B_interval": [
+          1700,
+          1900
+        ],
+        "intervals_compatible": true,
+        "overlap_for_compatibility_only": [
+          1710,
+          1900
+        ],
+        "consensus_readable_interval": [
+          1700,
+          1900
+        ],
+        "consensus_rule": "conservative hull of actual model pixel intervals; overlap is not used to claim extra precision",
+        "unit": "ms",
+        "approximate_visual_anchor": 1800,
+        "anchor_is_not_hidden_exact_value": true
+      },
+      "region_refs": [
+        "R-F03-B-4-point"
+      ],
+      "public_tolerance_ref": "F03"
+    },
+    {
+      "point_id": "F03-B-8",
+      "figure": "F03",
+      "file": "figures/F03_latency.png",
+      "annotation_A_x": 8,
+      "annotation_B_x": 8,
+      "x_unit": "workers",
+      "value": {
+        "annotation_A_interval": [
+          2900,
+          3100
+        ],
+        "annotation_B_interval": [
+          2800,
+          3200
+        ],
+        "intervals_compatible": true,
+        "overlap_for_compatibility_only": [
+          2900,
+          3100
+        ],
+        "consensus_readable_interval": [
+          2800,
+          3200
+        ],
+        "consensus_rule": "conservative hull of actual model pixel intervals; overlap is not used to claim extra precision",
+        "unit": "ms",
+        "approximate_visual_anchor": 3000,
+        "anchor_is_not_hidden_exact_value": true
+      },
+      "region_refs": [
+        "R-F03-B-8-point"
+      ],
+      "public_tolerance_ref": "F03"
+    },
+    {
+      "point_id": "F03-B-16",
+      "figure": "F03",
+      "file": "figures/F03_latency.png",
+      "annotation_A_x": 16,
+      "annotation_B_x": 16,
+      "x_unit": "workers",
+      "value": {
+        "annotation_A_interval": [
+          4750,
+          5250
+        ],
+        "annotation_B_interval": [
+          4700,
+          5300
+        ],
+        "intervals_compatible": true,
+        "overlap_for_compatibility_only": [
+          4750,
+          5250
+        ],
+        "consensus_readable_interval": [
+          4700,
+          5300
+        ],
+        "consensus_rule": "conservative hull of actual model pixel intervals; overlap is not used to claim extra precision",
+        "unit": "ms",
+        "approximate_visual_anchor": 5000,
+        "anchor_is_not_hidden_exact_value": true
+      },
+      "region_refs": [
+        "R-F03-B-16-point"
+      ],
+      "public_tolerance_ref": "F03"
+    },
+    {
+      "point_id": "F04-G1-1",
+      "figure": "F04",
+      "file": "figures/F04_grouping.png",
+      "annotation_A_x": 1,
+      "annotation_B_x": [
+        0.9,
+        1.1
+      ],
+      "x_unit": "steps",
+      "value": {
+        "annotation_A_interval": [
+          79.5,
+          80.5
+        ],
+        "annotation_B_interval": [
+          79.3,
+          80.7
+        ],
+        "intervals_compatible": true,
+        "overlap_for_compatibility_only": [
+          79.5,
+          80.5
+        ],
+        "consensus_readable_interval": [
+          79.3,
+          80.7
+        ],
+        "consensus_rule": "conservative hull of actual model pixel intervals; overlap is not used to claim extra precision",
+        "unit": "% target pass",
+        "approximate_visual_anchor": 80,
+        "anchor_is_not_hidden_exact_value": true
+      },
+      "region_refs": [
+        "R-F04-G1-1-point"
+      ],
+      "public_tolerance_ref": "F04",
+      "x_reading": {
+        "annotation_A_interval": [
+          1,
+          1
+        ],
+        "annotation_B_interval": [
+          0.9,
+          1.1
+        ],
+        "intervals_compatible": true,
+        "overlap_for_compatibility_only": [
+          1,
+          1
+        ],
+        "consensus_readable_interval": [
+          0.9,
+          1.1
+        ],
+        "consensus_rule": "conservative hull of actual model pixel intervals; overlap is not used to claim extra precision",
+        "unit": "steps",
+        "approximate_visual_anchor": 1,
+        "anchor_is_not_hidden_exact_value": true
+      }
+    },
+    {
+      "point_id": "F04-G1-2",
+      "figure": "F04",
+      "file": "figures/F04_grouping.png",
+      "annotation_A_x": 2,
+      "annotation_B_x": [
+        1.9,
+        2.1
+      ],
+      "x_unit": "steps",
+      "value": {
+        "annotation_A_interval": [
+          77.5,
+          78.5
+        ],
+        "annotation_B_interval": [
+          77.3,
+          78.7
+        ],
+        "intervals_compatible": true,
+        "overlap_for_compatibility_only": [
+          77.5,
+          78.5
+        ],
+        "consensus_readable_interval": [
+          77.3,
+          78.7
+        ],
+        "consensus_rule": "conservative hull of actual model pixel intervals; overlap is not used to claim extra precision",
+        "unit": "% target pass",
+        "approximate_visual_anchor": 78,
+        "anchor_is_not_hidden_exact_value": true
+      },
+      "region_refs": [
+        "R-F04-G1-2-point"
+      ],
+      "public_tolerance_ref": "F04",
+      "x_reading": {
+        "annotation_A_interval": [
+          2,
+          2
+        ],
+        "annotation_B_interval": [
+          1.9,
+          2.1
+        ],
+        "intervals_compatible": true,
+        "overlap_for_compatibility_only": [
+          2,
+          2
+        ],
+        "consensus_readable_interval": [
+          1.9,
+          2.1
+        ],
+        "consensus_rule": "conservative hull of actual model pixel intervals; overlap is not used to claim extra precision",
+        "unit": "steps",
+        "approximate_visual_anchor": 2,
+        "anchor_is_not_hidden_exact_value": true
+      }
+    },
+    {
+      "point_id": "F04-G1-3",
+      "figure": "F04",
+      "file": "figures/F04_grouping.png",
+      "annotation_A_x": 3,
+      "annotation_B_x": [
+        2.9,
+        3.1
+      ],
+      "x_unit": "steps",
+      "value": {
+        "annotation_A_interval": [
+          75.4,
+          76.4
+        ],
+        "annotation_B_interval": [
+          75.2,
+          76.6
+        ],
+        "intervals_compatible": true,
+        "overlap_for_compatibility_only": [
+          75.4,
+          76.4
+        ],
+        "consensus_readable_interval": [
+          75.2,
+          76.6
+        ],
+        "consensus_rule": "conservative hull of actual model pixel intervals; overlap is not used to claim extra precision",
+        "unit": "% target pass",
+        "approximate_visual_anchor": 76,
+        "anchor_is_not_hidden_exact_value": true
+      },
+      "region_refs": [
+        "R-F04-G1-3-point"
+      ],
+      "public_tolerance_ref": "F04",
+      "x_reading": {
+        "annotation_A_interval": [
+          3,
+          3
+        ],
+        "annotation_B_interval": [
+          2.9,
+          3.1
+        ],
+        "intervals_compatible": true,
+        "overlap_for_compatibility_only": [
+          3,
+          3
+        ],
+        "consensus_readable_interval": [
+          2.9,
+          3.1
+        ],
+        "consensus_rule": "conservative hull of actual model pixel intervals; overlap is not used to claim extra precision",
+        "unit": "steps",
+        "approximate_visual_anchor": 3,
+        "anchor_is_not_hidden_exact_value": true
+      }
+    },
+    {
+      "point_id": "F04-G1-4",
+      "figure": "F04",
+      "file": "figures/F04_grouping.png",
+      "annotation_A_x": 4,
+      "annotation_B_x": [
+        3.9,
+        4.1
+      ],
+      "x_unit": "steps",
+      "value": {
+        "annotation_A_interval": [
+          73.5,
+          74.5
+        ],
+        "annotation_B_interval": [
+          73.3,
+          74.7
+        ],
+        "intervals_compatible": true,
+        "overlap_for_compatibility_only": [
+          73.5,
+          74.5
+        ],
+        "consensus_readable_interval": [
+          73.3,
+          74.7
+        ],
+        "consensus_rule": "conservative hull of actual model pixel intervals; overlap is not used to claim extra precision",
+        "unit": "% target pass",
+        "approximate_visual_anchor": 74,
+        "anchor_is_not_hidden_exact_value": true
+      },
+      "region_refs": [
+        "R-F04-G1-4-point"
+      ],
+      "public_tolerance_ref": "F04",
+      "x_reading": {
+        "annotation_A_interval": [
+          4,
+          4
+        ],
+        "annotation_B_interval": [
+          3.9,
+          4.1
+        ],
+        "intervals_compatible": true,
+        "overlap_for_compatibility_only": [
+          4,
+          4
+        ],
+        "consensus_readable_interval": [
+          3.9,
+          4.1
+        ],
+        "consensus_rule": "conservative hull of actual model pixel intervals; overlap is not used to claim extra precision",
+        "unit": "steps",
+        "approximate_visual_anchor": 4,
+        "anchor_is_not_hidden_exact_value": true
+      }
+    },
+    {
+      "point_id": "F04-G1-5",
+      "figure": "F04",
+      "file": "figures/F04_grouping.png",
+      "annotation_A_x": 5,
+      "annotation_B_x": [
+        4.9,
+        5.1
+      ],
+      "x_unit": "steps",
+      "value": {
+        "annotation_A_interval": [
+          71.4,
+          72.4
+        ],
+        "annotation_B_interval": [
+          71.2,
+          72.6
+        ],
+        "intervals_compatible": true,
+        "overlap_for_compatibility_only": [
+          71.4,
+          72.4
+        ],
+        "consensus_readable_interval": [
+          71.2,
+          72.6
+        ],
+        "consensus_rule": "conservative hull of actual model pixel intervals; overlap is not used to claim extra precision",
+        "unit": "% target pass",
+        "approximate_visual_anchor": 72,
+        "anchor_is_not_hidden_exact_value": true
+      },
+      "region_refs": [
+        "R-F04-G1-5-point"
+      ],
+      "public_tolerance_ref": "F04",
+      "x_reading": {
+        "annotation_A_interval": [
+          5,
+          5
+        ],
+        "annotation_B_interval": [
+          4.9,
+          5.1
+        ],
+        "intervals_compatible": true,
+        "overlap_for_compatibility_only": [
+          5,
+          5
+        ],
+        "consensus_readable_interval": [
+          4.9,
+          5.1
+        ],
+        "consensus_rule": "conservative hull of actual model pixel intervals; overlap is not used to claim extra precision",
+        "unit": "steps",
+        "approximate_visual_anchor": 5,
+        "anchor_is_not_hidden_exact_value": true
+      }
+    },
+    {
+      "point_id": "F04-G2-8",
+      "figure": "F04",
+      "file": "figures/F04_grouping.png",
+      "annotation_A_x": 8,
+      "annotation_B_x": [
+        7.9,
+        8.1
+      ],
+      "x_unit": "steps",
+      "value": {
+        "annotation_A_interval": [
+          94.4,
+          95.4
+        ],
+        "annotation_B_interval": [
+          94.2,
+          95.6
+        ],
+        "intervals_compatible": true,
+        "overlap_for_compatibility_only": [
+          94.4,
+          95.4
+        ],
+        "consensus_readable_interval": [
+          94.2,
+          95.6
+        ],
+        "consensus_rule": "conservative hull of actual model pixel intervals; overlap is not used to claim extra precision",
+        "unit": "% target pass",
+        "approximate_visual_anchor": 95,
+        "anchor_is_not_hidden_exact_value": true
+      },
+      "region_refs": [
+        "R-F04-G2-8-point"
+      ],
+      "public_tolerance_ref": "F04",
+      "x_reading": {
+        "annotation_A_interval": [
+          8,
+          8
+        ],
+        "annotation_B_interval": [
+          7.9,
+          8.1
+        ],
+        "intervals_compatible": true,
+        "overlap_for_compatibility_only": [
+          8,
+          8
+        ],
+        "consensus_readable_interval": [
+          7.9,
+          8.1
+        ],
+        "consensus_rule": "conservative hull of actual model pixel intervals; overlap is not used to claim extra precision",
+        "unit": "steps",
+        "approximate_visual_anchor": 8,
+        "anchor_is_not_hidden_exact_value": true
+      }
+    },
+    {
+      "point_id": "F04-G2-9",
+      "figure": "F04",
+      "file": "figures/F04_grouping.png",
+      "annotation_A_x": 9,
+      "annotation_B_x": [
+        8.9,
+        9.1
+      ],
+      "x_unit": "steps",
+      "value": {
+        "annotation_A_interval": [
+          92.5,
+          93.5
+        ],
+        "annotation_B_interval": [
+          92.3,
+          93.7
+        ],
+        "intervals_compatible": true,
+        "overlap_for_compatibility_only": [
+          92.5,
+          93.5
+        ],
+        "consensus_readable_interval": [
+          92.3,
+          93.7
+        ],
+        "consensus_rule": "conservative hull of actual model pixel intervals; overlap is not used to claim extra precision",
+        "unit": "% target pass",
+        "approximate_visual_anchor": 93,
+        "anchor_is_not_hidden_exact_value": true
+      },
+      "region_refs": [
+        "R-F04-G2-9-point"
+      ],
+      "public_tolerance_ref": "F04",
+      "x_reading": {
+        "annotation_A_interval": [
+          9,
+          9
+        ],
+        "annotation_B_interval": [
+          8.9,
+          9.1
+        ],
+        "intervals_compatible": true,
+        "overlap_for_compatibility_only": [
+          9,
+          9
+        ],
+        "consensus_readable_interval": [
+          8.9,
+          9.1
+        ],
+        "consensus_rule": "conservative hull of actual model pixel intervals; overlap is not used to claim extra precision",
+        "unit": "steps",
+        "approximate_visual_anchor": 9,
+        "anchor_is_not_hidden_exact_value": true
+      }
+    },
+    {
+      "point_id": "F04-G2-10",
+      "figure": "F04",
+      "file": "figures/F04_grouping.png",
+      "annotation_A_x": 10,
+      "annotation_B_x": [
+        9.9,
+        10.1
+      ],
+      "x_unit": "steps",
+      "value": {
+        "annotation_A_interval": [
+          90.4,
+          91.4
+        ],
+        "annotation_B_interval": [
+          90.2,
+          91.6
+        ],
+        "intervals_compatible": true,
+        "overlap_for_compatibility_only": [
+          90.4,
+          91.4
+        ],
+        "consensus_readable_interval": [
+          90.2,
+          91.6
+        ],
+        "consensus_rule": "conservative hull of actual model pixel intervals; overlap is not used to claim extra precision",
+        "unit": "% target pass",
+        "approximate_visual_anchor": 91,
+        "anchor_is_not_hidden_exact_value": true
+      },
+      "region_refs": [
+        "R-F04-G2-10-point"
+      ],
+      "public_tolerance_ref": "F04",
+      "x_reading": {
+        "annotation_A_interval": [
+          10,
+          10
+        ],
+        "annotation_B_interval": [
+          9.9,
+          10.1
+        ],
+        "intervals_compatible": true,
+        "overlap_for_compatibility_only": [
+          10,
+          10
+        ],
+        "consensus_readable_interval": [
+          9.9,
+          10.1
+        ],
+        "consensus_rule": "conservative hull of actual model pixel intervals; overlap is not used to claim extra precision",
+        "unit": "steps",
+        "approximate_visual_anchor": 10,
+        "anchor_is_not_hidden_exact_value": true
+      }
+    },
+    {
+      "point_id": "F04-G2-11",
+      "figure": "F04",
+      "file": "figures/F04_grouping.png",
+      "annotation_A_x": 11,
+      "annotation_B_x": [
+        10.9,
+        11.1
+      ],
+      "x_unit": "steps",
+      "value": {
+        "annotation_A_interval": [
+          88.5,
+          89.5
+        ],
+        "annotation_B_interval": [
+          88.3,
+          89.7
+        ],
+        "intervals_compatible": true,
+        "overlap_for_compatibility_only": [
+          88.5,
+          89.5
+        ],
+        "consensus_readable_interval": [
+          88.3,
+          89.7
+        ],
+        "consensus_rule": "conservative hull of actual model pixel intervals; overlap is not used to claim extra precision",
+        "unit": "% target pass",
+        "approximate_visual_anchor": 89,
+        "anchor_is_not_hidden_exact_value": true
+      },
+      "region_refs": [
+        "R-F04-G2-11-point"
+      ],
+      "public_tolerance_ref": "F04",
+      "x_reading": {
+        "annotation_A_interval": [
+          11,
+          11
+        ],
+        "annotation_B_interval": [
+          10.9,
+          11.1
+        ],
+        "intervals_compatible": true,
+        "overlap_for_compatibility_only": [
+          11,
+          11
+        ],
+        "consensus_readable_interval": [
+          10.9,
+          11.1
+        ],
+        "consensus_rule": "conservative hull of actual model pixel intervals; overlap is not used to claim extra precision",
+        "unit": "steps",
+        "approximate_visual_anchor": 11,
+        "anchor_is_not_hidden_exact_value": true
+      }
+    },
+    {
+      "point_id": "F04-G2-12",
+      "figure": "F04",
+      "file": "figures/F04_grouping.png",
+      "annotation_A_x": 12,
+      "annotation_B_x": [
+        11.9,
+        12.1
+      ],
+      "x_unit": "steps",
+      "value": {
+        "annotation_A_interval": [
+          86.4,
+          87.4
+        ],
+        "annotation_B_interval": [
+          86.2,
+          87.6
+        ],
+        "intervals_compatible": true,
+        "overlap_for_compatibility_only": [
+          86.4,
+          87.4
+        ],
+        "consensus_readable_interval": [
+          86.2,
+          87.6
+        ],
+        "consensus_rule": "conservative hull of actual model pixel intervals; overlap is not used to claim extra precision",
+        "unit": "% target pass",
+        "approximate_visual_anchor": 87,
+        "anchor_is_not_hidden_exact_value": true
+      },
+      "region_refs": [
+        "R-F04-G2-12-point"
+      ],
+      "public_tolerance_ref": "F04",
+      "x_reading": {
+        "annotation_A_interval": [
+          12,
+          12
+        ],
+        "annotation_B_interval": [
+          11.9,
+          12.1
+        ],
+        "intervals_compatible": true,
+        "overlap_for_compatibility_only": [
+          12,
+          12
+        ],
+        "consensus_readable_interval": [
+          11.9,
+          12.1
+        ],
+        "consensus_rule": "conservative hull of actual model pixel intervals; overlap is not used to claim extra precision",
+        "unit": "steps",
+        "approximate_visual_anchor": 12,
+        "anchor_is_not_hidden_exact_value": true
+      }
+    }
+  ],
+  "derived_arithmetic": {
+    "budget_absolute_increments": {
+      "source": "actual F01 labeled ticks [1,10,100]",
+      "values": [
+        "9",
+        "90"
+      ],
+      "unit": "tool calls/task",
+      "equal": false
+    },
+    "budget_factors": {
+      "source": "actual F01 labeled ticks [1,10,100]",
+      "values": [
+        "10",
+        "10"
+      ],
+      "equal": true
+    },
+    "F03_8workers_B_to_A": {
+      "source_points": [
+        "F03-B-8",
+        "F03-A-8"
+      ],
+      "approximate_visual_anchor_ratio": "10",
+      "exact_decimal_lower": "8.75",
+      "exact_decimal_upper": "11.42857142857142857142857143",
+      "display_rounded_interval": [
+        8.75,
+        11.43
+      ],
+      "method": "positive-interval quotient [numerator_low/denominator_high,numerator_high/denominator_low]",
+      "ratio_tolerance_relative": 0.2,
+      "caution": "Interval arithmetic propagates visual read uncertainty, not statistical uncertainty. Decimal digits do not recover hidden source precision."
+    },
+    "arithmetic_boundary": "No significance statistic, missing quality value or causal parameter was computed."
+  },
+  "claims": [
+    {
+      "claim_id": "C01",
+      "claim_text": "F01在总工具预算10处，Method A的目标通过率约72%，Method B约64%；这只描述图示同设置均值，不宣称显著或因果优势。",
+      "primary_judgment_object": "预算10处两方法图示均值及同设置描述的边界",
+      "normalized_verdict": "supported",
+      "canonical_subclaims": [
+        {
+          "judgment_object": "A约72%、B约64%的均值读数",
+          "normalized_verdict": "supported",
+          "kind": "fact_or_scope"
+        },
+        {
+          "judgment_object": "仅描述图示同设置均值",
+          "normalized_verdict": "supported",
+          "kind": "fact_or_scope"
+        }
+      ],
+      "normative_values_are_approximate_pixel_anchors_or_exact_labeled_tick_arithmetic": {
+        "budget": 10,
+        "A_approximate_percent": 72,
+        "B_approximate_percent": 64
+      },
+      "readable_point_refs": [
+        "F01-A-10",
+        "F01-B-10"
+      ],
+      "readable_intervals": [
+        {
+          "point_id": "F01-A-10",
+          "figure": "F01",
+          "file": "figures/F01_budget.png",
+          "annotation_A_x": 10,
+          "annotation_B_x": 10,
+          "x_unit": "tool calls/task",
+          "value": {
+            "annotation_A_interval": [
+              71.5,
+              72.6
+            ],
+            "annotation_B_interval": [
+              71.3,
+              72.7
+            ],
+            "intervals_compatible": true,
+            "overlap_for_compatibility_only": [
+              71.5,
+              72.6
+            ],
+            "consensus_readable_interval": [
+              71.3,
+              72.7
+            ],
+            "consensus_rule": "conservative hull of actual model pixel intervals; overlap is not used to claim extra precision",
+            "unit": "% target pass",
+            "approximate_visual_anchor": 72,
+            "anchor_is_not_hidden_exact_value": true
+          },
+          "region_refs": [
+            "R-F01-A-10-mean",
+            "R-F01-A-10-error"
+          ],
+          "public_tolerance_ref": "F01",
+          "error_endpoints": {
+            "lower": {
+              "annotation_A_interval": [
+                68.5,
+                69.5
+              ],
+              "annotation_B_interval": [
+                68.4,
+                69.7
+              ],
+              "intervals_compatible": true,
+              "overlap_for_compatibility_only": [
+                68.5,
+                69.5
+              ],
+              "consensus_readable_interval": [
+                68.4,
+                69.7
+              ],
+              "consensus_rule": "conservative hull of actual model pixel intervals; overlap is not used to claim extra precision",
+              "unit": "percentage points on pass axis"
+            },
+            "upper": {
+              "annotation_A_interval": [
+                74.5,
+                75.5
+              ],
+              "annotation_B_interval": [
+                74.3,
+                75.7
+              ],
+              "intervals_compatible": true,
+              "overlap_for_compatibility_only": [
+                74.5,
+                75.5
+              ],
+              "consensus_readable_interval": [
+                74.3,
+                75.7
+              ],
+              "consensus_rule": "conservative hull of actual model pixel intervals; overlap is not used to claim extra precision",
+              "unit": "percentage points on pass axis"
+            }
+          }
+        },
+        {
+          "point_id": "F01-B-10",
+          "figure": "F01",
+          "file": "figures/F01_budget.png",
+          "annotation_A_x": 10,
+          "annotation_B_x": 10,
+          "x_unit": "tool calls/task",
+          "value": {
+            "annotation_A_interval": [
+              63.6,
+              64.7
+            ],
+            "annotation_B_interval": [
+              63.4,
+              64.8
+            ],
+            "intervals_compatible": true,
+            "overlap_for_compatibility_only": [
+              63.6,
+              64.7
+            ],
+            "consensus_readable_interval": [
+              63.4,
+              64.8
+            ],
+            "consensus_rule": "conservative hull of actual model pixel intervals; overlap is not used to claim extra precision",
+            "unit": "% target pass",
+            "approximate_visual_anchor": 64,
+            "anchor_is_not_hidden_exact_value": true
+          },
+          "region_refs": [
+            "R-F01-B-10-mean",
+            "R-F01-B-10-error"
+          ],
+          "public_tolerance_ref": "F01",
+          "error_endpoints": {
+            "lower": {
+              "annotation_A_interval": [
+                59.6,
+                60.6
+              ],
+              "annotation_B_interval": [
+                59.5,
+                60.8
+              ],
+              "intervals_compatible": true,
+              "overlap_for_compatibility_only": [
+                59.6,
+                60.6
+              ],
+              "consensus_readable_interval": [
+                59.5,
+                60.8
+              ],
+              "consensus_rule": "conservative hull of actual model pixel intervals; overlap is not used to claim extra precision",
+              "unit": "percentage points on pass axis"
+            },
+            "upper": {
+              "annotation_A_interval": [
+                67.6,
+                68.6
+              ],
+              "annotation_B_interval": [
+                67.4,
+                68.8
+              ],
+              "intervals_compatible": true,
+              "overlap_for_compatibility_only": [
+                67.6,
+                68.6
+              ],
+              "consensus_readable_interval": [
+                67.4,
+                68.8
+              ],
+              "consensus_rule": "conservative hull of actual model pixel intervals; overlap is not used to claim extra precision",
+              "unit": "percentage points on pass axis"
+            }
+          }
+        }
+      ],
+      "axis_and_legend_conditions": "x刻度1、10、100等距而数值成十倍；选中间预算10点。y是线性百分比轴。 A=蓝色空心圆；B=橙色实心方形。",
+      "source_region_refs": [
+        "R-F01-x-tick-10",
+        "R-F01-y-ticks",
+        "R-F01-y-label",
+        "R-F01-legend-A",
+        "R-F01-legend-B",
+        "R-F01-A-10-mean",
+        "R-F01-B-10-mean"
+      ],
+      "method_paragraph": {
+        "id": "E01",
+        "text": "F01使用同一任务集、相同模型设置和统一最终目标谓词，两方法仅在图示总工具调用预算下汇总。每点是12个评估批次均值，误差棒为批次标准差。不同预算是不同设置，不是额外任务身份。没有发布配对差值、不确定性检验或其它条件下的外推实验。"
+      },
+      "rationale": "中间点蓝圆位于70以上约2个百分点，橙方位于60以上约4个百分点；与约72%和64%一致。E01把这些点限定为给定设置的批次均值，论述也没有扩大到显著性或因果性。",
+      "necessary_limits": [
+        "Only the budget10 descriptive means under E01 same settings are claimed.",
+        "No significance, causal effect, unplotted budget or cross-task/hardware guarantee follows."
+      ],
+      "allowed_interpretations": [
+        "Approximate72%/64% or compatible intervals within public tolerance, with budget10, correct methods and descriptive scope."
+      ],
+      "all_original_uncertainties": {
+        "A": [
+          "无法由这些均值证明统计显著性、因果优势或其它预算/任务条件的优势。",
+          "F01误差棒的SD含义来自E01，原始PNG只显示棒形本身。"
+        ],
+        "B": [
+          "像素读数不是隐藏数值表；不主张小数精度。",
+          "即使图示均值相差约8个百分点，配对差值与检验未发布，不能在本项额外推导显著性。"
+        ]
+      },
+      "reconciliation_record_ref": "C01"
+    },
+    {
+      "claim_id": "C02",
+      "claim_text": "F01三个预算点的横向间距相等，所以从第一个到第二个点的预算绝对增量，与从第二个到第三个点相同。",
+      "primary_judgment_object": "由图上等距推出预算绝对增量相等",
+      "normalized_verdict": "refuted",
+      "canonical_subclaims": [
+        {
+          "judgment_object": "三个标出预算横向间距相等",
+          "normalized_verdict": "supported",
+          "kind": "fact_or_scope"
+        },
+        {
+          "judgment_object": "两段预算绝对增量相同",
+          "normalized_verdict": "refuted",
+          "kind": "fact_or_scope"
+        }
+      ],
+      "normative_values_are_approximate_pixel_anchors_or_exact_labeled_tick_arithmetic": {
+        "tick_values": [
+          1,
+          10,
+          100
+        ],
+        "absolute_increments": [
+          9,
+          90
+        ],
+        "factors": [
+          10,
+          10
+        ]
+      },
+      "readable_point_refs": [],
+      "readable_intervals": [],
+      "axis_and_legend_conditions": "等距位置对应1、10、100，显示对数刻度；等距对应倍数变化。 两方法共享同一预算横轴。",
+      "source_region_refs": [
+        "R-F01-x-tick-1",
+        "R-F01-x-tick-10",
+        "R-F01-x-tick-100",
+        "R-F01-x-label"
+      ],
+      "method_paragraph": {
+        "id": "E01",
+        "text": "F01使用同一任务集、相同模型设置和统一最终目标谓词，两方法仅在图示总工具调用预算下汇总。每点是12个评估批次均值，误差棒为批次标准差。不同预算是不同设置，不是额外任务身份。没有发布配对差值、不确定性检验或其它条件下的外推实验。"
+      },
+      "rationale": "第一段是10−1=9次，第二段是100−10=90次。横向等距是可见事实，但“绝对增量相同”被轴上数值直接反驳。",
+      "necessary_limits": [
+        "Equal horizontal distances represent equal budget ratios on a log axis.",
+        "Compare labeled settings only; no invented intermediate experiment."
+      ],
+      "allowed_interpretations": [
+        "Explain unequal absolute increments9 and90, or equivalent arithmetic using1/10/100 and log scale; equal factor10 is compatible."
+      ],
+      "all_original_uncertainties": {
+        "A": [
+          "没有单独观察预算2至9等中间设置；这不影响读取三个已标预算的差值。"
+        ],
+        "B": [
+          "只比较三个已标预算，不对图间未测设置补值。"
+        ]
+      },
+      "reconciliation_record_ref": "C02"
+    },
+    {
+      "claim_id": "C03",
+      "claim_text": "F02中Method B的均值高于Method A，且两条误差区间存在交叠；该句只描述图形关系。",
+      "primary_judgment_object": "均值顺序和显示误差区间的交叠",
+      "normalized_verdict": "supported",
+      "canonical_subclaims": [
+        {
+          "judgment_object": "B均值高于A",
+          "normalized_verdict": "supported",
+          "kind": "fact_or_scope"
+        },
+        {
+          "judgment_object": "两显示SD区间存在交叠",
+          "normalized_verdict": "supported",
+          "kind": "fact_or_scope"
+        }
+      ],
+      "normative_values_are_approximate_pixel_anchors_or_exact_labeled_tick_arithmetic": {
+        "A_mean_approximate_percent": 80,
+        "B_mean_approximate_percent": 84,
+        "A_SD_approximate_span_percent": [
+          74,
+          86
+        ],
+        "B_SD_approximate_span_percent": [
+          81,
+          87
+        ],
+        "overlap_approximate_percent": [
+          81,
+          86
+        ],
+        "error_type": "SD",
+        "n_paired_batches": 12
+      },
+      "readable_point_refs": [
+        "F02-A",
+        "F02-B"
+      ],
+      "readable_intervals": [
+        {
+          "point_id": "F02-A",
+          "figure": "F02",
+          "file": "figures/F02_intervals.png",
+          "annotation_A_x": "Method A",
+          "annotation_B_x": "Method A",
+          "x_unit": "method category",
+          "value": {
+            "annotation_A_interval": [
+              79.5,
+              80.5
+            ],
+            "annotation_B_interval": [
+              79.5,
+              80.5
+            ],
+            "intervals_compatible": true,
+            "overlap_for_compatibility_only": [
+              79.5,
+              80.5
+            ],
+            "consensus_readable_interval": [
+              79.5,
+              80.5
+            ],
+            "consensus_rule": "conservative hull of actual model pixel intervals; overlap is not used to claim extra precision",
+            "unit": "% target pass",
+            "approximate_visual_anchor": 80,
+            "anchor_is_not_hidden_exact_value": true
+          },
+          "region_refs": [
+            "R-F02-A-mean",
+            "R-F02-A-error"
+          ],
+          "public_tolerance_ref": "F02",
+          "error_endpoints": {
+            "lower": {
+              "annotation_A_interval": [
+                73.5,
+                74.5
+              ],
+              "annotation_B_interval": [
+                73.4,
+                74.6
+              ],
+              "intervals_compatible": true,
+              "overlap_for_compatibility_only": [
+                73.5,
+                74.5
+              ],
+              "consensus_readable_interval": [
+                73.4,
+                74.6
+              ],
+              "consensus_rule": "conservative hull of actual model pixel intervals; overlap is not used to claim extra precision",
+              "unit": "percentage points on pass axis"
+            },
+            "upper": {
+              "annotation_A_interval": [
+                85.5,
+                86.5
+              ],
+              "annotation_B_interval": [
+                85.4,
+                86.6
+              ],
+              "intervals_compatible": true,
+              "overlap_for_compatibility_only": [
+                85.5,
+                86.5
+              ],
+              "consensus_readable_interval": [
+                85.4,
+                86.6
+              ],
+              "consensus_rule": "conservative hull of actual model pixel intervals; overlap is not used to claim extra precision",
+              "unit": "percentage points on pass axis"
+            }
+          }
+        },
+        {
+          "point_id": "F02-B",
+          "figure": "F02",
+          "file": "figures/F02_intervals.png",
+          "annotation_A_x": "Method B",
+          "annotation_B_x": "Method B",
+          "x_unit": "method category",
+          "value": {
+            "annotation_A_interval": [
+              83.5,
+              84.5
+            ],
+            "annotation_B_interval": [
+              83.5,
+              84.5
+            ],
+            "intervals_compatible": true,
+            "overlap_for_compatibility_only": [
+              83.5,
+              84.5
+            ],
+            "consensus_readable_interval": [
+              83.5,
+              84.5
+            ],
+            "consensus_rule": "conservative hull of actual model pixel intervals; overlap is not used to claim extra precision",
+            "unit": "% target pass",
+            "approximate_visual_anchor": 84,
+            "anchor_is_not_hidden_exact_value": true
+          },
+          "region_refs": [
+            "R-F02-B-mean",
+            "R-F02-B-error"
+          ],
+          "public_tolerance_ref": "F02",
+          "error_endpoints": {
+            "lower": {
+              "annotation_A_interval": [
+                80.5,
+                81.5
+              ],
+              "annotation_B_interval": [
+                80.4,
+                81.6
+              ],
+              "intervals_compatible": true,
+              "overlap_for_compatibility_only": [
+                80.5,
+                81.5
+              ],
+              "consensus_readable_interval": [
+                80.4,
+                81.6
+              ],
+              "consensus_rule": "conservative hull of actual model pixel intervals; overlap is not used to claim extra precision",
+              "unit": "percentage points on pass axis"
+            },
+            "upper": {
+              "annotation_A_interval": [
+                86.5,
+                87.5
+              ],
+              "annotation_B_interval": [
+                86.4,
+                87.6
+              ],
+              "intervals_compatible": true,
+              "overlap_for_compatibility_only": [
+                86.5,
+                87.5
+              ],
+              "consensus_readable_interval": [
+                86.4,
+                87.6
+              ],
+              "consensus_rule": "conservative hull of actual model pixel intervals; overlap is not used to claim extra precision",
+              "unit": "percentage points on pass axis"
+            }
+          }
+        }
+      ],
+      "axis_and_legend_conditions": "纵轴线性，60至95，每5个百分点一格。柱形基线60，不以柱高倍数判断。 方法名在横轴直接标识；A蓝圆均值，B橙方均值。",
+      "source_region_refs": [
+        "R-F02-x-categories",
+        "R-F02-y-ticks",
+        "R-F02-y-label",
+        "R-F02-binding-A",
+        "R-F02-binding-B",
+        "R-F02-A-mean",
+        "R-F02-B-mean",
+        "R-F02-A-error",
+        "R-F02-B-error",
+        "R-F02-SD"
+      ],
+      "method_paragraph": {
+        "id": "E02",
+        "text": "F02两方法在相同12个配对评估批次上运行，均值及标准差绘在图中。图中误差棒不是95%置信区间。未提供原始配对差值、协方差、显著性检验或预先设定的等效界；不能仅由误差棒交叠/不交叠确定显著或等效。"
+      },
+      "rationale": "B均值在约84%，A在约80%；A显示范围约74%—86%，B约81%—87%，共有约81%—86%的纵轴数值。该论述只声称可见顺序与交叠，均获图形支持。",
+      "necessary_limits": [
+        "Overlap concerns displayed SD ranges on the percentage axis, not paired-difference confidence intervals.",
+        "B>A is a mean ordering, not a significance/equivalence result."
+      ],
+      "allowed_interpretations": [
+        "Report B mean above A and SD overlap, with roughly80/84 and endpoints74–86/81–87, preserving percent/SD scope."
+      ],
+      "all_original_uncertainties": {
+        "A": [
+          "两条棒在不同横坐标，交叠指纵轴数值范围有共同部分。",
+          "交叠不是配对差值分布，不提供显著性或等效判断。"
+        ],
+        "B": [
+          "端点为视觉近似读数；不声称交叠边界的小数精度。",
+          "这些是SD范围，描述性支持不包含显著性或等效性判断。"
+        ]
+      },
+      "reconciliation_record_ref": "C03"
+    },
+    {
+      "claim_id": "C04",
+      "claim_text": "F02误差棒交叠已经证明两方法差异不显著，并且效果相同。",
+      "primary_judgment_object": "“交叠已证明不显著且等效”的证据充分性断言",
+      "normalized_verdict": "refuted",
+      "canonical_subclaims": [
+        {
+          "judgment_object": "显示SD区间交叠",
+          "normalized_verdict": "supported",
+          "kind": "fact_or_scope"
+        },
+        {
+          "judgment_object": "交叠足以证明差异不显著",
+          "normalized_verdict": "refuted",
+          "kind": "evidence-sufficiency metaproposition"
+        },
+        {
+          "judgment_object": "真实差异是否不显著",
+          "normalized_verdict": "insufficient",
+          "kind": "statistical fact"
+        },
+        {
+          "judgment_object": "交叠足以证明效果相同",
+          "normalized_verdict": "refuted",
+          "kind": "evidence-sufficiency metaproposition"
+        },
+        {
+          "judgment_object": "真实效果是否等效",
+          "normalized_verdict": "insufficient",
+          "kind": "statistical fact"
+        }
+      ],
+      "normative_values_are_approximate_pixel_anchors_or_exact_labeled_tick_arithmetic": {
+        "displayed_SD_overlap": true,
+        "error_type": "SD",
+        "actual_significance": "unknown",
+        "actual_equivalence_or_equality": "unknown",
+        "evidence_sufficient_to_prove_both": false
+      },
+      "readable_point_refs": [
+        "F02-A",
+        "F02-B"
+      ],
+      "readable_intervals": [
+        {
+          "point_id": "F02-A",
+          "figure": "F02",
+          "file": "figures/F02_intervals.png",
+          "annotation_A_x": "Method A",
+          "annotation_B_x": "Method A",
+          "x_unit": "method category",
+          "value": {
+            "annotation_A_interval": [
+              79.5,
+              80.5
+            ],
+            "annotation_B_interval": [
+              79.5,
+              80.5
+            ],
+            "intervals_compatible": true,
+            "overlap_for_compatibility_only": [
+              79.5,
+              80.5
+            ],
+            "consensus_readable_interval": [
+              79.5,
+              80.5
+            ],
+            "consensus_rule": "conservative hull of actual model pixel intervals; overlap is not used to claim extra precision",
+            "unit": "% target pass",
+            "approximate_visual_anchor": 80,
+            "anchor_is_not_hidden_exact_value": true
+          },
+          "region_refs": [
+            "R-F02-A-mean",
+            "R-F02-A-error"
+          ],
+          "public_tolerance_ref": "F02",
+          "error_endpoints": {
+            "lower": {
+              "annotation_A_interval": [
+                73.5,
+                74.5
+              ],
+              "annotation_B_interval": [
+                73.4,
+                74.6
+              ],
+              "intervals_compatible": true,
+              "overlap_for_compatibility_only": [
+                73.5,
+                74.5
+              ],
+              "consensus_readable_interval": [
+                73.4,
+                74.6
+              ],
+              "consensus_rule": "conservative hull of actual model pixel intervals; overlap is not used to claim extra precision",
+              "unit": "percentage points on pass axis"
+            },
+            "upper": {
+              "annotation_A_interval": [
+                85.5,
+                86.5
+              ],
+              "annotation_B_interval": [
+                85.4,
+                86.6
+              ],
+              "intervals_compatible": true,
+              "overlap_for_compatibility_only": [
+                85.5,
+                86.5
+              ],
+              "consensus_readable_interval": [
+                85.4,
+                86.6
+              ],
+              "consensus_rule": "conservative hull of actual model pixel intervals; overlap is not used to claim extra precision",
+              "unit": "percentage points on pass axis"
+            }
+          }
+        },
+        {
+          "point_id": "F02-B",
+          "figure": "F02",
+          "file": "figures/F02_intervals.png",
+          "annotation_A_x": "Method B",
+          "annotation_B_x": "Method B",
+          "x_unit": "method category",
+          "value": {
+            "annotation_A_interval": [
+              83.5,
+              84.5
+            ],
+            "annotation_B_interval": [
+              83.5,
+              84.5
+            ],
+            "intervals_compatible": true,
+            "overlap_for_compatibility_only": [
+              83.5,
+              84.5
+            ],
+            "consensus_readable_interval": [
+              83.5,
+              84.5
+            ],
+            "consensus_rule": "conservative hull of actual model pixel intervals; overlap is not used to claim extra precision",
+            "unit": "% target pass",
+            "approximate_visual_anchor": 84,
+            "anchor_is_not_hidden_exact_value": true
+          },
+          "region_refs": [
+            "R-F02-B-mean",
+            "R-F02-B-error"
+          ],
+          "public_tolerance_ref": "F02",
+          "error_endpoints": {
+            "lower": {
+              "annotation_A_interval": [
+                80.5,
+                81.5
+              ],
+              "annotation_B_interval": [
+                80.4,
+                81.6
+              ],
+              "intervals_compatible": true,
+              "overlap_for_compatibility_only": [
+                80.5,
+                81.5
+              ],
+              "consensus_readable_interval": [
+                80.4,
+                81.6
+              ],
+              "consensus_rule": "conservative hull of actual model pixel intervals; overlap is not used to claim extra precision",
+              "unit": "percentage points on pass axis"
+            },
+            "upper": {
+              "annotation_A_interval": [
+                86.5,
+                87.5
+              ],
+              "annotation_B_interval": [
+                86.4,
+                87.6
+              ],
+              "intervals_compatible": true,
+              "overlap_for_compatibility_only": [
+                86.5,
+                87.5
+              ],
+              "consensus_readable_interval": [
+                86.4,
+                87.6
+              ],
+              "consensus_rule": "conservative hull of actual model pixel intervals; overlap is not used to claim extra precision",
+              "unit": "percentage points on pass axis"
+            }
+          }
+        }
+      ],
+      "axis_and_legend_conditions": "线性百分比纵轴；图形交叠只涉及SD端点。 A蓝色均值与棒，B橙色均值与棒。",
+      "source_region_refs": [
+        "R-F02-y-ticks",
+        "R-F02-A-mean",
+        "R-F02-B-mean",
+        "R-F02-A-error",
+        "R-F02-B-error",
+        "R-F02-SD",
+        "R-F02-n"
+      ],
+      "method_paragraph": {
+        "id": "E02",
+        "text": "F02两方法在相同12个配对评估批次上运行，均值及标准差绘在图中。图中误差棒不是95%置信区间。未提供原始配对差值、协方差、显著性检验或预先设定的等效界；不能仅由误差棒交叠/不交叠确定显著或等效。"
+      },
+      "rationale": "“已证明”这一元命题与公开证据范围矛盾：这里是SD，而不是差值检验或等效区间。可确认交叠，但不能据此证明不显著，更不能把不显著等同效果相同。该反驳针对证据已经充分的断言，不是声称真实差异必然显著或必然不等效。",
+      "necessary_limits": [
+        "Refuted applies to the claim that overlap has already proved non-significance and equality.",
+        "Actual significance and actual equivalence/equality remain unknown; no p-value, paired variance, equivalence bound or adverse experiment may be invented."
+      ],
+      "allowed_interpretations": [
+        "State the evidence-sufficiency proposition is refuted/invalid while the underlying non-significance and equivalence facts are unknown.",
+        "A fact-targeted insufficient-evidence subassessment is meaningful only when clearly separated from the rejected “already proved” proposition."
+      ],
+      "all_original_uncertainties": {
+        "A": [
+          "真实配对差异是否显著：未知。",
+          "在某个预设等效界内是否等效：未知，因为未给出等效界与等效检验。",
+          "不能用缺少检验编造显著差异或相反实验。"
+        ],
+        "B": [
+          "不补造配对差值、相关性、p值或等效性结果。",
+          "不把本项的refuted误读为已经证明两方法显著不同。"
+        ]
+      },
+      "reconciliation_record_ref": "C04"
+    },
+    {
+      "claim_id": "C05",
+      "claim_text": "F03在8 workers处，Method B的耗时约为Method A的10倍；该比较限图示硬件和计时条件。",
+      "primary_judgment_object": "8 workers处B/A耗时比及比较范围",
+      "normalized_verdict": "supported",
+      "canonical_subclaims": [
+        {
+          "judgment_object": "8 workers处B约为A的10倍耗时",
+          "normalized_verdict": "supported",
+          "kind": "fact_or_scope"
+        },
+        {
+          "judgment_object": "比较限图示硬件/计时条件",
+          "normalized_verdict": "supported",
+          "kind": "fact_or_scope"
+        }
+      ],
+      "normative_values_are_approximate_pixel_anchors_or_exact_labeled_tick_arithmetic": {
+        "workers": 8,
+        "A_approximate_ms": 300,
+        "B_approximate_ms": 3000,
+        "B_to_A_approximate_ratio": 10,
+        "ratio_readable_interval": [
+          8.75,
+          11.43
+        ]
+      },
+      "readable_point_refs": [
+        "F03-A-8",
+        "F03-B-8"
+      ],
+      "readable_intervals": [
+        {
+          "point_id": "F03-A-8",
+          "figure": "F03",
+          "file": "figures/F03_latency.png",
+          "annotation_A_x": 8,
+          "annotation_B_x": 8,
+          "x_unit": "workers",
+          "value": {
+            "annotation_A_interval": [
+              290,
+              310
+            ],
+            "annotation_B_interval": [
+              280,
+              320
+            ],
+            "intervals_compatible": true,
+            "overlap_for_compatibility_only": [
+              290,
+              310
+            ],
+            "consensus_readable_interval": [
+              280,
+              320
+            ],
+            "consensus_rule": "conservative hull of actual model pixel intervals; overlap is not used to claim extra precision",
+            "unit": "ms",
+            "approximate_visual_anchor": 300,
+            "anchor_is_not_hidden_exact_value": true
+          },
+          "region_refs": [
+            "R-F03-A-8-point"
+          ],
+          "public_tolerance_ref": "F03"
+        },
+        {
+          "point_id": "F03-B-8",
+          "figure": "F03",
+          "file": "figures/F03_latency.png",
+          "annotation_A_x": 8,
+          "annotation_B_x": 8,
+          "x_unit": "workers",
+          "value": {
+            "annotation_A_interval": [
+              2900,
+              3100
+            ],
+            "annotation_B_interval": [
+              2800,
+              3200
+            ],
+            "intervals_compatible": true,
+            "overlap_for_compatibility_only": [
+              2900,
+              3100
+            ],
+            "consensus_readable_interval": [
+              2800,
+              3200
+            ],
+            "consensus_rule": "conservative hull of actual model pixel intervals; overlap is not used to claim extra precision",
+            "unit": "ms",
+            "approximate_visual_anchor": 3000,
+            "anchor_is_not_hidden_exact_value": true
+          },
+          "region_refs": [
+            "R-F03-B-8-point"
+          ],
+          "public_tolerance_ref": "F03"
+        }
+      ],
+      "axis_and_legend_conditions": "x为线性workers，8在4与16之间；y为对数ms，300和3000刻度直接对应两点。 A蓝色空心圆；B橙色实心方形。",
+      "source_region_refs": [
+        "R-F03-x-tick-8",
+        "R-F03-x-label",
+        "R-F03-y-ticks",
+        "R-F03-y-label",
+        "R-F03-legend-A",
+        "R-F03-legend-B",
+        "R-F03-A-8-point",
+        "R-F03-B-8-point"
+      ],
+      "method_paragraph": {
+        "id": "E03",
+        "text": "F03同硬件和计时边界，仅记录图示worker设置下的耗时代表值。该图没有记录最终目标质量，也没有给出跨硬件或其它并发条件的保证。单位和轴尺度须实际读图。"
+      },
+      "rationale": "在8 workers同一横坐标处，A蓝圆基本落在300 ms水平线，B橙方落在3000 ms水平线；3000/300约10。没有使用对数图上纵向像素距离作为线性比值。论述的硬件和计时限定与E03一致。",
+      "necessary_limits": [
+        "Approximate representative elapsed-time ratio at8 workers only, same hardware/timing boundary.",
+        "Read ms and logarithmic y values; no variability, throughput, quality or cross-hardware guarantee."
+      ],
+      "allowed_interpretations": [
+        "About10x B/A from roughly3000/300 ms at8 workers; equivalent units may be converted explicitly, preserving the same ratio and conditions."
+      ],
+      "all_original_uncertainties": {
+        "A": [
+          "此比值只适用于图示条件的代表值，不是跨硬件保证。",
+          "图中未给出运行间波动或统计检验。"
+        ],
+        "B": [
+          "没有误差棒，不能从代表值推导耗时分布。",
+          "不保证其它硬件、并发设置或未绘点仍为十倍。"
+        ]
+      },
+      "reconciliation_record_ref": "C05"
+    },
+    {
+      "claim_id": "C06",
+      "claim_text": "F03中Method A在8 workers处的耗时较低，因此其最终目标质量也比Method B更高。",
+      "primary_judgment_object": "从低耗时推出最终目标质量更高；主判断为质量事实是否可由现有证据确定",
+      "normalized_verdict": "insufficient",
+      "canonical_subclaims": [
+        {
+          "judgment_object": "8 workers处A耗时较低",
+          "normalized_verdict": "supported",
+          "kind": "fact_or_scope"
+        },
+        {
+          "judgment_object": "该耗时图足以推出A最终目标质量较高",
+          "normalized_verdict": "refuted",
+          "kind": "evidence-sufficiency metaproposition"
+        },
+        {
+          "judgment_object": "A最终目标质量事实上是否较高",
+          "normalized_verdict": "insufficient",
+          "kind": "quality fact"
+        }
+      ],
+      "normative_values_are_approximate_pixel_anchors_or_exact_labeled_tick_arithmetic": {
+        "workers": 8,
+        "A_elapsed_lower_than_B": true,
+        "final_quality_A": "unreported",
+        "final_quality_B": "unreported",
+        "actual_quality_order": "unknown",
+        "latency_sufficient_to_prove_quality_order": false
+      },
+      "readable_point_refs": [
+        "F03-A-8",
+        "F03-B-8"
+      ],
+      "readable_intervals": [
+        {
+          "point_id": "F03-A-8",
+          "figure": "F03",
+          "file": "figures/F03_latency.png",
+          "annotation_A_x": 8,
+          "annotation_B_x": 8,
+          "x_unit": "workers",
+          "value": {
+            "annotation_A_interval": [
+              290,
+              310
+            ],
+            "annotation_B_interval": [
+              280,
+              320
+            ],
+            "intervals_compatible": true,
+            "overlap_for_compatibility_only": [
+              290,
+              310
+            ],
+            "consensus_readable_interval": [
+              280,
+              320
+            ],
+            "consensus_rule": "conservative hull of actual model pixel intervals; overlap is not used to claim extra precision",
+            "unit": "ms",
+            "approximate_visual_anchor": 300,
+            "anchor_is_not_hidden_exact_value": true
+          },
+          "region_refs": [
+            "R-F03-A-8-point"
+          ],
+          "public_tolerance_ref": "F03"
+        },
+        {
+          "point_id": "F03-B-8",
+          "figure": "F03",
+          "file": "figures/F03_latency.png",
+          "annotation_A_x": 8,
+          "annotation_B_x": 8,
+          "x_unit": "workers",
+          "value": {
+            "annotation_A_interval": [
+              2900,
+              3100
+            ],
+            "annotation_B_interval": [
+              2800,
+              3200
+            ],
+            "intervals_compatible": true,
+            "overlap_for_compatibility_only": [
+              2900,
+              3100
+            ],
+            "consensus_readable_interval": [
+              2800,
+              3200
+            ],
+            "consensus_rule": "conservative hull of actual model pixel intervals; overlap is not used to claim extra precision",
+            "unit": "ms",
+            "approximate_visual_anchor": 3000,
+            "anchor_is_not_hidden_exact_value": true
+          },
+          "region_refs": [
+            "R-F03-B-8-point"
+          ],
+          "public_tolerance_ref": "F03"
+        }
+      ],
+      "axis_and_legend_conditions": "图的因变量仅为Elapsed time (ms)，不是目标质量。 A蓝圆、B橙方绑定在耗时轴上。",
+      "source_region_refs": [
+        "R-F03-x-tick-8",
+        "R-F03-y-label",
+        "R-F03-y-ticks",
+        "R-F03-legend-A",
+        "R-F03-legend-B",
+        "R-F03-A-8-point",
+        "R-F03-B-8-point"
+      ],
+      "method_paragraph": {
+        "id": "E03",
+        "text": "F03同硬件和计时边界，仅记录图示worker设置下的耗时代表值。该图没有记录最终目标质量，也没有给出跨硬件或其它并发条件的保证。单位和轴尺度须实际读图。"
+      },
+      "rationale": "A在8 workers处约300 ms、B约3000 ms，低耗时前提成立。但轴中没有质量观测，E03也明确未记录质量。无法确定A质量高、低或相同；“因此”所需的推论依据不成立。整体标为证据不足是针对质量事实，不能把缺少质量证据改写为A质量较差。",
+      "necessary_limits": [
+        "The empirical final-quality comparison is unreported/unknown/insufficient.",
+        "The inference that lower latency alone is sufficient can be separately refuted if its judgment object is explicit.",
+        "Never infer A quality is worse, equal, zero or measured; F01/F02 pass rates are not bound to F03 worker8 quality."
+      ],
+      "allowed_interpretations": [
+        "Quality-targeted insufficient/unknown/unreported is the primary factual result.",
+        "A reasoning-targeted refutation is legitimate when it explicitly targets “latency is sufficient to prove quality” and still records real quality as unknown."
+      ],
+      "all_original_uncertainties": {
+        "A": [
+          "A与B在8 workers处的最终目标质量及其顺序均未知。",
+          "耗时与质量的关系、测量方法、任务质量分布均未给出。"
+        ],
+        "B": [
+          "最终质量的真实次序未知；不是已证伪A质量较高。",
+          "F01、F02的通过率不绑定到F03的8 workers设置，不能自动挪用为该设置质量数据。"
+        ]
+      },
+      "reconciliation_record_ref": "C06"
+    },
+    {
+      "claim_id": "C07",
+      "claim_text": "F04合并点位呈总体正关联，足以说明任一组内增加计划长度都会提高成功率，并已建立因果关系。",
+      "primary_judgment_object": "复合论述的组内方向与因果证据充分性；不是仅判断合并相关方向",
+      "normalized_verdict": "refuted",
+      "canonical_subclaims": [
+        {
+          "judgment_object": "合并点位总体正关联",
+          "normalized_verdict": "supported",
+          "kind": "fact_or_scope"
+        },
+        {
+          "judgment_object": "任一组内观测成功率都随长度增加而提高",
+          "normalized_verdict": "refuted",
+          "kind": "fact_or_scope"
+        },
+        {
+          "judgment_object": "合并关联足以说明任一组内增加长度都会提高成功率",
+          "normalized_verdict": "refuted",
+          "kind": "evidence-sufficiency metaproposition"
+        },
+        {
+          "judgment_object": "已建立因果关系",
+          "normalized_verdict": "refuted",
+          "kind": "causal-evidence metaproposition"
+        },
+        {
+          "judgment_object": "干预增加长度的真实因果效应",
+          "normalized_verdict": "insufficient",
+          "kind": "causal fact"
+        }
+      ],
+      "normative_values_are_approximate_pixel_anchors_or_exact_labeled_tick_arithmetic": {
+        "pooled_direction": "positive",
+        "within_G1_direction": "negative",
+        "within_G2_direction": "negative",
+        "G1_approximate_endpoints": [
+          [
+            1,
+            80
+          ],
+          [
+            5,
+            72
+          ]
+        ],
+        "G2_approximate_endpoints": [
+          [
+            8,
+            95
+          ],
+          [
+            12,
+            87
+          ]
+        ],
+        "causal_proof_established": false,
+        "actual_intervention_effect": "unknown"
+      },
+      "readable_point_refs": [
+        "F04-G1-1",
+        "F04-G1-2",
+        "F04-G1-3",
+        "F04-G1-4",
+        "F04-G1-5",
+        "F04-G2-8",
+        "F04-G2-9",
+        "F04-G2-10",
+        "F04-G2-11",
+        "F04-G2-12"
+      ],
+      "readable_intervals": [
+        {
+          "point_id": "F04-G1-1",
+          "figure": "F04",
+          "file": "figures/F04_grouping.png",
+          "annotation_A_x": 1,
+          "annotation_B_x": [
+            0.9,
+            1.1
+          ],
+          "x_unit": "steps",
+          "value": {
+            "annotation_A_interval": [
+              79.5,
+              80.5
+            ],
+            "annotation_B_interval": [
+              79.3,
+              80.7
+            ],
+            "intervals_compatible": true,
+            "overlap_for_compatibility_only": [
+              79.5,
+              80.5
+            ],
+            "consensus_readable_interval": [
+              79.3,
+              80.7
+            ],
+            "consensus_rule": "conservative hull of actual model pixel intervals; overlap is not used to claim extra precision",
+            "unit": "% target pass",
+            "approximate_visual_anchor": 80,
+            "anchor_is_not_hidden_exact_value": true
+          },
+          "region_refs": [
+            "R-F04-G1-1-point"
+          ],
+          "public_tolerance_ref": "F04",
+          "x_reading": {
+            "annotation_A_interval": [
+              1,
+              1
+            ],
+            "annotation_B_interval": [
+              0.9,
+              1.1
+            ],
+            "intervals_compatible": true,
+            "overlap_for_compatibility_only": [
+              1,
+              1
+            ],
+            "consensus_readable_interval": [
+              0.9,
+              1.1
+            ],
+            "consensus_rule": "conservative hull of actual model pixel intervals; overlap is not used to claim extra precision",
+            "unit": "steps",
+            "approximate_visual_anchor": 1,
+            "anchor_is_not_hidden_exact_value": true
+          }
+        },
+        {
+          "point_id": "F04-G1-2",
+          "figure": "F04",
+          "file": "figures/F04_grouping.png",
+          "annotation_A_x": 2,
+          "annotation_B_x": [
+            1.9,
+            2.1
+          ],
+          "x_unit": "steps",
+          "value": {
+            "annotation_A_interval": [
+              77.5,
+              78.5
+            ],
+            "annotation_B_interval": [
+              77.3,
+              78.7
+            ],
+            "intervals_compatible": true,
+            "overlap_for_compatibility_only": [
+              77.5,
+              78.5
+            ],
+            "consensus_readable_interval": [
+              77.3,
+              78.7
+            ],
+            "consensus_rule": "conservative hull of actual model pixel intervals; overlap is not used to claim extra precision",
+            "unit": "% target pass",
+            "approximate_visual_anchor": 78,
+            "anchor_is_not_hidden_exact_value": true
+          },
+          "region_refs": [
+            "R-F04-G1-2-point"
+          ],
+          "public_tolerance_ref": "F04",
+          "x_reading": {
+            "annotation_A_interval": [
+              2,
+              2
+            ],
+            "annotation_B_interval": [
+              1.9,
+              2.1
+            ],
+            "intervals_compatible": true,
+            "overlap_for_compatibility_only": [
+              2,
+              2
+            ],
+            "consensus_readable_interval": [
+              1.9,
+              2.1
+            ],
+            "consensus_rule": "conservative hull of actual model pixel intervals; overlap is not used to claim extra precision",
+            "unit": "steps",
+            "approximate_visual_anchor": 2,
+            "anchor_is_not_hidden_exact_value": true
+          }
+        },
+        {
+          "point_id": "F04-G1-3",
+          "figure": "F04",
+          "file": "figures/F04_grouping.png",
+          "annotation_A_x": 3,
+          "annotation_B_x": [
+            2.9,
+            3.1
+          ],
+          "x_unit": "steps",
+          "value": {
+            "annotation_A_interval": [
+              75.4,
+              76.4
+            ],
+            "annotation_B_interval": [
+              75.2,
+              76.6
+            ],
+            "intervals_compatible": true,
+            "overlap_for_compatibility_only": [
+              75.4,
+              76.4
+            ],
+            "consensus_readable_interval": [
+              75.2,
+              76.6
+            ],
+            "consensus_rule": "conservative hull of actual model pixel intervals; overlap is not used to claim extra precision",
+            "unit": "% target pass",
+            "approximate_visual_anchor": 76,
+            "anchor_is_not_hidden_exact_value": true
+          },
+          "region_refs": [
+            "R-F04-G1-3-point"
+          ],
+          "public_tolerance_ref": "F04",
+          "x_reading": {
+            "annotation_A_interval": [
+              3,
+              3
+            ],
+            "annotation_B_interval": [
+              2.9,
+              3.1
+            ],
+            "intervals_compatible": true,
+            "overlap_for_compatibility_only": [
+              3,
+              3
+            ],
+            "consensus_readable_interval": [
+              2.9,
+              3.1
+            ],
+            "consensus_rule": "conservative hull of actual model pixel intervals; overlap is not used to claim extra precision",
+            "unit": "steps",
+            "approximate_visual_anchor": 3,
+            "anchor_is_not_hidden_exact_value": true
+          }
+        },
+        {
+          "point_id": "F04-G1-4",
+          "figure": "F04",
+          "file": "figures/F04_grouping.png",
+          "annotation_A_x": 4,
+          "annotation_B_x": [
+            3.9,
+            4.1
+          ],
+          "x_unit": "steps",
+          "value": {
+            "annotation_A_interval": [
+              73.5,
+              74.5
+            ],
+            "annotation_B_interval": [
+              73.3,
+              74.7
+            ],
+            "intervals_compatible": true,
+            "overlap_for_compatibility_only": [
+              73.5,
+              74.5
+            ],
+            "consensus_readable_interval": [
+              73.3,
+              74.7
+            ],
+            "consensus_rule": "conservative hull of actual model pixel intervals; overlap is not used to claim extra precision",
+            "unit": "% target pass",
+            "approximate_visual_anchor": 74,
+            "anchor_is_not_hidden_exact_value": true
+          },
+          "region_refs": [
+            "R-F04-G1-4-point"
+          ],
+          "public_tolerance_ref": "F04",
+          "x_reading": {
+            "annotation_A_interval": [
+              4,
+              4
+            ],
+            "annotation_B_interval": [
+              3.9,
+              4.1
+            ],
+            "intervals_compatible": true,
+            "overlap_for_compatibility_only": [
+              4,
+              4
+            ],
+            "consensus_readable_interval": [
+              3.9,
+              4.1
+            ],
+            "consensus_rule": "conservative hull of actual model pixel intervals; overlap is not used to claim extra precision",
+            "unit": "steps",
+            "approximate_visual_anchor": 4,
+            "anchor_is_not_hidden_exact_value": true
+          }
+        },
+        {
+          "point_id": "F04-G1-5",
+          "figure": "F04",
+          "file": "figures/F04_grouping.png",
+          "annotation_A_x": 5,
+          "annotation_B_x": [
+            4.9,
+            5.1
+          ],
+          "x_unit": "steps",
+          "value": {
+            "annotation_A_interval": [
+              71.4,
+              72.4
+            ],
+            "annotation_B_interval": [
+              71.2,
+              72.6
+            ],
+            "intervals_compatible": true,
+            "overlap_for_compatibility_only": [
+              71.4,
+              72.4
+            ],
+            "consensus_readable_interval": [
+              71.2,
+              72.6
+            ],
+            "consensus_rule": "conservative hull of actual model pixel intervals; overlap is not used to claim extra precision",
+            "unit": "% target pass",
+            "approximate_visual_anchor": 72,
+            "anchor_is_not_hidden_exact_value": true
+          },
+          "region_refs": [
+            "R-F04-G1-5-point"
+          ],
+          "public_tolerance_ref": "F04",
+          "x_reading": {
+            "annotation_A_interval": [
+              5,
+              5
+            ],
+            "annotation_B_interval": [
+              4.9,
+              5.1
+            ],
+            "intervals_compatible": true,
+            "overlap_for_compatibility_only": [
+              5,
+              5
+            ],
+            "consensus_readable_interval": [
+              4.9,
+              5.1
+            ],
+            "consensus_rule": "conservative hull of actual model pixel intervals; overlap is not used to claim extra precision",
+            "unit": "steps",
+            "approximate_visual_anchor": 5,
+            "anchor_is_not_hidden_exact_value": true
+          }
+        },
+        {
+          "point_id": "F04-G2-8",
+          "figure": "F04",
+          "file": "figures/F04_grouping.png",
+          "annotation_A_x": 8,
+          "annotation_B_x": [
+            7.9,
+            8.1
+          ],
+          "x_unit": "steps",
+          "value": {
+            "annotation_A_interval": [
+              94.4,
+              95.4
+            ],
+            "annotation_B_interval": [
+              94.2,
+              95.6
+            ],
+            "intervals_compatible": true,
+            "overlap_for_compatibility_only": [
+              94.4,
+              95.4
+            ],
+            "consensus_readable_interval": [
+              94.2,
+              95.6
+            ],
+            "consensus_rule": "conservative hull of actual model pixel intervals; overlap is not used to claim extra precision",
+            "unit": "% target pass",
+            "approximate_visual_anchor": 95,
+            "anchor_is_not_hidden_exact_value": true
+          },
+          "region_refs": [
+            "R-F04-G2-8-point"
+          ],
+          "public_tolerance_ref": "F04",
+          "x_reading": {
+            "annotation_A_interval": [
+              8,
+              8
+            ],
+            "annotation_B_interval": [
+              7.9,
+              8.1
+            ],
+            "intervals_compatible": true,
+            "overlap_for_compatibility_only": [
+              8,
+              8
+            ],
+            "consensus_readable_interval": [
+              7.9,
+              8.1
+            ],
+            "consensus_rule": "conservative hull of actual model pixel intervals; overlap is not used to claim extra precision",
+            "unit": "steps",
+            "approximate_visual_anchor": 8,
+            "anchor_is_not_hidden_exact_value": true
+          }
+        },
+        {
+          "point_id": "F04-G2-9",
+          "figure": "F04",
+          "file": "figures/F04_grouping.png",
+          "annotation_A_x": 9,
+          "annotation_B_x": [
+            8.9,
+            9.1
+          ],
+          "x_unit": "steps",
+          "value": {
+            "annotation_A_interval": [
+              92.5,
+              93.5
+            ],
+            "annotation_B_interval": [
+              92.3,
+              93.7
+            ],
+            "intervals_compatible": true,
+            "overlap_for_compatibility_only": [
+              92.5,
+              93.5
+            ],
+            "consensus_readable_interval": [
+              92.3,
+              93.7
+            ],
+            "consensus_rule": "conservative hull of actual model pixel intervals; overlap is not used to claim extra precision",
+            "unit": "% target pass",
+            "approximate_visual_anchor": 93,
+            "anchor_is_not_hidden_exact_value": true
+          },
+          "region_refs": [
+            "R-F04-G2-9-point"
+          ],
+          "public_tolerance_ref": "F04",
+          "x_reading": {
+            "annotation_A_interval": [
+              9,
+              9
+            ],
+            "annotation_B_interval": [
+              8.9,
+              9.1
+            ],
+            "intervals_compatible": true,
+            "overlap_for_compatibility_only": [
+              9,
+              9
+            ],
+            "consensus_readable_interval": [
+              8.9,
+              9.1
+            ],
+            "consensus_rule": "conservative hull of actual model pixel intervals; overlap is not used to claim extra precision",
+            "unit": "steps",
+            "approximate_visual_anchor": 9,
+            "anchor_is_not_hidden_exact_value": true
+          }
+        },
+        {
+          "point_id": "F04-G2-10",
+          "figure": "F04",
+          "file": "figures/F04_grouping.png",
+          "annotation_A_x": 10,
+          "annotation_B_x": [
+            9.9,
+            10.1
+          ],
+          "x_unit": "steps",
+          "value": {
+            "annotation_A_interval": [
+              90.4,
+              91.4
+            ],
+            "annotation_B_interval": [
+              90.2,
+              91.6
+            ],
+            "intervals_compatible": true,
+            "overlap_for_compatibility_only": [
+              90.4,
+              91.4
+            ],
+            "consensus_readable_interval": [
+              90.2,
+              91.6
+            ],
+            "consensus_rule": "conservative hull of actual model pixel intervals; overlap is not used to claim extra precision",
+            "unit": "% target pass",
+            "approximate_visual_anchor": 91,
+            "anchor_is_not_hidden_exact_value": true
+          },
+          "region_refs": [
+            "R-F04-G2-10-point"
+          ],
+          "public_tolerance_ref": "F04",
+          "x_reading": {
+            "annotation_A_interval": [
+              10,
+              10
+            ],
+            "annotation_B_interval": [
+              9.9,
+              10.1
+            ],
+            "intervals_compatible": true,
+            "overlap_for_compatibility_only": [
+              10,
+              10
+            ],
+            "consensus_readable_interval": [
+              9.9,
+              10.1
+            ],
+            "consensus_rule": "conservative hull of actual model pixel intervals; overlap is not used to claim extra precision",
+            "unit": "steps",
+            "approximate_visual_anchor": 10,
+            "anchor_is_not_hidden_exact_value": true
+          }
+        },
+        {
+          "point_id": "F04-G2-11",
+          "figure": "F04",
+          "file": "figures/F04_grouping.png",
+          "annotation_A_x": 11,
+          "annotation_B_x": [
+            10.9,
+            11.1
+          ],
+          "x_unit": "steps",
+          "value": {
+            "annotation_A_interval": [
+              88.5,
+              89.5
+            ],
+            "annotation_B_interval": [
+              88.3,
+              89.7
+            ],
+            "intervals_compatible": true,
+            "overlap_for_compatibility_only": [
+              88.5,
+              89.5
+            ],
+            "consensus_readable_interval": [
+              88.3,
+              89.7
+            ],
+            "consensus_rule": "conservative hull of actual model pixel intervals; overlap is not used to claim extra precision",
+            "unit": "% target pass",
+            "approximate_visual_anchor": 89,
+            "anchor_is_not_hidden_exact_value": true
+          },
+          "region_refs": [
+            "R-F04-G2-11-point"
+          ],
+          "public_tolerance_ref": "F04",
+          "x_reading": {
+            "annotation_A_interval": [
+              11,
+              11
+            ],
+            "annotation_B_interval": [
+              10.9,
+              11.1
+            ],
+            "intervals_compatible": true,
+            "overlap_for_compatibility_only": [
+              11,
+              11
+            ],
+            "consensus_readable_interval": [
+              10.9,
+              11.1
+            ],
+            "consensus_rule": "conservative hull of actual model pixel intervals; overlap is not used to claim extra precision",
+            "unit": "steps",
+            "approximate_visual_anchor": 11,
+            "anchor_is_not_hidden_exact_value": true
+          }
+        },
+        {
+          "point_id": "F04-G2-12",
+          "figure": "F04",
+          "file": "figures/F04_grouping.png",
+          "annotation_A_x": 12,
+          "annotation_B_x": [
+            11.9,
+            12.1
+          ],
+          "x_unit": "steps",
+          "value": {
+            "annotation_A_interval": [
+              86.4,
+              87.4
+            ],
+            "annotation_B_interval": [
+              86.2,
+              87.6
+            ],
+            "intervals_compatible": true,
+            "overlap_for_compatibility_only": [
+              86.4,
+              87.4
+            ],
+            "consensus_readable_interval": [
+              86.2,
+              87.6
+            ],
+            "consensus_rule": "conservative hull of actual model pixel intervals; overlap is not used to claim extra precision",
+            "unit": "% target pass",
+            "approximate_visual_anchor": 87,
+            "anchor_is_not_hidden_exact_value": true
+          },
+          "region_refs": [
+            "R-F04-G2-12-point"
+          ],
+          "public_tolerance_ref": "F04",
+          "x_reading": {
+            "annotation_A_interval": [
+              12,
+              12
+            ],
+            "annotation_B_interval": [
+              11.9,
+              12.1
+            ],
+            "intervals_compatible": true,
+            "overlap_for_compatibility_only": [
+              12,
+              12
+            ],
+            "consensus_readable_interval": [
+              11.9,
+              12.1
+            ],
+            "consensus_rule": "conservative hull of actual model pixel intervals; overlap is not used to claim extra precision",
+            "unit": "steps",
+            "approximate_visual_anchor": 12,
+            "anchor_is_not_hidden_exact_value": true
+          }
+        }
+      ],
+      "axis_and_legend_conditions": "双轴线性；x单位steps，y百分比。 G1=蓝色空心圆；G2=橙色实心方形，不能把跨组差异当成组内趋势。",
+      "source_region_refs": [
+        "R-F04-x-ticks",
+        "R-F04-x-label",
+        "R-F04-y-ticks",
+        "R-F04-y-label",
+        "R-F04-legend-G1",
+        "R-F04-legend-G2",
+        "R-F04-G1-all-points",
+        "R-F04-G2-all-points",
+        "R-F04-pooled-points"
+      ],
+      "method_paragraph": {
+        "id": "E04",
+        "text": "F04为观察性记录。每个点汇总一种不同工作负载，G1与G2来自不同任务分布；并非随机把同一任务分配到不同计划长度。没有控制所有混杂因素，没有因果干预试验。"
+      },
+      "rationale": "合并关联向上的子命题可保留。但蓝圆从约80%降至72%，橙方从约95%降至87%，直接反驳把合并图形解读为每组观测趋势都向上。E04又说明组间任务分布不同且无干预，不能声称已建立因果关系。“增加长度都会提高”若指干预后的真实因果效果则仍未知，不能由下降的观察相关性断言因果效果必为负。",
+      "necessary_limits": [
+        "Retain pooled-positive support and within-both-groups-negative graphical counterevidence.",
+        "Do not relabel the whole compound claim insufficient while ignoring the visible within-group counterevidence.",
+        "The claim that causal proof exists is refuted as an evidential assertion; the real intervention effect remains unknown.",
+        "Observational negative within-group slopes do not establish a negative causal effect."
+      ],
+      "allowed_interpretations": [
+        "Refute the compound overclaim through both per-group downward graphical trends and missing causal design; retain pooled-positive subclaim.",
+        "Treat real causal effect as unknown; group/workload distribution is a compatible confounding explanation, not a measured causal mechanism."
+      ],
+      "all_original_uncertainties": {
+        "A": [
+          "真实增加计划长度的因果效应未知，可能受任务分布等混杂影响。",
+          "组内观测点也不是同一任务的随机干预结果。",
+          "图未给出6或7 steps的点，不外插。"
+        ],
+        "B": [
+          "未计算相关系数，方向来自图中分群与逐点趋势。",
+          "不能因组内观察向下就断言延长计划会降低成功率。",
+          "不同分布如何产生水平差异以及真实干预效应仍未知。"
+        ]
+      },
+      "reconciliation_record_ref": "C07"
+    },
+    {
+      "claim_id": "C08",
+      "claim_text": "F04合并后整体关联向上，但按图例分别看G1、G2时两组内趋势都向下；这些观察不能确证增加计划长度会提高成功率。",
+      "primary_judgment_object": "合并/分组方向与现有观察的因果边界",
+      "normalized_verdict": "supported",
+      "canonical_subclaims": [
+        {
+          "judgment_object": "合并正关联",
+          "normalized_verdict": "supported",
+          "kind": "fact_or_scope"
+        },
+        {
+          "judgment_object": "G1组内下降",
+          "normalized_verdict": "supported",
+          "kind": "fact_or_scope"
+        },
+        {
+          "judgment_object": "G2组内下降",
+          "normalized_verdict": "supported",
+          "kind": "fact_or_scope"
+        },
+        {
+          "judgment_object": "现有观察不能确证增加长度提高成功率",
+          "normalized_verdict": "supported",
+          "kind": "evidence-limit metaproposition"
+        }
+      ],
+      "normative_values_are_approximate_pixel_anchors_or_exact_labeled_tick_arithmetic": {
+        "pooled_direction": "positive",
+        "within_G1_direction": "negative",
+        "within_G2_direction": "negative",
+        "positive_intervention_effect_confirmed": false,
+        "actual_intervention_effect": "unknown"
+      },
+      "readable_point_refs": [
+        "F04-G1-1",
+        "F04-G1-2",
+        "F04-G1-3",
+        "F04-G1-4",
+        "F04-G1-5",
+        "F04-G2-8",
+        "F04-G2-9",
+        "F04-G2-10",
+        "F04-G2-11",
+        "F04-G2-12"
+      ],
+      "readable_intervals": [
+        {
+          "point_id": "F04-G1-1",
+          "figure": "F04",
+          "file": "figures/F04_grouping.png",
+          "annotation_A_x": 1,
+          "annotation_B_x": [
+            0.9,
+            1.1
+          ],
+          "x_unit": "steps",
+          "value": {
+            "annotation_A_interval": [
+              79.5,
+              80.5
+            ],
+            "annotation_B_interval": [
+              79.3,
+              80.7
+            ],
+            "intervals_compatible": true,
+            "overlap_for_compatibility_only": [
+              79.5,
+              80.5
+            ],
+            "consensus_readable_interval": [
+              79.3,
+              80.7
+            ],
+            "consensus_rule": "conservative hull of actual model pixel intervals; overlap is not used to claim extra precision",
+            "unit": "% target pass",
+            "approximate_visual_anchor": 80,
+            "anchor_is_not_hidden_exact_value": true
+          },
+          "region_refs": [
+            "R-F04-G1-1-point"
+          ],
+          "public_tolerance_ref": "F04",
+          "x_reading": {
+            "annotation_A_interval": [
+              1,
+              1
+            ],
+            "annotation_B_interval": [
+              0.9,
+              1.1
+            ],
+            "intervals_compatible": true,
+            "overlap_for_compatibility_only": [
+              1,
+              1
+            ],
+            "consensus_readable_interval": [
+              0.9,
+              1.1
+            ],
+            "consensus_rule": "conservative hull of actual model pixel intervals; overlap is not used to claim extra precision",
+            "unit": "steps",
+            "approximate_visual_anchor": 1,
+            "anchor_is_not_hidden_exact_value": true
+          }
+        },
+        {
+          "point_id": "F04-G1-2",
+          "figure": "F04",
+          "file": "figures/F04_grouping.png",
+          "annotation_A_x": 2,
+          "annotation_B_x": [
+            1.9,
+            2.1
+          ],
+          "x_unit": "steps",
+          "value": {
+            "annotation_A_interval": [
+              77.5,
+              78.5
+            ],
+            "annotation_B_interval": [
+              77.3,
+              78.7
+            ],
+            "intervals_compatible": true,
+            "overlap_for_compatibility_only": [
+              77.5,
+              78.5
+            ],
+            "consensus_readable_interval": [
+              77.3,
+              78.7
+            ],
+            "consensus_rule": "conservative hull of actual model pixel intervals; overlap is not used to claim extra precision",
+            "unit": "% target pass",
+            "approximate_visual_anchor": 78,
+            "anchor_is_not_hidden_exact_value": true
+          },
+          "region_refs": [
+            "R-F04-G1-2-point"
+          ],
+          "public_tolerance_ref": "F04",
+          "x_reading": {
+            "annotation_A_interval": [
+              2,
+              2
+            ],
+            "annotation_B_interval": [
+              1.9,
+              2.1
+            ],
+            "intervals_compatible": true,
+            "overlap_for_compatibility_only": [
+              2,
+              2
+            ],
+            "consensus_readable_interval": [
+              1.9,
+              2.1
+            ],
+            "consensus_rule": "conservative hull of actual model pixel intervals; overlap is not used to claim extra precision",
+            "unit": "steps",
+            "approximate_visual_anchor": 2,
+            "anchor_is_not_hidden_exact_value": true
+          }
+        },
+        {
+          "point_id": "F04-G1-3",
+          "figure": "F04",
+          "file": "figures/F04_grouping.png",
+          "annotation_A_x": 3,
+          "annotation_B_x": [
+            2.9,
+            3.1
+          ],
+          "x_unit": "steps",
+          "value": {
+            "annotation_A_interval": [
+              75.4,
+              76.4
+            ],
+            "annotation_B_interval": [
+              75.2,
+              76.6
+            ],
+            "intervals_compatible": true,
+            "overlap_for_compatibility_only": [
+              75.4,
+              76.4
+            ],
+            "consensus_readable_interval": [
+              75.2,
+              76.6
+            ],
+            "consensus_rule": "conservative hull of actual model pixel intervals; overlap is not used to claim extra precision",
+            "unit": "% target pass",
+            "approximate_visual_anchor": 76,
+            "anchor_is_not_hidden_exact_value": true
+          },
+          "region_refs": [
+            "R-F04-G1-3-point"
+          ],
+          "public_tolerance_ref": "F04",
+          "x_reading": {
+            "annotation_A_interval": [
+              3,
+              3
+            ],
+            "annotation_B_interval": [
+              2.9,
+              3.1
+            ],
+            "intervals_compatible": true,
+            "overlap_for_compatibility_only": [
+              3,
+              3
+            ],
+            "consensus_readable_interval": [
+              2.9,
+              3.1
+            ],
+            "consensus_rule": "conservative hull of actual model pixel intervals; overlap is not used to claim extra precision",
+            "unit": "steps",
+            "approximate_visual_anchor": 3,
+            "anchor_is_not_hidden_exact_value": true
+          }
+        },
+        {
+          "point_id": "F04-G1-4",
+          "figure": "F04",
+          "file": "figures/F04_grouping.png",
+          "annotation_A_x": 4,
+          "annotation_B_x": [
+            3.9,
+            4.1
+          ],
+          "x_unit": "steps",
+          "value": {
+            "annotation_A_interval": [
+              73.5,
+              74.5
+            ],
+            "annotation_B_interval": [
+              73.3,
+              74.7
+            ],
+            "intervals_compatible": true,
+            "overlap_for_compatibility_only": [
+              73.5,
+              74.5
+            ],
+            "consensus_readable_interval": [
+              73.3,
+              74.7
+            ],
+            "consensus_rule": "conservative hull of actual model pixel intervals; overlap is not used to claim extra precision",
+            "unit": "% target pass",
+            "approximate_visual_anchor": 74,
+            "anchor_is_not_hidden_exact_value": true
+          },
+          "region_refs": [
+            "R-F04-G1-4-point"
+          ],
+          "public_tolerance_ref": "F04",
+          "x_reading": {
+            "annotation_A_interval": [
+              4,
+              4
+            ],
+            "annotation_B_interval": [
+              3.9,
+              4.1
+            ],
+            "intervals_compatible": true,
+            "overlap_for_compatibility_only": [
+              4,
+              4
+            ],
+            "consensus_readable_interval": [
+              3.9,
+              4.1
+            ],
+            "consensus_rule": "conservative hull of actual model pixel intervals; overlap is not used to claim extra precision",
+            "unit": "steps",
+            "approximate_visual_anchor": 4,
+            "anchor_is_not_hidden_exact_value": true
+          }
+        },
+        {
+          "point_id": "F04-G1-5",
+          "figure": "F04",
+          "file": "figures/F04_grouping.png",
+          "annotation_A_x": 5,
+          "annotation_B_x": [
+            4.9,
+            5.1
+          ],
+          "x_unit": "steps",
+          "value": {
+            "annotation_A_interval": [
+              71.4,
+              72.4
+            ],
+            "annotation_B_interval": [
+              71.2,
+              72.6
+            ],
+            "intervals_compatible": true,
+            "overlap_for_compatibility_only": [
+              71.4,
+              72.4
+            ],
+            "consensus_readable_interval": [
+              71.2,
+              72.6
+            ],
+            "consensus_rule": "conservative hull of actual model pixel intervals; overlap is not used to claim extra precision",
+            "unit": "% target pass",
+            "approximate_visual_anchor": 72,
+            "anchor_is_not_hidden_exact_value": true
+          },
+          "region_refs": [
+            "R-F04-G1-5-point"
+          ],
+          "public_tolerance_ref": "F04",
+          "x_reading": {
+            "annotation_A_interval": [
+              5,
+              5
+            ],
+            "annotation_B_interval": [
+              4.9,
+              5.1
+            ],
+            "intervals_compatible": true,
+            "overlap_for_compatibility_only": [
+              5,
+              5
+            ],
+            "consensus_readable_interval": [
+              4.9,
+              5.1
+            ],
+            "consensus_rule": "conservative hull of actual model pixel intervals; overlap is not used to claim extra precision",
+            "unit": "steps",
+            "approximate_visual_anchor": 5,
+            "anchor_is_not_hidden_exact_value": true
+          }
+        },
+        {
+          "point_id": "F04-G2-8",
+          "figure": "F04",
+          "file": "figures/F04_grouping.png",
+          "annotation_A_x": 8,
+          "annotation_B_x": [
+            7.9,
+            8.1
+          ],
+          "x_unit": "steps",
+          "value": {
+            "annotation_A_interval": [
+              94.4,
+              95.4
+            ],
+            "annotation_B_interval": [
+              94.2,
+              95.6
+            ],
+            "intervals_compatible": true,
+            "overlap_for_compatibility_only": [
+              94.4,
+              95.4
+            ],
+            "consensus_readable_interval": [
+              94.2,
+              95.6
+            ],
+            "consensus_rule": "conservative hull of actual model pixel intervals; overlap is not used to claim extra precision",
+            "unit": "% target pass",
+            "approximate_visual_anchor": 95,
+            "anchor_is_not_hidden_exact_value": true
+          },
+          "region_refs": [
+            "R-F04-G2-8-point"
+          ],
+          "public_tolerance_ref": "F04",
+          "x_reading": {
+            "annotation_A_interval": [
+              8,
+              8
+            ],
+            "annotation_B_interval": [
+              7.9,
+              8.1
+            ],
+            "intervals_compatible": true,
+            "overlap_for_compatibility_only": [
+              8,
+              8
+            ],
+            "consensus_readable_interval": [
+              7.9,
+              8.1
+            ],
+            "consensus_rule": "conservative hull of actual model pixel intervals; overlap is not used to claim extra precision",
+            "unit": "steps",
+            "approximate_visual_anchor": 8,
+            "anchor_is_not_hidden_exact_value": true
+          }
+        },
+        {
+          "point_id": "F04-G2-9",
+          "figure": "F04",
+          "file": "figures/F04_grouping.png",
+          "annotation_A_x": 9,
+          "annotation_B_x": [
+            8.9,
+            9.1
+          ],
+          "x_unit": "steps",
+          "value": {
+            "annotation_A_interval": [
+              92.5,
+              93.5
+            ],
+            "annotation_B_interval": [
+              92.3,
+              93.7
+            ],
+            "intervals_compatible": true,
+            "overlap_for_compatibility_only": [
+              92.5,
+              93.5
+            ],
+            "consensus_readable_interval": [
+              92.3,
+              93.7
+            ],
+            "consensus_rule": "conservative hull of actual model pixel intervals; overlap is not used to claim extra precision",
+            "unit": "% target pass",
+            "approximate_visual_anchor": 93,
+            "anchor_is_not_hidden_exact_value": true
+          },
+          "region_refs": [
+            "R-F04-G2-9-point"
+          ],
+          "public_tolerance_ref": "F04",
+          "x_reading": {
+            "annotation_A_interval": [
+              9,
+              9
+            ],
+            "annotation_B_interval": [
+              8.9,
+              9.1
+            ],
+            "intervals_compatible": true,
+            "overlap_for_compatibility_only": [
+              9,
+              9
+            ],
+            "consensus_readable_interval": [
+              8.9,
+              9.1
+            ],
+            "consensus_rule": "conservative hull of actual model pixel intervals; overlap is not used to claim extra precision",
+            "unit": "steps",
+            "approximate_visual_anchor": 9,
+            "anchor_is_not_hidden_exact_value": true
+          }
+        },
+        {
+          "point_id": "F04-G2-10",
+          "figure": "F04",
+          "file": "figures/F04_grouping.png",
+          "annotation_A_x": 10,
+          "annotation_B_x": [
+            9.9,
+            10.1
+          ],
+          "x_unit": "steps",
+          "value": {
+            "annotation_A_interval": [
+              90.4,
+              91.4
+            ],
+            "annotation_B_interval": [
+              90.2,
+              91.6
+            ],
+            "intervals_compatible": true,
+            "overlap_for_compatibility_only": [
+              90.4,
+              91.4
+            ],
+            "consensus_readable_interval": [
+              90.2,
+              91.6
+            ],
+            "consensus_rule": "conservative hull of actual model pixel intervals; overlap is not used to claim extra precision",
+            "unit": "% target pass",
+            "approximate_visual_anchor": 91,
+            "anchor_is_not_hidden_exact_value": true
+          },
+          "region_refs": [
+            "R-F04-G2-10-point"
+          ],
+          "public_tolerance_ref": "F04",
+          "x_reading": {
+            "annotation_A_interval": [
+              10,
+              10
+            ],
+            "annotation_B_interval": [
+              9.9,
+              10.1
+            ],
+            "intervals_compatible": true,
+            "overlap_for_compatibility_only": [
+              10,
+              10
+            ],
+            "consensus_readable_interval": [
+              9.9,
+              10.1
+            ],
+            "consensus_rule": "conservative hull of actual model pixel intervals; overlap is not used to claim extra precision",
+            "unit": "steps",
+            "approximate_visual_anchor": 10,
+            "anchor_is_not_hidden_exact_value": true
+          }
+        },
+        {
+          "point_id": "F04-G2-11",
+          "figure": "F04",
+          "file": "figures/F04_grouping.png",
+          "annotation_A_x": 11,
+          "annotation_B_x": [
+            10.9,
+            11.1
+          ],
+          "x_unit": "steps",
+          "value": {
+            "annotation_A_interval": [
+              88.5,
+              89.5
+            ],
+            "annotation_B_interval": [
+              88.3,
+              89.7
+            ],
+            "intervals_compatible": true,
+            "overlap_for_compatibility_only": [
+              88.5,
+              89.5
+            ],
+            "consensus_readable_interval": [
+              88.3,
+              89.7
+            ],
+            "consensus_rule": "conservative hull of actual model pixel intervals; overlap is not used to claim extra precision",
+            "unit": "% target pass",
+            "approximate_visual_anchor": 89,
+            "anchor_is_not_hidden_exact_value": true
+          },
+          "region_refs": [
+            "R-F04-G2-11-point"
+          ],
+          "public_tolerance_ref": "F04",
+          "x_reading": {
+            "annotation_A_interval": [
+              11,
+              11
+            ],
+            "annotation_B_interval": [
+              10.9,
+              11.1
+            ],
+            "intervals_compatible": true,
+            "overlap_for_compatibility_only": [
+              11,
+              11
+            ],
+            "consensus_readable_interval": [
+              10.9,
+              11.1
+            ],
+            "consensus_rule": "conservative hull of actual model pixel intervals; overlap is not used to claim extra precision",
+            "unit": "steps",
+            "approximate_visual_anchor": 11,
+            "anchor_is_not_hidden_exact_value": true
+          }
+        },
+        {
+          "point_id": "F04-G2-12",
+          "figure": "F04",
+          "file": "figures/F04_grouping.png",
+          "annotation_A_x": 12,
+          "annotation_B_x": [
+            11.9,
+            12.1
+          ],
+          "x_unit": "steps",
+          "value": {
+            "annotation_A_interval": [
+              86.4,
+              87.4
+            ],
+            "annotation_B_interval": [
+              86.2,
+              87.6
+            ],
+            "intervals_compatible": true,
+            "overlap_for_compatibility_only": [
+              86.4,
+              87.4
+            ],
+            "consensus_readable_interval": [
+              86.2,
+              87.6
+            ],
+            "consensus_rule": "conservative hull of actual model pixel intervals; overlap is not used to claim extra precision",
+            "unit": "% target pass",
+            "approximate_visual_anchor": 87,
+            "anchor_is_not_hidden_exact_value": true
+          },
+          "region_refs": [
+            "R-F04-G2-12-point"
+          ],
+          "public_tolerance_ref": "F04",
+          "x_reading": {
+            "annotation_A_interval": [
+              12,
+              12
+            ],
+            "annotation_B_interval": [
+              11.9,
+              12.1
+            ],
+            "intervals_compatible": true,
+            "overlap_for_compatibility_only": [
+              12,
+              12
+            ],
+            "consensus_readable_interval": [
+              11.9,
+              12.1
+            ],
+            "consensus_rule": "conservative hull of actual model pixel intervals; overlap is not used to claim extra precision",
+            "unit": "steps",
+            "approximate_visual_anchor": 12,
+            "anchor_is_not_hidden_exact_value": true
+          }
+        }
+      ],
+      "axis_and_legend_conditions": "x线性steps，y线性百分比。 按蓝色空心圆G1与橙色实心方形G2分别判断。",
+      "source_region_refs": [
+        "R-F04-x-ticks",
+        "R-F04-x-label",
+        "R-F04-y-ticks",
+        "R-F04-y-label",
+        "R-F04-legend-G1",
+        "R-F04-legend-G2",
+        "R-F04-G1-all-points",
+        "R-F04-G2-all-points",
+        "R-F04-pooled-points"
+      ],
+      "method_paragraph": {
+        "id": "E04",
+        "text": "F04为观察性记录。每个点汇总一种不同工作负载，G1与G2来自不同任务分布；并非随机把同一任务分配到不同计划长度。没有控制所有混杂因素，没有因果干预试验。"
+      },
+      "rationale": "蓝圆和橙方各自向右下降，但橙方集中在更右、更高的区域，所以合并点云总体向上。E04说明分布不同且无随机干预，支持“这些观察不能确证增加长度提高成功率”的审慎限定；这不等于已经证明任何因果效果为负。",
+      "necessary_limits": [
+        "Pooled up and G1/G2 within-group down are descriptive directions, not a printed numeric correlation coefficient.",
+        "Cannot confirm a positive intervention effect does not prove zero or negative effect."
+      ],
+      "allowed_interpretations": [
+        "Support the pooled/within-group direction reversal and limited causal conclusion, using actual groups/points and E04."
+      ],
+      "all_original_uncertainties": {
+        "A": [
+          "具体混杂因素和各自贡献未知。",
+          "无法由此图判定增加计划长度的因果效应大小、正负或在新任务上的保证。"
+        ],
+        "B": [
+          "真实延长计划的因果效应仍未知。",
+          "没有数值相关系数，也没有充分控制混杂的条件效应估计。"
+        ]
+      },
+      "reconciliation_record_ref": "C08"
+    }
+  ],
+  "uncertainty_ledger": "uncertainty_ledger.json",
+  "approved_region_proposal": "approved_regions.proposal.json",
+  "unknown_facts": {
+    "F02_significance": "unknown",
+    "F02_equivalence_or_equality": "unknown",
+    "F03_worker8_final_quality_order": "unknown",
+    "F04_true_intervention_effect": "unknown"
+  },
+  "no_label_frequency_constraint": true,
+  "no_scoring_or_grading": true,
+  "root_integration_reading_policy": "Consensus hulls describe the two actual pixel readings and are not stricter acceptance windows. Rounded visual anchors are not hidden exact truth. Any future root integration must honor the unchanged public reading_tolerance.json and explicit judgment-object semantics, rather than exact interval endpoints, wording or label frequency."
+}

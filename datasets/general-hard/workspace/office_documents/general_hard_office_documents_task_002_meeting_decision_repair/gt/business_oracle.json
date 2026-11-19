@@ -1,0 +1,25 @@
+{
+  "schema_version": "h002-business-oracle/v1",
+  "field_weights": {
+    "status": 0.4,
+    "owner_id": 0.2,
+    "owner_role": 0.1,
+    "due_date": 0.3
+  },
+  "checkpoint_weights": {
+    "business_correctness": 0.55,
+    "boundary_cases": 0.25,
+    "delivery_integrity": 0.15,
+    "evidence_binding": 0.05
+  },
+  "accepted_amendments": [
+    "E01",
+    "E03",
+    "E04",
+    "E02"
+  ],
+  "rejected_amendments": [
+    "E05",
+    "E06"
+  ]
+}

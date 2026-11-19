@@ -1,0 +1,17 @@
+{
+  "schema_version": "h009-business-oracle/v1",
+  "checkpoint_weights": {
+    "business_correctness": 0.55,
+    "boundary_cases": 0.25,
+    "delivery_integrity": 0.15,
+    "evidence_binding": 0.05
+  },
+  "table_weights": {
+    "T01": 0.2,
+    "T02": 0.45,
+    "T03": 0.2,
+    "T04": 0.15
+  },
+  "source_truth": "Source facts and actual PDF independently verified before the author Word reference.",
+  "semantic_scope": "Exact cell relationships and note scope matter. Full visual fit, missing/false claims and usability require the independent Judge."
+}

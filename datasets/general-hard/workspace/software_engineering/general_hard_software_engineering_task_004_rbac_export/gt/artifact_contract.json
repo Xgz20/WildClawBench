@@ -1,0 +1,14 @@
+{
+  "mutable_sources": [
+    "project/auth.py",
+    "project/export.py",
+    "project/routes.py"
+  ],
+  "report": "results/security_tests.txt",
+  "report_schema": "h044-public-test-run/v1",
+  "integrity_allocation": {
+    "source_parse_and_presence": 0.5,
+    "protected_and_scope": 0.5
+  },
+  "report_missing_scored_only_by": "evidence_binding"
+}

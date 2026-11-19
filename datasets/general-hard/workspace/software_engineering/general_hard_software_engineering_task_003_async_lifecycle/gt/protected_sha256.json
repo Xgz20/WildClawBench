@@ -1,0 +1,7 @@
+{
+  "contract.md": "7c3403d775071d5518fe203e708e8d11849ff05ff04673e86f60e410ba8ce933",
+  "project/__init__.py": "a17f7c262b86de0e49b7c6a61212e311a585fcb9b6f7765177cccff212b811f0",
+  "project/resources.py": "f1499dcd4036f0f3d4f9c2a73ef1074a4317a055abf03b684089d93a6a6cb969",
+  "runtime.json": "189a110aa775762ff81075cce4768211beab1e1a9e2e6de3fb391899ceb4a37c",
+  "tests_public/test_normal.py": "b9e4747534ae15825f6544d905288419292a5eeb35649f60ed5c139f8634a110"
+}

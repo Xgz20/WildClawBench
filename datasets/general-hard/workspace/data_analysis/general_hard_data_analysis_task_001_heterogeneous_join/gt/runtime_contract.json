@@ -1,0 +1,91 @@
+{
+  "schema_version": "h017-runtime-contract/v1",
+  "target_aliases": {
+    "target_id": [
+      "target_id",
+      "目标ID",
+      "目标记录ID"
+    ],
+    "project_id": [
+      "project_id",
+      "项目编号"
+    ],
+    "contract_id": [
+      "contract_id",
+      "合同编号"
+    ],
+    "service_month": [
+      "service_month",
+      "服务月份"
+    ],
+    "project_name": [
+      "project_name",
+      "项目名称"
+    ],
+    "status": [
+      "status",
+      "状态"
+    ],
+    "match_count": [
+      "match_count",
+      "匹配条数"
+    ],
+    "amount_cny": [
+      "amount_cny",
+      "发生金额(元)",
+      "实际金额(CNY元)"
+    ],
+    "hours": [
+      "hours",
+      "工时(小时)",
+      "实际工时(小时)"
+    ],
+    "count": [
+      "count",
+      "记录数",
+      "计费记录数"
+    ]
+  },
+  "unmatched_aliases": {
+    "side": [
+      "side",
+      "对象类型"
+    ],
+    "record_id": [
+      "record_id",
+      "记录ID"
+    ],
+    "reason": [
+      "reason",
+      "原因"
+    ]
+  },
+  "audit_columns": [
+    "target_id",
+    "target_sheet",
+    "target_row",
+    "source_id",
+    "source_sheet",
+    "source_row",
+    "match_basis",
+    "status",
+    "amount_cny",
+    "hours",
+    "count"
+  ],
+  "worksheet_names_fixed": false,
+  "target_order_fixed": false,
+  "literal_original_target_fields_required": true,
+  "static_or_correct_formula_outputs": true,
+  "scoring_authority": "Automated blueprint contract, expected/protected data and bound scoring helpers. Older material-phase contracts are retained historical construction specs.",
+  "grading_type": "automated",
+  "semantic_judge_required": false,
+  "corrected_material_spec_errors": {
+    "evidence_requirements.json.semantic_judge": {
+      "prior": true,
+      "correct": false,
+      "reason": "Material-stage author typo; the approved H017 blueprint is automated, with no semantic rubric. Preserve original material bytes and record the explicit correction here."
+    }
+  },
+  "limits": "5 MiB per candidate file; 50000 row/512 column passive table window; original input hashes required; basic visibility only. Real external actions require execution traces; no narrative Judge or measured difficulty claim."
+}

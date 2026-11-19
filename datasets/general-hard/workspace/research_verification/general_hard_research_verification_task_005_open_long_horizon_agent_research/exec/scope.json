@@ -1,0 +1,41 @@
+{
+  "schema_version": "h031-research-scope/v1",
+  "as_of_inclusive": "2026-09-30",
+  "timezone": "Asia/Shanghai",
+  "cutoff_end_exclusive": "2026-10-01T00:00:00+08:00",
+  "minimum_entities": 5,
+  "minimum_publication_or_benchmark_works": 5,
+  "key_claim_count": 12,
+  "minimum_count_policy": "Minimums require distinct, relevant identities with supported pre-cutoff report/static-version basis. Identity/time unresolved objects may be retained as unknown/pending but do not fill the two minimum-five quotas. An individual capability cell being unknown does not itself disqualify an otherwise identified, time-supported entity; all five capabilities need not exist in every framework.",
+  "capability_dimensions": ["planning", "memory", "tool_use", "recovery", "delivery_verification"],
+  "candidate_source_ledger_maximum": 60,
+  "network": {
+    "mode": "open_public_search",
+    "answer_names_or_entry_URLs_provided": false,
+    "domain_whitelist": null,
+    "account_or_paid_access_required": false,
+    "follow_policy": "Discover publicly accessible primary materials and bounded cross-checks; do not log in, pay, send messages or change network safety rules."
+  },
+  "date_policy": {
+    "source_time_is_not_retrieval_time": true,
+    "entity_releases": "Use actual official release published_at or explicit package distribution upload time with its original field role. Release title, tag name, repository created_at or fetch time does not alone prove a release date or capability availability.",
+    "fixed_static_code": "A fixed official commit and its recorded timestamp may identify a pre-cutoff static version. State this role; commit time does not prove first public availability, deployment, tested durability or an independent historical web archive. Do not call current docs the cutoff's latest without evidence.",
+    "arxiv": "Use official base-ID v1 Submitted as the adopted report submission basis; record the read vN Submitted separately and do not use post-cutoff revisions. Submitted is not asserted to prove actual first public visibility.",
+    "journal": "Prefer first_online; use explicit issue_only fallback only when no official online date can be established and retain that unknown. Do not substitute received/accepted/indexed/repository/fetch dates.",
+    "conference_proceedings": "Use an identified official proceedings publication year/date at its actual precision and state that role. Conference event dates or copyright text do not establish an exact first-online day; retain uncertainty rather than filling one.",
+    "benchmark_protocol": "Identify the actual official fixed document/repository version and its date role; related manuscript dates are separate. Do not use a README to claim unseen manuscript results.",
+    "precision": "Keep actual year/month/day precision; a year/month means its entire calendar interval. Confirm cutoff eligibility only if the supported interval is fully before cutoff; crossing/unknown/conflicting dates remain pending or unknown, not favorable guesses.",
+    "timezone": "Retain an actual aware timestamp and convert to Asia/Shanghai for cutoff. Date-only sources without a timezone keep their stated calendar date and disclose timezone unknown; do not assume UTC.",
+    "current_carriers": "Current retrieval can expose an identified pre-cutoff report/static version, but is not proof of publication-day bytes. If later changes affect the used claim, identify an applicable version or keep it unknown."
+  },
+  "construction_constraints": {
+    "engineers": 3,
+    "workdays_per_engineer": 20,
+    "total_person_days_upper_budget": 60,
+    "priority_count_minimum": 1,
+    "priority_count_maximum": 3,
+    "base_model_training_required": false,
+    "implementation_or_live_business_execution_required": false
+  },
+  "reading_and_evidence_boundary": "At least five research works require complete relevant manuscript text or complete official benchmark protocol/main documentation. Excerpt/abstract and incomplete downloads support only observed facts. Evidence level, representativeness, identity/version deduplication, actual search/reading and semantic support require independent assessment; mechanically valid strings or URLs do not prove them."
+}

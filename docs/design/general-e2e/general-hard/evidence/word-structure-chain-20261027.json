@@ -1,0 +1,214 @@
+{
+  "schema_version": "wildclawbench.general-hard-word-structure-evidence/v1",
+  "recorded_date": "2026-10-27",
+  "scope": "author_protocol_validation_only",
+  "formal_harness_execution": false,
+  "independent_semantic_judgment": false,
+  "dataset_tasks_added": 0,
+  "implemented_dataset_tasks": 9,
+  "version_state": "building_without_manifest",
+  "skill_version": "0.17.0",
+  "core_version": "0.9.0",
+  "docx_engine": "wildclawbench.docx-text/v1",
+  "legacy_policy": "wildclaw-workspace-evidence-v5",
+  "build_source_revision": "efed1eb3b8036d2b9ebe31c1930546467a9a5b19",
+  "build_includes_uncommitted_source_snapshot": true,
+  "checks": {
+    "native_fixture": {
+      "status": "pass",
+      "source_sha256": "5e3ac0018da83e560749d0acef2a0bc9d899ebb1993760975a80ff958dc0a0d8",
+      "records": 35,
+      "python_docx_merges": true,
+      "raw_xml_note_bindings": true,
+      "rendered_pages": 1,
+      "rendered_note_text_present": true,
+      "visual_review": "Viewed final page PNG: merged table fits, footnote text and references agree; endnote text is present. Display numbering and target application editability are not established."
+    },
+    "detached_cli": {
+      "status": "pass",
+      "python_isolated": true,
+      "cwd_outside_checkout": true,
+      "path_empty": true,
+      "cli_loaded_from_distribution_zip": true,
+      "repository_fixture_helper_used_only_for_setup": true,
+      "legacy_transcript_only_explicit": true,
+      "returned_records": 35,
+      "source_sha256_unchanged": true,
+      "commands": [
+        {
+          "name": "prepare",
+          "exit_code": 0
+        },
+        {
+          "name": "prepare-semantics",
+          "exit_code": 0
+        },
+        {
+          "name": "catalog",
+          "exit_code": 0
+        },
+        {
+          "name": "file",
+          "exit_code": 0
+        }
+      ]
+    },
+    "regressions": [
+      {
+        "observed_tool_session_id": 32217,
+        "test_count": 72,
+        "exit_code": 0,
+        "modules": [
+          "test_native_word_structure",
+          "test_native_artifact_text",
+          "test_general_api_judge",
+          "test_general_semantic_scoring",
+          "test_grading_core",
+          "test_native_presentation_text",
+          "test_skill_layout"
+        ]
+      },
+      {
+        "observed_tool_session_id": 69116,
+        "test_count": 22,
+        "exit_code": 0,
+        "modules": [
+          "test_e2e_build"
+        ]
+      }
+    ],
+    "total_regression_tests": 94
+  },
+  "limits": [
+    "Declared OOXML intervals are not rendered geometry.",
+    "Nested table topology is not expanded.",
+    "Package note IDs are not displayed note numbers.",
+    "Text extraction does not implement all hidden or revision semantics.",
+    "Canonical author render is not a trusted DOCX scoring derivation chain.",
+    "No H009 task, GT, actual Harness result or semantic score is claimed."
+  ],
+  "source_bindings": [
+    {
+      "path": "src/wildclawbench_grading_core/native_text.py",
+      "sha256": "c92f7367c026497bc1594fc58b7e46809d0b163f9a930064fbfb027dacd5eb79"
+    },
+    {
+      "path": "src/wildclawbench_grading_core/__init__.py",
+      "sha256": "7fc2e0d79144a7d0f8946d7b03b1586395178134459aa5617609252e0d94ad3c"
+    },
+    {
+      "path": "src/utils/workspace_evidence.py",
+      "sha256": "2a94c5526fb90025b691945e119e0801e6f99dc59ad0b94d2d0d1a0bd73c0f31"
+    },
+    {
+      "path": "tools/report/skills/general-e2e/score-general-e2e/skill-metadata.json",
+      "sha256": "6910d9e1d9b46b46234b06c27ad81196566c646e45ef09ba6245bb7b110b3efb"
+    },
+    {
+      "path": "tests/general_e2e/test_native_word_structure.py",
+      "sha256": "a8b9862523ff4990cec3c1bd5e12b8ec28a620cfc2d804691bc869b711ab834b"
+    }
+  ],
+  "artifact_bindings": [
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/qa/word-structure/native-validation.json",
+      "sha256": "0c33f5077bd7cdbd2c3d042c890ed50ddb3b54e582c1b9ae0c7e0334a3ec52ee",
+      "bytes": 1881
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/qa/word-structure/detached-cli-validation.json",
+      "sha256": "b5e4cba6aae5f2d63dd1c9f2064d393dc15f02b94d82750d57e0112f0f996f67",
+      "bytes": 5845
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/qa/word-structure/projection.json",
+      "sha256": "7d7f0c64195675338230a91c7092ff807a1ef8e3aed22f783260547a5e97697b",
+      "bytes": 13557
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/qa/word-structure/fixture-expectations.json",
+      "sha256": "af93069951e9995376d6e34de89c1acd6a3c4937318518ea4e01d70aaad22c26",
+      "bytes": 801
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/qa/word-structure/distribution/skills-build-manifest.json",
+      "sha256": "2232fb9fb7236823cf4c2c90762a6b9e96546a7897ebac033110e6726aa74399",
+      "bytes": 1953
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/qa/word-structure/distribution/score-general-e2e-skill-v0.17.0.zip",
+      "sha256": "220fa25b079b34d707b9819aed937d5967edef185d30e6f9009603f59f250ec5",
+      "bytes": 542100
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/qa/word-structure/native-word-structure.docx",
+      "sha256": "5e3ac0018da83e560749d0acef2a0bc9d899ebb1993760975a80ff958dc0a0d8",
+      "bytes": 38532
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/qa/word-structure/render-final/native-word-structure.pdf",
+      "sha256": "8a1aca24a3a25215e2b76356fe7e3cf33ffccd0d49612b1fcc6e3085848ca6e6",
+      "bytes": 74143
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/qa/word-structure/render-final/page-1.png",
+      "sha256": "3b27334d5f3d7ccb80c2165ab153758c735bf8f70becb13e47f996dac7ab0530",
+      "bytes": 146865
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/authoring/word_structure_fixture.py",
+      "sha256": "9ded204975327f8061c936999ba5ca7034760dac514319db4b87708bbddc8e69",
+      "bytes": 5853
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/authoring/validate_word_structure.py",
+      "sha256": "ba32de6529a1bd9c73b9c9a055853a2e1402a0da2243cda4e2694bdf76f235ce",
+      "bytes": 4339
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/authoring/validate_word_detached_cli.py",
+      "sha256": "fd5ef27e0ad474a1e0c811c734cc2d90c513b1c78f9d27cfa41cee8c925ec942",
+      "bytes": 4877
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/qa/word-structure/detached/cli-logs/catalog.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/qa/word-structure/detached/cli-logs/catalog.stdout",
+      "sha256": "4ce24eee577cc3e1ca564ff94b090d8ca97da63ceba3495eae206070e4268439",
+      "bytes": 507
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/qa/word-structure/detached/cli-logs/file.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/qa/word-structure/detached/cli-logs/file.stdout",
+      "sha256": "947800c979c984841d80b7b5751d2fd462293cd53edcc98cbd4cf17ea5f9bc91",
+      "bytes": 19064
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/qa/word-structure/detached/cli-logs/prepare-semantics.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/qa/word-structure/detached/cli-logs/prepare-semantics.stdout",
+      "sha256": "23c9a7107e022044d291783bcb681a85cc52f6d91dad00fd9f929b6d4575d841",
+      "bytes": 1073
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/qa/word-structure/detached/cli-logs/prepare.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/qa/word-structure/detached/cli-logs/prepare.stdout",
+      "sha256": "718d23c8296e30018ceaee1b208f67c4c5c52823c2e9caa687eb7efb1954d3e0",
+      "bytes": 5792
+    }
+  ]
+}

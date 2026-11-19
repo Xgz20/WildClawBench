@@ -1,0 +1,32 @@
+{
+  "status": "PASS",
+  "checks": {
+    "count12": true,
+    "unique12": true,
+    "all_source_fields_equal": true,
+    "qualifiers4": true,
+    "sample40": true,
+    "review_count_balances": true,
+    "defects_balance": true,
+    "reviewed_ratio": true,
+    "median_same_denominator": true,
+    "descriptive_difference": true,
+    "proposed_not_approved": true,
+    "unknown_cost_or_model_comparison": true,
+    "no_reference_exists": true
+  },
+  "independent_calculation": {
+    "adopted_after_review": 0.9,
+    "descriptive_relative_difference": 0.2619047619047619,
+    "causal_effect": null,
+    "production_cost": null,
+    "next10_executed": false
+  },
+  "source_sha256": {
+    "draft.md": "80bf919d7206f79d14c0e55416fb6eb6847550b83d3f8d176c7eae885c93acab",
+    "facts.csv": "4164d4773ea6d5a1ffbc39c44746316dd13120d9f3b7165c26fe84220536ac00",
+    "editorial.md": "2c19939856d08fa436b18b31f0ad692a67fda46c7b265ee08e519c3f32d5f08c"
+  },
+  "review_kind": "second computational path by same model author, not human or blind expert",
+  "before_reference": true
+}

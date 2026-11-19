@@ -1,0 +1,408 @@
+{
+  "schema_version": "h029-source-first-open-research-oracle/v1",
+  "source_precedes_reference": true,
+  "candidate_answer_used_for_truth": false,
+  "reference_answer_is_oracle": false,
+  "reference_pool_is_non_exhaustive": true,
+  "closed_product_or_URL_matching_forbidden": true,
+  "requirements": {
+    "selected_events": 4,
+    "minimum_products": 3,
+    "provider_regions": [
+      "mainland_china",
+      "outside_mainland_china"
+    ],
+    "start_inclusive": "2026-09-01T00:00:00+08:00",
+    "end_exclusive": "2026-10-01T00:00:00+08:00",
+    "date_precision_modes": [
+      "timestamp",
+      "date",
+      "month",
+      "interval",
+      "unknown"
+    ],
+    "natural_month_reporting_is_not_actual_instant_boundary": true
+  },
+  "reference_events": [
+    {
+      "reference_id": "REF-01",
+      "product_identity": "google-search",
+      "product_name": "Google Search / AI Mode",
+      "provider_region_example": "overseas",
+      "change": "AI Mode可连接Yahoo Fantasy或Sleeper账号并使用实时阵容上下文",
+      "publication_observations": {
+        "source_value": "2026-09-09T16:00:00+00:00",
+        "asia_shanghai": "2026-09-10T00:00:00+08:00",
+        "metadata_kind": "JSON-LD datePublished",
+        "date_modified": "2026-09-09T16:00:02.714734+00:00",
+        "display_date": "2026-09-09",
+        "display_timezone": "unspecified; source JSON-LD gives UTC"
+      },
+      "event_time_qualifications": {
+        "precision": "announcement_instant_and_display_day",
+        "announced_at": "2026-09-10T00:00:00+08:00",
+        "official_display_day": "2026-09-09",
+        "actual_rollout_start": "unknown",
+        "within_window": true,
+        "caution": "公告发表瞬间不等于所有用户完成启用瞬间；不可把无时区display日期强作上海自然日"
+      },
+      "release_state_qualifications": {
+        "type": "official_declared_available",
+        "noted_language": "now available",
+        "runtime_verified": false
+      },
+      "feature_facts": [
+        "连接两个指定的第三方fantasy服务",
+        "利用实时阵容与联赛上下文提供首发/替补、自由球员、选秀评价和周回顾"
+      ],
+      "availability_qualifications": {
+        "countries_explicit": [
+          "United States"
+        ],
+        "languages_explicit": [
+          "English"
+        ],
+        "third_party_accounts": [
+          "Yahoo Fantasy",
+          "Sleeper"
+        ],
+        "linked_account_required": true,
+        "paid_plan_requirement": "not specified; no assertion that Pro/Ultra is necessary or unnecessary",
+        "client_scope": "fantasy段未明确移动端/桌面端；同文Live Game Feed的mobile条件不可自动移植"
+      },
+      "unknowns": [
+        "不能把同文即将全球开放的比分/统计模块说成Fantasy账户关联已全球开放",
+        "关联前后的推荐准确率或实际用户效果",
+        "未给出全部设备/年龄/套餐约束，不能补造",
+        "未验证任何真实账号连接或回答质量",
+        "账户准入细节、年龄门槛、分批完成时点"
+      ],
+      "author_source_B_refs": [
+        {
+          "source_id": "google-official",
+          "file": "text/google-official.txt",
+          "lines_1based": [
+            238,
+            241
+          ],
+          "supports": "feature and explicit US/English scope",
+          "short_quote": "now available in the U.S. in English"
+        },
+        {
+          "source_id": "google-official",
+          "file": "text/google-official.metadata.json",
+          "lines_1based": null,
+          "supports": "JSON-LD gives exact publication instant; source metadata retained"
+        }
+      ],
+      "author_source_A_refs": [
+        {
+          "source_id": "google-official",
+          "projection_file": "sources/google-official/text.txt",
+          "line": 239,
+          "source_receipt": "sources/google-official/receipt.json"
+        },
+        {
+          "source_id": "google-official",
+          "projection_file": "sources/google-official/text.txt",
+          "line": 241,
+          "source_receipt": "sources/google-official/receipt.json"
+        }
+      ],
+      "example_is_not_exclusive_correct_answer": true,
+      "source_reviews_model_not_human_expert": true
+    },
+    {
+      "reference_id": "REF-02",
+      "product_identity": "google-search",
+      "product_name": "Google Search / Search Live",
+      "provider_region_example": "overseas",
+      "change": "Search Live开始采用Gemini 3.8 Live",
+      "publication_observations": {
+        "source_value": "2026-09-15T17:00:00+00:00",
+        "asia_shanghai": "2026-09-16T01:00:00+08:00",
+        "metadata_kind": "JSON-LD datePublished",
+        "date_modified": "2026-09-17T14:56:05.310570+00:00",
+        "display_date": "2026-09-15"
+      },
+      "event_time_qualifications": {
+        "precision": "rollout_announcement_with_revision_uncertainty",
+        "announced_at_initial_publication": "2026-09-16T01:00:00+08:00",
+        "actual_rollout_start": "unknown",
+        "within_window": true,
+        "caution": "当前版本同时含9/15发表、9/17更新与starting today。没有历史版本diff，不能确定该句today专指9/15还是9/17；二者均在窗口内。"
+      },
+      "release_state_qualifications": {
+        "type": "official_rolling_out",
+        "noted_language": "3.8 Live is rolling out starting today",
+        "runtime_verified": false
+      },
+      "feature_facts": [
+        "Search Live模型升级到Gemini 3.8 Live",
+        "官方模型说明包括语音交互、视觉上下文及对话中语言切换；不把模型通用能力当每个Search Live工具能力保证"
+      ],
+      "availability_qualifications": {
+        "consumer_product": "Search Live",
+        "audience_wording": "For everyone",
+        "paid_plan_requirement": "Search Live段未要求Pro/Ultra；仍不能据此穷尽所有资格条件",
+        "countries": "not specified in this source",
+        "languages": "not specified for Search Live in this source",
+        "warning": "模型支持97种语言不等于Search Live在97种语言/所有地区正式开放。For everyone不能替代地区/设备/账号条件。"
+      },
+      "unknowns": [
+        "Search Live国家、语言、设备及账号准入清单",
+        "VP X原帖未独立获取，不能将二手嵌入当已读取原帖",
+        "不能把企业private preview条件移给消费者Search Live",
+        "不能把另列的Gemini 3.8 Live Extended Thinking部署到Gemini Live/Workspace的声明移给Search Live",
+        "完整地区/语言/设备清单未在此官方公告展开",
+        "没有账户内运行证据",
+        "精确发布/逐步启用日期与所有账号完成时间"
+      ],
+      "author_source_B_refs": [
+        {
+          "source_id": "searchlive-official",
+          "file": "text/searchlive-official.txt",
+          "lines_1based": [
+            280,
+            291
+          ],
+          "supports": "product-specific Search Live deployment and rollout wording",
+          "short_quote": "For everyone: In Search Live"
+        },
+        {
+          "source_id": "searchlive-official",
+          "file": "text/searchlive-official.txt",
+          "lines_1based": [
+            261,
+            271
+          ],
+          "supports": "updated date and official model capability descriptions"
+        }
+      ],
+      "author_source_A_refs": [
+        {
+          "source_id": "searchlive-official",
+          "projection_file": "sources/searchlive-official/text.txt",
+          "line": 280,
+          "source_receipt": "sources/searchlive-official/receipt.json"
+        },
+        {
+          "source_id": "searchlive-official",
+          "projection_file": "sources/searchlive-official/text.txt",
+          "line": 288,
+          "source_receipt": "sources/searchlive-official/receipt.json"
+        },
+        {
+          "source_id": "searchlive-official",
+          "projection_file": "sources/searchlive-official/text.txt",
+          "line": 291,
+          "source_receipt": "sources/searchlive-official/receipt.json"
+        }
+      ],
+      "example_is_not_exclusive_correct_answer": true,
+      "source_reviews_model_not_human_expert": true,
+      "author_resolution": "本次官方文章同时有9/15首发、9/17更新与starting today；公告在窗口内，原始/更新日都在窗内，但没有历史diff或账号实测，不把实际rollout起始日或全量完成日断为已验证。"
+    },
+    {
+      "reference_id": "REF-03",
+      "product_identity": "ask-youtube",
+      "product_name": "Ask YouTube",
+      "provider_region_example": "overseas",
+      "change": "宣布Ask YouTube购物相关搜索与观看页追问能力",
+      "publication_observations": {
+        "source_value": "2026-09-23T14:30:00+00:00",
+        "asia_shanghai": "2026-09-23T22:30:00+08:00",
+        "metadata_kind": "JSON-LD datePublished",
+        "date_modified": "2026-09-28T13:55:32.621325+00:00",
+        "display_date": "2026-09-23"
+      },
+      "event_time_qualifications": {
+        "precision": "announcement_instant",
+        "announced_at": "2026-09-23T22:30:00+08:00",
+        "actual_rollout_start": "unknown",
+        "within_window": true,
+        "caution": "we are launching / may receive说明能力发布，但不证明所有账号在同一刻获得"
+      },
+      "release_state_qualifications": {
+        "type": "official_new_capability_announcement",
+        "noted_language": "We’re launching / may receive",
+        "runtime_verified": false
+      },
+      "feature_facts": [
+        "产品评测搜索可能返回按属性和偏好组织的视频推荐或比较表",
+        "打开视频后可在观看页追问产品信息"
+      ],
+      "availability_qualifications": {
+        "countries": "not specified for shopping Ask YouTube paragraph",
+        "languages": "not specified for shopping Ask YouTube paragraph",
+        "paid_plan_requirement": "not specified",
+        "devices": "正文提及on the go与TV语音，但未穷尽设备清单",
+        "prior_phase_evidence": "第一阶段本路已独立读取官方帮助页和SEJ当日报道，可复用其美国英语/逐步开放及实验边界；此处不将当前帮助页状态倒推为9/23完整条件",
+        "warning": "同文Custom Feeds的US/web/mobile/TV/soon范围属于另一功能，不能直接移给购物Ask YouTube。搜索Ask YouTube与watch-page Ask YouTube也不能混合资格范围。"
+      },
+      "unknowns": [
+        "无证据证明全球全面GA或实际购物转化提升",
+        "比较表属性数据来源和推荐排序细节",
+        "比较表属性来源和排序细节",
+        "确切可用地区、账号条件与全量日期",
+        "逐国家/语言/套餐/账号启用表"
+      ],
+      "author_source_B_refs": [
+        {
+          "source_id": "youtube-official",
+          "file": "text/youtube-official.txt",
+          "lines_1based": [
+            66,
+            68
+          ],
+          "supports": "shopping search table and follow-up capability",
+          "short_quote": "We’re launching new capabilities to Ask YouTube"
+        },
+        {
+          "source_id": "youtube-official",
+          "file": "text/youtube-official.txt",
+          "lines_1based": [
+            63,
+            63
+          ],
+          "supports": "Custom Feeds has separate scope; must not borrow it"
+        }
+      ],
+      "author_source_A_refs": [
+        {
+          "source_id": "youtube-official",
+          "projection_file": "sources/youtube-official/text.txt",
+          "line": 67,
+          "source_receipt": "sources/youtube-official/receipt.json"
+        },
+        {
+          "source_id": "youtube-official",
+          "projection_file": "sources/youtube-official/text.txt",
+          "line": 68,
+          "source_receipt": "sources/youtube-official/receipt.json"
+        }
+      ],
+      "example_is_not_exclusive_correct_answer": true,
+      "source_reviews_model_not_human_expert": true
+    },
+    {
+      "reference_id": "REF-04",
+      "product_identity": "doubao-search",
+      "product_name": "豆包搜索 Global版 API",
+      "provider_region_example": "domestic",
+      "change": "Global版新增图搜图能力",
+      "publication_observations": {
+        "first_publication_time": null,
+        "precision": "unknown for official first announcement",
+        "official_changelog_document_created": "2026-03-13T08:05:22Z",
+        "official_changelog_document_last_updated": "2026-10-15T12:46:51Z",
+        "official_api_document_last_updated": "2026-09-22T10:56:53Z",
+        "earliest_fetched_dated_secondary": "2026-09-10T03:27:49.000Z",
+        "warning": "不得把网页CreatedTime/UpdatedTime、PDF文件名中的epoch或媒体发稿时间充当精确功能推出时间。"
+      },
+      "event_time_qualifications": {
+        "precision": "month",
+        "start_inclusive": "2026-09-01T00:00:00+08:00",
+        "end_exclusive": "2026-10-01T00:00:00+08:00",
+        "actual_rollout_day": "unknown",
+        "within_window": true,
+        "basis": "独立重取官方PDF物理第4页（文内1/5）月度2026-09行"
+      },
+      "release_state_qualifications": {
+        "type": "official_release_record_new_capability",
+        "GA_or_gray_marker": "not stated",
+        "runtime_verified": false
+      },
+      "feature_facts": [
+        "SearchType=visual，以图片URL或纯Base64二选一输入",
+        "可指定图片矩形区域，并可补充可为空的辅助文字query",
+        "响应示例包含图片及所在网页等字段；示例不是已执行API结果"
+      ],
+      "availability_qualifications": {
+        "edition": "Global",
+        "countries": "not specified",
+        "languages": "not specified",
+        "audience": "API developers; API details independently acquired in first phase",
+        "paid_plan_requirement": "PDF月度行未写；第一阶段API文档可另支持计费/认证，不运行API",
+        "warning": "Global是版本名称，不能推断全球所有地区/用户开放；也不是豆包App新增入口的证据。"
+      },
+      "unknowns": [
+        "8月文搜图为不同旧事件，不能当9月图搜图的重复证据",
+        "不能把媒体9/10发布日期写作图搜图上线日期",
+        "确切首次公布日期、推出日、正式/灰度标签",
+        "第一手文档最后更新在窗口之后，历史月度项是回溯记载；不能据此证明9月任一具体日的文档状态",
+        "精确上线日、灰度/GA定义、地域和用户准入"
+      ],
+      "author_source_B_refs": [
+        {
+          "source_id": "doubao-changelog-pdf",
+          "file": "text/doubao-changelog-pdf.page-04.txt",
+          "lines_1based": [
+            8,
+            11
+          ],
+          "supports": "official month and visual-search change",
+          "short_quote": "Global版本：新增图搜图能力",
+          "pdf_physical_page_1based": 4
+        },
+        {
+          "source_id": "doubao-api-pdf",
+          "file": "text/doubao-api-pdf.page-09.txt",
+          "lines_1based": [
+            1,
+            17
+          ],
+          "supports": "SearchType visual and optional Query",
+          "pdf_physical_page_1based": 9
+        },
+        {
+          "source_id": "doubao-api-pdf",
+          "file": "text/doubao-api-pdf.page-10.txt",
+          "lines_1based": [
+            1,
+            61
+          ],
+          "supports": "image inputs and region fields",
+          "pdf_physical_page_1based": 10
+        },
+        {
+          "source_id": "doubao-api-pdf",
+          "file": "text/doubao-api-pdf.page-04.txt",
+          "lines_1based": [
+            1,
+            17
+          ],
+          "supports": "API scope, authentication, billing and quota",
+          "pdf_physical_page_1based": 4
+        },
+        {
+          "source_id": "doubao-changelog",
+          "file": "text/doubao-changelog.official-md-derived.txt",
+          "lines_1based": [
+            4,
+            5
+          ],
+          "supports": "serialized official HTML document payload; derivative only"
+        }
+      ],
+      "author_source_A_refs": [
+        {
+          "source_id": "doubao-changelog-pdf",
+          "source_file": "sources/doubao-changelog-pdf/source.pdf",
+          "physical_page": 4,
+          "printed_page": "1/5",
+          "row": "2026-09",
+          "projection_file": "sources/doubao-changelog-pdf/page-004.txt",
+          "visual_verification": "page-004.png independently rendered and inspected; row membership confirmed"
+        }
+      ],
+      "example_is_not_exclusive_correct_answer": true,
+      "source_reviews_model_not_human_expert": true,
+      "author_resolution": "2026-09为来源自然月标签；文档没有事件时区或精确上线日。报告可按任务日历月归属显示，不声称精确UTC起止。Global为版本名，不证明全球用户开放。"
+    }
+  ],
+  "facts_for_independent_Judge_not_a_rule_answer_list": true,
+  "model_reviews_not_human_expert": true,
+  "actual_Harness_run": false,
+  "formal_semantic_score": null
+}

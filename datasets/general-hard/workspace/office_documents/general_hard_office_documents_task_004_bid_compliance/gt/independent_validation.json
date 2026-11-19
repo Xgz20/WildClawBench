@@ -1,0 +1,53 @@
+{
+  "schema_version": "h004-independent-author-validation/v1",
+  "status": "PASS",
+  "source_counts": {
+    "requirements": 35,
+    "mandatory": 20,
+    "drafts": 31,
+    "facts": 35,
+    "certificates": 6
+  },
+  "reference_coverage_counts": {
+    "已覆盖": 25,
+    "部分覆盖": 5,
+    "不满足": 1,
+    "待核实": 4
+  },
+  "page_counts": {
+    "requirements.pdf": 5,
+    "response.pdf": 8,
+    "response_revised.pdf": 5
+  },
+  "certificate_pages": 2,
+  "all_native_pages_and_workbook_views_reviewed": true,
+  "trusted_summary_recalculation": {
+    "C3": 25.0,
+    "E3": 8.0,
+    "H3": 4.0
+  },
+  "recalculation_receipt": {
+    "schema_version": "wildclawbench.office-recalculation/v1",
+    "profile": "offline-xlsx-remove-formula-caches/v1",
+    "engine_version": "LibreOfficeDev 26.8.0.0.alpha0 2c87e51eeaa2b413ff4ae097b2705eea1995d8e5",
+    "executable_sha256": "38936fe8d6fdd43effb49caef6a62107f568b5db5ec18de98899ebd78230f67b",
+    "source_sha256": "e26d1aa12c1ffaf6e1d56fd7a23e89d6c9b022f95a306c7779c290c2a52589d2",
+    "normalized_input_sha256": "1c54b7264d28deec008ddd3c89f08a1268f94936e81054f21e364ca5c8b6a3bf",
+    "derived_sha256": "3d9125d6ef0a599e20a286f9582389bb2fb293f266d641bd69d82b8d463a90aa",
+    "formula_caches_cleared": 3,
+    "source_unchanged": true,
+    "stdout": "convert /private/tmp/wcb-office-2b84fj1k/input/workbook.xlsx as a Calc document -> /private/tmp/wcb-office-2b84fj1k/output/workbook.xlsx using filter : Calc MS Excel 2007 XML\n",
+    "stderr": "Fontconfig warning: no <cachedir> elements found. Check configuration.\nFontconfig warning: adding <cachedir>/@.__________________________________________________OOO/var/cache/fontconfig</cachedir>\nFontconfig warning: adding <cachedir prefix=\"xdg\">fontconfig</cachedir>\n"
+  },
+  "material_sha256": {
+    "requirements.docx": "00292a275239c3b1186f9010b2f9d15dce069c0eca868f3e0963cf2aff116ac7",
+    "response.docx": "caf464129817e016a610518fffb40ee7223ee5c02e58963e26aa9f11929deb2a",
+    "certificates.pdf": "34a2b746be3feea5dcf25b8f177cd8c53e8bd928710d3221fe18aa6b9d424566"
+  },
+  "reference_sha256": {
+    "traceability.xlsx": "e26d1aa12c1ffaf6e1d56fd7a23e89d6c9b022f95a306c7779c290c2a52589d2",
+    "gaps.md": "32bc6aa888d3311ebe0993da5ffec192b725c48044ac5b19a1f6048b0823b7a2",
+    "response_revised.docx": "21823160ec792b846c2763da6331a6b70b5216bc54c8c54954f83cf9cd875b47"
+  },
+  "limit": "Separate python-docx/pdfplumber/pypdf/ZIP extraction and actual Calc; not independent expert semantic review, Judge or four-Harness proof."
+}

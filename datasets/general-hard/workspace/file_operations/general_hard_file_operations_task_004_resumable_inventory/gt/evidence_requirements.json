@@ -1,0 +1,17 @@
+{
+  "source_truth": "original source and actual partial bytes, old row counts and checkpoint claims before reference",
+  "identity": "NFC relative source path key; same hash on another key stays independent",
+  "actual_replay": "Trusted probe in GENERAL_E2E_RULE_EVIDENCE_DIR, bound current candidate content tree and actual entry bytes; no self-report marker/static set shortcut",
+  "logs": [
+    "candidate-binding.json",
+    "per-run request.json",
+    "stdout.log",
+    "stderr.log",
+    "receipt.json",
+    "probe-result.json"
+  ],
+  "limits": [
+    "No actual Harness/Judge/finalize; model author verification is not human expert review",
+    "Final bytes do not establish absence of transient candidate actions; formal real trajectory still required"
+  ]
+}

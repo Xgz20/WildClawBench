@@ -1,0 +1,290 @@
+{
+  "schema_version": "h009-source-evidence/v1",
+  "source_sha256": "1d1e5af01f4b05c2b38af9aeaf6553a946502f72c65cb27036333e24bc94b2bf",
+  "records": {
+    "T01@page:1": {
+      "source": "source.pdf",
+      "source_sha256": "1d1e5af01f4b05c2b38af9aeaf6553a946502f72c65cb27036333e24bc94b2bf",
+      "page": 1,
+      "bbox_top_left": [
+        55.0,
+        229.0000000000001,
+        537.0,
+        493.00000000000006
+      ],
+      "grid_edges": {
+        "x": [
+          55.0,
+          117.0,
+          167.0,
+          279.0,
+          344.0,
+          409.0,
+          537.0
+        ],
+        "y": [
+          229.0,
+          256.0,
+          283.0,
+          318.0,
+          353.0,
+          388.0,
+          423.0,
+          458.0,
+          493.0
+        ]
+      },
+      "actual_merged_cells": [
+        {
+          "row": 0,
+          "column": 0,
+          "rowspan": 1,
+          "colspan": 3
+        },
+        {
+          "row": 0,
+          "column": 3,
+          "rowspan": 1,
+          "colspan": 2
+        },
+        {
+          "row": 0,
+          "column": 5,
+          "rowspan": 2,
+          "colspan": 1
+        },
+        {
+          "row": 2,
+          "column": 0,
+          "rowspan": 2,
+          "colspan": 1
+        },
+        {
+          "row": 4,
+          "column": 0,
+          "rowspan": 2,
+          "colspan": 1
+        },
+        {
+          "row": 6,
+          "column": 0,
+          "rowspan": 2,
+          "colspan": 1
+        }
+      ]
+    },
+    "T02@page:2": {
+      "source": "source.pdf",
+      "source_sha256": "1d1e5af01f4b05c2b38af9aeaf6553a946502f72c65cb27036333e24bc94b2bf",
+      "page": 2,
+      "bbox_top_left": [
+        55.0,
+        210.0,
+        537.0,
+        678.0
+      ],
+      "grid_edges": {
+        "x": [
+          55.0,
+          117.0,
+          164.0,
+          216.0,
+          278.0,
+          350.0,
+          537.0
+        ],
+        "y": [
+          210.0,
+          237.0,
+          264.0,
+          310.0,
+          356.0,
+          402.0,
+          448.0,
+          494.0,
+          540.0,
+          586.0,
+          632.0,
+          678.0
+        ]
+      },
+      "actual_merged_cells": [
+        {
+          "row": 0,
+          "column": 0,
+          "rowspan": 1,
+          "colspan": 2
+        },
+        {
+          "row": 0,
+          "column": 2,
+          "rowspan": 1,
+          "colspan": 3
+        },
+        {
+          "row": 0,
+          "column": 5,
+          "rowspan": 2,
+          "colspan": 1
+        },
+        {
+          "row": 2,
+          "column": 0,
+          "rowspan": 6,
+          "colspan": 1
+        },
+        {
+          "row": 8,
+          "column": 0,
+          "rowspan": 3,
+          "colspan": 1
+        }
+      ]
+    },
+    "T02@page:3": {
+      "source": "source.pdf",
+      "source_sha256": "1d1e5af01f4b05c2b38af9aeaf6553a946502f72c65cb27036333e24bc94b2bf",
+      "page": 3,
+      "bbox_top_left": [
+        55.0,
+        77.00000000000011,
+        537.0,
+        545.0
+      ],
+      "grid_edges": {
+        "x": [
+          55.0,
+          117.0,
+          164.0,
+          216.0,
+          278.0,
+          350.0,
+          537.0
+        ],
+        "y": [
+          77.0,
+          104.0,
+          131.0,
+          177.0,
+          223.0,
+          269.0,
+          315.0,
+          361.0,
+          407.0,
+          453.0,
+          499.0,
+          545.0
+        ]
+      },
+      "actual_merged_cells": [
+        {
+          "row": 0,
+          "column": 0,
+          "rowspan": 1,
+          "colspan": 2
+        },
+        {
+          "row": 0,
+          "column": 2,
+          "rowspan": 1,
+          "colspan": 3
+        },
+        {
+          "row": 0,
+          "column": 5,
+          "rowspan": 2,
+          "colspan": 1
+        },
+        {
+          "row": 2,
+          "column": 0,
+          "rowspan": 3,
+          "colspan": 1
+        },
+        {
+          "row": 5,
+          "column": 0,
+          "rowspan": 6,
+          "colspan": 1
+        }
+      ]
+    },
+    "T03@page:4": {
+      "source": "source.pdf",
+      "source_sha256": "1d1e5af01f4b05c2b38af9aeaf6553a946502f72c65cb27036333e24bc94b2bf",
+      "page": 4,
+      "bbox_top_left": [
+        55.0,
+        150.0000000000001,
+        537.0,
+        417.00000000000006
+      ],
+      "grid_edges": {
+        "x": [
+          55.0,
+          105.0,
+          247.0,
+          327.0,
+          537.0
+        ],
+        "y": [
+          150.0,
+          177.0,
+          217.0,
+          257.0,
+          297.0,
+          337.0,
+          377.0,
+          417.0
+        ]
+      },
+      "actual_merged_cells": [
+        {
+          "row": 3,
+          "column": 3,
+          "rowspan": 2,
+          "colspan": 1
+        },
+        {
+          "row": 5,
+          "column": 1,
+          "rowspan": 1,
+          "colspan": 3
+        }
+      ]
+    },
+    "T04@page:6": {
+      "source": "source.pdf",
+      "source_sha256": "1d1e5af01f4b05c2b38af9aeaf6553a946502f72c65cb27036333e24bc94b2bf",
+      "page": 6,
+      "bbox_top_left": [
+        55.0,
+        150.0000000000001,
+        537.0,
+        489.00000000000006
+      ],
+      "grid_edges": {
+        "x": [
+          55.0,
+          103.0,
+          310.0,
+          385.0,
+          537.0
+        ],
+        "y": [
+          150.0,
+          177.0,
+          216.0,
+          255.0,
+          294.0,
+          333.0,
+          372.0,
+          411.0,
+          450.0,
+          489.0
+        ]
+      },
+      "actual_merged_cells": []
+    }
+  }
+}

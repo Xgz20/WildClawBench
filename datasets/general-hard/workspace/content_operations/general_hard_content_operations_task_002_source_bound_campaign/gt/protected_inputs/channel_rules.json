@@ -1,0 +1,13 @@
+{
+  "schema": "h058-channel-rules/v1",
+  "counting": "正文按Unicode字符计，去全部空白，保留标点；不含标题、字段标签、引文定位、标签或适配说明；正文中的古文计入正文。",
+  "channels": [
+    {"channel_id":"C1","name":"公众号","body_min":240,"body_max":360,"title_min":4,"title_max":20,"tag_count":0,"structure":"正文至少3个自然段，形成场景、释义与本次行动建议；不是标题/标签填字数。"},
+    {"channel_id":"C2","name":"小红书","body_min":140,"body_max":220,"title_min":4,"title_max":18,"tag_count":3,"structure":"正文至少2段，至少两个明确步骤（1.与2.或1、与2、或①与②），结尾给一个不索取隐私的交流问题。"},
+    {"channel_id":"C3","name":"短视频","body_min":100,"body_max":160,"title_min":4,"title_max":16,"tag_count":2,"structure":"正文有画面、口播、互动三段。等价标签画面/镜头、口播/旁白、互动/提问均可；写可拍的画面和可读的口播，不是三段同文。"}
+  ],
+  "adaptation": "每主题三渠道的非引文正文不得完全相同或只是彼此前缀；这仅是最低机械检测，语义适配由Judge审阅。",
+  "tags": "单独标签字段；使用#开头的连续中文/字母/数字/下划线词，空格分隔，不能用同一标签重复凑数。",
+  "forbidden_expressions": ["治愈焦虑","保证成功","躺赢","逆天改命","国学圣经"],
+  "planning": {"start":"2026-11-02","end":"2026-11-08","timezone":"Asia/Shanghai","max_per_day":2,"max_per_channel_day":1,"slots":["12:00","20:00"],"status":"待人工确认","one_time_suggestion_only":true}
+}

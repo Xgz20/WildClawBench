@@ -1,0 +1,8 @@
+{
+  "contract.md": "d1dd81f172e3a0ff57b333f025017bd837be6f4ebb1e44154990245ebbc33fca",
+  "project/test_public.py": "51ce4922b547afbe8dfa03cbb4b3921bcae1612316897f48ab4d5b29c69c3b83",
+  "fixtures/raw-preservation.csv": "9fca49948f2a972b169f12e8b44fd5b7bfbd858186475340ba3c7e705f7e272b",
+  "fixtures/legacy.csv": "55c87a9d337ea53c11913846527adb63aaec5088330329011970a62f77b8cff8",
+  "fixtures/invalid.txt": "65a79c7ecd285e52e123600687cdbf46545a47acf54453e19e3d0f4745c1ddb0",
+  "fixtures/bom.tsv": "36a0f1285514bb7489214db7d2125de039e4bf7420c0942bcec337496aaf825a"
+}

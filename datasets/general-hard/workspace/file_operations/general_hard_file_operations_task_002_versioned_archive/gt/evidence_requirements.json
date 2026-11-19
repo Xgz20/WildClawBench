@@ -1,0 +1,14 @@
+{
+  "source_identification": [
+    "source_id from protected.json",
+    "NFC original path under incoming",
+    "SHA256 of original raw bytes"
+  ],
+  "content_identity": "archive bytes independently hashed, not self-reported copied status",
+  "version_evidence": "original parsed business key, approval state, numeric version and UTC issued instant",
+  "exception_identity": "kind plus actual source-id set; wording free",
+  "limitations": [
+    "Final bytes do not prove absence of transient input mutation or external operations; formal execution needs actual trace.",
+    "The source-only Node check and references are model-authored verification, not human expert review or real Harness evidence."
+  ]
+}

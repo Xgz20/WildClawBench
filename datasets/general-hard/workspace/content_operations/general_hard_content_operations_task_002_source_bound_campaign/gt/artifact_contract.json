@@ -1,0 +1,34 @@
+{
+  "schema": "h058-artifact-contract/v1",
+  "deliverables": {
+    "campaign": "results/campaign.docx",
+    "citations": "results/citations.csv",
+    "calendar": "results/calendar.xlsx"
+  },
+  "calendar_aliases": {
+    "content_id": "content_id",
+    "内容编号": "content_id",
+    "theme_id": "theme_id",
+    "主题编号": "theme_id",
+    "channel_id": "channel_id",
+    "渠道": "channel_id",
+    "suggested_date": "suggested_date",
+    "建议日期": "suggested_date",
+    "slot": "slot",
+    "建议时段": "slot",
+    "owner": "owner",
+    "负责人": "owner",
+    "status": "status",
+    "状态": "status",
+    "citation_ids": "citation_ids",
+    "引用编号": "citation_ids"
+  },
+  "layout": "visible native paragraphs/tables and visible native row tables; no fixed sheet/coordinates/record order/column order",
+  "body_markers": "T1..T3 and P11..P33, standalone bracket markers; field labels public acceptance",
+  "delivery_weights": {
+    "parse": 0.35,
+    "protected": 0.25,
+    "calendar_graph": 0.25,
+    "visible_csv": 0.15
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "faults": [
+    "frontend fake rows",
+    "server permission absent",
+    "last admin deletion/demotion",
+    "stale concurrent overwrite",
+    "idempotent duplicate audit",
+    "key reuse changed payload",
+    "receipt before current actor authority",
+    "commit member before audit",
+    "migration version only chargeR01",
+    "fake PASS trace/source",
+    "tracker missing/duplicate fixed ID",
+    "protected helpers altered"
+  ],
+  "typed_unassessed": [
+    "missing trusted GT",
+    "missing frozen Node",
+    "unsupported imports/client external module",
+    "infrastructure deadline"
+  ]
+}

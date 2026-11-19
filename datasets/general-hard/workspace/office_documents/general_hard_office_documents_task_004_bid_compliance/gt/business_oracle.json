@@ -1,0 +1,20 @@
+{
+  "schema_version": "h004-business-oracle/v1",
+  "checkpoint_weights": {
+    "business_correctness": 0.55,
+    "boundary_cases": 0.25,
+    "delivery_integrity": 0.15,
+    "evidence_binding": 0.05
+  },
+  "per_issue_weights": {
+    "draft_status": 0.25,
+    "coverage": 0.25,
+    "certificate_status": 0.15,
+    "mandatory": 0.1,
+    "revised_coverage": 0.25
+  },
+  "issue_mean_weight": 0.85,
+  "mandatory_gap_weight": 0.15,
+  "date_rule": "2026-11-05 date inclusive, not edit date/current date",
+  "semantic_boundary": "Automatic rules check explicit fields and provenance; they do not assign prose correctness by keywords. Independent semantic Judge must inspect actual revised claims and omissions."
+}

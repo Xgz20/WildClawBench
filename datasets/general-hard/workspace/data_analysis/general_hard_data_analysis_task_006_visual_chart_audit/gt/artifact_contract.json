@@ -1,0 +1,214 @@
+{
+  "workbook": "results/claims_review.xlsx",
+  "findings": "results/findings.md",
+  "column_aliases": {
+    "claim_id": [
+      "claim_id",
+      "claim id",
+      "结论编号",
+      "主张编号",
+      "核对编号"
+    ],
+    "reading_id": [
+      "reading_id",
+      "reading id",
+      "读数编号",
+      "观测编号"
+    ],
+    "decision": [
+      "decision",
+      "判定",
+      "判断",
+      "结论",
+      "审核结论"
+    ],
+    "lower": [
+      "lower",
+      "下界",
+      "下限",
+      "区间下界",
+      "最小值"
+    ],
+    "upper": [
+      "upper",
+      "上界",
+      "上限",
+      "区间上界",
+      "最大值"
+    ],
+    "axis": [
+      "axis",
+      "坐标轴",
+      "轴",
+      "轴绑定"
+    ],
+    "unit": [
+      "unit",
+      "单位"
+    ],
+    "source_file": [
+      "source_file",
+      "source file",
+      "来源图",
+      "原图",
+      "来源文件",
+      "图片文件"
+    ],
+    "source_regions": [
+      "source_regions",
+      "source regions",
+      "区域证据",
+      "视觉证据",
+      "图像区域",
+      "区域坐标",
+      "证据区域"
+    ],
+    "reading_ids": [
+      "reading_ids",
+      "读数引用",
+      "关联读数",
+      "支撑读数"
+    ],
+    "reason": [
+      "reason",
+      "rationale",
+      "解释",
+      "理由",
+      "依据",
+      "判定说明"
+    ],
+    "basis": [
+      "basis",
+      "method",
+      "计算依据",
+      "计算过程",
+      "读数依据"
+    ],
+    "chart": [
+      "chart",
+      "图号",
+      "图",
+      "图片编号"
+    ],
+    "x0": [
+      "x0",
+      "x_min",
+      "左上x"
+    ],
+    "y0": [
+      "y0",
+      "y_min",
+      "左上y"
+    ],
+    "x1": [
+      "x1",
+      "x_max",
+      "右下x"
+    ],
+    "y1": [
+      "y1",
+      "y_max",
+      "右下y"
+    ]
+  },
+  "decision_aliases": {
+    "supported": [
+      "supported",
+      "support",
+      "支持"
+    ],
+    "refuted": [
+      "refuted",
+      "refute",
+      "反驳",
+      "不支持且被反证"
+    ],
+    "uncertain": [
+      "uncertain",
+      "insufficient_evidence",
+      "证据不足",
+      "不确定",
+      "无法确认"
+    ]
+  },
+  "axis_aliases": {
+    "left": [
+      "left",
+      "左轴",
+      "左侧纵轴",
+      "左纵轴"
+    ],
+    "right": [
+      "right",
+      "右轴",
+      "右侧纵轴",
+      "右纵轴"
+    ],
+    "single": [
+      "single",
+      "单轴",
+      "单一纵轴"
+    ],
+    "derived": [
+      "derived",
+      "派生",
+      "计算",
+      "区间计算"
+    ]
+  },
+  "unit_aliases": {
+    "people": [
+      "人",
+      "人数",
+      "people",
+      "persons"
+    ],
+    "thousand_people": [
+      "千人",
+      "thousand people",
+      "千"
+    ],
+    "ten_thousand_people": [
+      "万人",
+      "ten thousand people"
+    ],
+    "percent": [
+      "%",
+      "％",
+      "百分比",
+      "percent",
+      "百分数"
+    ],
+    "fraction": [
+      "比例",
+      "fraction",
+      "ratio",
+      "无量纲"
+    ],
+    "multiple": [
+      "倍",
+      "倍数",
+      "倍（无量纲）",
+      "multiple"
+    ]
+  },
+  "required_claim_fields": [
+    "decision",
+    "reason",
+    "source_file"
+  ],
+  "required_reading_fields": [
+    "axis",
+    "unit",
+    "lower",
+    "upper",
+    "source_file"
+  ],
+  "duplicate_policy": "Consistent repeated views are accepted; contradictory copies of the same object cannot be selected optimistically.",
+  "interval_equivalence": "Accept native numeric percentages, numeric percent literals, proportion units, person/thousand/ten-thousand units; original scale and unit must remain meaningful. Nonzero intervals must intersect independently observed bands, have compatible centers and remain informative. Model envelope endpoints are not mandatory.",
+  "semantic_limit": "Rules observe declarations, numeric intervals, actual native recalculation and geometric source locators. Correct IDs, labels or rectangles alone do not establish complete explanation, genuine visual tool use, statistical reasoning, absence of fabricated narrative, or usable visual layout.",
+  "private_helper_sha256": {
+    "office_runtime.py": "7dcb510b0a3a234799c8b4bf44f8fa0c8b2d047b43eded3e6010d239fd1c66ac",
+    "artifact_io.py": "1fdac86a086f664350c1fc69f85c9eefba96090fa92d32dfc42f95bfa1b89cd2"
+  }
+}

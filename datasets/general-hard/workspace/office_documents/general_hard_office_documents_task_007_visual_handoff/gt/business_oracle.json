@@ -1,0 +1,24 @@
+{
+  "schema_version": "h007-business-oracle/v1",
+  "checkpoint_weights": {
+    "business_correctness": 0.55,
+    "boundary_cases": 0.25,
+    "delivery_integrity": 0.15,
+    "evidence_binding": 0.05
+  },
+  "case_count": 8,
+  "business_artifact_weights": {
+    "actual_native_revision": 0.75,
+    "declared_action_and_target": 0.25
+  },
+  "boundaries": [
+    "same_text_different_target",
+    "deletion_only_selected_span",
+    "cross_row_arrow",
+    "cancelled_proposal_not_applied",
+    "insert_only_at_selected_note",
+    "actual_step_order_and_numbering",
+    "out_of_scope_rejected"
+  ],
+  "independent_semantics": "Actual images must be read to check arrow meaning, note cancellation, intended target and consistency with native edits. Rule geometry and source hashes do not prove image interpretation."
+}

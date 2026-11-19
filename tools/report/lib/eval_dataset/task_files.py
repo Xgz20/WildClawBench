@@ -58,9 +58,10 @@ def strip_codeblock(value: str) -> str:
     return re.sub(r"^```[^\n]*\n?", "", re.sub(r"\n?```$", "", value)).strip()
 
 
-def parse_task_document(path: str | Path) -> TaskDocument:
+def parse_task_document(path: str | Path, *, raw: str | None = None) -> TaskDocument:
     path = Path(path).resolve()
-    raw = path.read_text(encoding="utf-8")
+    if raw is None:
+        raw = path.read_text(encoding="utf-8")
     match = re.match(r"^---\s*\n(.*?)\n---\s*\n(.*)$", raw, re.DOTALL)
     if not match:
         return TaskDocument(path=path, raw=raw, frontmatter_error="YAML frontmatter not found")

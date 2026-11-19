@@ -1,0 +1,14 @@
+{
+  "required_observations": [
+    "original_five_images",
+    "17_decisions",
+    "regional_visual_features",
+    "6_execution_clauses",
+    "conditional_nonexecution",
+    "three_specific_unknowns",
+    "unchanged_inputs",
+    "trusted_native_word_pdf"
+  ],
+  "coordinate_contract": "file + bbox xyxy pixels by default + observation. Normalized xyxy and pixel xywh require explicit coordinate_space.",
+  "independent_judge": "Inspect original five PNGs, native matrix, Word/derived PDF and JSON; rule boxes and claimed reads alone do not establish correct image interpretation or actual Harness image delivery."
+}

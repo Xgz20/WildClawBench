@@ -1,0 +1,33 @@
+{
+  "schema": "h049-boundary-contract/v1",
+  "expected_old_commands": [
+    "stamp-old",
+    "legacy_stamp"
+  ],
+  "resources": [
+    "resources/defaults.json",
+    "resources/banner.txt"
+  ],
+  "invalid_configs": [
+    {
+      "scale": true
+    },
+    {
+      "include_null_region": 0
+    },
+    {
+      "min_amount": "bad"
+    }
+  ],
+  "invalid_records": [
+    {
+      "id": "x",
+      "amount": true,
+      "region": "cn"
+    }
+  ],
+  "isolated_cwd_required": true,
+  "source_hidden_after_build": true,
+  "non_ascii_target": true,
+  "editable_forbidden": true
+}

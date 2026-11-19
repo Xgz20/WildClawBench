@@ -1,0 +1,22 @@
+{
+  "public_ids": [
+    "B01_default",
+    "B02_scalar_priority",
+    "B03_legacy_all",
+    "B04_user_legacy_beats_project_new",
+    "B06_unknown_nested",
+    "N01_zero_all",
+    "N03_explicit_null_alias",
+    "N06_barrier_no_resurrection",
+    "N11_sources_legacy",
+    "N12_sources_ignored"
+  ],
+  "test_count": 4,
+  "command_tail": [
+    "-B",
+    "-m",
+    "unittest",
+    "project.test_public",
+    "-v"
+  ]
+}

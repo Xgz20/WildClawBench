@@ -1,0 +1,75 @@
+{
+  "schema_version": "h031-facts-free-scoring-design/v1",
+  "scope": "公开契约推导的自动机制设计；不读取来源科学事实或参考答案",
+  "outer_weights": {
+    "automated": 0.4,
+    "llm_judge": 0.6
+  },
+  "checkpoint_weights": {
+    "record_contract": 0.2,
+    "time_and_scope": 0.25,
+    "citation_resolution": 0.4,
+    "protected_delivery": 0.15
+  },
+  "semantic_weights": {
+    "factual_support": 0.5,
+    "coverage_and_independence": 0.3,
+    "bounded_conclusions": 0.2
+  },
+  "denominators": {
+    "NE": "max(5,全部entities行数)，畸形/重复也不先过滤",
+    "NP": "max(5,全部publications行数)",
+    "NC": "max(12,全部claims行数)，多于12是公开契约错误，仍审全部",
+    "DCAP": "5*NE，最低25",
+    "DMETA": "2*NE+3*NP，最低25；实体身份/时点及研究工作身份/报告日期/所读版本",
+    "DDATE": "NE+2*NP，最低15；实体as_of、研究报告日期及所读版本日期，不随unknown缩减",
+    "NPR": "max(1,全部priorities行数)",
+    "unknown": "保留每格机会，不制造引用。明确unknown不主张事实时只核声明形态，标记unasserted_unknown而不是伪造provenance；日期unknown不填最低已支持时点数量。",
+    "padding": "每逻辑字段只有一个机会，全部实际引用all通过才通过；孤立/多余错引用进入固定完整性槽，不按引用条数平均。"
+  },
+  "automatic_checkpoints": {
+    "record_contract": {
+      "formula": ".15*root_shape + .25*item_shapes + .20*id_graph + .25*native_matrix + .15*native_report",
+      "item_shapes": ".30*entity_shape/NE + .25*publication_shape/NP + .35*claim_shape/NC + .10*coverage_priority_shape",
+      "id_graph": "ID只在各自数组命名空间唯一；CID全账本唯一。claim引用存在且两类关联不同时空；priority.claim_ids实际存在；没有隐藏镜像或反向闭包。",
+      "native_matrix": ".45*身份/版本/日期及选择理由逻辑视图 + .55*五维可见可编辑表达/证据层级关联；自由文本意义由Judge。",
+      "native_report": "原生可读可编辑与明确实际可解析的镜像矛盾；不要求固定模板、ID重复或关键词证明完整科学内容。"
+    },
+    "time_and_scope": {
+      "formula": ".40*metadata_trace + .25*calendar_consistency + .20*scope_arithmetic + .15*priority_budget_DAG",
+      "metadata_trace": "DMETA固定机会；已知日期必须连接独立实际字段并同一位置字面日历一致，角色/身份真值交Judge。未知版本不新增CID要求，可沿用记录核查说明。",
+      "calendar_consistency": "年份/月/日区间和真实aware timestamp保留精度，按Asia/Shanghai截止；无H030的2021下界；unknown/跨界不填已支持时点最低数。",
+      "scope_arithmetic": "声明数及12结论/五维topics覆盖、最多60source、1至3priority；真实合格身份/完整正文/去重另由Judge。；read_full的实际来源连接仅核声明，不证明完整正文或实读。",
+      "priority_budget_DAG": "有限非负lower/upper且upper>=lower，总upper<=60；数字或明确人日文本；rank非重复正序且最小1，不加未公开间隔罚分；引用本priority或明确外部前提，不能循环。"
+    },
+    "citation_resolution": {
+      "formula": ".20*pointer_graph + .20*E(provenance) + .40*E(literal) + .20*epistemic_numeric_shape",
+      "E": ".45*能力格/DCAP + .25*结论/NC + .30*身份日期/DMETA",
+      "pointer_graph": ".75*E(graph)+.25*固定账本完整性检查",
+      "linkage": "RFC6901 token前缀关系，块/叶/多目标/重排及~0/~1；unknown/inference可沿已有记录/显式关联核查语境，无强制引用副本。已给引用全部审，不能凭语义关系标签判支持成立。",
+      "originals": "H030通用DOM XPath/CSS/括号/安全XML/PDF物理页和实际Office重算；另加通用JSON字段与严格content API base64/Git blob/decoded行bytes lineage，无代码执行。",
+      "numeric": "递归核已有对象中的实际metric/value记录，不把日期/ID/rank/schema计数当实验结果，不强制定量quota或numeric_results新容器。"
+    },
+    "protected_delivery": {
+      "formula": ".50*三输入SHA + .25*四交付存在 + .25*四交付可解析/原生可见可编辑",
+      "boundary": "原生外部数据连接/宏不接受，普通来源超链接接受；公式只接受真实可信重算，环境缺失是异常而非错误缓存回退。"
+    }
+  },
+  "unknown_and_semantic_boundary": "自动满分只说明公开机械契约成立；不证明实际检索、完整阅读、身份独立、证据强度、科学结论或优先级。最终=.4A+.6S仅在独立Judge后计算。",
+  "error_policy": "缺GT/来源/Office、供证漂移、JSON/content无法安全派生或unsupported定位/合法表示为TrustedEvidenceError/evaluation_error；实际候选可观察交付缺陷按相关机会计分，不静默重归一化。",
+  "readiness": "设计可实施；当前仅计划合成机制控制，不宣称runtime/真实包/原生参考/Harness/Judge验收。",
+  "semantic_rubric": {
+    "factual_support": {
+      "weight": 0.5,
+      "scope": "Actual original support/refute/qualify, numbers/conditions and metadata/version roles; same standard for pool-external sources."
+    },
+    "coverage_and_independence": {
+      "weight": 0.3,
+      "scope": "Qualified identity/time/full research-body coverage, actual discovery/reading, representativeness and same-work/version dedup."
+    },
+    "bounded_conclusions": {
+      "weight": 0.2,
+      "scope": "Comparability, evidence nature, uncertainty, justified cost/dependency priorities and falsifiable counterexamples; no static-to-runtime guarantee."
+    }
+  }
+}

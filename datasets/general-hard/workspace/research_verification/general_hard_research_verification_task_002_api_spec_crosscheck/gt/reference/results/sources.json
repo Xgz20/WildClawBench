@@ -1,0 +1,1366 @@
+{
+  "schema_version": "h028-author-reference-source-ledger/v1",
+  "author_reference": true,
+  "purpose": "将此前独立获取并完整读取的主API官方原件、冻结来源先行结论与本地数学复核整理为作者参考；本参考不反向生成GT。",
+  "candidate_harness_run": false,
+  "human_expert_review": false,
+  "model_review_not_human_expert": true,
+  "formal_semantic_score": null,
+  "assembled_at": "2026-10-28T10:05:51.319746+00:00",
+  "source_reference": {
+    "identity": "author_reference",
+    "source_precedes_reference": true,
+    "expected_read_for_reference_assembly": true,
+    "candidate_answer_used_for_truth": false,
+    "ground_truth_modified_or_generated_from_this_reference": false,
+    "frozen_source_truth_leaf_count": 101,
+    "service_acceptance_tested": false
+  },
+  "sources": [
+    {
+      "source_id": "official-standard-api",
+      "url": "https://www.xfyun.cn/doc/asr/rtasr/API.html",
+      "access_status": "read_full",
+      "accessed_at": "2026-10-28T09:10:44.255426+00:00",
+      "access_started_at": "2026-10-28T09:10:43.479975+00:00",
+      "access_time_basis": "source-review-b原真实HTTPS GET回执；不是本次组装时间，也不冒用题目首份快照更早的抓取时刻。",
+      "title": "实时语音转写(标准版)",
+      "publisher": "讯飞开放平台文档中心",
+      "citations": [
+        {
+          "citation_id": "C-title",
+          "locator": {
+            "heading": "实时语音转写(标准版)",
+            "anchor": "实时语音转写-标准版",
+            "selector": "main.page > .content__default",
+            "direct_child_block_index_zero_based": 0,
+            "raw_html_line_1based": 19,
+            "raw_html_column_zero_based": 6850,
+            "column_units": "Unicode code points"
+          },
+          "quote": "实时语音转写(标准版)",
+          "verification": {
+            "exact_substring_of_independently_acquired_html_projection": true,
+            "matching_blocks_in_declared_heading": 1,
+            "selected_match_basis": "Exact logical row where specified; otherwise first matching direct-child block within the actual heading."
+          }
+        },
+        {
+          "citation_id": "C-requirements",
+          "locator": {
+            "heading": "接口要求",
+            "anchor": "接口要求",
+            "table_row": "音频属性",
+            "article_table_index_1based": 1,
+            "row_index_header_zero": 7,
+            "selector": "main.page > .content__default",
+            "direct_child_block_index_zero_based": 8,
+            "raw_html_line_1based": 23,
+            "raw_html_column_zero_based": 1553,
+            "column_units": "Unicode code points"
+          },
+          "quote": "单声道",
+          "verification": {
+            "exact_substring_of_independently_acquired_html_projection": true,
+            "matching_blocks_in_declared_heading": 1,
+            "selected_match_basis": "Exact logical row where specified; otherwise first matching direct-child block within the actual heading."
+          }
+        },
+        {
+          "citation_id": "C-handshake",
+          "locator": {
+            "heading": "握手阶段",
+            "anchor": "握手阶段",
+            "selector": "main.page > .content__default",
+            "direct_child_block_index_zero_based": 16,
+            "raw_html_line_1based": 26,
+            "raw_html_column_zero_based": 31,
+            "column_units": "Unicode code points"
+          },
+          "quote": "urlencode",
+          "verification": {
+            "exact_substring_of_independently_acquired_html_projection": true,
+            "matching_blocks_in_declared_heading": 1,
+            "selected_match_basis": "Exact logical row where specified; otherwise first matching direct-child block within the actual heading."
+          }
+        },
+        {
+          "citation_id": "C-signature",
+          "locator": {
+            "heading": "signa生成",
+            "anchor": "signa生成",
+            "selector": "main.page > .content__default",
+            "direct_child_block_index_zero_based": 24,
+            "raw_html_line_1based": 27,
+            "raw_html_column_zero_based": 4173,
+            "column_units": "Unicode code points"
+          },
+          "quote": "HmacSHA1",
+          "verification": {
+            "exact_substring_of_independently_acquired_html_projection": true,
+            "matching_blocks_in_declared_heading": 2,
+            "selected_match_basis": "Exact logical row where specified; otherwise first matching direct-child block within the actual heading."
+          }
+        },
+        {
+          "citation_id": "C-upload",
+          "locator": {
+            "heading": "上传数据",
+            "anchor": "上传数据",
+            "selector": "main.page > .content__default",
+            "direct_child_block_index_zero_based": 43,
+            "raw_html_line_1based": 45,
+            "raw_html_column_zero_based": 315,
+            "column_units": "Unicode code points"
+          },
+          "quote": "15秒",
+          "verification": {
+            "exact_substring_of_independently_acquired_html_projection": true,
+            "matching_blocks_in_declared_heading": 1,
+            "selected_match_basis": "Exact logical row where specified; otherwise first matching direct-child block within the actual heading."
+          }
+        },
+        {
+          "citation_id": "C-end",
+          "locator": {
+            "heading": "上传结束标志",
+            "anchor": "上传结束标志",
+            "selector": "main.page > .content__default",
+            "direct_child_block_index_zero_based": 45,
+            "raw_html_line_1based": 47,
+            "raw_html_column_zero_based": 86,
+            "column_units": "Unicode code points"
+          },
+          "quote": "binary message",
+          "verification": {
+            "exact_substring_of_independently_acquired_html_projection": true,
+            "matching_blocks_in_declared_heading": 1,
+            "selected_match_basis": "Exact logical row where specified; otherwise first matching direct-child block within the actual heading."
+          }
+        },
+        {
+          "citation_id": "C-result",
+          "locator": {
+            "heading": "接收转写结果",
+            "anchor": "接收转写结果",
+            "selector": "main.page > .content__default",
+            "direct_child_block_index_zero_based": 51,
+            "raw_html_line_1based": 55,
+            "raw_html_column_zero_based": 19,
+            "column_units": "Unicode code points"
+          },
+          "quote": "data为转写结果的json字符串",
+          "verification": {
+            "exact_substring_of_independently_acquired_html_projection": true,
+            "matching_blocks_in_declared_heading": 2,
+            "selected_match_basis": "Exact logical row where specified; otherwise first matching direct-child block within the actual heading."
+          }
+        },
+        {
+          "citation_id": "C-errors",
+          "locator": {
+            "heading": "错误码",
+            "anchor": "错误码",
+            "table_row": "16003",
+            "article_table_index_1based": 5,
+            "row_index_header_zero": 10,
+            "selector": "main.page > .content__default",
+            "direct_child_block_index_zero_based": 68,
+            "raw_html_line_1based": 149,
+            "raw_html_column_zero_based": 1997,
+            "column_units": "Unicode code points"
+          },
+          "quote": "重试或向服务提供商反馈",
+          "verification": {
+            "exact_substring_of_independently_acquired_html_projection": true,
+            "matching_blocks_in_declared_heading": 1,
+            "selected_match_basis": "Exact logical row where specified; otherwise first matching direct-child block within the actual heading."
+          }
+        },
+        {
+          "citation_id": "C-whitelist",
+          "locator": {
+            "heading": "白名单",
+            "anchor": "白名单",
+            "selector": "main.page > .content__default",
+            "direct_child_block_index_zero_based": 65,
+            "raw_html_line_1based": 142,
+            "raw_html_column_zero_based": 2548,
+            "column_units": "Unicode code points"
+          },
+          "quote": "保存后五分钟左右生效",
+          "verification": {
+            "exact_substring_of_independently_acquired_html_projection": true,
+            "matching_blocks_in_declared_heading": 1,
+            "selected_match_basis": "Exact logical row where specified; otherwise first matching direct-child block within the actual heading."
+          }
+        },
+        {
+          "citation_id": "C-faq-license",
+          "locator": {
+            "heading": "调用实时语音转写接口报10110错误码，如何解决？",
+            "anchor": "调用实时语音转写接口报10110错误码-如何解决",
+            "selector": "main.page > .content__default",
+            "direct_child_block_index_zero_based": 107,
+            "raw_html_line_1based": 153,
+            "raw_html_column_zero_based": 420,
+            "column_units": "Unicode code points"
+          },
+          "quote": "没有授权许可或授权数已满",
+          "verification": {
+            "exact_substring_of_independently_acquired_html_projection": true,
+            "matching_blocks_in_declared_heading": 1,
+            "selected_match_basis": "Exact logical row where specified; otherwise first matching direct-child block within the actual heading."
+          }
+        },
+        {
+          "citation_id": "C-faq-checksum",
+          "locator": {
+            "heading": "实时语音转写接口返回10105，如何解决？",
+            "anchor": "实时语音转写接口返回10105-如何解决",
+            "selector": "main.page > .content__default",
+            "direct_child_block_index_zero_based": 105,
+            "raw_html_line_1based": 153,
+            "raw_html_column_zero_based": 207,
+            "column_units": "Unicode code points"
+          },
+          "quote": "checkSum",
+          "verification": {
+            "exact_substring_of_independently_acquired_html_projection": true,
+            "matching_blocks_in_declared_heading": 1,
+            "selected_match_basis": "Exact logical row where specified; otherwise first matching direct-child block within the actual heading."
+          }
+        },
+        {
+          "citation_id": "C-duration",
+          "locator": {
+            "heading": "实时语音转写支持的音频时长有什么限制？",
+            "anchor": "实时语音转写支持的音频时长有什么限制",
+            "selector": "main.page > .content__default",
+            "direct_child_block_index_zero_based": 93,
+            "raw_html_line_1based": 151,
+            "raw_html_column_zero_based": 2722,
+            "column_units": "Unicode code points"
+          },
+          "quote": "理论上不做限制",
+          "verification": {
+            "exact_substring_of_independently_acquired_html_projection": true,
+            "matching_blocks_in_declared_heading": 1,
+            "selected_match_basis": "Exact logical row where specified; otherwise first matching direct-child block within the actual heading."
+          }
+        },
+        {
+          "citation_id": "C-envelope",
+          "locator": {
+            "heading": "返回值",
+            "anchor": "返回值",
+            "table_row": "sid",
+            "article_table_index_1based": 3,
+            "row_index_header_zero": 5,
+            "selector": "main.page > .content__default",
+            "direct_child_block_index_zero_based": 32,
+            "raw_html_line_1based": 30,
+            "raw_html_column_zero_based": 850,
+            "column_units": "Unicode code points"
+          },
+          "quote": "会话ID",
+          "verification": {
+            "exact_substring_of_independently_acquired_html_projection": true,
+            "matching_blocks_in_declared_heading": 1,
+            "selected_match_basis": "Exact logical row where specified; otherwise first matching direct-child block within the actual heading."
+          }
+        },
+        {
+          "citation_id": "C-flags",
+          "locator": {
+            "heading": "接收转写结果",
+            "anchor": "接收转写结果",
+            "table_row": "type",
+            "article_table_index_1based": 4,
+            "row_index_header_zero": 7,
+            "selector": "main.page > .content__default",
+            "direct_child_block_index_zero_based": 58,
+            "raw_html_line_1based": 142,
+            "raw_html_column_zero_based": 1065,
+            "column_units": "Unicode code points"
+          },
+          "quote": "0-最终结果",
+          "verification": {
+            "exact_substring_of_independently_acquired_html_projection": true,
+            "matching_blocks_in_declared_heading": 1,
+            "selected_match_basis": "Exact logical row where specified; otherwise first matching direct-child block within the actual heading."
+          }
+        },
+        {
+          "citation_id": "C-signa-error",
+          "locator": {
+            "heading": "返回值",
+            "anchor": "返回值",
+            "selector": "main.page > .content__default",
+            "direct_child_block_index_zero_based": 37,
+            "raw_html_line_1based": 38,
+            "raw_html_column_zero_based": 54,
+            "column_units": "Unicode code points"
+          },
+          "quote": "illegal signa",
+          "verification": {
+            "exact_substring_of_independently_acquired_html_projection": true,
+            "matching_blocks_in_declared_heading": 1,
+            "selected_match_basis": "Exact logical row where specified; otherwise first matching direct-child block within the actual heading."
+          }
+        }
+      ],
+      "sha256": "d6f65debe1937055d66c7263260cdfa18f2478e1dbbd8fd4f298c218c2a72760",
+      "body_sha256": "d6f65debe1937055d66c7263260cdfa18f2478e1dbbd8fd4f298c218c2a72760",
+      "bytes": 126790,
+      "main_text_sha256": "a4cd197142b319f574b9fb44ee9e94a48a3b85e1d8203aa484ce8e47dc70aad5",
+      "main_text_characters": 8951,
+      "capture_id": "xfyun-rtasr-standard-20261028",
+      "capture_identity": {
+        "identity_type": "author_document_capture",
+        "binding_basis": "本次来源B原字节SHA与题目快照原字节SHA相同；正文摘要也经规定projector在来源B原字节复算一致。",
+        "projector": "h028-main-article-text/v1",
+        "selector": "main.page > .content__default",
+        "normalization": "HTMLParser convert_charrefs; block/BR boundaries; ignore script/style/noscript; NFKC; collapse whitespace; preserve case",
+        "is_official_version": false,
+        "is_official_publication_date": false
+      },
+      "document_identity": {
+        "official_version": null,
+        "publication_date": null,
+        "revision_date": null,
+        "status": "unknown: full main article does not declare these metadata",
+        "standard_edition_is_product_label": true
+      },
+      "retrieval_method": "System curl HTTPS GET with normal TLS verification; static main article available without JavaScript/login/challenge.",
+      "http_status": 200,
+      "redirect_count": 0,
+      "content_type": "text/html",
+      "snapshot_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h028/qa/source-review-b/official-api.body.raw",
+      "http_headers_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h028/qa/source-review-b/official-api.headers.raw",
+      "retrieval_receipt_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h028/qa/source-review-b/official-api.retrieval.json",
+      "author_reference": true
+    }
+  ],
+  "field_citations": {
+    "service.product": [
+      "C-title"
+    ],
+    "connection.endpoint": [
+      "C-requirements",
+      "C-handshake"
+    ],
+    "connection.host_policy": [
+      "C-requirements"
+    ],
+    "document.version_state": [
+      "C-title"
+    ],
+    "handshake.required_query": [
+      "C-handshake"
+    ],
+    "auth.api_key_placement": [
+      "C-handshake",
+      "C-signature"
+    ],
+    "query.encoding": [
+      "C-handshake"
+    ],
+    "signature.base_string": [
+      "C-signature"
+    ],
+    "signature.md5_representation": [
+      "C-signature"
+    ],
+    "signature.hmac_inputs": [
+      "C-signature"
+    ],
+    "signature.final_encoding": [
+      "C-signature"
+    ],
+    "timestamp.semantic": [
+      "C-handshake"
+    ],
+    "timestamp.documented_window": [
+      "C-handshake",
+      "C-whitelist",
+      "C-upload"
+    ],
+    "audio.format": [
+      "C-requirements"
+    ],
+    "audio.sample_rate": [
+      "C-requirements"
+    ],
+    "audio.bit_depth": [
+      "C-requirements"
+    ],
+    "audio.channels": [
+      "C-requirements"
+    ],
+    "audio.message_type": [
+      "C-upload"
+    ],
+    "cadence.recommended_interval": [
+      "C-upload"
+    ],
+    "cadence.recommended_chunk": [
+      "C-upload"
+    ],
+    "cadence.requirement_strength": [
+      "C-upload"
+    ],
+    "audio.idle_timeout": [
+      "C-upload"
+    ],
+    "session.duration_boundary": [
+      "C-duration"
+    ],
+    "end.message_type": [
+      "C-end"
+    ],
+    "end.payload": [
+      "C-end"
+    ],
+    "response.message_type": [
+      "C-result"
+    ],
+    "response.envelope_types": [
+      "C-envelope"
+    ],
+    "response.data_parse": [
+      "C-result",
+      "C-envelope"
+    ],
+    "response.result_type": [
+      "C-flags"
+    ],
+    "optional.lang": [
+      "C-handshake"
+    ],
+    "optional.trans_strategy": [
+      "C-handshake"
+    ],
+    "optional.punc": [
+      "C-handshake"
+    ],
+    "optional.role_type": [
+      "C-handshake"
+    ],
+    "errors.selected_map": [
+      "C-errors"
+    ],
+    "errors.10110_diagnostic": [
+      "C-errors",
+      "C-signa-error",
+      "C-faq-license"
+    ],
+    "retry.documented_policy": [
+      "C-errors",
+      "C-envelope"
+    ],
+    "ip_whitelist.rules": [
+      "C-whitelist"
+    ],
+    "handshake.checksum_boundary": [
+      "C-handshake",
+      "C-faq-checksum"
+    ]
+  },
+  "field_support_locators": {
+    "service.product": [
+      {
+        "heading": "实时语音转写(标准版)",
+        "anchor": "实时语音转写-标准版",
+        "selector": "main.page > .content__default",
+        "direct_child_block_index_zero_based": 0,
+        "raw_html_line_1based": 19,
+        "raw_html_column_zero_based": 6850,
+        "column_units": "Unicode code points"
+      }
+    ],
+    "connection.endpoint": [
+      {
+        "heading": "接口要求",
+        "anchor": "接口要求",
+        "table_row": "请求协议",
+        "article_table_index_1based": 1,
+        "row_index_header_zero": 1,
+        "selector": "main.page > .content__default",
+        "direct_child_block_index_zero_based": 8,
+        "raw_html_line_1based": 23,
+        "raw_html_column_zero_based": 845,
+        "column_units": "Unicode code points"
+      },
+      {
+        "heading": "接口要求",
+        "anchor": "接口要求",
+        "table_row": "请求地址",
+        "article_table_index_1based": 1,
+        "row_index_header_zero": 2,
+        "selector": "main.page > .content__default",
+        "direct_child_block_index_zero_based": 8,
+        "raw_html_line_1based": 23,
+        "raw_html_column_zero_based": 950,
+        "column_units": "Unicode code points"
+      },
+      {
+        "heading": "握手阶段",
+        "anchor": "握手阶段",
+        "selector": "main.page > .content__default",
+        "direct_child_block_index_zero_based": 14,
+        "raw_html_line_1based": 23,
+        "raw_html_column_zero_based": 2280,
+        "column_units": "Unicode code points"
+      }
+    ],
+    "connection.host_policy": [
+      {
+        "heading": "接口要求",
+        "anchor": "接口要求",
+        "table_row": "请求地址",
+        "article_table_index_1based": 1,
+        "row_index_header_zero": 2,
+        "selector": "main.page > .content__default",
+        "direct_child_block_index_zero_based": 8,
+        "raw_html_line_1based": 23,
+        "raw_html_column_zero_based": 950,
+        "column_units": "Unicode code points"
+      }
+    ],
+    "document.version_state": [
+      {
+        "selector": "main.page > .content__default",
+        "scope": "entire complete main article; all10requested topics; full bounded reading and contextual term review",
+        "main_text_sha256": "a4cd197142b319f574b9fb44ee9e94a48a3b85e1d8203aa484ce8e47dc70aad5"
+      }
+    ],
+    "handshake.required_query": [
+      {
+        "heading": "握手阶段",
+        "anchor": "握手阶段",
+        "table_row": "appid",
+        "article_table_index_1based": 2,
+        "row_index_header_zero": 1,
+        "selector": "main.page > .content__default",
+        "direct_child_block_index_zero_based": 18,
+        "raw_html_line_1based": 27,
+        "raw_html_column_zero_based": 254,
+        "column_units": "Unicode code points"
+      },
+      {
+        "heading": "握手阶段",
+        "anchor": "握手阶段",
+        "table_row": "ts",
+        "article_table_index_1based": 2,
+        "row_index_header_zero": 2,
+        "selector": "main.page > .content__default",
+        "direct_child_block_index_zero_based": 18,
+        "raw_html_line_1based": 27,
+        "raw_html_column_zero_based": 468,
+        "column_units": "Unicode code points"
+      },
+      {
+        "heading": "握手阶段",
+        "anchor": "握手阶段",
+        "table_row": "signa",
+        "article_table_index_1based": 2,
+        "row_index_header_zero": 3,
+        "selector": "main.page > .content__default",
+        "direct_child_block_index_zero_based": 18,
+        "raw_html_line_1based": 27,
+        "raw_html_column_zero_based": 701,
+        "column_units": "Unicode code points"
+      }
+    ],
+    "auth.api_key_placement": [
+      {
+        "heading": "signa生成",
+        "anchor": "signa生成",
+        "selector": "main.page > .content__default",
+        "direct_child_block_index_zero_based": 27,
+        "raw_html_line_1based": 29,
+        "raw_html_column_zero_based": 106,
+        "column_units": "Unicode code points"
+      },
+      {
+        "heading": "握手阶段",
+        "anchor": "握手阶段",
+        "scope": "entire12-rowparameter table; apiKey not listed as a query parameter"
+      }
+    ],
+    "query.encoding": [
+      {
+        "heading": "握手阶段",
+        "anchor": "握手阶段",
+        "selector": "main.page > .content__default",
+        "direct_child_block_index_zero_based": 16,
+        "raw_html_line_1based": 26,
+        "raw_html_column_zero_based": 31,
+        "column_units": "Unicode code points"
+      }
+    ],
+    "signature.base_string": [
+      {
+        "heading": "signa生成",
+        "anchor": "signa生成",
+        "selector": "main.page > .content__default",
+        "direct_child_block_index_zero_based": 20,
+        "raw_html_line_1based": 27,
+        "raw_html_column_zero_based": 3890,
+        "column_units": "Unicode code points"
+      },
+      {
+        "heading": "signa生成",
+        "anchor": "signa生成",
+        "selector": "main.page > .content__default",
+        "direct_child_block_index_zero_based": 21,
+        "raw_html_line_1based": 27,
+        "raw_html_column_zero_based": 3985,
+        "column_units": "Unicode code points"
+      }
+    ],
+    "signature.md5_representation": [
+      {
+        "heading": "signa生成",
+        "anchor": "signa生成",
+        "selector": "main.page > .content__default",
+        "direct_child_block_index_zero_based": 22,
+        "raw_html_line_1based": 27,
+        "raw_html_column_zero_based": 4036,
+        "column_units": "Unicode code points"
+      },
+      {
+        "heading": "signa生成",
+        "anchor": "signa生成",
+        "selector": "main.page > .content__default",
+        "direct_child_block_index_zero_based": 23,
+        "raw_html_line_1based": 27,
+        "raw_html_column_zero_based": 4108,
+        "column_units": "Unicode code points"
+      }
+    ],
+    "signature.hmac_inputs": [
+      {
+        "heading": "signa生成",
+        "anchor": "signa生成",
+        "selector": "main.page > .content__default",
+        "direct_child_block_index_zero_based": 24,
+        "raw_html_line_1based": 27,
+        "raw_html_column_zero_based": 4173,
+        "column_units": "Unicode code points"
+      },
+      {
+        "heading": "signa生成",
+        "anchor": "signa生成",
+        "selector": "main.page > .content__default",
+        "direct_child_block_index_zero_based": 27,
+        "raw_html_line_1based": 29,
+        "raw_html_column_zero_based": 106,
+        "column_units": "Unicode code points"
+      }
+    ],
+    "signature.final_encoding": [
+      {
+        "heading": "signa生成",
+        "anchor": "signa生成",
+        "selector": "main.page > .content__default",
+        "direct_child_block_index_zero_based": 24,
+        "raw_html_line_1based": 27,
+        "raw_html_column_zero_based": 4173,
+        "column_units": "Unicode code points"
+      },
+      {
+        "heading": "signa生成",
+        "anchor": "signa生成",
+        "selector": "main.page > .content__default",
+        "direct_child_block_index_zero_based": 25,
+        "raw_html_line_1based": 29,
+        "raw_html_column_zero_based": 34,
+        "column_units": "Unicode code points"
+      }
+    ],
+    "timestamp.semantic": [
+      {
+        "heading": "握手阶段",
+        "anchor": "握手阶段",
+        "table_row": "ts",
+        "article_table_index_1based": 2,
+        "row_index_header_zero": 2,
+        "selector": "main.page > .content__default",
+        "direct_child_block_index_zero_based": 18,
+        "raw_html_line_1based": 27,
+        "raw_html_column_zero_based": 468,
+        "column_units": "Unicode code points"
+      }
+    ],
+    "timestamp.documented_window": [
+      {
+        "selector": "main.page > .content__default",
+        "scope": "entire complete main article; all10requested topics; full bounded reading and contextual term review",
+        "main_text_sha256": "a4cd197142b319f574b9fb44ee9e94a48a3b85e1d8203aa484ce8e47dc70aad5"
+      },
+      {
+        "heading": "握手阶段",
+        "anchor": "握手阶段",
+        "table_row": "ts",
+        "article_table_index_1based": 2,
+        "row_index_header_zero": 2,
+        "selector": "main.page > .content__default",
+        "direct_child_block_index_zero_based": 18,
+        "raw_html_line_1based": 27,
+        "raw_html_column_zero_based": 468,
+        "column_units": "Unicode code points"
+      },
+      {
+        "heading": "白名单",
+        "anchor": "白名单",
+        "selector": "main.page > .content__default",
+        "direct_child_block_index_zero_based": 65,
+        "raw_html_line_1based": 142,
+        "raw_html_column_zero_based": 2548,
+        "column_units": "Unicode code points"
+      },
+      {
+        "heading": "上传数据",
+        "anchor": "上传数据",
+        "selector": "main.page > .content__default",
+        "direct_child_block_index_zero_based": 43,
+        "raw_html_line_1based": 45,
+        "raw_html_column_zero_based": 315,
+        "column_units": "Unicode code points"
+      }
+    ],
+    "audio.format": [
+      {
+        "heading": "接口说明",
+        "anchor": "接口说明",
+        "selector": "main.page > .content__default",
+        "direct_child_block_index_zero_based": 3,
+        "raw_html_line_1based": 19,
+        "raw_html_column_zero_based": 7705,
+        "column_units": "Unicode code points"
+      },
+      {
+        "heading": "接口要求",
+        "anchor": "接口要求",
+        "table_row": "音频格式",
+        "article_table_index_1based": 1,
+        "row_index_header_zero": 8,
+        "selector": "main.page > .content__default",
+        "direct_child_block_index_zero_based": 8,
+        "raw_html_line_1based": 23,
+        "raw_html_column_zero_based": 1654,
+        "column_units": "Unicode code points"
+      }
+    ],
+    "audio.sample_rate": [
+      {
+        "heading": "接口要求",
+        "anchor": "接口要求",
+        "table_row": "音频属性",
+        "article_table_index_1based": 1,
+        "row_index_header_zero": 7,
+        "selector": "main.page > .content__default",
+        "direct_child_block_index_zero_based": 8,
+        "raw_html_line_1based": 23,
+        "raw_html_column_zero_based": 1553,
+        "column_units": "Unicode code points"
+      }
+    ],
+    "audio.bit_depth": [
+      {
+        "heading": "接口要求",
+        "anchor": "接口要求",
+        "table_row": "音频属性",
+        "article_table_index_1based": 1,
+        "row_index_header_zero": 7,
+        "selector": "main.page > .content__default",
+        "direct_child_block_index_zero_based": 8,
+        "raw_html_line_1based": 23,
+        "raw_html_column_zero_based": 1553,
+        "column_units": "Unicode code points"
+      }
+    ],
+    "audio.channels": [
+      {
+        "heading": "接口要求",
+        "anchor": "接口要求",
+        "table_row": "音频属性",
+        "article_table_index_1based": 1,
+        "row_index_header_zero": 7,
+        "selector": "main.page > .content__default",
+        "direct_child_block_index_zero_based": 8,
+        "raw_html_line_1based": 23,
+        "raw_html_column_zero_based": 1553,
+        "column_units": "Unicode code points"
+      }
+    ],
+    "audio.message_type": [
+      {
+        "heading": "上传数据",
+        "anchor": "上传数据",
+        "selector": "main.page > .content__default",
+        "direct_child_block_index_zero_based": 41,
+        "raw_html_line_1based": 45,
+        "raw_html_column_zero_based": 227,
+        "column_units": "Unicode code points"
+      }
+    ],
+    "cadence.recommended_interval": [
+      {
+        "heading": "上传数据",
+        "anchor": "上传数据",
+        "selector": "main.page > .content__default",
+        "direct_child_block_index_zero_based": 43,
+        "raw_html_line_1based": 45,
+        "raw_html_column_zero_based": 315,
+        "column_units": "Unicode code points"
+      }
+    ],
+    "cadence.recommended_chunk": [
+      {
+        "heading": "上传数据",
+        "anchor": "上传数据",
+        "selector": "main.page > .content__default",
+        "direct_child_block_index_zero_based": 43,
+        "raw_html_line_1based": 45,
+        "raw_html_column_zero_based": 315,
+        "column_units": "Unicode code points"
+      }
+    ],
+    "cadence.requirement_strength": [
+      {
+        "heading": "上传数据",
+        "anchor": "上传数据",
+        "selector": "main.page > .content__default",
+        "direct_child_block_index_zero_based": 43,
+        "raw_html_line_1based": 45,
+        "raw_html_column_zero_based": 315,
+        "column_units": "Unicode code points"
+      },
+      {
+        "heading": "实时语音转写的分片时长40ms是什么意思？",
+        "anchor": "实时语音转写的分片时长40ms是什么意思",
+        "selector": "main.page > .content__default",
+        "direct_child_block_index_zero_based": 95,
+        "raw_html_line_1based": 151,
+        "raw_html_column_zero_based": 2934,
+        "column_units": "Unicode code points"
+      }
+    ],
+    "audio.idle_timeout": [
+      {
+        "heading": "上传数据",
+        "anchor": "上传数据",
+        "selector": "main.page > .content__default",
+        "direct_child_block_index_zero_based": 43,
+        "raw_html_line_1based": 45,
+        "raw_html_column_zero_based": 315,
+        "column_units": "Unicode code points"
+      }
+    ],
+    "session.duration_boundary": [
+      {
+        "heading": "实时语音转写支持的音频时长有什么限制？",
+        "anchor": "实时语音转写支持的音频时长有什么限制",
+        "selector": "main.page > .content__default",
+        "direct_child_block_index_zero_based": 93,
+        "raw_html_line_1based": 151,
+        "raw_html_column_zero_based": 2722,
+        "column_units": "Unicode code points"
+      },
+      {
+        "selector": "main.page > .content__default",
+        "scope": "entire complete main article; all10requested topics; full bounded reading and contextual term review",
+        "main_text_sha256": "a4cd197142b319f574b9fb44ee9e94a48a3b85e1d8203aa484ce8e47dc70aad5"
+      }
+    ],
+    "end.message_type": [
+      {
+        "heading": "上传结束标志",
+        "anchor": "上传结束标志",
+        "selector": "main.page > .content__default",
+        "direct_child_block_index_zero_based": 45,
+        "raw_html_line_1based": 47,
+        "raw_html_column_zero_based": 86,
+        "column_units": "Unicode code points"
+      }
+    ],
+    "end.payload": [
+      {
+        "heading": "上传结束标志",
+        "anchor": "上传结束标志",
+        "selector": "main.page > .content__default",
+        "direct_child_block_index_zero_based": 46,
+        "raw_html_line_1based": 47,
+        "raw_html_column_zero_based": 144,
+        "column_units": "Unicode code points"
+      }
+    ],
+    "response.message_type": [
+      {
+        "heading": "接收转写结果",
+        "anchor": "接收转写结果",
+        "selector": "main.page > .content__default",
+        "direct_child_block_index_zero_based": 48,
+        "raw_html_line_1based": 48,
+        "raw_html_column_zero_based": 93,
+        "column_units": "Unicode code points"
+      },
+      {
+        "heading": "接收错误信息",
+        "anchor": "接收错误信息",
+        "selector": "main.page > .content__default",
+        "direct_child_block_index_zero_based": 60,
+        "raw_html_line_1based": 142,
+        "raw_html_column_zero_based": 2257,
+        "column_units": "Unicode code points"
+      }
+    ],
+    "response.envelope_types": [
+      {
+        "heading": "返回值",
+        "anchor": "返回值",
+        "table_row": "action",
+        "article_table_index_1based": 3,
+        "row_index_header_zero": 1,
+        "selector": "main.page > .content__default",
+        "direct_child_block_index_zero_based": 32,
+        "raw_html_line_1based": 30,
+        "raw_html_column_zero_based": 258,
+        "column_units": "Unicode code points"
+      },
+      {
+        "heading": "返回值",
+        "anchor": "返回值",
+        "table_row": "code",
+        "article_table_index_1based": 3,
+        "row_index_header_zero": 2,
+        "selector": "main.page > .content__default",
+        "direct_child_block_index_zero_based": 32,
+        "raw_html_line_1based": 30,
+        "raw_html_column_zero_based": 418,
+        "column_units": "Unicode code points"
+      },
+      {
+        "heading": "返回值",
+        "anchor": "返回值",
+        "table_row": "data",
+        "article_table_index_1based": 3,
+        "row_index_header_zero": 3,
+        "selector": "main.page > .content__default",
+        "direct_child_block_index_zero_based": 32,
+        "raw_html_line_1based": 30,
+        "raw_html_column_zero_based": 596,
+        "column_units": "Unicode code points"
+      },
+      {
+        "heading": "返回值",
+        "anchor": "返回值",
+        "table_row": "desc",
+        "article_table_index_1based": 3,
+        "row_index_header_zero": 4,
+        "selector": "main.page > .content__default",
+        "direct_child_block_index_zero_based": 32,
+        "raw_html_line_1based": 30,
+        "raw_html_column_zero_based": 724,
+        "column_units": "Unicode code points"
+      },
+      {
+        "heading": "返回值",
+        "anchor": "返回值",
+        "table_row": "sid",
+        "article_table_index_1based": 3,
+        "row_index_header_zero": 5,
+        "selector": "main.page > .content__default",
+        "direct_child_block_index_zero_based": 32,
+        "raw_html_line_1based": 30,
+        "raw_html_column_zero_based": 850,
+        "column_units": "Unicode code points"
+      }
+    ],
+    "response.data_parse": [
+      {
+        "heading": "接收转写结果",
+        "anchor": "接收转写结果",
+        "selector": "main.page > .content__default",
+        "direct_child_block_index_zero_based": 51,
+        "raw_html_line_1based": 55,
+        "raw_html_column_zero_based": 19,
+        "column_units": "Unicode code points"
+      },
+      {
+        "heading": "返回值",
+        "anchor": "返回值",
+        "selector": "main.page > .content__default",
+        "direct_child_block_index_zero_based": 35,
+        "raw_html_line_1based": 30,
+        "raw_html_column_zero_based": 1078,
+        "column_units": "Unicode code points"
+      },
+      {
+        "heading": "返回值",
+        "anchor": "返回值",
+        "selector": "main.page > .content__default",
+        "direct_child_block_index_zero_based": 37,
+        "raw_html_line_1based": 38,
+        "raw_html_column_zero_based": 54,
+        "column_units": "Unicode code points"
+      }
+    ],
+    "response.result_type": [
+      {
+        "heading": "接收转写结果",
+        "anchor": "接收转写结果",
+        "table_row": "type",
+        "article_table_index_1based": 4,
+        "row_index_header_zero": 7,
+        "selector": "main.page > .content__default",
+        "direct_child_block_index_zero_based": 58,
+        "raw_html_line_1based": 142,
+        "raw_html_column_zero_based": 1065,
+        "column_units": "Unicode code points"
+      }
+    ],
+    "optional.lang": [
+      {
+        "heading": "握手阶段",
+        "anchor": "握手阶段",
+        "table_row": "lang",
+        "article_table_index_1based": 2,
+        "row_index_header_zero": 4,
+        "selector": "main.page > .content__default",
+        "direct_child_block_index_zero_based": 18,
+        "raw_html_line_1based": 27,
+        "raw_html_column_zero_based": 945,
+        "column_units": "Unicode code points"
+      }
+    ],
+    "optional.trans_strategy": [
+      {
+        "heading": "握手阶段",
+        "anchor": "握手阶段",
+        "table_row": "transStrategy",
+        "article_table_index_1based": 2,
+        "row_index_header_zero": 6,
+        "selector": "main.page > .content__default",
+        "direct_child_block_index_zero_based": 18,
+        "raw_html_line_1based": 27,
+        "raw_html_column_zero_based": 1540,
+        "column_units": "Unicode code points"
+      },
+      {
+        "selector": "main.page > .content__default",
+        "scope": "entire complete main article; all10requested topics; full bounded reading and contextual term review",
+        "main_text_sha256": "a4cd197142b319f574b9fb44ee9e94a48a3b85e1d8203aa484ce8e47dc70aad5"
+      }
+    ],
+    "optional.punc": [
+      {
+        "heading": "握手阶段",
+        "anchor": "握手阶段",
+        "table_row": "punc",
+        "article_table_index_1based": 2,
+        "row_index_header_zero": 8,
+        "selector": "main.page > .content__default",
+        "direct_child_block_index_zero_based": 18,
+        "raw_html_line_1based": 27,
+        "raw_html_column_zero_based": 2415,
+        "column_units": "Unicode code points"
+      },
+      {
+        "selector": "main.page > .content__default",
+        "scope": "entire complete main article; all10requested topics; full bounded reading and contextual term review",
+        "main_text_sha256": "a4cd197142b319f574b9fb44ee9e94a48a3b85e1d8203aa484ce8e47dc70aad5"
+      }
+    ],
+    "optional.role_type": [
+      {
+        "heading": "握手阶段",
+        "anchor": "握手阶段",
+        "table_row": "roleType",
+        "article_table_index_1based": 2,
+        "row_index_header_zero": 11,
+        "selector": "main.page > .content__default",
+        "direct_child_block_index_zero_based": 18,
+        "raw_html_line_1based": 27,
+        "raw_html_column_zero_based": 3269,
+        "column_units": "Unicode code points"
+      },
+      {
+        "selector": "main.page > .content__default",
+        "scope": "entire complete main article; all10requested topics; full bounded reading and contextual term review",
+        "main_text_sha256": "a4cd197142b319f574b9fb44ee9e94a48a3b85e1d8203aa484ce8e47dc70aad5"
+      }
+    ],
+    "errors.selected_map": [
+      {
+        "heading": "错误码",
+        "anchor": "错误码",
+        "table_row": "10105",
+        "article_table_index_1based": 5,
+        "row_index_header_zero": 2,
+        "selector": "main.page > .content__default",
+        "direct_child_block_index_zero_based": 68,
+        "raw_html_line_1based": 149,
+        "raw_html_column_zero_based": 432,
+        "column_units": "Unicode code points"
+      },
+      {
+        "heading": "错误码",
+        "anchor": "错误码",
+        "table_row": "10106",
+        "article_table_index_1based": 5,
+        "row_index_header_zero": 3,
+        "selector": "main.page > .content__default",
+        "direct_child_block_index_zero_based": 68,
+        "raw_html_line_1based": 149,
+        "raw_html_column_zero_based": 627,
+        "column_units": "Unicode code points"
+      },
+      {
+        "heading": "错误码",
+        "anchor": "错误码",
+        "table_row": "10110",
+        "article_table_index_1based": 5,
+        "row_index_header_zero": 5,
+        "selector": "main.page > .content__default",
+        "direct_child_block_index_zero_based": 68,
+        "raw_html_line_1based": 149,
+        "raw_html_column_zero_based": 1014,
+        "column_units": "Unicode code points"
+      },
+      {
+        "heading": "错误码",
+        "anchor": "错误码",
+        "table_row": "10800",
+        "article_table_index_1based": 5,
+        "row_index_header_zero": 11,
+        "selector": "main.page > .content__default",
+        "direct_child_block_index_zero_based": 68,
+        "raw_html_line_1based": 149,
+        "raw_html_column_zero_based": 2189,
+        "column_units": "Unicode code points"
+      },
+      {
+        "heading": "错误码",
+        "anchor": "错误码",
+        "table_row": "16003",
+        "article_table_index_1based": 5,
+        "row_index_header_zero": 10,
+        "selector": "main.page > .content__default",
+        "direct_child_block_index_zero_based": 68,
+        "raw_html_line_1based": 149,
+        "raw_html_column_zero_based": 1997,
+        "column_units": "Unicode code points"
+      },
+      {
+        "heading": "错误码",
+        "anchor": "错误码",
+        "table_row": "37005",
+        "article_table_index_1based": 5,
+        "row_index_header_zero": 12,
+        "selector": "main.page > .content__default",
+        "direct_child_block_index_zero_based": 68,
+        "raw_html_line_1based": 149,
+        "raw_html_column_zero_based": 2388,
+        "column_units": "Unicode code points"
+      }
+    ],
+    "errors.10110_diagnostic": [
+      {
+        "heading": "错误码",
+        "anchor": "错误码",
+        "table_row": "10110",
+        "article_table_index_1based": 5,
+        "row_index_header_zero": 5,
+        "selector": "main.page > .content__default",
+        "direct_child_block_index_zero_based": 68,
+        "raw_html_line_1based": 149,
+        "raw_html_column_zero_based": 1014,
+        "column_units": "Unicode code points"
+      },
+      {
+        "heading": "返回值",
+        "anchor": "返回值",
+        "selector": "main.page > .content__default",
+        "direct_child_block_index_zero_based": 37,
+        "raw_html_line_1based": 38,
+        "raw_html_column_zero_based": 54,
+        "column_units": "Unicode code points"
+      },
+      {
+        "heading": "调用实时语音转写接口报10110错误码，如何解决？",
+        "anchor": "调用实时语音转写接口报10110错误码-如何解决",
+        "selector": "main.page > .content__default",
+        "direct_child_block_index_zero_based": 107,
+        "raw_html_line_1based": 153,
+        "raw_html_column_zero_based": 420,
+        "column_units": "Unicode code points"
+      }
+    ],
+    "retry.documented_policy": [
+      {
+        "heading": "错误码",
+        "anchor": "错误码",
+        "table_row": "16003",
+        "article_table_index_1based": 5,
+        "row_index_header_zero": 10,
+        "selector": "main.page > .content__default",
+        "direct_child_block_index_zero_based": 68,
+        "raw_html_line_1based": 149,
+        "raw_html_column_zero_based": 1997,
+        "column_units": "Unicode code points"
+      },
+      {
+        "heading": "返回值",
+        "anchor": "返回值",
+        "selector": "main.page > .content__default",
+        "direct_child_block_index_zero_based": 33,
+        "raw_html_line_1based": 30,
+        "raw_html_column_zero_based": 993,
+        "column_units": "Unicode code points"
+      },
+      {
+        "selector": "main.page > .content__default",
+        "scope": "entire complete main article; all10requested topics; full bounded reading and contextual term review",
+        "main_text_sha256": "a4cd197142b319f574b9fb44ee9e94a48a3b85e1d8203aa484ce8e47dc70aad5"
+      }
+    ],
+    "ip_whitelist.rules": [
+      {
+        "heading": "白名单",
+        "anchor": "白名单",
+        "selector": "main.page > .content__default",
+        "direct_child_block_index_zero_based": 63,
+        "raw_html_line_1based": 142,
+        "raw_html_column_zero_based": 2410,
+        "column_units": "Unicode code points"
+      },
+      {
+        "heading": "白名单",
+        "anchor": "白名单",
+        "selector": "main.page > .content__default",
+        "direct_child_block_index_zero_based": 65,
+        "raw_html_line_1based": 142,
+        "raw_html_column_zero_based": 2548,
+        "column_units": "Unicode code points"
+      }
+    ],
+    "handshake.checksum_boundary": [
+      {
+        "heading": "实时语音转写接口返回10105，如何解决？",
+        "anchor": "实时语音转写接口返回10105-如何解决",
+        "selector": "main.page > .content__default",
+        "direct_child_block_index_zero_based": 105,
+        "raw_html_line_1based": 153,
+        "raw_html_column_zero_based": 207,
+        "column_units": "Unicode code points"
+      },
+      {
+        "heading": "握手阶段",
+        "anchor": "握手阶段",
+        "scope": "all12formal query parameter rows, not FAQ alone"
+      }
+    ]
+  },
+  "local_math_verification": {
+    "method": "Offline Python hashlib.md5 plus hmac.sha1, standard Base64, percent-encode once; inputs read only from execution input, then compare fixed results. No files in original math reviews changed.",
+    "vectors": [
+      {
+        "vector_id": "SIG-01",
+        "citation_ids": [
+          "C-signature",
+          "C-handshake"
+        ],
+        "input_origin": "exec/client_requirements.md signature_inputs; clearly synthetic",
+        "local_recalculation_matches_frozen_vector": true,
+        "server_acceptance_tested": false
+      },
+      {
+        "vector_id": "SIG-02",
+        "citation_ids": [
+          "C-signature",
+          "C-handshake"
+        ],
+        "input_origin": "exec/client_requirements.md signature_inputs; clearly synthetic",
+        "local_recalculation_matches_frozen_vector": true,
+        "server_acceptance_tested": false
+      },
+      {
+        "vector_id": "SIG-03",
+        "citation_ids": [
+          "C-signature",
+          "C-handshake"
+        ],
+        "input_origin": "exec/client_requirements.md signature_inputs; clearly synthetic",
+        "local_recalculation_matches_frozen_vector": true,
+        "server_acceptance_tested": false
+      }
+    ],
+    "service_calls": 0,
+    "real_credentials_used": false,
+    "official_example_key_copied_to_configuration": false,
+    "source_algorithm_citation_ids": [
+      "C-signature",
+      "C-handshake"
+    ]
+  },
+  "bounded_unknown_review": {
+    "scope": {
+      "selector": "main.page > .content__default",
+      "scope": "entire complete main article; all10requested topics; full bounded reading and contextual term review",
+      "main_text_sha256": "a4cd197142b319f574b9fb44ee9e94a48a3b85e1d8203aa484ce8e47dc70aad5"
+    },
+    "method": "Read complete independently acquired article; revisit relevant complete paragraphs, logical rows and examples. Short quotes are location hints, not absence proofs.",
+    "document.version_state": {
+      "reviewed": "Entire article plus separation of HTTP headers, asset-link dates and telemetry from document metadata.",
+      "result": "No explicit formal revision/version/publication date; null is unknown, not inferred from title."
+    },
+    "timestamp.documented_window": {
+      "reviewed": "Every contextual occurrence of ts,时间戳,signa,有效,偏差,时间窗,分钟,秒; full handshake/signature/errors/FAQ.",
+      "result": "No numeric clock-skew or signature-validity limit found in this bounded direct-WebSocket article. This does not prove no server time validation. Whitelist propagation and audio idle are separate."
+    },
+    "optional_numeric_defaults": {
+      "reviewed": "Entire formal parameter table and full article for transStrategy,punc,roleType.",
+      "result": "Recommendation/control values are present; no numeric default stated for these fields. Keep default behavior separate from unknown numeric value."
+    },
+    "retry.documented_policy": {
+      "reviewed": "All error-code rows, runtime error section, sid explanation and FAQ, with full-article review for attempt/backoff/resume/replay guarantees.",
+      "explicit_retry_row_ids": [
+        "16003"
+      ],
+      "result": "No maximum attempts, backoff seconds or lossless resume/replay guarantee stated. Other error types are not thereby universally forbidden to retry."
+    },
+    "handshake.checksum_boundary": {
+      "reviewed": "All12formal query rows versus10105FAQ.",
+      "result": "FAQ mentions checkSum; formal table does not list it, so it cannot be promoted to a required query parameter. No assertion that server must reject every extra parameter."
+    },
+    "session.duration_boundary": {
+      "reviewed": "Entire article and durationFAQ.",
+      "result": "Theoretical no-limit statement; no finite total duration number or measured unlimited guarantee."
+    }
+  },
+  "citation_validation": {
+    "projection": "Independent generic HTMLParser tree from original source-review-b bytes; HTML entity decode and whitespace collapse; heading-anchor links excluded from visible heading text; logical tr/td/th rows retained. Not validation by GT quote alone.",
+    "generic_parser_independent_of_identity_projector": true,
+    "all15quotes_verified_in_actual_heading_or_row": true,
+    "citation_count": 15,
+    "total_quote_characters": 136,
+    "new_long_quotes_added": false,
+    "main_identity_projector_recalculated_on_independent_raw_bytes": true,
+    "quote_scope": "Only bounded locating hints. Field support uses full actual sections/rows as listed; C-title alone never proves absence.",
+    "raw_sha256_match": true,
+    "main_text_sha256_match": true
+  },
+  "limitations": [
+    "只把主API一页列为本参考规范来源；单页单来源，不把URL数量或两名模型读取当独立官方规范。",
+    "已授权在本次组装读取冻结expected等作者文件，不能把本参考冒充未见GT的候选Harness运行或新独立专家复核。此前独立来源B读取先于本参考。",
+    "来源accessed_at是2026-10-28T09:10:44.255426+00:00真实获取完成时间。capture_id是题目自建快照身份；HTTPDate/Last-Modified、资源URL日期、端点/v1和遥测版本不作官方发布日期或修订号。",
+    "未知项来自8951字符完整main article的有界审阅；15个短引只定位，不能单独证明不存在。未来官方正文变化需重新核对，不能据此声称服务器永不校验或永久不支持。",
+    "签名字节解释与小写MD5来自示例一致性及本地计算；3组输入纯合成，未发业务API请求，未证明服务端接受、计费行为、时钟容差、异常恢复或长期稳定性。",
+    "标准版与页首推荐的大模型、其他SDK授权错误不同；没有把相邻产品/SDK限制并入此WebSocket契约。",
+    "商业官方文档仅保留清单指定15个短引共136字符；不复制全文或示例密钥作为配置。全原件仍只指向此前作者取证记录。"
+  ]
+}

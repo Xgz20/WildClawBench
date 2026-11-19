@@ -1,0 +1,1535 @@
+{
+  "schema_version": "h003-author-validation/v1",
+  "status": "PASS",
+  "controls": {
+    "reference": {
+      "scores": {
+        "business_correctness": 1.0,
+        "boundary_cases": 1.0,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0,
+        "overall_score": 1.0
+      },
+      "checks": {
+        "C01": {
+          "requirements": [
+            true,
+            true
+          ],
+          "score": 1.0
+        },
+        "C02": {
+          "requirements": [
+            true,
+            true
+          ],
+          "score": 1.0
+        },
+        "C03": {
+          "requirements": [
+            true,
+            true,
+            true,
+            true
+          ],
+          "score": 1.0
+        },
+        "C04": {
+          "requirements": [
+            true
+          ],
+          "score": 1.0
+        },
+        "C05": {
+          "requirements": [
+            true
+          ],
+          "score": 1.0
+        },
+        "C06": {
+          "requirements": [
+            true,
+            true
+          ],
+          "score": 1.0
+        },
+        "C07": {
+          "requirements": [
+            true,
+            true
+          ],
+          "score": 1.0
+        }
+      },
+      "boundary_groups": {
+        "preservation": 1.0,
+        "native_references": 1.0,
+        "table_structure": 1.0
+      }
+    },
+    "equivalent_native": {
+      "scores": {
+        "business_correctness": 1.0,
+        "boundary_cases": 1.0,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0,
+        "overall_score": 1.0
+      },
+      "checks": {
+        "C01": {
+          "requirements": [
+            true,
+            true
+          ],
+          "score": 1.0
+        },
+        "C02": {
+          "requirements": [
+            true,
+            true
+          ],
+          "score": 1.0
+        },
+        "C03": {
+          "requirements": [
+            true,
+            true,
+            true,
+            true
+          ],
+          "score": 1.0
+        },
+        "C04": {
+          "requirements": [
+            true
+          ],
+          "score": 1.0
+        },
+        "C05": {
+          "requirements": [
+            true
+          ],
+          "score": 1.0
+        },
+        "C06": {
+          "requirements": [
+            true,
+            true
+          ],
+          "score": 1.0
+        },
+        "C07": {
+          "requirements": [
+            true,
+            true
+          ],
+          "score": 1.0
+        }
+      },
+      "boundary_groups": {
+        "preservation": 1.0,
+        "native_references": 1.0,
+        "table_structure": 1.0
+      }
+    },
+    "numeric_table_formats": {
+      "scores": {
+        "business_correctness": 1.0,
+        "boundary_cases": 1.0,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0,
+        "overall_score": 1.0
+      },
+      "checks": {
+        "C01": {
+          "requirements": [
+            true,
+            true
+          ],
+          "score": 1.0
+        },
+        "C02": {
+          "requirements": [
+            true,
+            true
+          ],
+          "score": 1.0
+        },
+        "C03": {
+          "requirements": [
+            true,
+            true,
+            true,
+            true
+          ],
+          "score": 1.0
+        },
+        "C04": {
+          "requirements": [
+            true
+          ],
+          "score": 1.0
+        },
+        "C05": {
+          "requirements": [
+            true
+          ],
+          "score": 1.0
+        },
+        "C06": {
+          "requirements": [
+            true,
+            true
+          ],
+          "score": 1.0
+        },
+        "C07": {
+          "requirements": [
+            true,
+            true
+          ],
+          "score": 1.0
+        }
+      },
+      "boundary_groups": {
+        "preservation": 1.0,
+        "native_references": 1.0,
+        "table_structure": 1.0
+      }
+    },
+    "original_unchanged": {
+      "scores": {
+        "business_correctness": 0.0,
+        "boundary_cases": 0.95,
+        "delivery_integrity": 0.8,
+        "evidence_binding": 0.8285714285714285,
+        "overall_score": 0.3989285714285714
+      },
+      "checks": {
+        "C01": {
+          "requirements": [
+            false,
+            false
+          ],
+          "score": 0.0
+        },
+        "C02": {
+          "requirements": [
+            false,
+            false
+          ],
+          "score": 0.0
+        },
+        "C03": {
+          "requirements": [
+            false,
+            false,
+            false,
+            false
+          ],
+          "score": 0.0
+        },
+        "C04": {
+          "requirements": [
+            false
+          ],
+          "score": 0.0
+        },
+        "C05": {
+          "requirements": [
+            false
+          ],
+          "score": 0.0
+        },
+        "C06": {
+          "requirements": [
+            false,
+            false
+          ],
+          "score": 0.0
+        },
+        "C07": {
+          "requirements": [
+            false,
+            false
+          ],
+          "score": 0.0
+        }
+      },
+      "boundary_groups": {
+        "preservation": 1.0,
+        "native_references": 0.85,
+        "table_structure": 1.0
+      }
+    },
+    "rewrite_unapproved": {
+      "scores": {
+        "business_correctness": 0.0,
+        "boundary_cases": 0.6666666666666666,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0,
+        "overall_score": 0.36666666666666664
+      },
+      "checks": {
+        "C01": {
+          "requirements": [
+            true,
+            true
+          ],
+          "score": 1.0
+        },
+        "C02": {
+          "requirements": [
+            true,
+            true
+          ],
+          "score": 1.0
+        },
+        "C03": {
+          "requirements": [
+            true,
+            true,
+            true,
+            true
+          ],
+          "score": 1.0
+        },
+        "C04": {
+          "requirements": [
+            true
+          ],
+          "score": 1.0
+        },
+        "C05": {
+          "requirements": [
+            true
+          ],
+          "score": 1.0
+        },
+        "C06": {
+          "requirements": [
+            true,
+            true
+          ],
+          "score": 1.0
+        },
+        "C07": {
+          "requirements": [
+            true,
+            true
+          ],
+          "score": 1.0
+        }
+      },
+      "boundary_groups": {
+        "preservation": 0.0,
+        "native_references": 1.0,
+        "table_structure": 1.0
+      }
+    },
+    "stale_reference_display": {
+      "scores": {
+        "business_correctness": 0.9642857142857142,
+        "boundary_cases": 0.9814814814814814,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0,
+        "overall_score": 0.9757275132275132
+      },
+      "checks": {
+        "C01": {
+          "requirements": [
+            true,
+            true
+          ],
+          "score": 1.0
+        },
+        "C02": {
+          "requirements": [
+            true,
+            true
+          ],
+          "score": 1.0
+        },
+        "C03": {
+          "requirements": [
+            true,
+            true,
+            true,
+            false
+          ],
+          "score": 0.75
+        },
+        "C04": {
+          "requirements": [
+            true
+          ],
+          "score": 1.0
+        },
+        "C05": {
+          "requirements": [
+            true
+          ],
+          "score": 1.0
+        },
+        "C06": {
+          "requirements": [
+            true,
+            true
+          ],
+          "score": 1.0
+        },
+        "C07": {
+          "requirements": [
+            true,
+            true
+          ],
+          "score": 1.0
+        }
+      },
+      "boundary_groups": {
+        "preservation": 1.0,
+        "native_references": 0.9444444444444444,
+        "table_structure": 1.0
+      }
+    },
+    "wrong_reference_target": {
+      "scores": {
+        "business_correctness": 0.9642857142857142,
+        "boundary_cases": 0.9666666666666666,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0,
+        "overall_score": 0.9720238095238095
+      },
+      "checks": {
+        "C01": {
+          "requirements": [
+            true,
+            true
+          ],
+          "score": 1.0
+        },
+        "C02": {
+          "requirements": [
+            true,
+            true
+          ],
+          "score": 1.0
+        },
+        "C03": {
+          "requirements": [
+            true,
+            true,
+            true,
+            false
+          ],
+          "score": 0.75
+        },
+        "C04": {
+          "requirements": [
+            true
+          ],
+          "score": 1.0
+        },
+        "C05": {
+          "requirements": [
+            true
+          ],
+          "score": 1.0
+        },
+        "C06": {
+          "requirements": [
+            true,
+            true
+          ],
+          "score": 1.0
+        },
+        "C07": {
+          "requirements": [
+            true,
+            true
+          ],
+          "score": 1.0
+        }
+      },
+      "boundary_groups": {
+        "preservation": 1.0,
+        "native_references": 0.9,
+        "table_structure": 1.0
+      }
+    },
+    "dangling_deleted_target": {
+      "scores": {
+        "business_correctness": 0.8928571428571428,
+        "boundary_cases": 0.9666666666666666,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0,
+        "overall_score": 0.9327380952380953
+      },
+      "checks": {
+        "C01": {
+          "requirements": [
+            true,
+            true
+          ],
+          "score": 1.0
+        },
+        "C02": {
+          "requirements": [
+            true,
+            true
+          ],
+          "score": 1.0
+        },
+        "C03": {
+          "requirements": [
+            true,
+            true,
+            true,
+            false
+          ],
+          "score": 0.75
+        },
+        "C04": {
+          "requirements": [
+            true
+          ],
+          "score": 1.0
+        },
+        "C05": {
+          "requirements": [
+            true
+          ],
+          "score": 1.0
+        },
+        "C06": {
+          "requirements": [
+            true,
+            false
+          ],
+          "score": 0.5
+        },
+        "C07": {
+          "requirements": [
+            true,
+            true
+          ],
+          "score": 1.0
+        }
+      },
+      "boundary_groups": {
+        "preservation": 1.0,
+        "native_references": 0.9,
+        "table_structure": 1.0
+      }
+    },
+    "invalid_grid_value": {
+      "scores": {
+        "business_correctness": 0.0,
+        "boundary_cases": 0.0,
+        "delivery_integrity": 0.4,
+        "evidence_binding": 0.0,
+        "overall_score": 0.06
+      },
+      "checks": {
+        "C01": {
+          "requirements": [
+            false,
+            false
+          ],
+          "score": 0.0
+        },
+        "C02": {
+          "requirements": [
+            false,
+            false
+          ],
+          "score": 0.0
+        },
+        "C03": {
+          "requirements": [
+            false,
+            false,
+            false,
+            false
+          ],
+          "score": 0.0
+        },
+        "C04": {
+          "requirements": [
+            false
+          ],
+          "score": 0.0
+        },
+        "C05": {
+          "requirements": [
+            false
+          ],
+          "score": 0.0
+        },
+        "C06": {
+          "requirements": [
+            false,
+            false
+          ],
+          "score": 0.0
+        },
+        "C07": {
+          "requirements": [
+            false,
+            false
+          ],
+          "score": 0.0
+        }
+      },
+      "boundary_groups": {
+        "preservation": 0.0,
+        "native_references": 0.0,
+        "table_structure": 0.0
+      }
+    },
+    "flatten_native_refs": {
+      "scores": {
+        "business_correctness": 0.8214285714285714,
+        "boundary_cases": 0.8263888888888888,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0,
+        "overall_score": 0.8583829365079365
+      },
+      "checks": {
+        "C01": {
+          "requirements": [
+            true,
+            false
+          ],
+          "score": 0.5
+        },
+        "C02": {
+          "requirements": [
+            true,
+            true
+          ],
+          "score": 1.0
+        },
+        "C03": {
+          "requirements": [
+            false,
+            false,
+            true,
+            false
+          ],
+          "score": 0.25
+        },
+        "C04": {
+          "requirements": [
+            true
+          ],
+          "score": 1.0
+        },
+        "C05": {
+          "requirements": [
+            true
+          ],
+          "score": 1.0
+        },
+        "C06": {
+          "requirements": [
+            true,
+            true
+          ],
+          "score": 1.0
+        },
+        "C07": {
+          "requirements": [
+            true,
+            true
+          ],
+          "score": 1.0
+        }
+      },
+      "boundary_groups": {
+        "preservation": 0.9791666666666666,
+        "native_references": 0.5,
+        "table_structure": 1.0
+      }
+    },
+    "drop_table_column": {
+      "scores": {
+        "business_correctness": 1.0,
+        "boundary_cases": 0.798611111111111,
+        "delivery_integrity": 0.8,
+        "evidence_binding": 1.0,
+        "overall_score": 0.9196527777777778
+      },
+      "checks": {
+        "C01": {
+          "requirements": [
+            true,
+            true
+          ],
+          "score": 1.0
+        },
+        "C02": {
+          "requirements": [
+            true,
+            true
+          ],
+          "score": 1.0
+        },
+        "C03": {
+          "requirements": [
+            true,
+            true,
+            true,
+            true
+          ],
+          "score": 1.0
+        },
+        "C04": {
+          "requirements": [
+            true
+          ],
+          "score": 1.0
+        },
+        "C05": {
+          "requirements": [
+            true
+          ],
+          "score": 1.0
+        },
+        "C06": {
+          "requirements": [
+            true,
+            true
+          ],
+          "score": 1.0
+        },
+        "C07": {
+          "requirements": [
+            true,
+            true
+          ],
+          "score": 1.0
+        }
+      },
+      "boundary_groups": {
+        "preservation": 0.8958333333333334,
+        "native_references": 1.0,
+        "table_structure": 0.5
+      }
+    },
+    "display_only_email": {
+      "scores": {
+        "business_correctness": 0.9285714285714285,
+        "boundary_cases": 0.9930555555555555,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0,
+        "overall_score": 0.9589781746031746
+      },
+      "checks": {
+        "C01": {
+          "requirements": [
+            true,
+            true
+          ],
+          "score": 1.0
+        },
+        "C02": {
+          "requirements": [
+            true,
+            true
+          ],
+          "score": 1.0
+        },
+        "C03": {
+          "requirements": [
+            true,
+            true,
+            true,
+            true
+          ],
+          "score": 1.0
+        },
+        "C04": {
+          "requirements": [
+            true
+          ],
+          "score": 1.0
+        },
+        "C05": {
+          "requirements": [
+            true
+          ],
+          "score": 1.0
+        },
+        "C06": {
+          "requirements": [
+            true,
+            true
+          ],
+          "score": 1.0
+        },
+        "C07": {
+          "requirements": [
+            true,
+            false
+          ],
+          "score": 0.5
+        }
+      },
+      "boundary_groups": {
+        "preservation": 0.9791666666666666,
+        "native_references": 1.0,
+        "table_structure": 1.0
+      }
+    },
+    "modify_protected_total": {
+      "scores": {
+        "business_correctness": 0.0,
+        "boundary_cases": 0.0,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0,
+        "overall_score": 0.2
+      },
+      "checks": {
+        "C01": {
+          "requirements": [
+            true,
+            true
+          ],
+          "score": 1.0
+        },
+        "C02": {
+          "requirements": [
+            true,
+            true
+          ],
+          "score": 1.0
+        },
+        "C03": {
+          "requirements": [
+            true,
+            true,
+            true,
+            true
+          ],
+          "score": 1.0
+        },
+        "C04": {
+          "requirements": [
+            true
+          ],
+          "score": 1.0
+        },
+        "C05": {
+          "requirements": [
+            true
+          ],
+          "score": 1.0
+        },
+        "C06": {
+          "requirements": [
+            true,
+            true
+          ],
+          "score": 1.0
+        },
+        "C07": {
+          "requirements": [
+            true,
+            true
+          ],
+          "score": 1.0
+        }
+      },
+      "boundary_groups": {
+        "preservation": 0.0,
+        "native_references": 1.0,
+        "table_structure": 1.0
+      }
+    },
+    "modify_protected_cap": {
+      "scores": {
+        "business_correctness": 0.0,
+        "boundary_cases": 0.0,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0,
+        "overall_score": 0.2
+      },
+      "checks": {
+        "C01": {
+          "requirements": [
+            true,
+            true
+          ],
+          "score": 1.0
+        },
+        "C02": {
+          "requirements": [
+            true,
+            true
+          ],
+          "score": 1.0
+        },
+        "C03": {
+          "requirements": [
+            true,
+            true,
+            true,
+            true
+          ],
+          "score": 1.0
+        },
+        "C04": {
+          "requirements": [
+            true
+          ],
+          "score": 1.0
+        },
+        "C05": {
+          "requirements": [
+            true
+          ],
+          "score": 1.0
+        },
+        "C06": {
+          "requirements": [
+            true,
+            true
+          ],
+          "score": 1.0
+        },
+        "C07": {
+          "requirements": [
+            true,
+            true
+          ],
+          "score": 1.0
+        }
+      },
+      "boundary_groups": {
+        "preservation": 0.0,
+        "native_references": 1.0,
+        "table_structure": 1.0
+      }
+    },
+    "overbroad_sla": {
+      "scores": {
+        "business_correctness": 0.0,
+        "boundary_cases": 0.6666666666666666,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0,
+        "overall_score": 0.36666666666666664
+      },
+      "checks": {
+        "C01": {
+          "requirements": [
+            true,
+            true
+          ],
+          "score": 1.0
+        },
+        "C02": {
+          "requirements": [
+            true,
+            true
+          ],
+          "score": 1.0
+        },
+        "C03": {
+          "requirements": [
+            true,
+            true,
+            true,
+            true
+          ],
+          "score": 1.0
+        },
+        "C04": {
+          "requirements": [
+            true
+          ],
+          "score": 1.0
+        },
+        "C05": {
+          "requirements": [
+            true
+          ],
+          "score": 1.0
+        },
+        "C06": {
+          "requirements": [
+            true,
+            true
+          ],
+          "score": 1.0
+        },
+        "C07": {
+          "requirements": [
+            true,
+            true
+          ],
+          "score": 1.0
+        }
+      },
+      "boundary_groups": {
+        "preservation": 0.0,
+        "native_references": 1.0,
+        "table_structure": 1.0
+      }
+    },
+    "missing_relationships": {
+      "scores": {
+        "business_correctness": 0.9285714285714285,
+        "boundary_cases": 0.9791666666666666,
+        "delivery_integrity": 0.8,
+        "evidence_binding": 1.0,
+        "overall_score": 0.9255059523809523
+      },
+      "checks": {
+        "C01": {
+          "requirements": [
+            true,
+            true
+          ],
+          "score": 1.0
+        },
+        "C02": {
+          "requirements": [
+            true,
+            true
+          ],
+          "score": 1.0
+        },
+        "C03": {
+          "requirements": [
+            true,
+            true,
+            true,
+            true
+          ],
+          "score": 1.0
+        },
+        "C04": {
+          "requirements": [
+            true
+          ],
+          "score": 1.0
+        },
+        "C05": {
+          "requirements": [
+            true
+          ],
+          "score": 1.0
+        },
+        "C06": {
+          "requirements": [
+            true,
+            true
+          ],
+          "score": 1.0
+        },
+        "C07": {
+          "requirements": [
+            true,
+            false
+          ],
+          "score": 0.5
+        }
+      },
+      "boundary_groups": {
+        "preservation": 0.9375,
+        "native_references": 1.0,
+        "table_structure": 1.0
+      }
+    },
+    "active_blank_even_header": {
+      "scores": {
+        "business_correctness": 0.0,
+        "boundary_cases": 0.6666666666666666,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0,
+        "overall_score": 0.36666666666666664
+      },
+      "checks": {
+        "C01": {
+          "requirements": [
+            true,
+            true
+          ],
+          "score": 1.0
+        },
+        "C02": {
+          "requirements": [
+            true,
+            true
+          ],
+          "score": 1.0
+        },
+        "C03": {
+          "requirements": [
+            true,
+            true,
+            true,
+            true
+          ],
+          "score": 1.0
+        },
+        "C04": {
+          "requirements": [
+            true
+          ],
+          "score": 1.0
+        },
+        "C05": {
+          "requirements": [
+            true
+          ],
+          "score": 1.0
+        },
+        "C06": {
+          "requirements": [
+            true,
+            true
+          ],
+          "score": 1.0
+        },
+        "C07": {
+          "requirements": [
+            true,
+            true
+          ],
+          "score": 1.0
+        }
+      },
+      "boundary_groups": {
+        "preservation": 0.0,
+        "native_references": 1.0,
+        "table_structure": 1.0
+      }
+    },
+    "stale_audit": {
+      "scores": {
+        "business_correctness": 1.0,
+        "boundary_cases": 1.0,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 0.6,
+        "overall_score": 0.98
+      },
+      "checks": {
+        "C01": {
+          "requirements": [
+            true,
+            true
+          ],
+          "score": 1.0
+        },
+        "C02": {
+          "requirements": [
+            true,
+            true
+          ],
+          "score": 1.0
+        },
+        "C03": {
+          "requirements": [
+            true,
+            true,
+            true,
+            true
+          ],
+          "score": 1.0
+        },
+        "C04": {
+          "requirements": [
+            true
+          ],
+          "score": 1.0
+        },
+        "C05": {
+          "requirements": [
+            true
+          ],
+          "score": 1.0
+        },
+        "C06": {
+          "requirements": [
+            true,
+            true
+          ],
+          "score": 1.0
+        },
+        "C07": {
+          "requirements": [
+            true,
+            true
+          ],
+          "score": 1.0
+        }
+      },
+      "boundary_groups": {
+        "preservation": 1.0,
+        "native_references": 1.0,
+        "table_structure": 1.0
+      }
+    },
+    "malformed_audit": {
+      "scores": {
+        "business_correctness": 1.0,
+        "boundary_cases": 1.0,
+        "delivery_integrity": 0.8,
+        "evidence_binding": 0.9142857142857143,
+        "overall_score": 0.9657142857142857
+      },
+      "checks": {
+        "C01": {
+          "requirements": [
+            true,
+            true
+          ],
+          "score": 1.0
+        },
+        "C02": {
+          "requirements": [
+            true,
+            true
+          ],
+          "score": 1.0
+        },
+        "C03": {
+          "requirements": [
+            true,
+            true,
+            true,
+            true
+          ],
+          "score": 1.0
+        },
+        "C04": {
+          "requirements": [
+            true
+          ],
+          "score": 1.0
+        },
+        "C05": {
+          "requirements": [
+            true
+          ],
+          "score": 1.0
+        },
+        "C06": {
+          "requirements": [
+            true,
+            true
+          ],
+          "score": 1.0
+        },
+        "C07": {
+          "requirements": [
+            true,
+            true
+          ],
+          "score": 1.0
+        }
+      },
+      "boundary_groups": {
+        "preservation": 1.0,
+        "native_references": 1.0,
+        "table_structure": 1.0
+      }
+    },
+    "missing_audit": {
+      "scores": {
+        "business_correctness": 1.0,
+        "boundary_cases": 1.0,
+        "delivery_integrity": 0.8,
+        "evidence_binding": 0.0,
+        "overall_score": 0.92
+      },
+      "checks": {
+        "C01": {
+          "requirements": [
+            true,
+            true
+          ],
+          "score": 1.0
+        },
+        "C02": {
+          "requirements": [
+            true,
+            true
+          ],
+          "score": 1.0
+        },
+        "C03": {
+          "requirements": [
+            true,
+            true,
+            true,
+            true
+          ],
+          "score": 1.0
+        },
+        "C04": {
+          "requirements": [
+            true
+          ],
+          "score": 1.0
+        },
+        "C05": {
+          "requirements": [
+            true
+          ],
+          "score": 1.0
+        },
+        "C06": {
+          "requirements": [
+            true,
+            true
+          ],
+          "score": 1.0
+        },
+        "C07": {
+          "requirements": [
+            true,
+            true
+          ],
+          "score": 1.0
+        }
+      },
+      "boundary_groups": {
+        "preservation": 1.0,
+        "native_references": 1.0,
+        "table_structure": 1.0
+      }
+    },
+    "missing_contract": {
+      "scores": {
+        "business_correctness": 0.0,
+        "boundary_cases": 0.0,
+        "delivery_integrity": 0.4,
+        "evidence_binding": 0.0,
+        "overall_score": 0.06
+      },
+      "checks": {
+        "C01": {
+          "requirements": [
+            false,
+            false
+          ],
+          "score": 0.0
+        },
+        "C02": {
+          "requirements": [
+            false,
+            false
+          ],
+          "score": 0.0
+        },
+        "C03": {
+          "requirements": [
+            false,
+            false,
+            false,
+            false
+          ],
+          "score": 0.0
+        },
+        "C04": {
+          "requirements": [
+            false
+          ],
+          "score": 0.0
+        },
+        "C05": {
+          "requirements": [
+            false
+          ],
+          "score": 0.0
+        },
+        "C06": {
+          "requirements": [
+            false,
+            false
+          ],
+          "score": 0.0
+        },
+        "C07": {
+          "requirements": [
+            false,
+            false
+          ],
+          "score": 0.0
+        }
+      },
+      "boundary_groups": {
+        "preservation": 0.0,
+        "native_references": 0.0,
+        "table_structure": 0.0
+      }
+    },
+    "protected_input_change": {
+      "scores": {
+        "business_correctness": 1.0,
+        "boundary_cases": 0.0,
+        "delivery_integrity": 0.0,
+        "evidence_binding": 0.0,
+        "overall_score": 0.55
+      },
+      "checks": {
+        "C01": {
+          "requirements": [
+            true,
+            true
+          ],
+          "score": 1.0
+        },
+        "C02": {
+          "requirements": [
+            true,
+            true
+          ],
+          "score": 1.0
+        },
+        "C03": {
+          "requirements": [
+            true,
+            true,
+            true,
+            true
+          ],
+          "score": 1.0
+        },
+        "C04": {
+          "requirements": [
+            true
+          ],
+          "score": 1.0
+        },
+        "C05": {
+          "requirements": [
+            true
+          ],
+          "score": 1.0
+        },
+        "C06": {
+          "requirements": [
+            true,
+            true
+          ],
+          "score": 1.0
+        },
+        "C07": {
+          "requirements": [
+            true,
+            true
+          ],
+          "score": 1.0
+        }
+      },
+      "boundary_groups": {
+        "preservation": 1.0,
+        "native_references": 1.0,
+        "table_structure": 1.0
+      }
+    },
+    "missing_gt": {
+      "status": "evaluation_error",
+      "score": null,
+      "error": "FileNotFoundError"
+    },
+    "office_roundtrip": {
+      "scores": {
+        "business_correctness": 1.0,
+        "boundary_cases": 1.0,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0,
+        "overall_score": 1.0
+      },
+      "checks": {
+        "C01": {
+          "requirements": [
+            true,
+            true
+          ],
+          "score": 1.0
+        },
+        "C02": {
+          "requirements": [
+            true,
+            true
+          ],
+          "score": 1.0
+        },
+        "C03": {
+          "requirements": [
+            true,
+            true,
+            true,
+            true
+          ],
+          "score": 1.0
+        },
+        "C04": {
+          "requirements": [
+            true
+          ],
+          "score": 1.0
+        },
+        "C05": {
+          "requirements": [
+            true
+          ],
+          "score": 1.0
+        },
+        "C06": {
+          "requirements": [
+            true,
+            true
+          ],
+          "score": 1.0
+        },
+        "C07": {
+          "requirements": [
+            true,
+            true
+          ],
+          "score": 1.0
+        }
+      },
+      "boundary_groups": {
+        "preservation": 1.0,
+        "native_references": 1.0,
+        "table_structure": 1.0
+      }
+    },
+    "actual_md_reference": {
+      "scores": {
+        "business_correctness": 1.0,
+        "boundary_cases": 1.0,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0,
+        "overall_score": 1.0
+      }
+    }
+  },
+  "gt_sha256": {
+    "artifact_contract.json": "16153c5977955f62f3c51e2bb61c7dd9f3c254c74231c8ea7229b3f222157189",
+    "business_oracle.json": "06b379ba5d5a0763c82b1dca776743c93126656bd53dae5b26675c0c96b87290",
+    "counterexamples.json": "c303c603e0ab2af836c50b347d9c0e869b811844bc43fea7be026126a8cd68ea",
+    "docx_model.py": "4861b1d047cb107e2997c4d5216281367e91a5930c233c2c2f7ea779eddb3a40",
+    "evidence_requirements.json": "4dc340660cc9e815ec8fcdfcc8386e3e58a9f73ff62feddd4e9abb51d93f1d73",
+    "expected.json": "7bf78aed90239a1127932edde9f6eee4712ef0cd17c0871b1bd1acb3a839ed41",
+    "grader.py": "5b921dbe1bc943085892e389b6b30fdc554ce90b087c71af044bef4a83bbe98d",
+    "independent_validation.json": "f53c28a6e4bba3adddefe7d460132a1eaf67ad63d2f470fe64ac9d9dfe3ddda0",
+    "protected_sha256.json": "86abf6aa45da64cba695579a81fb74afc7378810de7eed6d8022c57f227204f0",
+    "reference/results/changes.json": "27bdad4abfd905389030e26f37036b3f8205adb9d026ddf6e5eaf4220ee8e77e",
+    "reference/results/contract_revised.docx": "01af25214b1d7459b6a23b6676dfa5b39e3a8efaebe42b1e27103997544111fc",
+    "source_contract.json": "892422d792495d990256bd24bdeac265c10bdf7efa07d2fcee73f8e7e58fec73",
+    "validate_authoring.py": "411dce0c9bd6ffd1e9e5d7a74f7f88cf96aa78818acbf6bc847035dbb1803a54"
+  },
+  "office_roundtrip_binding": {
+    "alternative_docx_sha256": "2953ac0717e5481122da16d2a7d760b0facc89157889e80d6a4e639da26bbfaa",
+    "reference_docx_sha256": "01af25214b1d7459b6a23b6676dfa5b39e3a8efaebe42b1e27103997544111fc"
+  },
+  "limit": "Native package author controls; no independent legal human review, semantic Judge, four-Harness run or empirical difficulty."
+}

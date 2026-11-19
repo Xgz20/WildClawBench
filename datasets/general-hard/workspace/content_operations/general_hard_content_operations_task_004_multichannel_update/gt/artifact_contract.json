@@ -1,0 +1,49 @@
+{
+  "schema": "h060.artifact-contract/v1",
+  "required_names": [
+    "website.html",
+    "social.docx",
+    "email_en.md",
+    "change_map.json"
+  ],
+  "channel_names": [
+    "website.html",
+    "social.docx",
+    "email_en.md"
+  ],
+  "index_schema": {
+    "schema": "h060.change-map/v1",
+    "mode": "draft_only",
+    "as_of": "2026-10-23",
+    "facts": "12 distinct fact_id/value/source_ref/locations objects; source value objects keep exact final fields; finite numericstrings allowed, booleans remain booleans",
+    "locations": "Each fact has exactly one location per three required channel paths; quote is exact short human-readable visible excerpt after NFKC/whitespace normalization; multiple facts may share one natural paragraph",
+    "locators": {
+      "quote": {
+        "kind": "quote",
+        "occurrence": "positive1based occurrence, default1"
+      },
+      "paragraph": {
+        "kind": "paragraph",
+        "index": "positive1based nonempty nativeWord/Markdown paragraph index, headings included",
+        "quote": "exact visible excerpt"
+      }
+    },
+    "source_ref": "baseline path approved_facts.json + approval_id + /facts/Fxx; change path changes.jsonl + change_id + seq + /changes/Fxx",
+    "changes": "three change_id/seq/status=applied/fact_ids records in any JSON order",
+    "publication": {
+      "website": "not_deployed",
+      "social": "draft_only",
+      "email": "not_sent"
+    }
+  },
+  "equivalence": [
+    "Different semanticHTML structures, styles, Word paragraph/list structure and natural wording",
+    "Multiple facts in a paragraph or table with quote locator; paragraph locator optional",
+    "ISO or stated natural-language dates, currency format, optional157.94 inclusive estimate",
+    "Equivalent paraphrase and explicit negative statement; clearly revoked historical values permitted",
+    "JSON BOM/key/record order and finite numericstrings/6percent equivalent rate",
+    "Complex legal unimplemented native/locator representation typed evaluation exception, not ability zero"
+  ],
+  "automatic_limit": "Automatic grade verifies sourceledger/changefold, visible native quote relations, bounded explicit numeric/identifier/topic support and known highrisk contradictions. It never declares arbitrary natural semantics/channel suitability proven;35percent Judge remains required.",
+  "causal_ownership": "A channel is a required-fact opportunity. Missing or wrong numeric/identity provision is business; its samefact is neutral in boundary. Explicit extra/qualifier contradictions with business representation are boundary. Wrong sourceowner only evidence; input mutation only delivery."
+}

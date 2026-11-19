@@ -1,0 +1,57 @@
+{
+  "schema_version": "h034-public-reading-tolerance/v1",
+  "visual_inputs": [
+    {
+      "file": "figures/F01_budget.png",
+      "pixels": [
+        1800,
+        1260
+      ],
+      "sha256": "08451e387cda7a74c9ffac2b6f15c96b8ab37b8a14aa938f61b2cc14343a7c61"
+    },
+    {
+      "file": "figures/F02_intervals.png",
+      "pixels": [
+        1800,
+        1260
+      ],
+      "sha256": "ff305b0b1bb655f73c71c087bf82f52bb9d89ac098da9f46610a83a3d80965b8"
+    },
+    {
+      "file": "figures/F03_latency.png",
+      "pixels": [
+        1800,
+        1260
+      ],
+      "sha256": "b9603a7773845b082db4a19162134af68bd09445f80731ef153cdae6f20b3eeb"
+    },
+    {
+      "file": "figures/F04_grouping.png",
+      "pixels": [
+        1800,
+        1260
+      ],
+      "sha256": "bf38edc61ed6fef6fb715802324b81f537f0f10a2a844840e377a8186245e745"
+    }
+  ],
+  "readout_policy": "Record readable intervals; hidden arrays never set pixel-exact numeric expectations.",
+  "F01": {
+    "mean_target_pass_absolute_percentage_points": 2,
+    "budget_ticks": "Read actual labeled tick values and scale; do not infer linear increments from pixel spacing."
+  },
+  "F02": {
+    "mean_and_SD_endpoint_absolute_percentage_points": 2,
+    "interval_overlap": "Evaluate visually resolvable order/overlap only; statistical significance/equivalence requires separate evidence."
+  },
+  "F03": {
+    "individual_elapsed_relative_tolerance": 0.15,
+    "ratio_relative_tolerance": 0.2,
+    "unit": "Read original axis unit; preserve logarithmic/linear role."
+  },
+  "F04": {
+    "point_success_absolute_percentage_points": 1,
+    "group_direction": "Assess each legend group separately and pooled relation; no causal parameter is observed."
+  },
+  "regions": "Accept reasonable actual-source regions covering the relevant axes/marks/legend, not hidden author coordinates.",
+  "unknown": "Missing quality, pairing statistics or causal experiment stays unknown; do not fill0 or invent adverse experiment."
+}

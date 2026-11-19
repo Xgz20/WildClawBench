@@ -1,0 +1,2193 @@
+{
+  "schema_version": "h030-evidence-matrix/v1",
+  "author_context": "明确非盲模型参考作者，基于先行冻结来源整理；无真实Harness会话或实验复现。",
+  "searches": [
+    {
+      "site": "pubmed",
+      "query_or_navigation": "site:pubmed.ncbi.nlm.nih.gov spatial transcriptomics deep learning graph neural network 2021 2022 2023",
+      "performed_at": null,
+      "unknown_reason": "冻结A搜索log无query时间；未用相邻HTTP时间或当前作者时间猜测。",
+      "outcome": "实际有文献线索；PubMed线索跟随PMC核读。arXiv另有landing/版本史及全文失败，未混入本次保留子集。",
+      "observed_log": "qa/source-review-a/discovery-search-results.json",
+      "author_stage": "A初始模型独立发现；参考阶段未重演。"
+    },
+    {
+      "site": "arxiv",
+      "query_or_navigation": "site:arxiv.org spatial transcriptomics artificial intelligence graph learning 2024 2025",
+      "performed_at": null,
+      "unknown_reason": "冻结A搜索log无query时间；未用相邻HTTP时间或当前作者时间猜测。",
+      "outcome": "实际有文献线索；PubMed线索跟随PMC核读。arXiv另有landing/版本史及全文失败，未混入本次保留子集。",
+      "observed_log": "qa/source-review-a/discovery-search-results.json",
+      "author_stage": "A初始模型独立发现；参考阶段未重演。"
+    },
+    {
+      "site": "pubmed",
+      "query_or_navigation": "site:pubmed.ncbi.nlm.nih.gov spatial transcriptomics deep learning spatial mapping 2021 2022 SpaGCN STAGATE",
+      "performed_at": null,
+      "unknown_reason": "冻结A搜索log无query时间；未用相邻HTTP时间或当前作者时间猜测。",
+      "outcome": "实际有文献线索；PubMed线索跟随PMC核读。arXiv另有landing/版本史及全文失败，未混入本次保留子集。",
+      "observed_log": "qa/source-review-a/discovery-search-results.json",
+      "author_stage": "A初始模型独立发现；参考阶段未重演。"
+    },
+    {
+      "site": "arxiv",
+      "query_or_navigation": "site:arxiv.org/abs \"spatial\" \"transcriptomics\" \"2021\" \"deep\"",
+      "performed_at": null,
+      "unknown_reason": "冻结A搜索log无query时间；未用相邻HTTP时间或当前作者时间猜测。",
+      "outcome": "实际有文献线索；PubMed线索跟随PMC核读。arXiv另有landing/版本史及全文失败，未混入本次保留子集。",
+      "observed_log": "qa/source-review-a/discovery-search-results.json",
+      "author_stage": "A初始模型独立发现；参考阶段未重演。"
+    },
+    {
+      "site": "pubmed",
+      "query_or_navigation": "spatial transcriptomics graph neural network original method 2021 2022 2023 2024；原批次domains同时含arxiv.org与pubmed.ncbi.nlm.nih.gov",
+      "performed_at": "2026-10-28T12:42:26Z",
+      "outcome": "B初始独立模型发现log记录该多query批次；不是本作者新查询，不声称所有最终工作均由此query首次找到。",
+      "observed_log": "qa/source-review-b/search/01-discovery.json"
+    }
+  ],
+  "records": [
+    {
+      "record_id": "record-stdgcn-preprint",
+      "work_id": "work-stdgcn",
+      "title": "Spatial Transcriptomic Cell-type Deconvolution Using Graph Neural Networks",
+      "authors": [
+        "Yawei Li",
+        "Yuan Luo"
+      ],
+      "identifiers": {
+        "doi": "10.1101/2023.03.10.532112",
+        "pmid": "37333198",
+        "pmcid": "PMC10274700"
+      },
+      "discovery": {
+        "site": "pubmed",
+        "record_url": "https://pubmed.ncbi.nlm.nih.gov/37333198/",
+        "context": "冻结A PubMed范围发现日志search-a或search-b保留此条线索，随后跟随官方PMC核身份/正文；本机PubMed challenge未冒充报告内容。"
+      },
+      "report_version": "unknown：较早预印本身份已知，准确修订后缀未独立核实。",
+      "report_date": {
+        "value": null,
+        "precision": "unknown",
+        "basis": "unknown",
+        "status": "unknown",
+        "reason": "PMC显示引用日和DOI日期片段不能证明原始posted/submitted日或准确v1后缀；此非所选报告不用于纳入资格。"
+      },
+      "version_date": null,
+      "version_date_reason": "初稿准确日期和版本后缀unknown；不据DOI或PMC显示日猜测。",
+      "observed_display_date": {
+        "value": "2023-06-09",
+        "precision": "day",
+        "role": "PMC显示引用日，不是已核初稿日期"
+      },
+      "relation_note": "PMC明确更新通知指向同作者STdGCN期刊版本；合并同工作，不将两DOI算两工作。"
+    },
+    {
+      "record_id": "record-stdgcn-journal",
+      "work_id": "work-stdgcn",
+      "title": "STdGCN: spatial transcriptomic cell-type deconvolution using graph convolutional networks",
+      "authors": [
+        "Yawei Li",
+        "Yuan Luo"
+      ],
+      "identifiers": {
+        "doi": "10.1186/s13059-024-03353-0",
+        "pmid": "39103939",
+        "pmcid": "PMC11302295",
+        "arxiv_id": null
+      },
+      "discovery": {
+        "site": "pubmed",
+        "record_url": "https://pubmed.ncbi.nlm.nih.gov/39103939/",
+        "context": "冻结A PubMed范围发现日志search-a或search-b保留此条线索，随后跟随官方PMC核身份/正文；本机PubMed challenge未冒充报告内容。"
+      },
+      "report_version": "已发表期刊报告；所读为冻结的当前公开主文HTML，未单独核实内容修订后缀。",
+      "report_date": {
+        "value": "2024-08-05",
+        "precision": "day",
+        "basis": "first_online",
+        "status": "documented",
+        "note": "来源日期无时区，不假设UTC跨日；first_online角色由官方publisher或电子发表XML支持。"
+      },
+      "version_date": null,
+      "version_date_reason": "无独立内容修订时间；不声称当前HTML与发表当日网页逐字相同。"
+    },
+    {
+      "record_id": "record-spacel-journal",
+      "work_id": "work-spacel",
+      "title": "SPACEL: deep learning-based characterization of spatial transcriptome architectures",
+      "authors": [
+        "Hao Xu",
+        "Shuyan Wang",
+        "Minghao Fang",
+        "Songwen Luo",
+        "Chunpeng Chen",
+        "Siyuan Wan",
+        "Rirui Wang",
+        "Meifang Tang",
+        "Tian Xue",
+        "Bin Li",
+        "Jun Lin",
+        "Kun Qu"
+      ],
+      "identifiers": {
+        "doi": "10.1038/s41467-023-43220-3",
+        "pmid": "37990022",
+        "pmcid": "PMC10663563",
+        "arxiv_id": null
+      },
+      "discovery": {
+        "site": "pubmed",
+        "record_url": "https://pubmed.ncbi.nlm.nih.gov/37990022/",
+        "context": "冻结A PubMed范围发现日志search-a或search-b保留此条线索，随后跟随官方PMC核身份/正文；本机PubMed challenge未冒充报告内容。"
+      },
+      "report_version": "已发表期刊报告；所读为冻结的当前公开主文HTML，未单独核实内容修订后缀。",
+      "report_date": {
+        "value": "2023-11-22",
+        "precision": "day",
+        "basis": "first_online",
+        "status": "documented",
+        "note": "来源日期无时区，不假设UTC跨日；first_online角色由官方publisher或电子发表XML支持。"
+      },
+      "version_date": null,
+      "version_date_reason": "无独立内容修订时间；不声称当前HTML与发表当日网页逐字相同。"
+    },
+    {
+      "record_id": "record-stagate-journal",
+      "work_id": "work-stagate",
+      "title": "Deciphering spatial domains from spatially resolved transcriptomics with an adaptive graph attention auto-encoder",
+      "authors": [
+        "Kangning Dong",
+        "Shihua Zhang"
+      ],
+      "identifiers": {
+        "doi": "10.1038/s41467-022-29439-6",
+        "pmid": "35365632",
+        "pmcid": "PMC8976049",
+        "arxiv_id": null
+      },
+      "discovery": {
+        "site": "pubmed",
+        "record_url": "https://pubmed.ncbi.nlm.nih.gov/35365632/",
+        "context": "冻结A PubMed范围发现日志search-a或search-b保留此条线索，随后跟随官方PMC核身份/正文；本机PubMed challenge未冒充报告内容。"
+      },
+      "report_version": "已发表期刊报告；所读为冻结的当前公开主文HTML，未单独核实内容修订后缀。",
+      "report_date": {
+        "value": "2022-04-01",
+        "precision": "day",
+        "basis": "first_online",
+        "status": "documented",
+        "note": "来源日期无时区，不假设UTC跨日；first_online角色由官方publisher或电子发表XML支持。"
+      },
+      "version_date": null,
+      "version_date_reason": "无独立内容修订时间；不声称当前HTML与发表当日网页逐字相同。"
+    },
+    {
+      "record_id": "record-deepst-journal",
+      "work_id": "work-deepst",
+      "title": "DeepST: identifying spatial domains in spatial transcriptomics by deep learning",
+      "authors": [
+        "Chang Xu",
+        "Xiyun Jin",
+        "Songren Wei",
+        "Pingping Wang",
+        "Meng Luo",
+        "Zhaochun Xu",
+        "Wenyi Yang",
+        "Yideng Cai",
+        "Lixing Xiao",
+        "Xiaoyu Lin",
+        "Hongxin Liu",
+        "Rui Cheng",
+        "Fenglan Pang",
+        "Rui Chen",
+        "Xi Su",
+        "Ying Hu",
+        "Guohua Wang",
+        "Qinghua Jiang"
+      ],
+      "identifiers": {
+        "doi": "10.1093/nar/gkac901",
+        "pmid": "36250636",
+        "pmcid": "PMC9825193",
+        "arxiv_id": null
+      },
+      "discovery": {
+        "site": "pubmed",
+        "record_url": "https://pubmed.ncbi.nlm.nih.gov/36250636/",
+        "context": "冻结A PubMed范围发现日志search-a或search-b保留此条线索，随后跟随官方PMC核身份/正文；本机PubMed challenge未冒充报告内容。"
+      },
+      "report_version": "已发表期刊报告；所读为冻结的当前公开主文HTML，未单独核实内容修订后缀。",
+      "report_date": {
+        "value": "2022-10-17",
+        "precision": "day",
+        "basis": "first_online",
+        "status": "documented",
+        "note": "来源日期无时区，不假设UTC跨日；first_online角色由官方publisher或电子发表XML支持。"
+      },
+      "version_date": null,
+      "version_date_reason": "无独立内容修订时间；不声称当前HTML与发表当日网页逐字相同。"
+    },
+    {
+      "record_id": "record-deepsc-journal",
+      "work_id": "work-deepsc",
+      "title": "DEEPsc: A Deep Learning-Based Map Connecting Single-Cell Transcriptomics and Spatial Imaging Data",
+      "authors": [
+        "Floyd Maseda",
+        "Zixuan Cang",
+        "Qing Nie"
+      ],
+      "identifiers": {
+        "doi": "10.3389/fgene.2021.636743",
+        "pmid": "33833776",
+        "pmcid": "PMC8021700",
+        "arxiv_id": null
+      },
+      "discovery": {
+        "site": "pubmed",
+        "record_url": "https://pubmed.ncbi.nlm.nih.gov/33833776/",
+        "context": "冻结A PubMed范围发现日志search-a或search-b保留此条线索，随后跟随官方PMC核身份/正文；本机PubMed challenge未冒充报告内容。"
+      },
+      "report_version": "已发表期刊报告；所读为冻结的当前公开主文HTML，未单独核实内容修订后缀。",
+      "report_date": {
+        "value": "2021-03-23",
+        "precision": "day",
+        "basis": "first_online",
+        "status": "documented",
+        "note": "来源日期无时区，不假设UTC跨日；first_online角色由官方publisher或电子发表XML支持。"
+      },
+      "version_date": null,
+      "version_date_reason": "无独立内容修订时间；不声称当前HTML与发表当日网页逐字相同。"
+    },
+    {
+      "record_id": "record-past-journal",
+      "work_id": "work-past",
+      "title": "Latent feature extraction with a prior-based self-attention framework for spatial transcriptomics",
+      "authors": [
+        "Zhen Li",
+        "Xiaoyang Chen",
+        "Xuegong Zhang",
+        "Rui Jiang",
+        "Shengquan Chen"
+      ],
+      "identifiers": {
+        "doi": "10.1101/gr.277891.123",
+        "pmid": "37903634",
+        "pmcid": "PMC10691543",
+        "arxiv_id": null
+      },
+      "discovery": {
+        "site": "pubmed",
+        "record_url": "https://pubmed.ncbi.nlm.nih.gov/37903634/",
+        "context": "冻结A PubMed范围发现日志search-a或search-b保留此条线索，随后跟随官方PMC核身份/正文；本机PubMed challenge未冒充报告内容。"
+      },
+      "report_version": "已发表期刊报告；所读为冻结的当前公开主文HTML，未单独核实内容修订后缀。",
+      "report_date": {
+        "value": "2023-10-30",
+        "precision": "day",
+        "basis": "first_online",
+        "status": "documented",
+        "note": "来源日期无时区，不假设UTC跨日；first_online角色由官方publisher或电子发表XML支持。"
+      },
+      "version_date": null,
+      "version_date_reason": "无独立内容修订时间；不声称当前HTML与发表当日网页逐字相同。"
+    }
+  ],
+  "works": [
+    {
+      "work_id": "work-stdgcn",
+      "selected_record_id": "record-stdgcn-journal",
+      "decision": "include",
+      "decision_reason": "原创空间组学学习方法；所选期刊报告日期在窗口内，已实际核读公开主文。此为非穷尽作者示例，不是答案名单。",
+      "research_task": {
+        "status": "documented",
+        "text": "混合空间转录组 spot 的细胞类型比例解卷积，输出各 spot 各类型比例，不是空间域聚类。"
+      },
+      "input_data": {
+        "status": "documented",
+        "text": "需要 ST 表达、spot 坐标及带细胞类型标签的 scRNA-seq 参考；核心假设是两种数据共享细胞类型及相似表达签名。"
+      },
+      "method": {
+        "status": "documented",
+        "text": "scRNA-seq 产生 pseudo-spots；表达相似性 MNN 图与真实 spot 空间距离图分别进入 GCN，拼接后经全连接层预测比例；只在训练 pseudo-spots 反传，验证集用于 early stopping。"
+      },
+      "evaluation": {
+        "status": "documented",
+        "text": "期刊版比较 17 个其他模型（含自身 18）。seqFISH、seqFISH+、MERFISH 的原标注细胞按方格合成 spot 得到比例真值，seqFISH+ 内部与外部 scRNA 参考分开；JSD/RMSE 越低越好，Spearman 越高越好；跨切片先求各数据集 mean rank。近单细胞 Slide-seq 仅在补充部分，不能说严格单细胞真值已验证；补充文件未另读。"
+      },
+      "results": {
+        "status": "documented",
+        "text": "期刊主文：seqFISH+ 外部参考情形 JSD/RMSE 均排第 2、Spearman 排第 4；不要把“多数条件有优势”改写成每个数据和指标均第一。",
+        "numbers": [
+          {
+            "metric": "mean rank: JSD/RMSE",
+            "value": "2 / 2",
+            "unit": "dimensionless",
+            "direction": "lower_better",
+            "condition": "期刊报告；seqFISH+ 外部 scRNA-seq 参考；18 模型"
+          },
+          {
+            "metric": "mean rank: Spearman",
+            "value": 4,
+            "unit": "dimensionless",
+            "direction": "lower_better",
+            "condition": "同上，原 Spearman 相关系数方向 higher_better；此处是名次"
+          }
+        ]
+      },
+      "limitations": {
+        "status": "documented",
+        "text": "作者承认跨空间域边界的邻居消息可造成负效应，低比例类型相对预测较弱。"
+      }
+    },
+    {
+      "work_id": "work-spacel",
+      "selected_record_id": "record-spacel-journal",
+      "decision": "include",
+      "decision_reason": "原创空间组学学习方法；所选期刊报告日期在窗口内，已实际核读公开主文。此为非穷尽作者示例，不是答案名单。",
+      "research_task": {
+        "status": "documented",
+        "text": "Spoint 反卷积细胞组成、Splane 多切片空间域识别、Scube 连续切片三维配准/堆叠是三个不同任务和输出。"
+      },
+      "input_data": {
+        "status": "documented",
+        "text": "Spoint 用同组织 scRNA-seq 模拟 pseudo-spots 并处理 seq-based ST；Splane 用细胞类型组成和空间邻接，图像型单细胞 ST 可用已有细胞类型标注；Scube 用空间域和坐标。"
+      },
+      "method": {
+        "status": "documented",
+        "text": "Spoint结合概率模型与MLP；Splane以GCN和对抗训练学习多片共享表示后聚类；Scube采用MNN和差分进化配准变换，并非所有模块都是深度网络。"
+      },
+      "evaluation": {
+        "status": "documented",
+        "text": "DLPFC 12 张 Visium 切片加 Allen 单细胞参考；没有逐 spot 实测细胞组成，皮层层标签仅作组成分布代理。空间域用原研究人工皮层标签，与反卷积真值类型不同。"
+      },
+      "results": {
+        "status": "documented",
+        "text": "12张DLPFC联合空间域识别中，作者报告平均JI=0.61、中位ARI=0.61。仅为该数据与联合分析方案，不是单片结果或真实三维坐标准确率。",
+        "numbers": [
+          {
+            "metric": "mean JI",
+            "value": 0.61,
+            "unit": "无量纲",
+            "direction": "higher_better",
+            "condition": "Splane联合分析12张DLPFC；原研究人工皮层标签"
+          },
+          {
+            "metric": "median ARI",
+            "value": 0.61,
+            "unit": "无量纲",
+            "direction": "higher_better",
+            "condition": "同一12片联合分析"
+          }
+        ]
+      },
+      "limitations": {
+        "status": "documented",
+        "text": "Splane须先有细胞类型组成；作者指出当前Scube不支持非线性配准，新增切片会要求整套模型重训。真实多切片配准没有已知坐标真值，相邻切片SSIM/PCC只是相似性评价。"
+      }
+    },
+    {
+      "work_id": "work-stagate",
+      "selected_record_id": "record-stagate-journal",
+      "decision": "include",
+      "decision_reason": "原创空间组学学习方法；所选期刊报告日期在窗口内，已实际核读公开主文。此为非穷尽作者示例，不是答案名单。",
+      "research_task": {
+        "status": "documented",
+        "text": "以低维嵌入识别空间域，并支持表达去噪及在已对齐多切片中提取三维表达域。"
+      },
+      "input_data": {
+        "status": "documented",
+        "text": "表达和坐标构建半径 SNN；低分辨率数据可选 cell-type-aware 预聚类剪边。原模型不使用组织学图像；3000 HVG 和归一化属于原分析预处理，不能泛化为强制图像输入。"
+      },
+      "method": {
+        "status": "documented",
+        "text": "图注意力自编码器重建表达并自适应学习邻居边权；mclust/Louvain 等聚类使用其嵌入，聚类器与学习模型分开。"
+      },
+      "evaluation": {
+        "status": "documented",
+        "text": "基准为12张DLPFC切片，皮层/白质标签来自原研究形态和基因marker注释。单片展示与跨12片分布不能混作一个结果。"
+      },
+      "results": {
+        "status": "documented",
+        "text": "作者在DLPFC 151676单切片报告ARI=0.60，不是12片均值或中位数。",
+        "numbers": [
+          {
+            "metric": "ARI",
+            "value": 0.6,
+            "unit": "无量纲",
+            "direction": "higher_better",
+            "condition": "DLPFC单切片151676，原研究皮层/白质标签"
+          }
+        ]
+      },
+      "limitations": {
+        "status": "documented",
+        "text": "七张Slide-seq三维示例先经ICP与人工微调对齐，不是对任意未对齐切片的全自动配准。作者指出GPU内存随spot数量近线性增长。"
+      }
+    },
+    {
+      "work_id": "work-deepst",
+      "selected_record_id": "record-deepst-journal",
+      "decision": "include",
+      "decision_reason": "原创空间组学学习方法；所选期刊报告日期在窗口内，已实际核读公开主文。此为非穷尽作者示例，不是答案名单。",
+      "research_task": {
+        "status": "documented",
+        "text": "空间域识别，以及多批次/跨平台整合中的批次效应校正。"
+      },
+      "input_data": {
+        "status": "documented",
+        "text": "输入空间表达、坐标和可选H&E，有图像时提取形态特征增强表达；不把H&E说成所有场景必需。"
+      },
+      "method": {
+        "status": "documented",
+        "text": "去噪自编码器与变分图自编码器联合表示；整合任务可用梯度反转连接域判别器，后续聚类与学习模型分别理解。"
+      },
+      "evaluation": {
+        "status": "documented",
+        "text": "核心为 12 张 DLPFC 人工层/WM 标注的 ARI 比较；DLPFC 基线采用已知真实层数，DeepST 可按目标簇数搜索 resolution，或无先验按 CH 选择。无标注时 SC/DB 是内部指标，不能冒充手工标签准确率。"
+      },
+      "results": {
+        "status": "documented",
+        "text": "主文12张DLPFC比较为ARI=0.515+/0.011，BayesSpace对照0.463+/0.012，Wilcoxon P=.007；HTML的+/误差项类型unknown，不补称SD/SE/CI。单片151671 ARI=.798另列；四片151673至151676整合ARI=.56、SC=.36，条件与指标均不同。",
+        "numbers": [
+          {
+            "metric": "ARI",
+            "value": "0.515+/0.011",
+            "unit": "无量纲",
+            "direction": "higher_better",
+            "condition": "12张DLPFC主文比较；BayesSpace对照0.463+/0.012；误差类型unknown"
+          },
+          {
+            "metric": "Wilcoxon P",
+            "value": 0.007,
+            "unit": "无量纲",
+            "direction": "not_applicable",
+            "condition": "该12片DeepST与BayesSpace比较；不是ARI"
+          },
+          {
+            "metric": "ARI",
+            "value": 0.798,
+            "unit": "无量纲",
+            "direction": "higher_better",
+            "condition": "DLPFC单片151671"
+          },
+          {
+            "metric": "ARI",
+            "value": 0.56,
+            "unit": "无量纲",
+            "direction": "higher_better",
+            "condition": "DLPFC四片151673、151674、151675、151676整合"
+          },
+          {
+            "metric": "SC",
+            "value": 0.36,
+            "unit": "无量纲",
+            "direction": "higher_better",
+            "condition": "同一四片整合；内部指标，不是标注准确率"
+          }
+        ]
+      },
+      "limitations": {
+        "status": "documented",
+        "text": "作者报告复现对照的性能与原论文不同，硬件及无监督收敛只是可能解释，未经本参考运行证实；整图GNN内存会限制大规模数据。"
+      }
+    },
+    {
+      "work_id": "work-deepsc",
+      "selected_record_id": "record-deepsc-journal",
+      "decision": "include",
+      "decision_reason": "原创空间组学学习方法；所选期刊报告日期在窗口内，已实际核读公开主文。此为非穷尽作者示例，不是答案名单。",
+      "research_task": {
+        "status": "documented",
+        "text": "把非空间scRNA-seq细胞映射至同生物系统的空间参考atlas，输出cell-position匹配分数/候选来源，不是de novo空间域聚类。"
+      },
+      "input_data": {
+        "status": "documented",
+        "text": "需要有已知位置的表达atlas及scRNA-seq共同基因；atlas PCA系数同样投影细胞数据。四系统为斑马鱼胚胎、果蝇胚胎、鼠毛囊、鼠额叶皮层。"
+      },
+      "method": {
+        "status": "documented",
+        "text": "全连接网络比较cell与position配对特征，atlas位置模拟细胞，加入高斯噪声；匹配稀少时对false negative加权。不是GCN。"
+      },
+      "evaluation": {
+        "status": "documented",
+        "text": "模拟来源由复制atlas位置而已知；Table1复合E高为好、individual penalty低为好。真实scRNA-seq没有已知来源，Table2是共同基因留出预测复现度，分scRNA/atlas、零/非零表达；毛囊/果蝇k=4，斑马鱼/额叶k=5，同法间共享split。"
+      },
+      "results": {
+        "status": "documented",
+        "text": "作者Table1报告四个模拟atlas系统的平均复合E=.9145；这是自定义综合分，不能写成真实细胞准确定位率或每个系统/指标均第一。",
+        "numbers": [
+          {
+            "metric": "mean composite E",
+            "value": 0.9145,
+            "unit": "无量纲",
+            "direction": "higher_better",
+            "condition": "Table1四个模拟atlas系统平均；来源由复制atlas位置而已知，不是真实细胞定位率"
+          }
+        ]
+      },
+      "limitations": {
+        "status": "documented",
+        "text": "作者指出最大果蝇atlas3039位置即使稀疏训练仍需数小时，不能外推任意规模。鼠毛囊atlas表达与几何由图像人工构造并加噪，不能称完全自动的独立原位真值。"
+      }
+    },
+    {
+      "work_id": "work-past",
+      "selected_record_id": "record-past-journal",
+      "decision": "include",
+      "decision_reason": "原创空间组学学习方法；所选期刊报告日期在窗口内，已实际核读公开主文。此为非穷尽作者示例，不是答案名单。",
+      "research_task": {
+        "status": "documented",
+        "text": "空间转录组自监督表示学习/空间域表征，嵌入供轨迹、伪时间、多切片整合及域注释等下游使用。"
+      },
+      "input_data": {
+        "status": "documented",
+        "text": "目标ST表达和坐标，加参考表达；参考可为同协议/相近组织的外部ST、其他协议ST、scRNA-seq，或目标自身（PAST-S），所以不是始终强制外部参考。DLPFC的PAST-E使用其余11片，PAST-S用自身。"
+      },
+      "method": {
+        "status": "documented",
+        "text": "变分图卷积自编码器结合BNN参考先验、并行FCN、自注意力和ripple walk子图训练/预测；latent Gaussian均值为嵌入，后续SVM/mclust/Louvain分属评估或聚类步骤。"
+      },
+      "evaluation": {
+        "status": "documented",
+        "text": "STARmap MPVC比较八个基线，DLPFC十二片比较九个；要分开五折下游SVM监督表征评估、已知ground-truth簇数的mclust聚类、默认resolution的Louvain聚类。监督kappa/F1与无监督ARI/AMI不可混并；已知簇数是额外先验。"
+      },
+      "results": {
+        "status": "documented",
+        "text": "12张DLPFC中，PAST-E对PAST-S的ARI差异一侧配对Wilcoxon P=.0105/.0002分别对应给定簇数/默认resolution，不能当作ARI值；监督表征评估并非所有指标第一。",
+        "numbers": [
+          {
+            "metric": "paired Wilcoxon P for ARI difference",
+            "value": "0.0105 / 0.0002",
+            "unit": "无量纲",
+            "direction": "not_applicable",
+            "condition": "12张DLPFC；PAST-E对PAST-S；给定簇数 / 默认resolution；不是ARI分数"
+          }
+        ]
+      },
+      "limitations": {
+        "status": "documented",
+        "text": "外部参考不匹配带来不确定性；作者建议同技术、同组织、更多共享域和较大参考。H&E跨模态与空间ATAC仍列为未来方向，不能冒充本文已经验证的能力。"
+      }
+    }
+  ],
+  "sources": [
+    {
+      "source_id": "src-a-F06-stdgcn-pmc",
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC11302295/",
+      "title": "STdGCN冻结正文",
+      "access_status": "read_full",
+      "accessed_at": "2026-10-28T12:34:35.478565Z",
+      "citations": [
+        {
+          "citation_id": "citation-001",
+          "quote": "cell-type deconvolution in ST data by using scRNA-seq data as a reference",
+          "locator": {
+            "type": "html_text",
+            "xpath": "/html/body/div[2]/div[2]/div/div[1]/div/div[2]/main/article/section[2]/section/section[3]/section[1]/p",
+            "section": "Results > STdGCN description",
+            "paragraph_number_in_frozen_reading_index": 10,
+            "html_id": "Par5"
+          },
+          "supports_fields": [
+            "/works/0/research_task",
+            "/works/0/input_data",
+            "/works/0/decision_reason"
+          ]
+        },
+        {
+          "citation_id": "citation-002",
+          "quote": "expression graph",
+          "locator": {
+            "type": "html_text",
+            "xpath": "/html/body/div[2]/div[2]/div/div[1]/div/div[2]/main/article/section[2]/section/section[3]/section[1]/p",
+            "section": "Results > STdGCN description",
+            "paragraph_number_in_frozen_reading_index": 10,
+            "html_id": "Par5"
+          },
+          "supports_fields": [
+            "/works/0/method"
+          ]
+        },
+        {
+          "citation_id": "citation-003",
+          "quote": "spatial graph",
+          "locator": {
+            "type": "html_text",
+            "xpath": "/html/body/div[2]/div[2]/div/div[1]/div/div[2]/main/article/section[2]/section/section[3]/section[1]/p",
+            "section": "Results > STdGCN description",
+            "paragraph_number_in_frozen_reading_index": 10,
+            "html_id": "Par5"
+          },
+          "supports_fields": [
+            "/works/0/method"
+          ]
+        },
+        {
+          "citation_id": "citation-004",
+          "quote": "then concatenated column-wise into a single matrix",
+          "locator": {
+            "type": "html_text",
+            "xpath": "/html/body/div[2]/div[2]/div/div[1]/div/div[2]/main/article/section[2]/section/section[3]/section[1]/p",
+            "section": "Results > STdGCN description",
+            "paragraph_number_in_frozen_reading_index": 10,
+            "html_id": "Par5"
+          },
+          "supports_fields": [
+            "/works/0/method"
+          ]
+        },
+        {
+          "citation_id": "citation-005",
+          "quote": "validation dataset serves the purpose of early stopping",
+          "locator": {
+            "type": "html_text",
+            "xpath": "/html/body/div[2]/div[2]/div/div[1]/div/div[2]/main/article/section[2]/section/section[3]/section[1]/p",
+            "section": "Results > STdGCN description",
+            "paragraph_number_in_frozen_reading_index": 10,
+            "html_id": "Par5"
+          },
+          "supports_fields": [
+            "/works/0/method"
+          ]
+        },
+        {
+          "citation_id": "citation-006",
+          "quote": "17 state-of-the-art deconvolution models",
+          "locator": {
+            "type": "html_text",
+            "xpath": "/html/body/div[2]/div[2]/div/div[1]/div/div[2]/main/article/section[2]/section/section[3]/section[2]/p[1]",
+            "section": "Results > Benchmarks of STdGCN in different datasets",
+            "paragraph_number_in_frozen_reading_index": 12,
+            "html_id": "Par6"
+          },
+          "supports_fields": [
+            "/works/0/evaluation"
+          ]
+        },
+        {
+          "citation_id": "citation-007",
+          "quote": "Cells within each square pixel area were merged to form a synthetic spot",
+          "locator": {
+            "type": "html_text",
+            "xpath": "/html/body/div[2]/div[2]/div/div[1]/div/div[2]/main/article/section[2]/section/section[6]/section[1]/p[2]",
+            "section": "Methods > Benchmark data selection and preprocess",
+            "paragraph_number_in_frozen_reading_index": 37,
+            "html_id": "Par25"
+          },
+          "supports_fields": [
+            "/works/0/evaluation"
+          ]
+        },
+        {
+          "citation_id": "citation-008",
+          "quote": "2nd place in both JSD and RMSE metrics, and 4th place in Spearman",
+          "locator": {
+            "type": "html_text",
+            "xpath": "/html/body/div[2]/div[2]/div/div[1]/div/div[2]/main/article/section[2]/section/section[3]/section[2]/p[2]",
+            "section": "Results > Benchmarks of STdGCN in different datasets",
+            "paragraph_number_in_frozen_reading_index": 14,
+            "html_id": "Par7"
+          },
+          "supports_fields": [
+            "/works/0/results"
+          ]
+        },
+        {
+          "citation_id": "citation-009",
+          "quote": "relative performance of STdGCN in cell types with lower proportions is not as good",
+          "locator": {
+            "type": "html_text",
+            "xpath": "/html/body/div[2]/div[2]/div/div[1]/div/div[2]/main/article/section[2]/section/section[4]/p[5]",
+            "section": "Discussion",
+            "paragraph_number_in_frozen_reading_index": 33,
+            "html_id": "Par21"
+          },
+          "supports_fields": [
+            "/works/0/limitations"
+          ]
+        },
+        {
+          "citation_id": "citation-069",
+          "quote": "STdGCN: spatial transcriptomic cell-type deconvolution",
+          "locator": {
+            "type": "metadata",
+            "xpath": "//meta[@name=\"citation_title\"]/@content",
+            "field": "citation_title"
+          },
+          "supports_fields": [
+            "/records/1/title"
+          ]
+        },
+        {
+          "citation_id": "citation-070",
+          "quote": "10.1186/s13059-024-03353-0",
+          "locator": {
+            "type": "metadata",
+            "xpath": "//meta[@name=\"citation_doi\"]/@content",
+            "field": "citation_doi"
+          },
+          "supports_fields": [
+            "/records/1/identifiers/doi"
+          ]
+        },
+        {
+          "citation_id": "citation-071",
+          "quote": "39103939",
+          "locator": {
+            "type": "metadata",
+            "xpath": "//meta[@name=\"citation_pmid\"]/@content",
+            "field": "citation_pmid"
+          },
+          "supports_fields": [
+            "/records/1/identifiers/pmid"
+          ]
+        },
+        {
+          "citation_id": "citation-072",
+          "quote": "Yawei Li",
+          "locator": {
+            "type": "metadata",
+            "xpath": "//meta[@name=\"citation_author\"]/@content",
+            "field": "citation_author"
+          },
+          "supports_fields": [
+            "/records/1/authors"
+          ]
+        },
+        {
+          "citation_id": "citation-093",
+          "quote": "Genome Biology",
+          "locator": {
+            "type": "metadata",
+            "xpath": "//meta[@name=\"citation_journal_title\"]/@content",
+            "field": "citation_journal_title"
+          },
+          "supports_fields": [
+            "/records/1/report_version"
+          ]
+        }
+      ],
+      "access_observation": "在本非盲作者阶段读取既有冻结观测；时间沿用原获取，不表示本作者新GET。"
+    },
+    {
+      "source_id": "src-a-F01-spacel-pmc",
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC10663563/",
+      "title": "SPACEL冻结正文",
+      "access_status": "read_full",
+      "accessed_at": "2026-10-28T12:34:11.188826Z",
+      "citations": [
+        {
+          "citation_id": "citation-010",
+          "quote": "cell type composition of each ST spot",
+          "locator": {
+            "type": "html_text",
+            "xpath": "/html/body/div[2]/div[2]/div/div[1]/div/div[2]/main/article/section[2]/section/section[4]/section[1]/p[1]",
+            "section": "Results > Workflow of SPACEL",
+            "paragraph_number_in_frozen_reading_index": 14,
+            "html_id": "Par8"
+          },
+          "supports_fields": [
+            "/works/1/research_task",
+            "/works/1/input_data",
+            "/works/1/method",
+            "/works/1/decision_reason"
+          ]
+        },
+        {
+          "citation_id": "citation-011",
+          "quote": "adopting a joint analysis scheme",
+          "locator": {
+            "type": "html_text",
+            "xpath": "/html/body/div[2]/div[2]/div/div[1]/div/div[2]/main/article/section[2]/section/section[4]/section[1]/p[2]",
+            "section": "Results > Workflow of SPACEL",
+            "paragraph_number_in_frozen_reading_index": 15,
+            "html_id": "Par9"
+          },
+          "supports_fields": [
+            "/works/1/research_task",
+            "/works/1/input_data",
+            "/works/1/method"
+          ]
+        },
+        {
+          "citation_id": "citation-012",
+          "quote": "differential evolution optimization algorithm",
+          "locator": {
+            "type": "html_text",
+            "xpath": "/html/body/div[2]/div[2]/div/div[1]/div/div[2]/main/article/section[2]/section/section[4]/section[1]/p[3]",
+            "section": "Results > Workflow of SPACEL",
+            "paragraph_number_in_frozen_reading_index": 16,
+            "html_id": "Par10"
+          },
+          "supports_fields": [
+            "/works/1/research_task",
+            "/works/1/input_data",
+            "/works/1/method"
+          ]
+        },
+        {
+          "citation_id": "citation-013",
+          "quote": "no experimental evidence for the cell type composition of each spot",
+          "locator": {
+            "type": "html_text",
+            "xpath": "/html/body/div[2]/div[2]/div/div[1]/div/div[2]/main/article/section[2]/section/section[4]/section[2]/p[2]",
+            "section": "Results > Spoint accurately deconvolutes cell-type composition",
+            "paragraph_number_in_frozen_reading_index": 21,
+            "html_id": "Par14"
+          },
+          "supports_fields": [
+            "/works/1/evaluation"
+          ]
+        },
+        {
+          "citation_id": "citation-014",
+          "quote": "no ground truth is known in this case",
+          "locator": {
+            "type": "html_text",
+            "xpath": "/html/body/div[2]/div[2]/div/div[1]/div/div[2]/main/article/section[2]/section/section[4]/section[5]/p[4]",
+            "section": "Results > Scube constructs 3D architecture of tissue from consecutive 2D slices",
+            "paragraph_number_in_frozen_reading_index": 39,
+            "html_id": "Par29"
+          },
+          "supports_fields": [
+            "/works/1/limitations"
+          ]
+        },
+        {
+          "citation_id": "citation-015",
+          "quote": "average JI/median ARI = 0.61/0.61",
+          "locator": {
+            "type": "html_text",
+            "xpath": "/html/body/div[2]/div[2]/div/div[1]/div/div[2]/main/article/section[2]/section/section[4]/section[3]/p[3]",
+            "section": "Results > Splane identifies spatial domains for multiple slices",
+            "paragraph_number_in_frozen_reading_index": 26,
+            "html_id": "Par18"
+          },
+          "supports_fields": [
+            "/works/1/results"
+          ]
+        },
+        {
+          "citation_id": "citation-016",
+          "quote": "Scube does not support nonlinear alignment",
+          "locator": {
+            "type": "html_text",
+            "xpath": "/html/body/div[2]/div[2]/div/div[1]/div/div[2]/main/article/section[2]/section/section[5]/p[4]",
+            "section": "Discussion",
+            "paragraph_number_in_frozen_reading_index": 46,
+            "html_id": "Par36"
+          },
+          "supports_fields": [
+            "/works/1/limitations"
+          ]
+        },
+        {
+          "citation_id": "citation-017",
+          "quote": "the entire deep learning model needs to be retrained from scratch",
+          "locator": {
+            "type": "html_text",
+            "xpath": "/html/body/div[2]/div[2]/div/div[1]/div/div[2]/main/article/section[2]/section/section[5]/p[4]",
+            "section": "Discussion",
+            "paragraph_number_in_frozen_reading_index": 46,
+            "html_id": "Par36"
+          },
+          "supports_fields": [
+            "/works/1/limitations"
+          ]
+        },
+        {
+          "citation_id": "citation-073",
+          "quote": "SPACEL: deep learning-based characterization of",
+          "locator": {
+            "type": "metadata",
+            "xpath": "//meta[@name=\"citation_title\"]/@content",
+            "field": "citation_title"
+          },
+          "supports_fields": [
+            "/records/2/title"
+          ]
+        },
+        {
+          "citation_id": "citation-074",
+          "quote": "10.1038/s41467-023-43220-3",
+          "locator": {
+            "type": "metadata",
+            "xpath": "//meta[@name=\"citation_doi\"]/@content",
+            "field": "citation_doi"
+          },
+          "supports_fields": [
+            "/records/2/identifiers/doi"
+          ]
+        },
+        {
+          "citation_id": "citation-075",
+          "quote": "37990022",
+          "locator": {
+            "type": "metadata",
+            "xpath": "//meta[@name=\"citation_pmid\"]/@content",
+            "field": "citation_pmid"
+          },
+          "supports_fields": [
+            "/records/2/identifiers/pmid"
+          ]
+        },
+        {
+          "citation_id": "citation-076",
+          "quote": "Hao Xu",
+          "locator": {
+            "type": "metadata",
+            "xpath": "//meta[@name=\"citation_author\"]/@content",
+            "field": "citation_author"
+          },
+          "supports_fields": [
+            "/records/2/authors"
+          ]
+        },
+        {
+          "citation_id": "citation-094",
+          "quote": "Nature Communications",
+          "locator": {
+            "type": "metadata",
+            "xpath": "//meta[@name=\"citation_journal_title\"]/@content",
+            "field": "citation_journal_title"
+          },
+          "supports_fields": [
+            "/records/2/report_version"
+          ]
+        }
+      ],
+      "access_observation": "在本非盲作者阶段读取既有冻结观测；时间沿用原获取，不表示本作者新GET。"
+    },
+    {
+      "source_id": "src-a-F02-stagate-pmc",
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC8976049/",
+      "title": "STAGATE冻结正文",
+      "access_status": "read_full",
+      "accessed_at": "2026-10-28T12:34:11.188467Z",
+      "citations": [
+        {
+          "citation_id": "citation-018",
+          "quote": "graph attention auto-encoder",
+          "locator": {
+            "type": "html_text",
+            "xpath": "/html/body/div[2]/div[2]/div/div[1]/div/div[2]/main/article/section[2]/section/section[4]/section[1]/p[2]",
+            "section": "Results > Overview of STAGATE",
+            "paragraph_number_in_frozen_reading_index": 13,
+            "html_id": "Par8"
+          },
+          "supports_fields": [
+            "/works/2/research_task",
+            "/works/2/method",
+            "/works/2/decision_reason"
+          ]
+        },
+        {
+          "citation_id": "citation-019",
+          "quote": "mclust",
+          "locator": {
+            "type": "html_text",
+            "xpath": "/html/body/div[2]/div[2]/div/div[1]/div/div[2]/main/article/section[2]/section/section[4]/section[1]/p[2]",
+            "section": "Results > Overview of STAGATE",
+            "paragraph_number_in_frozen_reading_index": 13,
+            "html_id": "Par8"
+          },
+          "supports_fields": [
+            "/works/2/method"
+          ]
+        },
+        {
+          "citation_id": "citation-020",
+          "quote": "does not leverage the histological images",
+          "locator": {
+            "type": "html_text",
+            "xpath": "/html/body/div[2]/div[2]/div/div[1]/div/div[2]/main/article/section[2]/section/section[5]/p[2]",
+            "section": "Discussion",
+            "paragraph_number_in_frozen_reading_index": 33,
+            "html_id": "Par22"
+          },
+          "supports_fields": [
+            "/works/2/input_data"
+          ]
+        },
+        {
+          "citation_id": "citation-021",
+          "quote": "top 3000 highly variable genes",
+          "locator": {
+            "type": "html_text",
+            "xpath": "/html/body/div[2]/div[2]/div/div[1]/div/div[2]/main/article/section[2]/section/section[6]/section[2]/p",
+            "section": "Methods > Data preprocessing",
+            "paragraph_number_in_frozen_reading_index": 41,
+            "html_id": "Par30"
+          },
+          "supports_fields": [
+            "/works/2/input_data"
+          ]
+        },
+        {
+          "citation_id": "citation-022",
+          "quote": "pre-defined radius",
+          "locator": {
+            "type": "html_text",
+            "xpath": "/html/body/div[2]/div[2]/div/div[1]/div/div[2]/main/article/section[2]/section/section[6]/section[3]/p",
+            "section": "Methods > Construction of SNN",
+            "paragraph_number_in_frozen_reading_index": 42,
+            "html_id": "Par31"
+          },
+          "supports_fields": [
+            "/works/2/input_data"
+          ]
+        },
+        {
+          "citation_id": "citation-023",
+          "quote": "pruning the SNN according to pre-clustering of gene expressions",
+          "locator": {
+            "type": "html_text",
+            "xpath": "/html/body/div[2]/div[2]/div/div[1]/div/div[2]/main/article/section[2]/section/section[6]/section[4]/p",
+            "section": "Methods > Construction of cell type-aware SNN (optional)",
+            "paragraph_number_in_frozen_reading_index": 43,
+            "html_id": "Par32"
+          },
+          "supports_fields": [
+            "/works/2/input_data"
+          ]
+        },
+        {
+          "citation_id": "citation-024",
+          "quote": "12 human dorsolateral prefrontal cortex (DLPFC) sections",
+          "locator": {
+            "type": "html_text",
+            "xpath": "/html/body/div[2]/div[2]/div/div[1]/div/div[2]/main/article/section[2]/section/section[4]/section[2]/p[1]",
+            "section": "Results > STAGATE improves the identification of known layers on the human dorsolateral prefrontal cortex dataset",
+            "paragraph_number_in_frozen_reading_index": 14,
+            "html_id": "Par9"
+          },
+          "supports_fields": [
+            "/works/2/evaluation"
+          ]
+        },
+        {
+          "citation_id": "citation-025",
+          "quote": "morphological features and gene markers",
+          "locator": {
+            "type": "html_text",
+            "xpath": "/html/body/div[2]/div[2]/div/div[1]/div/div[2]/main/article/section[2]/section/section[4]/section[2]/p[1]",
+            "section": "Results > STAGATE improves the identification of known layers on the human dorsolateral prefrontal cortex dataset",
+            "paragraph_number_in_frozen_reading_index": 14,
+            "html_id": "Par9"
+          },
+          "supports_fields": [
+            "/works/2/evaluation"
+          ]
+        },
+        {
+          "citation_id": "citation-026",
+          "quote": "ARI = 0.60",
+          "locator": {
+            "type": "html_text",
+            "xpath": "/html/body/div[2]/div[2]/div/div[1]/div/div[2]/main/article/section[2]/section/section[4]/section[2]/p[2]",
+            "section": "Results > STAGATE improves the identification of known layers on the human dorsolateral prefrontal cortex dataset",
+            "paragraph_number_in_frozen_reading_index": 16,
+            "html_id": "Par10"
+          },
+          "supports_fields": [
+            "/works/2/results"
+          ]
+        },
+        {
+          "citation_id": "citation-027",
+          "quote": "Iterative Closest Point algorithm40 and manual fine-tuning",
+          "locator": {
+            "type": "html_text",
+            "xpath": "/html/body/div[2]/div[2]/div/div[1]/div/div[2]/main/article/section[2]/section/section[6]/section[1]/p[2]",
+            "section": "Methods > Data description",
+            "paragraph_number_in_frozen_reading_index": 39,
+            "html_id": "Par28"
+          },
+          "supports_fields": [
+            "/works/2/limitations"
+          ]
+        },
+        {
+          "citation_id": "citation-028",
+          "quote": "GPU memory usage is nearly linearly correlated to the number of spots",
+          "locator": {
+            "type": "html_text",
+            "xpath": "/html/body/div[2]/div[2]/div/div[1]/div/div[2]/main/article/section[2]/section/section[5]/p[5]",
+            "section": "Discussion",
+            "paragraph_number_in_frozen_reading_index": 36,
+            "html_id": "Par25"
+          },
+          "supports_fields": [
+            "/works/2/limitations"
+          ]
+        },
+        {
+          "citation_id": "citation-077",
+          "quote": "Deciphering spatial domains from spatially",
+          "locator": {
+            "type": "metadata",
+            "xpath": "//meta[@name=\"citation_title\"]/@content",
+            "field": "citation_title"
+          },
+          "supports_fields": [
+            "/records/3/title"
+          ]
+        },
+        {
+          "citation_id": "citation-078",
+          "quote": "10.1038/s41467-022-29439-6",
+          "locator": {
+            "type": "metadata",
+            "xpath": "//meta[@name=\"citation_doi\"]/@content",
+            "field": "citation_doi"
+          },
+          "supports_fields": [
+            "/records/3/identifiers/doi"
+          ]
+        },
+        {
+          "citation_id": "citation-079",
+          "quote": "35365632",
+          "locator": {
+            "type": "metadata",
+            "xpath": "//meta[@name=\"citation_pmid\"]/@content",
+            "field": "citation_pmid"
+          },
+          "supports_fields": [
+            "/records/3/identifiers/pmid"
+          ]
+        },
+        {
+          "citation_id": "citation-080",
+          "quote": "Kangning Dong",
+          "locator": {
+            "type": "metadata",
+            "xpath": "//meta[@name=\"citation_author\"]/@content",
+            "field": "citation_author"
+          },
+          "supports_fields": [
+            "/records/3/authors"
+          ]
+        },
+        {
+          "citation_id": "citation-095",
+          "quote": "Nature Communications",
+          "locator": {
+            "type": "metadata",
+            "xpath": "//meta[@name=\"citation_journal_title\"]/@content",
+            "field": "citation_journal_title"
+          },
+          "supports_fields": [
+            "/records/3/report_version"
+          ]
+        }
+      ],
+      "access_observation": "在本非盲作者阶段读取既有冻结观测；时间沿用原获取，不表示本作者新GET。"
+    },
+    {
+      "source_id": "src-a-F03-deepst-pmc",
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC9825193/",
+      "title": "DeepST冻结正文",
+      "access_status": "read_full",
+      "accessed_at": "2026-10-28T12:34:11.189131Z",
+      "citations": [
+        {
+          "citation_id": "citation-029",
+          "quote": "H&E) staining (optional), spatial coordinates, and spatial gene expression as input",
+          "locator": {
+            "type": "html_text",
+            "xpath": "/html/body/div[2]/div[2]/div/div[1]/div/div[2]/main/article/section[2]/section/section[4]/section[1]/figure/figcaption/p",
+            "section": "RESULTS > Overview of the DeepST workflow",
+            "paragraph_number_in_frozen_reading_index": 36
+          },
+          "supports_fields": [
+            "/works/3/input_data",
+            "/works/3/research_task",
+            "/works/3/decision_reason"
+          ]
+        },
+        {
+          "citation_id": "citation-030",
+          "quote": "denoising autoencoder",
+          "locator": {
+            "type": "html_text",
+            "xpath": "/html/body/div[2]/div[2]/div/div[1]/div/div[2]/main/article/section[2]/section/section[4]/section[1]/p",
+            "section": "RESULTS > Overview of the DeepST workflow",
+            "paragraph_number_in_frozen_reading_index": 35
+          },
+          "supports_fields": [
+            "/works/3/method"
+          ]
+        },
+        {
+          "citation_id": "citation-031",
+          "quote": "variational graph autoencoder",
+          "locator": {
+            "type": "html_text",
+            "xpath": "/html/body/div[2]/div[2]/div/div[1]/div/div[2]/main/article/section[2]/section/section[4]/section[1]/p",
+            "section": "RESULTS > Overview of the DeepST workflow",
+            "paragraph_number_in_frozen_reading_index": 35
+          },
+          "supports_fields": [
+            "/works/3/method"
+          ]
+        },
+        {
+          "citation_id": "citation-032",
+          "quote": "gradient reversal layer",
+          "locator": {
+            "type": "html_text",
+            "xpath": "/html/body/div[2]/div[2]/div/div[1]/div/div[2]/main/article/section[2]/section/section[4]/section[1]/p",
+            "section": "RESULTS > Overview of the DeepST workflow",
+            "paragraph_number_in_frozen_reading_index": 35
+          },
+          "supports_fields": [
+            "/works/3/method",
+            "/works/3/research_task"
+          ]
+        },
+        {
+          "citation_id": "citation-033",
+          "quote": "same number of domains as the truth layers",
+          "locator": {
+            "type": "html_text",
+            "xpath": "/html/body/div[2]/div[2]/div/div[1]/div/div[2]/main/article/section[2]/section/section[3]/section[8]/p[1]",
+            "section": "MATERIALS AND METHODS > Benchmarking",
+            "paragraph_number_in_frozen_reading_index": 30
+          },
+          "supports_fields": [
+            "/works/3/evaluation"
+          ]
+        },
+        {
+          "citation_id": "citation-034",
+          "quote": "spatial domain annotations are not available",
+          "locator": {
+            "type": "html_text",
+            "xpath": "/html/body/div[2]/div[2]/div/div[1]/div/div[2]/main/article/section[2]/section/section[3]/section[9]/p",
+            "section": "MATERIALS AND METHODS > Clustering metrics",
+            "paragraph_number_in_frozen_reading_index": 32
+          },
+          "supports_fields": [
+            "/works/3/evaluation"
+          ]
+        },
+        {
+          "citation_id": "citation-035",
+          "quote": "0.515+/0.011",
+          "locator": {
+            "type": "html_text",
+            "xpath": "/html/body/div[2]/div[2]/div/div[1]/div/div[2]/main/article/section[2]/section/section[4]/section[2]/p[2]",
+            "section": "RESULTS > Benchmarking of DeepST against state-of-the-art methods",
+            "paragraph_number_in_frozen_reading_index": 39
+          },
+          "supports_fields": [
+            "/works/3/results"
+          ]
+        },
+        {
+          "citation_id": "citation-036",
+          "quote": "0.463+/0.012; Wilcoxon test, P value = 0.007",
+          "locator": {
+            "type": "html_text",
+            "xpath": "/html/body/div[2]/div[2]/div/div[1]/div/div[2]/main/article/section[2]/section/section[4]/section[2]/p[2]",
+            "section": "RESULTS > Benchmarking of DeepST against state-of-the-art methods",
+            "paragraph_number_in_frozen_reading_index": 39
+          },
+          "supports_fields": [
+            "/works/3/results"
+          ]
+        },
+        {
+          "citation_id": "citation-037",
+          "quote": "slide 151671 (ARI = 0.798",
+          "locator": {
+            "type": "html_text",
+            "xpath": "/html/body/div[2]/div[2]/div/div[1]/div/div[2]/main/article/section[2]/section/section[4]/section[2]/p[2]",
+            "section": "RESULTS > Benchmarking of DeepST against state-of-the-art methods",
+            "paragraph_number_in_frozen_reading_index": 39
+          },
+          "supports_fields": [
+            "/works/3/results"
+          ]
+        },
+        {
+          "citation_id": "citation-038",
+          "quote": "four DLPFC slides (151673, 151674, 151675 and 151676)",
+          "locator": {
+            "type": "html_text",
+            "xpath": "/html/body/div[2]/div[2]/div/div[1]/div/div[2]/main/article/section[2]/section/section[4]/section[3]/p[2]",
+            "section": "RESULTS > Systematic parameter optimization and integration of DeepST",
+            "paragraph_number_in_frozen_reading_index": 43
+          },
+          "supports_fields": [
+            "/works/3/evaluation",
+            "/works/3/results"
+          ]
+        },
+        {
+          "citation_id": "citation-039",
+          "quote": "ARI = 0.56, SC = 0.36",
+          "locator": {
+            "type": "html_text",
+            "xpath": "/html/body/div[2]/div[2]/div/div[1]/div/div[2]/main/article/section[2]/section/section[4]/section[3]/p[2]",
+            "section": "RESULTS > Systematic parameter optimization and integration of DeepST",
+            "paragraph_number_in_frozen_reading_index": 43
+          },
+          "supports_fields": [
+            "/works/3/results"
+          ]
+        },
+        {
+          "citation_id": "citation-040",
+          "quote": "performance disparity from the original papers",
+          "locator": {
+            "type": "html_text",
+            "xpath": "/html/body/div[2]/div[2]/div/div[1]/div/div[2]/main/article/section[2]/section/section[5]/p[2]",
+            "section": "DISCUSSION",
+            "paragraph_number_in_frozen_reading_index": 54
+          },
+          "supports_fields": [
+            "/works/3/limitations"
+          ]
+        },
+        {
+          "citation_id": "citation-041",
+          "quote": "large memory to load the entire graph",
+          "locator": {
+            "type": "html_text",
+            "xpath": "/html/body/div[2]/div[2]/div/div[1]/div/div[2]/main/article/section[2]/section/section[5]/p[3]",
+            "section": "DISCUSSION",
+            "paragraph_number_in_frozen_reading_index": 55
+          },
+          "supports_fields": [
+            "/works/3/limitations"
+          ]
+        },
+        {
+          "citation_id": "citation-062",
+          "quote": "highest CH value",
+          "locator": {
+            "type": "html_text",
+            "xpath": "/html/body/div[2]/div[2]/div/div[1]/div/div[2]/main/article/section[2]/section/section[3]/section[10]/p",
+            "section": "MATERIALS AND METHODS > Clustering and visualization",
+            "paragraph_number_in_frozen_reading_index": 33
+          },
+          "supports_fields": [
+            "/works/3/evaluation"
+          ]
+        },
+        {
+          "citation_id": "citation-081",
+          "quote": "DeepST: identifying spatial domains in",
+          "locator": {
+            "type": "metadata",
+            "xpath": "//meta[@name=\"citation_title\"]/@content",
+            "field": "citation_title"
+          },
+          "supports_fields": [
+            "/records/4/title"
+          ]
+        },
+        {
+          "citation_id": "citation-082",
+          "quote": "10.1093/nar/gkac901",
+          "locator": {
+            "type": "metadata",
+            "xpath": "//meta[@name=\"citation_doi\"]/@content",
+            "field": "citation_doi"
+          },
+          "supports_fields": [
+            "/records/4/identifiers/doi"
+          ]
+        },
+        {
+          "citation_id": "citation-083",
+          "quote": "36250636",
+          "locator": {
+            "type": "metadata",
+            "xpath": "//meta[@name=\"citation_pmid\"]/@content",
+            "field": "citation_pmid"
+          },
+          "supports_fields": [
+            "/records/4/identifiers/pmid"
+          ]
+        },
+        {
+          "citation_id": "citation-084",
+          "quote": "Chang Xu",
+          "locator": {
+            "type": "metadata",
+            "xpath": "//meta[@name=\"citation_author\"]/@content",
+            "field": "citation_author"
+          },
+          "supports_fields": [
+            "/records/4/authors"
+          ]
+        },
+        {
+          "citation_id": "citation-096",
+          "quote": "Nucleic Acids Research",
+          "locator": {
+            "type": "metadata",
+            "xpath": "//meta[@name=\"citation_journal_title\"]/@content",
+            "field": "citation_journal_title"
+          },
+          "supports_fields": [
+            "/records/4/report_version"
+          ]
+        }
+      ],
+      "access_observation": "在本非盲作者阶段读取既有冻结观测；时间沿用原获取，不表示本作者新GET。"
+    },
+    {
+      "source_id": "src-a-F04-deepsc-pmc",
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC8021700/",
+      "title": "DEEPsc冻结正文",
+      "access_status": "read_full",
+      "accessed_at": "2026-10-28T12:34:11.188906Z",
+      "citations": [
+        {
+          "citation_id": "citation-042",
+          "quote": "impute the spatial information onto the scRNA-seq data",
+          "locator": {
+            "type": "html_text",
+            "xpath": "/html/body/div[2]/div[2]/div/div[1]/div/div[2]/main/article/section[2]/section/section[3]/section[1]/p[1]",
+            "section": "Results > A Deep-Leaning Based Method to Connect scRNA-seq Datasets and Spatial Imaging Data",
+            "paragraph_number_in_frozen_reading_index": 16
+          },
+          "supports_fields": [
+            "/works/4/research_task",
+            "/works/4/decision_reason"
+          ]
+        },
+        {
+          "citation_id": "citation-043",
+          "quote": "same PCA coefficients are used to project the scRNA-seq matrix",
+          "locator": {
+            "type": "html_text",
+            "xpath": "/html/body/div[2]/div[2]/div/div[1]/div/div[2]/main/article/section[2]/section/section[6]/section[1]/p[2]",
+            "section": "Materials and Methods > Data Preparation for DEEPsc",
+            "paragraph_number_in_frozen_reading_index": 49
+          },
+          "supports_fields": [
+            "/works/4/input_data"
+          ]
+        },
+        {
+          "citation_id": "citation-044",
+          "quote": "four different biological systems",
+          "locator": {
+            "type": "html_text",
+            "xpath": "/html/body/div[2]/div[2]/div/div[1]/div/div[2]/main/article/section[2]/section/section[3]/section[3]/p[1]",
+            "section": "Results > Comparisons of Multiple Methods Using Simulated scRNA-seq Data",
+            "paragraph_number_in_frozen_reading_index": 25
+          },
+          "supports_fields": [
+            "/works/4/input_data",
+            "/works/4/evaluation"
+          ]
+        },
+        {
+          "citation_id": "citation-045",
+          "quote": "two fully connected hidden layers",
+          "locator": {
+            "type": "html_text",
+            "xpath": "/html/body/div[2]/div[2]/div/div[1]/div/div[2]/main/article/section[2]/section/section[6]/section[2]/p[2]",
+            "section": "Materials and Methods > Training a DEEPsc Network",
+            "paragraph_number_in_frozen_reading_index": 52
+          },
+          "supports_fields": [
+            "/works/4/method"
+          ]
+        },
+        {
+          "citation_id": "citation-046",
+          "quote": "Gaussian noise is added to the simulated cells",
+          "locator": {
+            "type": "html_text",
+            "xpath": "/html/body/div[2]/div[2]/div/div[1]/div/div[2]/main/article/section[2]/section/section[6]/section[2]/p[2]",
+            "section": "Materials and Methods > Training a DEEPsc Network",
+            "paragraph_number_in_frozen_reading_index": 52
+          },
+          "supports_fields": [
+            "/works/4/method"
+          ]
+        },
+        {
+          "citation_id": "citation-047",
+          "quote": "false negative",
+          "locator": {
+            "type": "html_text",
+            "xpath": "/html/body/div[2]/div[2]/div/div[1]/div/div[2]/main/article/section[2]/section/section[6]/section[2]/p[4]",
+            "section": "Materials and Methods > Training a DEEPsc Network",
+            "paragraph_number_in_frozen_reading_index": 54
+          },
+          "supports_fields": [
+            "/works/4/method"
+          ]
+        },
+        {
+          "citation_id": "citation-048",
+          "quote": "each an exact copy of a reference atlas position",
+          "locator": {
+            "type": "html_text",
+            "xpath": "/html/body/div[2]/div[2]/div/div[1]/div/div[2]/main/article/section[2]/section/section[3]/section[2]/p[2]",
+            "section": "Results > Quantifying Spatial Mapping Performance",
+            "paragraph_number_in_frozen_reading_index": 21
+          },
+          "supports_fields": [
+            "/works/4/evaluation"
+          ]
+        },
+        {
+          "citation_id": "citation-049",
+          "quote": "predictive reproducibility",
+          "locator": {
+            "type": "html_text",
+            "xpath": "/html/body/div[2]/div[2]/div/div[1]/div/div[2]/main/article/section[2]/section/section[3]/section[4]/p[2]",
+            "section": "Results > Applications to Real scRNA-seq Datasets",
+            "paragraph_number_in_frozen_reading_index": 36
+          },
+          "supports_fields": [
+            "/works/4/evaluation"
+          ]
+        },
+        {
+          "citation_id": "citation-050",
+          "quote": "training of which took several hours",
+          "locator": {
+            "type": "html_text",
+            "xpath": "/html/body/div[2]/div[2]/div/div[1]/div/div[2]/main/article/section[2]/section/section[4]/p[4]",
+            "section": "Discussion",
+            "paragraph_number_in_frozen_reading_index": 44
+          },
+          "supports_fields": [
+            "/works/4/limitations"
+          ]
+        },
+        {
+          "citation_id": "citation-051",
+          "quote": "Gene expression levels in [0,1] were chosen manually",
+          "locator": {
+            "type": "html_text",
+            "xpath": "/html/body/div[2]/div[2]/div/div[1]/div/div[2]/main/article/section[2]/section/section[6]/section[3]/p",
+            "section": "Materials and Methods > Creating a Reference Atlas for the Murine Follicle",
+            "paragraph_number_in_frozen_reading_index": 57
+          },
+          "supports_fields": [
+            "/works/4/limitations"
+          ]
+        },
+        {
+          "citation_id": "citation-063",
+          "quote": "value closer to zero signifies lower error",
+          "locator": {
+            "type": "html_text",
+            "xpath": "/html/body/div[2]/div[2]/div/div[1]/div/div[2]/main/article/section[2]/section/section[3]/section[3]/section/div[4]/div/p",
+            "section": "Results > Comparisons of Multiple Methods Using Simulated scRNA-seq Data > TABLE 1.",
+            "paragraph_number_in_frozen_reading_index": 28
+          },
+          "supports_fields": [
+            "/works/4/evaluation"
+          ]
+        },
+        {
+          "citation_id": "citation-064",
+          "quote": "ground truth knowledge is not available for actual scRNA-seq data",
+          "locator": {
+            "type": "html_text",
+            "xpath": "/html/body/div[2]/div[2]/div/div[1]/div/div[2]/main/article/section[2]/section/section[3]/section[2]/p[4]",
+            "section": "Results > Quantifying Spatial Mapping Performance",
+            "paragraph_number_in_frozen_reading_index": 24
+          },
+          "supports_fields": [
+            "/works/4/evaluation"
+          ]
+        },
+        {
+          "citation_id": "citation-068",
+          "quote": "0.9145",
+          "locator": {
+            "type": "html_text_table",
+            "xpath": "//section[@id=\"T1\"]//tr[td[last()][normalize-space(.)=\"0.9145\"]]/td[last()]",
+            "section": "Table 1",
+            "row": "Average / DEEPsc (ours)",
+            "column": "Performance score E"
+          },
+          "supports_fields": [
+            "/works/4/results"
+          ]
+        },
+        {
+          "citation_id": "citation-085",
+          "quote": "DEEPsc: A Deep Learning-Based Map",
+          "locator": {
+            "type": "metadata",
+            "xpath": "//meta[@name=\"citation_title\"]/@content",
+            "field": "citation_title"
+          },
+          "supports_fields": [
+            "/records/5/title"
+          ]
+        },
+        {
+          "citation_id": "citation-086",
+          "quote": "10.3389/fgene.2021.636743",
+          "locator": {
+            "type": "metadata",
+            "xpath": "//meta[@name=\"citation_doi\"]/@content",
+            "field": "citation_doi"
+          },
+          "supports_fields": [
+            "/records/5/identifiers/doi"
+          ]
+        },
+        {
+          "citation_id": "citation-087",
+          "quote": "33833776",
+          "locator": {
+            "type": "metadata",
+            "xpath": "//meta[@name=\"citation_pmid\"]/@content",
+            "field": "citation_pmid"
+          },
+          "supports_fields": [
+            "/records/5/identifiers/pmid"
+          ]
+        },
+        {
+          "citation_id": "citation-088",
+          "quote": "Floyd Maseda",
+          "locator": {
+            "type": "metadata",
+            "xpath": "//meta[@name=\"citation_author\"]/@content",
+            "field": "citation_author"
+          },
+          "supports_fields": [
+            "/records/5/authors"
+          ]
+        },
+        {
+          "citation_id": "citation-097",
+          "quote": "Frontiers in Genetics",
+          "locator": {
+            "type": "metadata",
+            "xpath": "//meta[@name=\"citation_journal_title\"]/@content",
+            "field": "citation_journal_title"
+          },
+          "supports_fields": [
+            "/records/5/report_version"
+          ]
+        }
+      ],
+      "access_observation": "在本非盲作者阶段读取既有冻结观测；时间沿用原获取，不表示本作者新GET。"
+    },
+    {
+      "source_id": "src-a-F07-past-pmc",
+      "url": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pmc&id=10691543&retmode=xml",
+      "title": "PAST官方PMC JATS全文，版本PMC10691543.1",
+      "access_status": "read_full",
+      "accessed_at": "2026-10-28T14:57:35.252777Z",
+      "citations": [
+        {
+          "citation_id": "citation-052",
+          "quote": "target ST data itself",
+          "locator": {
+            "type": "jats_text",
+            "xpath": "/pmc-articleset[1]/article[1]/body[1]/sec[1]/sec[1]/p[1]",
+            "section": "Results > Overview of PAST"
+          },
+          "supports_fields": [
+            "/works/5/research_task",
+            "/works/5/input_data",
+            "/works/5/decision_reason"
+          ]
+        },
+        {
+          "citation_id": "citation-053",
+          "quote": "remaining 11 slices",
+          "locator": {
+            "type": "jats_text",
+            "xpath": "/pmc-articleset[1]/article[1]/body[1]/sec[1]/sec[3]/p[1]",
+            "section": "Results > PAST robustly obtains informative low-dimensional embeddings and facilitates diverse downstream analyses"
+          },
+          "supports_fields": [
+            "/works/5/input_data"
+          ]
+        },
+        {
+          "citation_id": "citation-054",
+          "quote": "BNN module and a parallel FCN",
+          "locator": {
+            "type": "jats_text",
+            "xpath": "/pmc-articleset[1]/article[1]/body[1]/sec[3]/sec[1]/sec[1]/p[1]",
+            "section": "Methods > The model of PAST > Encoder"
+          },
+          "supports_fields": [
+            "/works/5/method"
+          ]
+        },
+        {
+          "citation_id": "citation-055",
+          "quote": "mean matrix",
+          "locator": {
+            "type": "jats_text",
+            "xpath": "/pmc-articleset[1]/article[1]/body[1]/sec[3]/sec[1]/sec[2]/p[1]",
+            "section": "Methods > The model of PAST > Reparameterization module"
+          },
+          "supports_fields": [
+            "/works/5/method"
+          ]
+        },
+        {
+          "citation_id": "citation-056",
+          "quote": "ripple walk training strategy",
+          "locator": {
+            "type": "jats_text",
+            "xpath": "/pmc-articleset[1]/article[1]/body[1]/sec[3]/sec[1]/sec[4]/p[1]",
+            "section": "Methods > The model of PAST > Training and prediction workflow"
+          },
+          "supports_fields": [
+            "/works/5/method"
+          ]
+        },
+        {
+          "citation_id": "citation-057",
+          "quote": "fivefold cross-validation experiments",
+          "locator": {
+            "type": "jats_text",
+            "xpath": "/pmc-articleset[1]/article[1]/body[1]/sec[1]/sec[2]/p[2]",
+            "section": "Results > PAST effectively leverages reference data from various sources for spatial domain characterization"
+          },
+          "supports_fields": [
+            "/works/5/evaluation"
+          ]
+        },
+        {
+          "citation_id": "citation-058",
+          "quote": "number of unique ground-truth spatial domains",
+          "locator": {
+            "type": "jats_text",
+            "xpath": "/pmc-articleset[1]/article[1]/body[1]/sec[1]/sec[2]/p[3]",
+            "section": "Results > PAST effectively leverages reference data from various sources for spatial domain characterization"
+          },
+          "supports_fields": [
+            "/works/5/evaluation"
+          ]
+        },
+        {
+          "citation_id": "citation-059",
+          "quote": "with P-values of 0.0105 and 0.0002 for ARI",
+          "locator": {
+            "type": "jats_text",
+            "xpath": "/pmc-articleset[1]/article[1]/body[1]/sec[1]/sec[3]/p[1]",
+            "section": "Results > PAST robustly obtains informative low-dimensional embeddings and facilitates diverse downstream analyses"
+          },
+          "supports_fields": [
+            "/works/5/results",
+            "/works/5/evaluation"
+          ]
+        },
+        {
+          "citation_id": "citation-060",
+          "quote": "potential uncertainty stemming from incongruity of external reference",
+          "locator": {
+            "type": "jats_text",
+            "xpath": "/pmc-articleset[1]/article[1]/body[1]/sec[2]/p[2]",
+            "section": "Discussion"
+          },
+          "supports_fields": [
+            "/works/5/limitations"
+          ]
+        },
+        {
+          "citation_id": "citation-061",
+          "quote": "spatial-ATAC-seq",
+          "locator": {
+            "type": "jats_text",
+            "xpath": "/pmc-articleset[1]/article[1]/body[1]/sec[2]/p[5]",
+            "section": "Discussion"
+          },
+          "supports_fields": [
+            "/works/5/limitations"
+          ]
+        },
+        {
+          "citation_id": "citation-065",
+          "quote": "trajectory inference, pseudotime analysis, multislice integration, and automatic annotation",
+          "locator": {
+            "type": "jats_text",
+            "xpath": "/pmc-articleset[1]/article[1]/body[1]/sec[1]/sec[1]/fig[1]/caption[1]",
+            "section": "Results > Overview of PAST"
+          },
+          "supports_fields": [
+            "/works/5/research_task"
+          ]
+        },
+        {
+          "citation_id": "citation-066",
+          "quote": "benchmarked against eight baseline methods",
+          "locator": {
+            "type": "jats_text",
+            "xpath": "/pmc-articleset[1]/article[1]/body[1]/sec[1]/sec[2]/p[1]",
+            "section": "Results > PAST effectively leverages reference data from various sources for spatial domain characterization"
+          },
+          "supports_fields": [
+            "/works/5/evaluation"
+          ]
+        },
+        {
+          "citation_id": "citation-067",
+          "quote": "nine baseline methods",
+          "locator": {
+            "type": "jats_text",
+            "xpath": "/pmc-articleset[1]/article[1]/body[1]/sec[1]/sec[3]/p[1]",
+            "section": "Results > PAST robustly obtains informative low-dimensional embeddings and facilitates diverse downstream analyses"
+          },
+          "supports_fields": [
+            "/works/5/evaluation"
+          ]
+        },
+        {
+          "citation_id": "citation-089",
+          "quote": "Latent feature extraction with a",
+          "locator": {
+            "type": "jats_text",
+            "xpath": "/pmc-articleset[1]/article[1]/front[1]/article-meta[1]/title-group[1]/article-title[1]"
+          },
+          "supports_fields": [
+            "/records/6/title"
+          ]
+        },
+        {
+          "citation_id": "citation-090",
+          "quote": "10.1101/gr.277891.123",
+          "locator": {
+            "type": "jats_text",
+            "xpath": "/pmc-articleset[1]/article[1]/front[1]/article-meta[1]/article-id[6]"
+          },
+          "supports_fields": [
+            "/records/6/identifiers/doi"
+          ]
+        },
+        {
+          "citation_id": "citation-091",
+          "quote": "37903634",
+          "locator": {
+            "type": "jats_text",
+            "xpath": "/pmc-articleset[1]/article[1]/front[1]/article-meta[1]/article-id[5]"
+          },
+          "supports_fields": [
+            "/records/6/identifiers/pmid"
+          ]
+        },
+        {
+          "citation_id": "citation-092",
+          "quote": "LiZhen",
+          "locator": {
+            "type": "jats_text",
+            "xpath": "/pmc-articleset[1]/article[1]/front[1]/article-meta[1]/contrib-group[1]/contrib[1]/name[1]",
+            "attributes": {
+              "name-style": "western"
+            }
+          },
+          "supports_fields": [
+            "/records/6/authors"
+          ]
+        },
+        {
+          "citation_id": "citation-098",
+          "quote": "Genome Research",
+          "locator": {
+            "type": "jats_text",
+            "xpath": "/pmc-articleset[1]/article[1]/front[1]/journal-meta[1]/journal-title-group[1]/journal-title[1]"
+          },
+          "supports_fields": [
+            "/records/6/report_version"
+          ]
+        }
+      ],
+      "access_observation": "原PMC网页此次返回验证码，改用实际新GET的官方PMC JATS全文；DOI/PMID/PMC version1及相关正文核对，非历史网页字节存档，不以收稿/接受/入库日期刷新first_online。原HTML成功读取事实与后来验证码分别留痕。"
+    },
+    {
+      "source_id": "src-b1-doi-stdgcn",
+      "url": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&id=39103939&retmode=xml",
+      "title": "STdGCN官方PubMed XML：本参考仅电子发表日期元数据",
+      "access_status": "read_excerpt",
+      "accessed_at": "2026-10-28T14:51:10.917698Z",
+      "citations": [
+        {
+          "citation_id": "citation-099",
+          "quote": "<ArticleDate DateType=\"Electronic\"><Year>2024</Year><Month>08</Month><Day>05</Day></ArticleDate>",
+          "locator": {
+            "type": "official_xml_field",
+            "xpath": "./PubmedArticle[1]/MedlineCitation/Article/ArticleDate[@DateType=\"Electronic\"]"
+          },
+          "supports_fields": [
+            "/records/1/report_date",
+            "/works/0/decision_reason"
+          ]
+        }
+      ],
+      "access_observation": "因出版社TLS连接超时，作者阶段新GET官方PubMed XML核Electronic ArticleDate；source_id保持为稳定关联ID，名称中的doi不表示URL类型。此源仅作日期/身份元数据，不冒全文。原日期数值和first_online口径不变。"
+    },
+    {
+      "source_id": "src-b2-target-three-pubmed-dates-efetch",
+      "url": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&id=37990022,36250636,33833776&retmode=xml",
+      "title": "NCBI PubMed三报告XML：SPACEL、DeepST与DEEPsc日期元数据",
+      "access_status": "read_excerpt",
+      "accessed_at": "2026-10-28T13:16:37.175842+00:00",
+      "citations": [
+        {
+          "citation_id": "citation-100",
+          "quote": "<ArticleDate DateType=\"Electronic\"><Year>2023</Year><Month>11</Month><Day>22</Day></ArticleDate>",
+          "locator": {
+            "type": "official_xml_field",
+            "xpath": "./PubmedArticle[1]/MedlineCitation/Article/ArticleDate[@DateType=\"Electronic\"]"
+          },
+          "supports_fields": [
+            "/records/2/report_date",
+            "/works/1/decision_reason"
+          ]
+        },
+        {
+          "citation_id": "citation-103",
+          "quote": "<ArticleDate DateType=\"Electronic\"><Year>2021</Year><Month>03</Month><Day>23</Day></ArticleDate>",
+          "locator": {
+            "type": "official_xml_field",
+            "xpath": "./PubmedArticle[3]/MedlineCitation/Article/ArticleDate[@DateType=\"Electronic\"]"
+          },
+          "supports_fields": [
+            "/records/5/report_date",
+            "/works/4/decision_reason"
+          ]
+        }
+      ],
+      "access_observation": "在本非盲作者阶段读取既有冻结观测；时间沿用原获取，不表示本作者新GET。"
+    },
+    {
+      "source_id": "src-b1-doi-stagate",
+      "url": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&id=35365632&retmode=xml",
+      "title": "STAGATE官方PubMed XML：本参考仅电子发表日期元数据",
+      "access_status": "read_excerpt",
+      "accessed_at": "2026-10-28T14:51:10.840917Z",
+      "citations": [
+        {
+          "citation_id": "citation-101",
+          "quote": "<ArticleDate DateType=\"Electronic\"><Year>2022</Year><Month>04</Month><Day>01</Day></ArticleDate>",
+          "locator": {
+            "type": "official_xml_field",
+            "xpath": "./PubmedArticle[1]/MedlineCitation/Article/ArticleDate[@DateType=\"Electronic\"]"
+          },
+          "supports_fields": [
+            "/records/3/report_date",
+            "/works/2/decision_reason"
+          ]
+        }
+      ],
+      "access_observation": "因出版社TLS连接超时，作者阶段新GET官方PubMed XML核Electronic ArticleDate；source_id保持为稳定关联ID，名称中的doi不表示URL类型。此源仅作日期/身份元数据，不冒全文。原日期数值和first_online口径不变。"
+    },
+    {
+      "source_id": "src-b2-deepst-jats-date-efetch",
+      "url": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pmc&id=9825193&retmode=xml",
+      "title": "DeepST官方JATS XML：电子发表日期元数据",
+      "access_status": "read_excerpt",
+      "accessed_at": "2026-10-28T13:17:47.010412+00:00",
+      "citations": [
+        {
+          "citation_id": "citation-102",
+          "quote": "<pub-date pub-type=\"epub\" iso-8601-date=\"2022-10-17\"><day>17</day><month>10</month><year>2022</year></pub-date>",
+          "locator": {
+            "type": "official_xml_field",
+            "xpath": ".//article-meta/pub-date[@pub-type=\"epub\"]"
+          },
+          "supports_fields": [
+            "/records/4/report_date",
+            "/works/3/decision_reason"
+          ]
+        }
+      ],
+      "access_observation": "在本非盲作者阶段读取既有冻结观测；时间沿用原获取，不表示本作者新GET。"
+    },
+    {
+      "source_id": "src-b2-past-pubmed-efetch",
+      "url": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&id=37903634&retmode=xml",
+      "title": "PAST官方PubMed XML：电子发表日期元数据",
+      "access_status": "read_excerpt",
+      "accessed_at": "2026-10-28T13:15:24.543330+00:00",
+      "citations": [
+        {
+          "citation_id": "citation-104",
+          "quote": "<ArticleDate DateType=\"Electronic\"><Year>2023</Year><Month>10</Month><Day>30</Day></ArticleDate>",
+          "locator": {
+            "type": "official_xml_field",
+            "xpath": ".//ArticleDate[@DateType=\"Electronic\"]"
+          },
+          "supports_fields": [
+            "/records/6/report_date",
+            "/works/5/decision_reason"
+          ]
+        }
+      ],
+      "access_observation": "在本非盲作者阶段读取既有冻结观测；时间沿用原获取，不表示本作者新GET。"
+    },
+    {
+      "source_id": "src-a-M12-stdgcn-preprint-pmc",
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC10274700/",
+      "title": "STdGCN较早预印本：只读身份、显示日期与更新通知",
+      "access_status": "read_excerpt",
+      "accessed_at": "2026-10-28T12:37:03.652428Z",
+      "citations": [
+        {
+          "citation_id": "citation-105",
+          "quote": "Spatial Transcriptomic Cell-type Deconvolution Using",
+          "locator": {
+            "type": "metadata",
+            "xpath": "//meta[@name=\"citation_title\"]/@content",
+            "field": "citation_title"
+          },
+          "supports_fields": [
+            "/records/0/title"
+          ]
+        },
+        {
+          "citation_id": "citation-106",
+          "quote": "10.1101/2023.03.10.532112",
+          "locator": {
+            "type": "metadata",
+            "xpath": "//meta[@name=\"citation_doi\"]/@content",
+            "field": "citation_doi"
+          },
+          "supports_fields": [
+            "/records/0/identifiers/doi"
+          ]
+        },
+        {
+          "citation_id": "citation-107",
+          "quote": "37333198",
+          "locator": {
+            "type": "metadata",
+            "xpath": "//meta[@name=\"citation_pmid\"]/@content",
+            "field": "citation_pmid"
+          },
+          "supports_fields": [
+            "/records/0/identifiers/pmid"
+          ]
+        },
+        {
+          "citation_id": "citation-108",
+          "quote": "Yawei Li",
+          "locator": {
+            "type": "metadata",
+            "xpath": "//meta[@name=\"citation_author\"]/@content",
+            "field": "citation_author"
+          },
+          "supports_fields": [
+            "/records/0/authors"
+          ]
+        },
+        {
+          "citation_id": "citation-109",
+          "quote": "2023 Jun 9",
+          "locator": {
+            "type": "metadata",
+            "xpath": "//meta[@name=\"citation_publication_date\"]/@content",
+            "field": "citation_publication_date"
+          },
+          "supports_fields": [
+            "/records/0/observed_display_date"
+          ]
+        },
+        {
+          "citation_id": "citation-110",
+          "quote": "Updated version available:",
+          "locator": {
+            "type": "html_text",
+            "xpath": "/html/body/div[2]/div[2]/div/div[1]/div/div[2]/main/article/section[1]/section[2]/div/div[4]/div[1]/strong",
+            "section": "Updated version available notice"
+          },
+          "supports_fields": [
+            "/records/0/work_id",
+            "/records/0/relation_note"
+          ]
+        }
+      ],
+      "access_observation": "在本非盲作者阶段读取既有冻结观测；时间沿用原获取，不表示本作者新GET。"
+    },
+    {
+      "source_id": "pubmed-unavailable-m01",
+      "url": "https://pubmed.ncbi.nlm.nih.gov/39103939/",
+      "title": "PubMed报告记录：本机冻结响应为challenge，不作正文或元数据引文",
+      "access_status": "unavailable",
+      "accessed_at": "2026-10-28T12:32:58.901617Z",
+      "citations": [],
+      "access_note": "原HTTP200但正文为reCAPTCHA/Checking your browser，不是全文成功。"
+    },
+    {
+      "source_id": "pubmed-unavailable-m02",
+      "url": "https://pubmed.ncbi.nlm.nih.gov/37333198/",
+      "title": "PubMed报告记录：本机冻结响应为challenge，不作正文或元数据引文",
+      "access_status": "unavailable",
+      "accessed_at": "2026-10-28T12:32:58.901848Z",
+      "citations": [],
+      "access_note": "原HTTP200但正文为reCAPTCHA/Checking your browser，不是全文成功。"
+    },
+    {
+      "source_id": "pubmed-unavailable-m03",
+      "url": "https://pubmed.ncbi.nlm.nih.gov/37990022/",
+      "title": "PubMed报告记录：本机冻结响应为challenge，不作正文或元数据引文",
+      "access_status": "unavailable",
+      "accessed_at": "2026-10-28T12:32:58.900877Z",
+      "citations": [],
+      "access_note": "原HTTP200但正文为reCAPTCHA/Checking your browser，不是全文成功。"
+    },
+    {
+      "source_id": "pubmed-unavailable-m04",
+      "url": "https://pubmed.ncbi.nlm.nih.gov/37903634/",
+      "title": "PubMed报告记录：本机冻结响应为challenge，不作正文或元数据引文",
+      "access_status": "unavailable",
+      "accessed_at": "2026-10-28T12:32:58.901780Z",
+      "citations": [],
+      "access_note": "原HTTP200但正文为reCAPTCHA/Checking your browser，不是全文成功。"
+    },
+    {
+      "source_id": "pubmed-unavailable-m05",
+      "url": "https://pubmed.ncbi.nlm.nih.gov/35365632/",
+      "title": "PubMed报告记录：本机冻结响应为challenge，不作正文或元数据引文",
+      "access_status": "unavailable",
+      "accessed_at": "2026-10-28T12:33:00.440959Z",
+      "citations": [],
+      "access_note": "原HTTP200但正文为reCAPTCHA/Checking your browser，不是全文成功。"
+    },
+    {
+      "source_id": "pubmed-unavailable-m06",
+      "url": "https://pubmed.ncbi.nlm.nih.gov/36250636/",
+      "title": "PubMed报告记录：本机冻结响应为challenge，不作正文或元数据引文",
+      "access_status": "unavailable",
+      "accessed_at": "2026-10-28T12:33:00.532292Z",
+      "citations": [],
+      "access_note": "原HTTP200但正文为reCAPTCHA/Checking your browser，不是全文成功。"
+    },
+    {
+      "source_id": "pubmed-unavailable-m07",
+      "url": "https://pubmed.ncbi.nlm.nih.gov/33833776/",
+      "title": "PubMed报告记录：本机冻结响应为challenge，不作正文或元数据引文",
+      "access_status": "unavailable",
+      "accessed_at": "2026-10-28T12:33:01.279228Z",
+      "citations": [],
+      "access_note": "原HTTP200但正文为reCAPTCHA/Checking your browser，不是全文成功。"
+    }
+  ],
+  "flow": {
+    "records": 7,
+    "unresolved_records": 0,
+    "duplicate_version_records": 1,
+    "works": 6,
+    "included": 6,
+    "excluded": 0,
+    "pending": 0
+  },
+  "flow_scope": "仅本参考保留的R7/W6子集，不是全部搜索返回或所有A/B历史候选的穷尽筛选。",
+  "comparability": "不同任务、样本、真值/代理、先验和硬件不横向排统一榜；作者报告不等于独立复现。"
+}

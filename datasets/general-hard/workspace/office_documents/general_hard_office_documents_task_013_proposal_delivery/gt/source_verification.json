@@ -1,0 +1,103 @@
+{
+  "status": "native_inputs_verified_before_reference",
+  "source_sha256": {
+    "customer_requirements.docx": "0a4dc8a33c42eab345bdad0690830bd3005fb0e6c9adb7d0e44f4a18be3bf05a",
+    "options.csv": "35bd4e9b0cfd3c121ef4cd11cf9b7cda5ea47a38c7e429b552e1fd58d8a9d236",
+    "technical_notes.pdf": "ebfb69ac93be4180aebf7239d58a5de045548a0ff1dcf99b04288b1e3044e87b",
+    "response_template.docx": "be54cdcd2f4f31b00cde15ffc2e6798ae76d5049e687e1ae0b849ff318c588d4"
+  },
+  "site_fields": 13,
+  "site_scalar_values": 39,
+  "options": 3,
+  "parameter_values": 13,
+  "requirements": 12,
+  "pdf_rules": 12,
+  "independent_paths": [
+    "python-docx vs direct Word OOXML tables",
+    "pdfplumber table vs pypdf text values",
+    "Decimal vs independently grouped Fraction quote calculations",
+    "minimal-module ceiling inequality for all nine pairs"
+  ],
+  "numeric_checks": 243,
+  "note_locations": {
+    "T01": {
+      "file": "technical_notes.pdf",
+      "page": 2,
+      "anchor": "T01",
+      "text": "module_count = ROUNDUP(annual_target_kwh / (module_kwp * yield_kwh_kwp * performance_factor * shading_factor), 0)。dc_kwp = module_count * module_kwp；area_m2 = module_count * module_area_m2；annual_energy_kwh = dc_kwp * yield_kwh_kwp * performance_factor * shading_factor。所有比率均为小数，因子相乘一次，kWp和kWh不可互换。此为本题纸面年量模型，不是发电保证。"
+    },
+    "T02": {
+      "file": "technical_notes.pdf",
+      "page": 2,
+      "anchor": "T02",
+      "text": "A/B/C在本题均可用于metal和平屋面flat。inverter_count = ROUNDUP(dc_kwp / inverter_block_kwp, 0)，按额定块向上取整；本题DC接入上限直接与dc_kwp比较，不作AC/DC折算。"
+    },
+    "T03": {
+      "file": "technical_notes.pdf",
+      "page": 2,
+      "anchor": "T03",
+      "text": "area_m2不可超过场地可用面积；设计新增荷载取options.csv对应屋面类型列，不按总屋面面积平均摊薄。verified_load_kg_m2只有load_status=verified时可作上限。S3荷载未核验，缺值不是0也不是无限大。"
+    },
+    "T04": {
+      "file": "technical_notes.pdf",
+      "page": 2,
+      "anchor": "T04",
+      "text": "B必须获replacement_allowed=true，并对整个usable_area_m2计屋面更换和排水配套，不按area_m2计这两项；即使权限不允许也需展示该方案的条件性基础报价用于比较，但不可推荐实施。A/C这两项为0。"
+    },
+    "T05": {
+      "file": "technical_notes.pdf",
+      "page": 3,
+      "anchor": "T05",
+      "text": "供货未税额 = module_count * module_price_ex_vat + inverter_count * inverter_unit_ex_vat + module_count * cable_per_module_ex_vat + isolation_per_site_ex_vat。所有四项必需，隔离防护14500元对每个场地方案组合只计一次，不能漏逆变器、电缆或保护件。"
+    },
+    "T06": {
+      "file": "technical_notes.pdf",
+      "page": 3,
+      "anchor": "T06",
+      "text": "施工未税额 = area_m2 * 当前屋面类型的mount价格 + dc_kwp * installation_cny_kwp + replacement_area_m2 * replacement_roof_cny_m2 + replacement_area_m2 * drainage_cny_m2。replacement_area_m2对B取场地usable_area_m2，对A/C取0。"
+    },
+    "T07": {
+      "file": "technical_notes.pdf",
+      "page": 3,
+      "anchor": "T07",
+      "text": "技术服务未税额包含每场地设计和独立检验各6000元。C另加施工粘接验收7500元，即使前置兼容性材料已验证也不能漏这笔施工检验费用。S3三个方案均加腐蚀专项核验4800元；报价包含核验工作不等于报告已经取得或通过。"
+    },
+    "T08": {
+      "file": "technical_notes.pdf",
+      "page": 3,
+      "anchor": "T08",
+      "text": "供货按vat_goods=0.13，施工按vat_construction=0.09，技术服务按vat_services=0.06；三个税额分别按ROUND(未税额*税率,2)四舍五入到分，再与三个未税额相加得gross_total。预算余量=budget_gross_cny-gross_total。不合并税率，不重复加税，不减未知补贴。"
+    },
+    "T09": {
+      "file": "technical_notes.pdf",
+      "page": 4,
+      "anchor": "T09",
+      "text": "逐项判定AREA、LOAD、GRID、REPLACEMENT、BUDGET、ADHESION、CORROSION、REPAIR_SCOPE。可读硬约束失败优先为infeasible；否则任一需要核实的条件为conditional；全部满足为feasible。ADHESION仅对C检查前置兼容材料，CORROSION与REPAIR_SCOPE仅对S3检查。LOAD未核验、材料未核实或修复费未知均是条件，不能写成已经满足。"
+    },
+    "T10": {
+      "file": "technical_notes.pdf",
+      "page": 4,
+      "anchor": "T10",
+      "text": "exceptions.csv逐条列出所有硬约束失败或待核实条件，包含site_id、option_id、rule_id、status、observed、limit、source_file、source_locator、next_action。rule_id用T09八个检查名。硬失败status=fail，条件status=unknown；即使某组合已不可行，也保留其他尚待核实项。来源用实际输入及其可见S/Q/T/option_id定位，不能引用私有oracle。"
+    },
+    "T11": {
+      "file": "technical_notes.pdf",
+      "page": 4,
+      "anchor": "T11",
+      "text": "每场地先排除infeasible，再对feasible/conditional各自按已知基础含税总额排序；存在feasible则优先feasible；仅有conditional时可给有条件的最低已知基础总额方案，但保留荷载、证据与未知修复费等全部条件。没有可选项时不推荐，不能擅改目标、预算或权限。"
+    },
+    "T12": {
+      "file": "technical_notes.pdf",
+      "page": 4,
+      "anchor": "T12",
+      "text": "所有价格均为合成固定未税参数，报价有效时点2026-09-30，仅用于纸面比较。S3未知修复费和全部未知补贴不作数值假定，需另行确认，不构成工程报价承诺、正式发电保证或实施批准。客户沟通稿仅保存草稿，不发送。"
+    }
+  },
+  "template_headings": [
+    "三个方案与九个场地组合比较",
+    "分场地推荐与前置条件",
+    "逐项需求响应",
+    "例外和后续确认"
+  ],
+  "limit": "Deterministic synthetic rules and cross-path calculations, not independent human engineering review or a semantic Judge result."
+}

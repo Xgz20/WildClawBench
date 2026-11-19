@@ -1,0 +1,80 @@
+{
+  "schema": "h040-source-first-expected-v1",
+  "task_id": "general_hard_file_operations_task_006_visual_file_mapping",
+  "created_at_utc": "2026-10-28T21:40:15.220251+00:00",
+  "origin": "A/B frozen visual observations reconciled before reference creation; source bytes independently hashed",
+  "selections": [
+    {
+      "scene_id": "S01",
+      "source_path": "source_tree/复核/客户甲/2026秋/方案.md",
+      "sha256": "02cdc433b2abef24ff7308e72147f813a6f50e37c293b126d82a383c3aba4d90",
+      "size_bytes": 148
+    },
+    {
+      "scene_id": "S01",
+      "source_path": "source_tree/复核/客户甲/2026秋/交付清单.txt",
+      "sha256": "1785364873a3742bd6c7d2e2651512bbeaec015645b61030d0acb01205fbdcba",
+      "size_bytes": 160
+    },
+    {
+      "scene_id": "S02",
+      "source_path": "source_tree/外包协作/客户甲/2026春/预算.csv",
+      "sha256": "59a0c8fb1cac3abc8c83c77bd8f18c0c806610290b71f1cedc949961032943a2",
+      "size_bytes": 119
+    },
+    {
+      "scene_id": "S03",
+      "source_path": "source_tree/客户乙/2026秋/方案.md",
+      "sha256": "272adeeb4ecb063f0bc2ec67561a01ed5d64068a451a6a6aea1b3090ec105588",
+      "size_bytes": 139
+    },
+    {
+      "scene_id": "S03",
+      "source_path": "source_tree/客户乙/2026秋/预算.csv",
+      "sha256": "717f2ec544a952363f8ac70ea1b07f05e15c46dc64f987e6623fec68a0468ecb",
+      "size_bytes": 93
+    }
+  ],
+  "unique_source_paths": [
+    "source_tree/复核/客户甲/2026秋/交付清单.txt",
+    "source_tree/复核/客户甲/2026秋/方案.md",
+    "source_tree/外包协作/客户甲/2026春/预算.csv",
+    "source_tree/客户乙/2026秋/方案.md",
+    "source_tree/客户乙/2026秋/预算.csv"
+  ],
+  "source_images": [
+    {
+      "scene_id": "S01",
+      "path": "source_images/S01.png",
+      "sha256": "679218247f3bea3e85c4d11c3cb01b77f92b70e46d1993a1d406a93dbae4ed0b",
+      "width": 1800,
+      "height": 1100,
+      "format": "PNG",
+      "decode": "Pillow Image.open + load + convert RGB succeeded",
+      "rgb_sha256": "ba4824724c5fbff10045296f0dc6f25b9f242edb58cfcbf23f06fbaebea613f9",
+      "image_path": "screenshots/S01.png"
+    },
+    {
+      "scene_id": "S02",
+      "path": "source_images/S02.png",
+      "sha256": "c05ea8dc7d6d6d4701fc33a75938b0f5e041106424a2fef39f7b93ddda1c5fd1",
+      "width": 1800,
+      "height": 1100,
+      "format": "PNG",
+      "decode": "Pillow Image.open + load + convert RGB succeeded",
+      "rgb_sha256": "b2fb99c37f45b375fdce6018b59645ab819ffb3c62ab0ae3dec0a62afa29cef6",
+      "image_path": "screenshots/S02.png"
+    },
+    {
+      "scene_id": "S03",
+      "path": "source_images/S03.png",
+      "sha256": "bd9f115e7de9926c89ea7ef4f0be71e756eb0d0ed11715a1ee0f2d139133c7bb",
+      "width": 1800,
+      "height": 1100,
+      "format": "PNG",
+      "decode": "Pillow Image.open + load + convert RGB succeeded",
+      "rgb_sha256": "2d37c875aaa6c0c754f06d8155e8ee02e605fe295d746163c0d1043d3f778be5",
+      "image_path": "screenshots/S03.png"
+    }
+  ]
+}

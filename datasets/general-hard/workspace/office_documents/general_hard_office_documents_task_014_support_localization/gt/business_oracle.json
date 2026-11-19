@@ -1,0 +1,15 @@
+{
+  "expected_sha256": "e99edec9feec6cf5f61f3c8ad3a535467381c513ac10bf87aefd277930cf68f7",
+  "review_sha256": "baf546184652d135fe40564e341012294382332cde7234d5d7af125ba0e593ea",
+  "checkpoint_weights": {
+    "case_routing": 0.45,
+    "faq_coverage": 0.2,
+    "delivery_integrity": 0.2,
+    "evidence_binding": 0.15
+  },
+  "component_weights": {
+    "automated": 0.25,
+    "llm_judge": 0.75
+  },
+  "semantic_limit": "Rules observe declared routing, editable-topic coverage, physical source locators and real Office text visibility. They do not establish language identity, complete factual meaning, negation, unsupported promises, cross-language consistency, fluency or semantic citation support. A rule score of 1.0 is not an overall pass."
+}

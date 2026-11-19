@@ -1,0 +1,1034 @@
+{
+  "status": "source_truth_and_authorized_model_reviews_accepted",
+  "source_sha256": {
+    "support_cases.csv": "49bb3e68f7c8423b68e2e1dd16903efcd815dca7919e976e41bc176e5aaccf2c",
+    "release_notes.md": "f1d6ce2d76230c3af6f6f41ea26dc495908b6d2f749a9dada190d6511a29482c",
+    "terms.csv": "701ca9d20e35d376326a88185bacc93f79ec3ce33c27725f263befc5d6885d21",
+    "faq_old/en.md": "aa0e7021a682cd94e9b8ba0f1b664b9c48b38929ef3cd50c471cfee5062a1765",
+    "faq_old/zh.md": "4a9b5c7ed0942f425dece37088b91f82f7e89ac306ca7d5178ac70dc075e2436",
+    "faq_old/vi.md": "87b6af91eaf91232801f17ae494f2972b9b6ecfcff47947a76c6b370643f3937"
+  },
+  "as_of": "2026-10-04T08:00:00+08:00",
+  "faq_claims": {
+    "K01": {
+      "stable_version": "3.2.0",
+      "stable_released_on": "2026-09-24",
+      "preview_version": "3.2.1",
+      "preview_released_on": "2026-10-02",
+      "preview_os": [
+        "macOS"
+      ],
+      "preview_enrollment_required": true,
+      "preview_is_all_platform_stable": false,
+      "other_release_dates": null
+    },
+    "K02": {
+      "per_file_limit": {
+        "value": 25,
+        "unit": "MiB",
+        "inclusive": true
+      },
+      "batch_count_limit": {
+        "value": 8,
+        "inclusive": true
+      },
+      "batch_total_limit": {
+        "value": 100,
+        "unit": "MiB",
+        "inclusive": true
+      },
+      "limits_apply_simultaneously": true,
+      "mib_bytes": 1048576,
+      "current_unit_is_mb": false,
+      "old_10mb_rule_is_current": false
+    },
+    "K03": {
+      "plan_csv_row_limits": {
+        "Starter": 500,
+        "Team": 10000,
+        "Enterprise": 50000
+      },
+      "limits_inclusive": true,
+      "export_roles": [
+        "Editor",
+        "Owner"
+      ],
+      "viewer_can_export": false,
+      "csv_text_and_metadata_only": true,
+      "attachments_included": false,
+      "full_workspace_included": false,
+      "unlimited_rows": false
+    },
+    "K04": {
+      "text_pdf_supported": true,
+      "scanned_ocr_released_stable": false,
+      "scanned_ocr_released_preview": false,
+      "ocr_release_date": null,
+      "all_pdf_types_unsupported": false,
+      "text_source_alternatives_are_examples": true
+    },
+    "K05": {
+      "affected_os": "Windows",
+      "affected_version": "3.2.0",
+      "workaround_steps_in_order": [
+        "save_separate_unsynced_draft_copy",
+        "close_and_reopen_affected_document",
+        "retry_sync_once"
+      ],
+      "retry_count": 1,
+      "workaround_is_released_fix": false,
+      "cache_deletion_allowed": false,
+      "workspace_deletion_allowed": false,
+      "unsynced_overwrite_allowed": false,
+      "macos_preview_proves_windows_fixed": false,
+      "windows_patch_date": null
+    },
+    "K06": {
+      "cached_previously_opened_only": true,
+      "online_auth_window_hours": 24,
+      "window_inclusive": true,
+      "new_workspace_offline": false,
+      "csv_export_offline": false,
+      "billing_offline": false,
+      "sso_settings_offline": false,
+      "expiry_implies_deletion": false,
+      "actual_content_deleted": null,
+      "indefinite_offline_guaranteed": false,
+      "offline_access_equals_audit_retention": false
+    },
+    "K07": {
+      "export_roles": [
+        "Editor",
+        "Owner"
+      ],
+      "viewer_can_export": false,
+      "sso_configuration_role": "Owner",
+      "migration_assessment_request_role": "Owner",
+      "role_overrides_other_scope_conditions": false,
+      "support_reply_changes_roles_or_grants_permission": false,
+      "owner_automatically_enrolled_in_all_previews": false
+    },
+    "K08": {
+      "required_plan": "Enterprise",
+      "required_role": "Owner",
+      "ga_version": "3.2.0",
+      "ga_regions": [
+        "cn-sh",
+        "ap-sg"
+      ],
+      "eu_sso_ga": false,
+      "eu_preview_conditions": {
+        "region": "eu-fr",
+        "plan": "Enterprise",
+        "role": "Owner",
+        "os": "macOS",
+        "version": "3.2.1",
+        "channel": "preview",
+        "enrolled": true
+      },
+      "all_conditions_required": true,
+      "unenrolled_may_request_assessment": true,
+      "request_equals_enablement": false,
+      "eu_ga_date": null,
+      "other_platform_preview_date": null
+    },
+    "K09": {
+      "plan_retention_calendar_days": {
+        "Starter": 7,
+        "Team": 30,
+        "Enterprise": 90
+      },
+      "age_from_record_creation": true,
+      "boundary_day_query_allowed": true,
+      "expired_self_service_recovery": false,
+      "backup_recovery_guaranteed": false,
+      "backup_exists": null,
+      "recovery_possible_by_other_means": null,
+      "upgrade_guarantees_expired_restore": false,
+      "equals_offline_window": false
+    },
+    "K10": {
+      "standard_route_channel": "direct_monthly",
+      "max_calendar_days": 7,
+      "max_consumed_credits": 10,
+      "both_bounds_inclusive": true,
+      "application_not_approval": true,
+      "refund_approved": null,
+      "refund_amount": null,
+      "refund_completed_at": null,
+      "immediate_full_refund_guaranteed": false,
+      "all_other_contracts_refundable": null,
+      "all_other_contracts_nonrefundable": null,
+      "credits_determine_currency_amount": false,
+      "outside_standard_route_requires_billing_or_contract_assessment": true
+    },
+    "K11": {
+      "self_service_migration_released": false,
+      "owner_may_request_assessment": true,
+      "request_equals_implementation_approval": false,
+      "ids_preservation_guaranteed": false,
+      "actual_ids_preserved": null,
+      "attachment_transfer_guaranteed": false,
+      "csv_equals_full_migration": false,
+      "sso_preview_implies_migration_permission": false,
+      "migration_release_date": null,
+      "csv_numeric_cap_scope": "per_export",
+      "separate_import_row_cap": null,
+      "import_unlimited_asserted": false
+    },
+    "K12": {
+      "support_weekdays": "Monday-Friday",
+      "support_hours": "09:00-18:00",
+      "timezone": "UTC+08:00",
+      "first_response_target_business_days": 2,
+      "target_is_guarantee": false,
+      "target_is_sla": false,
+      "resolution_deadline": null,
+      "refund_settlement_deadline": null,
+      "holiday_calendar": null,
+      "specific_response_due_date": null,
+      "business_days_equal_calendar_days": false
+    }
+  },
+  "cases": {
+    "C01": {
+      "case_id": "C01",
+      "locale": "zh",
+      "topic_id": "K02",
+      "decision": "supported",
+      "source_fact_ids": [
+        "F02"
+      ],
+      "details": {
+        "file_count": 1,
+        "total_mib": "25",
+        "maximum_mib": "25"
+      }
+    },
+    "C02": {
+      "case_id": "C02",
+      "locale": "zh",
+      "topic_id": "K02",
+      "decision": "batch_size_limit",
+      "source_fact_ids": [
+        "F02"
+      ],
+      "details": {
+        "file_count": 8,
+        "total_mib": "160",
+        "maximum_mib": "20"
+      }
+    },
+    "C03": {
+      "case_id": "C03",
+      "locale": "zh",
+      "topic_id": "K03",
+      "decision": "role_not_allowed",
+      "source_fact_ids": [
+        "F03",
+        "F07"
+      ],
+      "details": {
+        "rows": 2000,
+        "row_limit": 10000,
+        "attachments_included": false
+      }
+    },
+    "C04": {
+      "case_id": "C04",
+      "locale": "zh",
+      "topic_id": "K08",
+      "decision": "preview_conditions_not_met",
+      "source_fact_ids": [
+        "F01",
+        "F07",
+        "F08"
+      ],
+      "details": {
+        "preview_checks": {
+          "plan": true,
+          "role": true,
+          "os": true,
+          "version": false,
+          "channel": false,
+          "enrolled": false
+        },
+        "ga_regions": [
+          "cn-sh",
+          "ap-sg"
+        ]
+      }
+    },
+    "C05": {
+      "case_id": "C05",
+      "locale": "zh",
+      "topic_id": "K05",
+      "decision": "workaround_only",
+      "source_fact_ids": [
+        "F01",
+        "F05"
+      ],
+      "details": {
+        "save_unsynced_copy_first": true,
+        "reopen_then_retry_count": 1,
+        "cache_deletion_allowed": false,
+        "windows_fix_date": null
+      }
+    },
+    "C06": {
+      "case_id": "C06",
+      "locale": "zh",
+      "topic_id": "K10",
+      "decision": "standard_policy_not_met",
+      "source_fact_ids": [
+        "F10",
+        "F12"
+      ],
+      "details": {
+        "calendar_days_since_payment": 5,
+        "consumed_credits": 12,
+        "refund_approved": null,
+        "refund_amount": null,
+        "refund_completed_at": null
+      }
+    },
+    "C07": {
+      "case_id": "C07",
+      "locale": "en",
+      "topic_id": "K02",
+      "decision": "file_count_limit",
+      "source_fact_ids": [
+        "F02"
+      ],
+      "details": {
+        "file_count": 9,
+        "total_mib": "9",
+        "maximum_mib": "1"
+      }
+    },
+    "C08": {
+      "case_id": "C08",
+      "locale": "en",
+      "topic_id": "K03",
+      "decision": "export_row_limit",
+      "source_fact_ids": [
+        "F03",
+        "F07"
+      ],
+      "details": {
+        "rows": 800,
+        "row_limit": 500,
+        "attachments_included": false
+      }
+    },
+    "C09": {
+      "case_id": "C09",
+      "locale": "en",
+      "topic_id": "K03",
+      "decision": "supported_text_only",
+      "source_fact_ids": [
+        "F03",
+        "F07"
+      ],
+      "details": {
+        "rows": 10000,
+        "row_limit": 10000,
+        "attachments_included": false
+      }
+    },
+    "C10": {
+      "case_id": "C10",
+      "locale": "en",
+      "topic_id": "K08",
+      "decision": "preview_conditions_not_met",
+      "source_fact_ids": [
+        "F01",
+        "F07",
+        "F08"
+      ],
+      "details": {
+        "preview_checks": {
+          "plan": true,
+          "role": true,
+          "os": true,
+          "version": true,
+          "channel": true,
+          "enrolled": false
+        },
+        "ga_regions": [
+          "cn-sh",
+          "ap-sg"
+        ]
+      }
+    },
+    "C11": {
+      "case_id": "C11",
+      "locale": "en",
+      "topic_id": "K06",
+      "decision": "online_reauth_required",
+      "source_fact_ids": [
+        "F06"
+      ],
+      "details": {
+        "elapsed_auth_hours": "26",
+        "window_hours": 24,
+        "expired_access_means_deleted": false
+      }
+    },
+    "C12": {
+      "case_id": "C12",
+      "locale": "en",
+      "topic_id": "K10",
+      "decision": "refund_review",
+      "source_fact_ids": [
+        "F10",
+        "F12"
+      ],
+      "details": {
+        "calendar_days_since_payment": 7,
+        "consumed_credits": 10,
+        "refund_approved": null,
+        "refund_amount": null,
+        "refund_completed_at": null
+      }
+    },
+    "C13": {
+      "case_id": "C13",
+      "locale": "vi",
+      "topic_id": "K02",
+      "decision": "per_file_limit",
+      "source_fact_ids": [
+        "F02"
+      ],
+      "details": {
+        "file_count": 1,
+        "total_mib": "25.1",
+        "maximum_mib": "25.1"
+      }
+    },
+    "C14": {
+      "case_id": "C14",
+      "locale": "vi",
+      "topic_id": "K04",
+      "decision": "feature_not_released",
+      "source_fact_ids": [
+        "F04"
+      ],
+      "details": {
+        "text_pdf_supported": true,
+        "scanned_ocr_released": false,
+        "ocr_release_date": null
+      }
+    },
+    "C15": {
+      "case_id": "C15",
+      "locale": "vi",
+      "topic_id": "K08",
+      "decision": "enterprise_required",
+      "source_fact_ids": [
+        "F01",
+        "F07",
+        "F08"
+      ],
+      "details": {
+        "preview_checks": {
+          "plan": false,
+          "role": true,
+          "os": true,
+          "version": false,
+          "channel": false,
+          "enrolled": false
+        },
+        "ga_regions": [
+          "cn-sh",
+          "ap-sg"
+        ]
+      }
+    },
+    "C16": {
+      "case_id": "C16",
+      "locale": "vi",
+      "topic_id": "K09",
+      "decision": "retention_expired",
+      "source_fact_ids": [
+        "F06",
+        "F09"
+      ],
+      "details": {
+        "record_age_calendar_days": 91,
+        "retention_days": 90,
+        "backup_recovery_guaranteed": false
+      }
+    },
+    "C17": {
+      "case_id": "C17",
+      "locale": "vi",
+      "topic_id": "K11",
+      "decision": "manual_assessment_only",
+      "source_fact_ids": [
+        "F03",
+        "F07",
+        "F08",
+        "F11"
+      ],
+      "details": {
+        "self_service_migration_released": false,
+        "ids_preservation_guaranteed": false,
+        "attachments_preservation_guaranteed": false,
+        "migration_release_date": null
+      }
+    },
+    "C18": {
+      "case_id": "C18",
+      "locale": "vi",
+      "topic_id": "K10",
+      "decision": "reseller_review",
+      "source_fact_ids": [
+        "F10",
+        "F12"
+      ],
+      "details": {
+        "calendar_days_since_payment": 1,
+        "consumed_credits": 0,
+        "refund_approved": null,
+        "refund_amount": null,
+        "refund_completed_at": null
+      }
+    }
+  },
+  "truth_construction": "Source policies and two independent arithmetic/predicate paths precede proposals; 255 source boundary checks. Language models review actual Word/replies and preserve original disagreements.",
+  "review_type": "independent_model_review",
+  "human_expert_review": false,
+  "case_claims": {
+    "C01": {
+      "case_id": "C01",
+      "locale": "zh",
+      "topic_id": "K02",
+      "required_claims": {
+        "file_count": 1,
+        "total_mib": "25",
+        "maximum_mib": "25",
+        "route": "supported",
+        "all_upload_caps_met": true,
+        "mib_not_mb": true
+      },
+      "unknown_fields": [],
+      "prohibited_propositions": [
+        "upload_already_performed",
+        "boundary_25mib_rejected",
+        "current_cap_10mb"
+      ],
+      "source_fact_ids": [
+        "F02"
+      ],
+      "equivalence": "Semantic atoms, not mandatory wording. Reasonable draft next steps may vary without inventing support, permission, money, dates or completed actions."
+    },
+    "C02": {
+      "case_id": "C02",
+      "locale": "zh",
+      "topic_id": "K02",
+      "required_claims": {
+        "file_count": 8,
+        "total_mib": "160",
+        "maximum_mib": "20",
+        "route": "batch_size_limit",
+        "count_cap_met": true,
+        "per_file_cap_met": true,
+        "batch_total_cap_met": false
+      },
+      "unknown_fields": [],
+      "prohibited_propositions": [
+        "batch_allowed_because_count_fits",
+        "batch_total_80mib_is_current",
+        "files_already_split_or_uploaded"
+      ],
+      "source_fact_ids": [
+        "F02"
+      ],
+      "equivalence": "Semantic atoms, not mandatory wording. Reasonable draft next steps may vary without inventing support, permission, money, dates or completed actions."
+    },
+    "C03": {
+      "case_id": "C03",
+      "locale": "zh",
+      "topic_id": "K03",
+      "required_claims": {
+        "rows": 2000,
+        "row_limit": 10000,
+        "attachments_included": false,
+        "route": "role_not_allowed",
+        "plan_row_cap_met": true,
+        "current_role": "Viewer",
+        "export_permission": false,
+        "authorized_roles": [
+          "Owner",
+          "Editor"
+        ]
+      },
+      "unknown_fields": [],
+      "prohibited_propositions": [
+        "permission_already_granted",
+        "viewer_may_export",
+        "higher_plan_alone_resolves_role_gate",
+        "attachments_included"
+      ],
+      "source_fact_ids": [
+        "F03",
+        "F07"
+      ],
+      "equivalence": "Semantic atoms, not mandatory wording. Reasonable draft next steps may vary without inventing support, permission, money, dates or completed actions."
+    },
+    "C04": {
+      "case_id": "C04",
+      "locale": "zh",
+      "topic_id": "K08",
+      "required_claims": {
+        "preview_checks": {
+          "plan": true,
+          "role": true,
+          "os": true,
+          "version": false,
+          "channel": false,
+          "enrolled": false
+        },
+        "ga_regions": [
+          "cn-sh",
+          "ap-sg"
+        ],
+        "route": "preview_conditions_not_met",
+        "eu_sso_ga": false,
+        "preview_currently_eligible": false,
+        "may_request_preview_assessment": true
+      },
+      "unknown_fields": [
+        "eu_ga_date",
+        "actual_sso_enabled"
+      ],
+      "prohibited_propositions": [
+        "eu_sso_ga_now",
+        "enrollment_already_approved",
+        "preview_conditions_can_be_skipped",
+        "guaranteed_ga_date"
+      ],
+      "source_fact_ids": [
+        "F01",
+        "F07",
+        "F08"
+      ],
+      "equivalence": "Semantic atoms, not mandatory wording. Reasonable draft next steps may vary without inventing support, permission, money, dates or completed actions."
+    },
+    "C05": {
+      "case_id": "C05",
+      "locale": "zh",
+      "topic_id": "K05",
+      "required_claims": {
+        "save_unsynced_copy_first": true,
+        "reopen_then_retry_count": 1,
+        "cache_deletion_allowed": false,
+        "windows_fix_date": null,
+        "route": "workaround_only"
+      },
+      "unknown_fields": [
+        "windows_patch_date"
+      ],
+      "prohibited_propositions": [
+        "delete_cache",
+        "delete_workspace",
+        "overwrite_unsynced_drafts",
+        "workaround_is_permanent_fix",
+        "windows_3_2_1_stable_patch_shipped"
+      ],
+      "source_fact_ids": [
+        "F01",
+        "F05"
+      ],
+      "equivalence": "Semantic atoms, not mandatory wording. Reasonable draft next steps may vary without inventing support, permission, money, dates or completed actions."
+    },
+    "C06": {
+      "case_id": "C06",
+      "locale": "zh",
+      "topic_id": "K10",
+      "required_claims": {
+        "calendar_days_since_payment": 5,
+        "consumed_credits": 12,
+        "refund_approved": null,
+        "refund_amount": null,
+        "refund_completed_at": null,
+        "route": "standard_policy_not_met",
+        "payment_age_within_7_calendar_days": true,
+        "credits_within_10": false,
+        "standard_route_conditions_met": false
+      },
+      "unknown_fields": [
+        "refund_approved",
+        "refund_amount",
+        "refund_completed_at"
+      ],
+      "prohibited_propositions": [
+        "standard_route_eligible",
+        "guaranteed_immediate_full_refund",
+        "specific_currency_refund_amount",
+        "blanket_no_possible_review",
+        "two_business_days_is_refund_deadline"
+      ],
+      "source_fact_ids": [
+        "F10",
+        "F12"
+      ],
+      "equivalence": "Semantic atoms, not mandatory wording. Reasonable draft next steps may vary without inventing support, permission, money, dates or completed actions."
+    },
+    "C07": {
+      "case_id": "C07",
+      "locale": "en",
+      "topic_id": "K02",
+      "required_claims": {
+        "file_count": 9,
+        "total_mib": "9",
+        "maximum_mib": "1",
+        "route": "file_count_limit",
+        "per_file_cap_met": true,
+        "batch_total_cap_met": true,
+        "batch_count_cap_met": false
+      },
+      "unknown_fields": [],
+      "prohibited_propositions": [
+        "nine_files_allowed",
+        "per_file_or_total_size_is_the_failed_cap",
+        "upload_already_performed"
+      ],
+      "source_fact_ids": [
+        "F02"
+      ],
+      "equivalence": "Semantic atoms, not mandatory wording. Reasonable draft next steps may vary without inventing support, permission, money, dates or completed actions."
+    },
+    "C08": {
+      "case_id": "C08",
+      "locale": "en",
+      "topic_id": "K03",
+      "required_claims": {
+        "rows": 800,
+        "row_limit": 500,
+        "attachments_included": false,
+        "route": "export_row_limit",
+        "editor_role_allowed": true,
+        "starter_csv_feature_released": true,
+        "current_rows_within_cap": false
+      },
+      "unknown_fields": [],
+      "prohibited_propositions": [
+        "starter_has_no_csv_export",
+        "unlimited_rows",
+        "attachments_included",
+        "export_already_done"
+      ],
+      "source_fact_ids": [
+        "F03",
+        "F07"
+      ],
+      "equivalence": "Semantic atoms, not mandatory wording. Reasonable draft next steps may vary without inventing support, permission, money, dates or completed actions."
+    },
+    "C09": {
+      "case_id": "C09",
+      "locale": "en",
+      "topic_id": "K03",
+      "required_claims": {
+        "rows": 10000,
+        "row_limit": 10000,
+        "attachments_included": false,
+        "route": "supported_text_only",
+        "role_allowed": true,
+        "row_cap_met_inclusively": true,
+        "text_export_allowed": true
+      },
+      "unknown_fields": [],
+      "prohibited_propositions": [
+        "attachments_included",
+        "full_workspace_export",
+        "ten_thousand_boundary_rejected",
+        "unlimited_rows"
+      ],
+      "source_fact_ids": [
+        "F03",
+        "F07"
+      ],
+      "equivalence": "Semantic atoms, not mandatory wording. Reasonable draft next steps may vary without inventing support, permission, money, dates or completed actions."
+    },
+    "C10": {
+      "case_id": "C10",
+      "locale": "en",
+      "topic_id": "K08",
+      "required_claims": {
+        "preview_checks": {
+          "plan": true,
+          "role": true,
+          "os": true,
+          "version": true,
+          "channel": true,
+          "enrolled": false
+        },
+        "ga_regions": [
+          "cn-sh",
+          "ap-sg"
+        ],
+        "route": "preview_conditions_not_met",
+        "eu_sso_ga": false,
+        "preview_currently_eligible": false,
+        "may_request_preview_assessment": true,
+        "only_unmet_preview_check": "enrolled"
+      },
+      "unknown_fields": [
+        "eu_ga_date",
+        "actual_sso_enabled"
+      ],
+      "prohibited_propositions": [
+        "eu_sso_ga_now",
+        "enrollment_already_approved",
+        "preview_conditions_can_be_skipped",
+        "guaranteed_ga_date"
+      ],
+      "source_fact_ids": [
+        "F01",
+        "F07",
+        "F08"
+      ],
+      "equivalence": "Semantic atoms, not mandatory wording. Reasonable draft next steps may vary without inventing support, permission, money, dates or completed actions."
+    },
+    "C11": {
+      "case_id": "C11",
+      "locale": "en",
+      "topic_id": "K06",
+      "required_claims": {
+        "elapsed_auth_hours": "26",
+        "window_hours": 24,
+        "expired_access_means_deleted": false,
+        "route": "online_reauth_required",
+        "reauth_required": true,
+        "indefinite_offline_allowed": false,
+        "expiry_implies_deleted": false
+      },
+      "unknown_fields": [
+        "actual_content_deleted"
+      ],
+      "prohibited_propositions": [
+        "permanent_offline_access",
+        "expiry_means_content_deleted",
+        "new_workspace_or_export_offline"
+      ],
+      "source_fact_ids": [
+        "F06"
+      ],
+      "equivalence": "Semantic atoms, not mandatory wording. Reasonable draft next steps may vary without inventing support, permission, money, dates or completed actions."
+    },
+    "C12": {
+      "case_id": "C12",
+      "locale": "en",
+      "topic_id": "K10",
+      "required_claims": {
+        "calendar_days_since_payment": 7,
+        "consumed_credits": 10,
+        "refund_approved": null,
+        "refund_amount": null,
+        "refund_completed_at": null,
+        "route": "refund_review",
+        "direct_monthly": true,
+        "both_standard_bounds_met_inclusively": true,
+        "may_submit_refund_review": true
+      },
+      "unknown_fields": [
+        "refund_approved",
+        "refund_amount",
+        "refund_completed_at"
+      ],
+      "prohibited_propositions": [
+        "standard_application_denied_at_equal_boundary",
+        "guaranteed_immediate_full_refund",
+        "specific_currency_refund_amount",
+        "credits_are_currency",
+        "two_business_days_is_settlement_deadline"
+      ],
+      "source_fact_ids": [
+        "F10",
+        "F12"
+      ],
+      "equivalence": "Semantic atoms, not mandatory wording. Reasonable draft next steps may vary without inventing support, permission, money, dates or completed actions."
+    },
+    "C13": {
+      "case_id": "C13",
+      "locale": "vi",
+      "topic_id": "K02",
+      "required_claims": {
+        "file_count": 1,
+        "total_mib": "25.1",
+        "maximum_mib": "25.1",
+        "route": "per_file_limit",
+        "per_file_cap_met": false,
+        "mib_not_mb": true
+      },
+      "unknown_fields": [],
+      "prohibited_propositions": [
+        "round_25_1_down_to_25_and_accept",
+        "25mb_is_current_unit",
+        "upload_already_performed"
+      ],
+      "source_fact_ids": [
+        "F02"
+      ],
+      "equivalence": "Semantic atoms, not mandatory wording. Reasonable draft next steps may vary without inventing support, permission, money, dates or completed actions."
+    },
+    "C14": {
+      "case_id": "C14",
+      "locale": "vi",
+      "topic_id": "K04",
+      "required_claims": {
+        "text_pdf_supported": true,
+        "scanned_ocr_released": false,
+        "ocr_release_date": null,
+        "route": "feature_not_released"
+      },
+      "unknown_fields": [
+        "ocr_release_date",
+        "actual_ocr_performed"
+      ],
+      "prohibited_propositions": [
+        "ocr_available_in_preview",
+        "ocr_enabled_or_completed",
+        "all_pdf_types_unsupported",
+        "committed_ocr_date"
+      ],
+      "source_fact_ids": [
+        "F04"
+      ],
+      "equivalence": "Semantic atoms, not mandatory wording. Reasonable draft next steps may vary without inventing support, permission, money, dates or completed actions."
+    },
+    "C15": {
+      "case_id": "C15",
+      "locale": "vi",
+      "topic_id": "K08",
+      "required_claims": {
+        "preview_checks": {
+          "plan": false,
+          "role": true,
+          "os": true,
+          "version": false,
+          "channel": false,
+          "enrolled": false
+        },
+        "ga_regions": [
+          "cn-sh",
+          "ap-sg"
+        ],
+        "route": "enterprise_required",
+        "current_plan": "Team",
+        "current_role": "Owner",
+        "region_is_ga_for_eligible_plan": true,
+        "current_plan_eligible": false
+      },
+      "unknown_fields": [],
+      "prohibited_propositions": [
+        "team_sso_supported",
+        "owner_role_overrides_plan",
+        "sso_already_enabled_or_plan_changed"
+      ],
+      "source_fact_ids": [
+        "F01",
+        "F07",
+        "F08"
+      ],
+      "equivalence": "Semantic atoms, not mandatory wording. Reasonable draft next steps may vary without inventing support, permission, money, dates or completed actions."
+    },
+    "C16": {
+      "case_id": "C16",
+      "locale": "vi",
+      "topic_id": "K09",
+      "required_claims": {
+        "record_age_calendar_days": 91,
+        "retention_days": 90,
+        "backup_recovery_guaranteed": false,
+        "route": "retention_expired",
+        "within_retention": false,
+        "self_service_recovery_available": false
+      },
+      "unknown_fields": [
+        "backup_exists",
+        "actual_recovery_possible"
+      ],
+      "prohibited_propositions": [
+        "guaranteed_backup_restore",
+        "upgrade_guarantees_restore",
+        "all_backups_absent",
+        "data_permanently_irrecoverable_as_fact"
+      ],
+      "source_fact_ids": [
+        "F06",
+        "F09"
+      ],
+      "equivalence": "Semantic atoms, not mandatory wording. Reasonable draft next steps may vary without inventing support, permission, money, dates or completed actions."
+    },
+    "C17": {
+      "case_id": "C17",
+      "locale": "vi",
+      "topic_id": "K11",
+      "required_claims": {
+        "self_service_migration_released": false,
+        "ids_preservation_guaranteed": false,
+        "attachments_preservation_guaranteed": false,
+        "migration_release_date": null,
+        "route": "manual_assessment_only",
+        "owner_may_request_manual_assessment": true,
+        "request_is_not_approval": true,
+        "csv_is_not_full_migration": true,
+        "sso_preview_not_migration_permission": true
+      },
+      "unknown_fields": [
+        "assessment_approved",
+        "actual_ids_preserved",
+        "migration_release_date"
+      ],
+      "prohibited_propositions": [
+        "self_service_migration_available",
+        "migration_already_completed",
+        "ids_and_attachments_preservation_guaranteed",
+        "sso_preview_grants_migration"
+      ],
+      "source_fact_ids": [
+        "F03",
+        "F07",
+        "F08",
+        "F11"
+      ],
+      "equivalence": "Semantic atoms, not mandatory wording. Reasonable draft next steps may vary without inventing support, permission, money, dates or completed actions."
+    },
+    "C18": {
+      "case_id": "C18",
+      "locale": "vi",
+      "topic_id": "K10",
+      "required_claims": {
+        "calendar_days_since_payment": 1,
+        "consumed_credits": 0,
+        "refund_approved": null,
+        "refund_amount": null,
+        "refund_completed_at": null,
+        "route": "reseller_review",
+        "standard_direct_monthly_route_applies": false,
+        "annual_reseller_contract_route": true,
+        "zero_consumed_credits_is_known": true
+      },
+      "unknown_fields": [
+        "refund_approved",
+        "refund_amount",
+        "refund_completed_at"
+      ],
+      "prohibited_propositions": [
+        "guaranteed_immediate_full_refund",
+        "all_reseller_orders_nonrefundable",
+        "all_reseller_orders_refundable",
+        "specific_currency_refund_amount",
+        "approval_unknown_replaced_with_false_or_true"
+      ],
+      "source_fact_ids": [
+        "F10",
+        "F12"
+      ],
+      "equivalence": "Semantic atoms, not mandatory wording. Reasonable draft next steps may vary without inventing support, permission, money, dates or completed actions."
+    }
+  }
+}

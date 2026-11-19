@@ -1,0 +1,27 @@
+{
+  "schema_version": "h029-business-oracle/v1",
+  "source_truth": "expected.json",
+  "source_reviews": "source_review_reconciliation.json",
+  "reference_sources": "reference_source_manifest.json",
+  "protected_inputs": "protected_sha256.json",
+  "artifact_contract": "artifact_contract.json",
+  "source_precedes_reference": true,
+  "candidate_answer_used_for_truth": false,
+  "reference_pool_is_non_exhaustive": true,
+  "automatic_closed_event_product_URL_match_forbidden": true,
+  "automatic_scores": [
+    "record_contract",
+    "time_and_scope",
+    "citation_resolution",
+    "protected_delivery"
+  ],
+  "semantic_boundary": [
+    "true AI-search product/change qualification",
+    "date-to-event/phase relation and actual eligibility",
+    "real product/change dedup and domestic/overseas provider coverage",
+    "source independence, republication and first-party/secondary meaning",
+    "trend/action factual support and bounded usefulness"
+  ],
+  "human_expert": false,
+  "formal_semantic_score": null
+}

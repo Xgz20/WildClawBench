@@ -1,0 +1,22 @@
+{
+  "schema_version": "h016-scoring-contract/v1",
+  "checkpoint_weights": {
+    "business_correctness": 0.55,
+    "boundary_cases": 0.25,
+    "delivery_integrity": 0.15,
+    "evidence_binding": 0.05
+  },
+  "private_sha256": {
+    "expected.json": "b0d9f8a9ea618db96fd123b9655b7730a6e0145173648f064a8c09442f4d3e0e",
+    "original_graph.json": "09bc41c39d3b5d1edad0d66f05aca3e38daae51ce91bc3035b46c71ccc794efb",
+    "damaged_graph.json": "864ab8041aea7504cf951d0ac80c6f4c3e12acec9ea61acb34cf50d8c438f4d0",
+    "protected_sha256.json": "4feca7979c6cafc4f3c5b760c4693cfeee78fab95d61376b2e0fea4e187e810e",
+    "candidate_graph.py": "0831e23cfb169949b599e7e0fb3e136ab6028b23fc90215e14c2a57dcdec7bdb",
+    "structure_checks.py": "b6c0e907787ad8417a11ea2f53e0d07b868b6178406b82b5925dae8943ec2b3b",
+    "render_checks.py": "264e0fa8042023d07b049f6553fc0d166a4085ff7c24657d7214c7e562d149b8",
+    "grader.py": "e9738a37734f21dd670e70c5d63f045354414348191a751c5887c3d36b757865",
+    "office_runtime.py": "e789f06be15587ff28f280a67887f083f7dd473694b6f3059ce9da6cdca22534"
+  },
+  "semantic_judge_required": true,
+  "limits": "Native-rule observations only; material-phase specs remain immutable historical inputs."
+}

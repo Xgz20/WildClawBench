@@ -1,0 +1,162 @@
+{
+  "schema_version": "h032-facts-free-scoring-design-proposal/v1",
+  "status": "ROOT_ADOPTED_SOURCE_FIRST_DESIGN_RULES_PENDING",
+  "review_context": {
+    "reviewer_kind": "model",
+    "human_expert": false,
+    "PDF_CSV_claims_GT_reference_read": false,
+    "any_claim_verdict_preassigned": false
+  },
+  "outer_weights": {
+    "automated": 0.75,
+    "llm_judge": 0.25
+  },
+  "automatic_keys": {
+    "business_correctness": 0.55,
+    "boundary_cases": 0.25,
+    "delivery_integrity": 0.15,
+    "evidence_binding": 0.05
+  },
+  "semantic_keys": {
+    "decision_grounding": 0.7,
+    "usable_handoff": 0.3
+  },
+  "aggregation": "A=.55*business_correctness+.25*boundary_cases+.15*delivery_integrity+.05*evidence_binding. overall_score=A only. Final=.75A+.25S only after actual independent Judge. Never reweight missing Judge or evaluator errors.",
+  "denominators": {
+    "claim_floor": 12,
+    "N": "max(12, all submitted logical claim records); audit extras/duplicates, every original claim remains one fixed opportunity",
+    "mapping": "Match actual input_ref, not fixed output ordinal/ID prefix or 12-keyword count. Duplicate answer for one original never fills another.",
+    "unknown": "Unknown/insufficient keeps all applicable fixed opportunities; justified uncertainty can satisfy its adjudicated logical condition without inventing facts/quotes.",
+    "boundary_slots": "Before candidates, root freezes actual source-supported boundary checks per family. No applicable baseline is a design/GT gap, not a fabricated counterexample or candidate-conditioned denominator change.",
+    "citations": "One logical binding opportunity per original claim plus fixed global integrity checks; all actual attached citations must bind, not a count average. True-padding cannot dilute false quote.",
+    "native": "Required three artifact containers and protected input inventory are frozen independently of candidate. Native logical content is not fixed coordinates or repeated JSON field count.",
+    "business_core_claims": 5,
+    "boundary_core_claims": 7
+  },
+  "business_correctness": {
+    "scope": "Independent source-oracle facts and reasoned decision about the actual proposition, excluding separately owned boundary/citation/transfer primitives",
+    "proposed_per_claim_subweights": {
+      "explicit_proposition_and_verdict_logic": 0.3,
+      "actual_task_data_split_descriptors": 0.2,
+      "metric_value_unit_direction_result": 0.2,
+      "actual_budget_and_other_conditions": 0.15,
+      "document_metadata_and_read_version_identity": 0.15
+    },
+    "normalization": "Equivalent units/spellings/precision and text/object forms only with actual roles preserved; no leaderboard scalar inferred across incompatible settings",
+    "source_first_oracle": "Root freezes atomic facts, source/version/page/context and accepted interpretation routes before seeing candidates. This proposal supplies only schema/logic, no paper roster, source fact, label or verdict frequency.",
+    "verdict_routes": "Adjudicate actual fact vs evidence-sufficiency/compound target. A refuted proof metaproposition and insufficient factual subclaim may both be justified. Label/kind alone earns nothing; actual text, conditions, facts and rationale must agree.",
+    "free_interpretations": "Do not zero a clear public-equivalent formulation because a static parser lacks a template. Escalate unsupported representation/semantic mapping for explicit review without coercing labels.",
+    "missing_content": "Original-claim omission belongs here at its fixed opportunity. It is not additionally a missing-row format, missing-citation and boundary-wrong-label penalty. Physical container absence is separately observed; use other usable artifacts to determine actual content rather than cascade all keys to zero."
+  },
+  "boundary_cases": {
+    "proposed_family_weights": {
+      "full_text_appendix_context_vs_abstract_only": 0.25,
+      "cross_setup_comparability_vs_hard_ranking": 0.25,
+      "absence_unknown_vs_counterevidence_or_fabricated_experiment": 0.25,
+      "same_work_version_result_relationship": 0.25
+    },
+    "family_slots": "Actual source-adjudicated checks, frozen before candidate. No preset which of 12 has any trap or verdict; root confirms availability of these checks or publicly revises the proposal before implementation.",
+    "owner_rule": "A root cause in these families is charged once here. Related business descriptor/verdict and literal-binding observations are retained but do not deduct again for the same normalized primitive.",
+    "no_pixels_or_keywords": "No abstract/full-body keywords as proof of reading; no figure pixel inference. Use actual source context, appendix, explicit comparison conditions and version relations; actual reading behavior requires bound trajectory/Judge.",
+    "correct_uncertainty": "No experiment found cannot become an invented negative experiment. It may defeat an explicit proof-sufficiency metaclaim while leaving factual truth insufficient if justified."
+  },
+  "delivery_integrity": {
+    "proposed_subweights": {
+      "protected_supplied_input_bytes": 0.35,
+      "required_containers_native_readable_editable_self_contained": 0.4,
+      "actual_cross_artifact_transfer_consistency": 0.25
+    },
+    "native": "Chinese/English semantic headers, reorder/split/merge/transpose/merged headers and free DOCX prose accepted. Static values accepted; formula caches never certify correctness.",
+    "cross_artifact": "Consistently wrong science is not a transfer conflict. Explicit different scope/version/subclaim explanations are not contradictions. One actual transfer conflict gets one owner here; do not additionally charge the same conflict as multiple scientific errors.",
+    "missing_file": "Record the actual missing/invalid container. Continue independent content checks from available artifacts; no missing-one-file => all downstream zero shortcut.",
+    "formula": "If formulas used, actual trusted Office cache-cleared recomputation on separate bound derivatives; no candidate/GT mutation. Missing helper/lock/engine or unsupported legal formula is evaluator error, not cached fallback or capability zero."
+  },
+  "evidence_binding": {
+    "proposed_subweights": {
+      "actual_local_file_physical_page_short_quote_binding": 0.6,
+      "document_citation_target_reference_graph": 0.25,
+      "global_citation_inventory_integrity": 0.15
+    },
+    "identity_boundary": "Physical document_id -> frozen file and locator/quote correspondence only here. Scientific work/version/result relationship errors belong to boundary/business as assigned, not automatically both.",
+    "locations": "Actual PDF physical page from1 and relevant paragraph/section/appendix/table/caption context; printed labels optional. Cross-page locations explicit. No title/URL-only hit or global cross-file quote fallback.",
+    "normalization": "Keep raw original/quote, source SHA, actual page/text context and derivation. Formatting-only normalization cannot delete semantic words/numbers or switch version/page.",
+    "unknown": "Do not invent a quote for nonreporting. Evaluate real reviewed scope/reason and existing citations; false existing citations still bind independently.",
+    "non_duplication": "A bad physical quote/page is charged here; do not infer all fact judgments wrong solely from it when independent source-oracle facts permit evaluation. Truly separate false fact and false locator need separately evidenced primitive errors."
+  },
+  "error_ownership": {
+    "record_fields": [
+      "error_id",
+      "input_claim_or_artifact",
+      "normalized_underlying_primitive",
+      "owner_key",
+      "owner_opportunity",
+      "actual_evidence",
+      "related_signals_no_extra_deduction"
+    ],
+    "identity": "Deduplicate by logical claim + assessed target/scope + actual source/version/field + underlying contradiction, not by number of citations/cells/files mentioning it",
+    "owners": {
+      "actual_atomic_fact_or_unhandled_original_claim": "business_correctness",
+      "abstract_full_body_or_cross_setup_or_missing_experiment_or_same_work_version_relationship": "boundary_cases",
+      "native_container_protection_or_actual_transfer_conflict": "delivery_integrity",
+      "physical_file_page_quote_or_reference_graph_binding": "evidence_binding"
+    },
+    "resolution": "Core decisions and dependent values/conditions belong to fixed5-business/7-boundary partition. Original-claim omission only loses its owner opportunity. Separate independently evidenced native/protection/transfer and actual citation binding obligations remain; empty evidence never certifies binding. Related signals carry no extra deduction.",
+    "classification_order": [
+      "Missing trusted baseline/helper is an evaluator error, outside ability scoring",
+      "Claim omission maps once to business content coverage; physical native/container/protection defects and actual transfer conflicts map to delivery",
+      "A demonstrated abstract/full-body, cross-setup, absence/fabrication or same-work/version relationship primitive maps to boundary, including dependent wrong-label signals",
+      "A remaining physical file/page/quote/reference-graph defect maps to evidence binding",
+      "A remaining independently demonstrated atomic fact/proposition error maps to business"
+    ],
+    "score_units": "Freeze per-opportunity deduction units before candidates. Each normalized error subtracts its units once from its owner key only; clip each key to [0,1], retain fixed denominators. Related nonowner triggers are neutral for deduction and explicitly labelled not_independently_verified, never presented as fact verification. Independently missing published obligations, including total lack of substantive work, are not collapsed into one cosmetic file error.",
+    "absence": "One omitted claim is a content opportunity, not four versions of the same penalty. Whole containers and whole-task lack of substantive work remain distinct published completeness obligations; do not hide observations, grant fictitious fact verification, or apply blanket cascading zeros.",
+    "denominator": "Ownership changes do not remove claim opportunities, silently renormalize key weights or let extra correct citations erase an error. Precedence and neutral/nonowner treatment must be fixed and reviewable before implementation."
+  },
+  "semantic_review": {
+    "decision_grounding": "Actual relation between proposition/fact/proof sufficiency, rationale, conflicts, unknowns, semantic support and logical routes; no keyword/label matching. Model review must not be called human expert review.",
+    "usable_handoff": "Can downstream recover each original claim, decision, evidence, conditions, limits and unresolved follow-up collectively from the three artifacts; no chat-only supplementation or mandated repeated prose",
+    "overlap_boundary": "Judge explanations may discuss automatic evidence but do not add an extra automatic deduction for the same primitive. The published .25 semantic component assesses its own reasoning/handoff anchors; do not secretly rescore automatic fields."
+  },
+  "trusted_runtime_boundary": {
+    "sources": "Frozen supplied local PDFs/metadata/claims independently bound on scoring side; no public-URL source collection/network. Candidate snapshots/modifications are not ground truth.",
+    "pdf": "Faithful physical-page text extraction and original file/version hash; unavailable necessary text/page evidence or extractor/helper is evaluator error",
+    "office": "Formal outer scoring runtime may declare office capability to make trusted recomputation available; private artifact contract is not the runtime gate. Static candidate values do not require inventing formulas.",
+    "missing_GT_or_helper": "Typed evaluator error/pending evidence; never fill0 or reweight remaining checkpoints",
+    "resource_limits": "No inherited H031 cutoff/5MiB/source-count rules. Future bounded unsupported forms explicit; no undisclosed ability penalties.",
+    "actual_process": "Do not infer actual full-text reading or forbidden network actions from artifact strings alone; use bound trajectory/independent Judge when required. Missing observation is not proof of violation.",
+    "timeout": "Blueprint900 is metadata only, not ability deduction. Infrastructure safeguards are separate."
+  },
+  "before_implementation": [
+    "Root source-first factual adjudication of actual supplied originals without preset labels",
+    "Freeze admissible fact/proof-sufficiency routes and boundary check slots",
+    "Resolve error-owner precedence with fixed nonowner treatment and completeness obligations",
+    "Adopt public contract and exact oracle/source hashes",
+    "Then authorize facts-free rules, synthetic controls and real native/source/Office acceptance"
+  ],
+  "not_done": [
+    "any H032 PDF/CSV/claims/GT/reference or annotated answer read",
+    "rules implemented",
+    "Office artifacts created",
+    "network used",
+    "source facts adjudicated",
+    "runtime tested",
+    "Judge run",
+    "commit"
+  ],
+  "judgment_owners": {
+    "C01": "business_correctness",
+    "C02": "boundary_cases",
+    "C03": "boundary_cases",
+    "C04": "boundary_cases",
+    "C05": "business_correctness",
+    "C06": "business_correctness",
+    "C07": "boundary_cases",
+    "C08": "boundary_cases",
+    "C09": "boundary_cases",
+    "C10": "boundary_cases",
+    "C11": "business_correctness",
+    "C12": "business_correctness"
+  },
+  "root_owner_resolution": "Core decisions and dependent values/conditions belong to fixed5-business/7-boundary partition. Original-claim omission only loses its owner opportunity. Separate independently evidenced native/protection/transfer and actual citation binding obligations remain; empty evidence never certifies binding. Related signals carry no extra deduction.",
+  "source_oracle": "expected.json claim_expectations + business_oracle.json + reference_source_manifest.json; all precede reference and implementation."
+}

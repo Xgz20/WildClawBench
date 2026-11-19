@@ -1,0 +1,22 @@
+{
+  "schema_version": "h028-official-entry/v1",
+  "official_url": "https://www.xfyun.cn/doc/asr/rtasr/API.html",
+  "scope": "本题明确核对给定实时语音转写标准版API文档；相关正文仅沿https://www.xfyun.cn/doc/asr/rtasr/公开文档子树读取，不把其他产品/SDK的限制套用为本接口事实。",
+  "follow_policy": "允许给定来源的公开可核验重定向与渲染必要静态资源；不访问真实转写服务、不登录账号、不调用付费接口。",
+  "snapshot": {
+    "identity_type": "author_document_capture",
+    "capture_id": "xfyun-rtasr-standard-20261028",
+    "access_started_at_utc": "2026-10-28T09:10:04.383412Z",
+    "access_completed_at_utc": "2026-10-28T09:10:05.546313Z",
+    "raw_sha256": "d6f65debe1937055d66c7263260cdfa18f2478e1dbbd8fd4f298c218c2a72760",
+    "main_text_sha256": "a4cd197142b319f574b9fb44ee9e94a48a3b85e1d8203aa484ce8e47dc70aad5",
+    "main_text_characters": 8951,
+    "projector": "h028-main-article-text/v1",
+    "selector": "main.page > .content__default",
+    "normalization": "HTMLParser convert_charrefs; block/BR boundaries; ignore script/style/noscript; NFKC; collapse whitespace; preserve case"
+  },
+  "version_note": "capture_id为本题取证快照标识，不是官方发布版本号；官方版本/发布日期需依正文核实，不从抓取时间或HTTP头推断。",
+  "document_drift_policy": "执行前核对指定主文档的规范化正文摘要；正文变化属于评测输入漂移，不能当模型能力零分。仅壳/排版变化且该摘要相同可继续。",
+  "answer_source_text_provided": false,
+  "all_credentials_synthetic_only": true
+}

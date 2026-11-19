@@ -1,0 +1,169 @@
+{
+  "schema_version": "general-hard-h007-reviewed-authoring/v1",
+  "date_local": "2026-10-27",
+  "task_id": "general_hard_office_documents_task_007_visual_handoff",
+  "status": "registered_author_validation_pass",
+  "canonical_task_registered": true,
+  "completed_dataset_task_count": 10,
+  "remaining_dataset_tasks": 50,
+  "repository_root": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard",
+  "branch": "feat/general-hard",
+  "base_commit_before_task": "5825bdb8ba449b14831facbf830e697c8d300562",
+  "independent_annotations": {
+    "count": 2,
+    "kind": "independent_model_review",
+    "human_expert": false,
+    "user_authorized": true,
+    "history_isolation": "Two fork_turns=none agents read only five permitted inputs; both records retained unchanged.",
+    "reviewer_bindings": [
+      {
+        "reviewer_id": "reviewer_a",
+        "kind": "independent_model_annotation",
+        "human_expert": false,
+        "agent_task": "/root/h007_annotator_a",
+        "history": "fork_turns=none",
+        "path": "reviews/reviewer_a.json",
+        "sha256": "b7fd29de9311e5fe896311e61eedfcc74f0339c731a02ce958e8d1750f8fbc33"
+      },
+      {
+        "reviewer_id": "reviewer_b",
+        "kind": "independent_model_annotation",
+        "human_expert": false,
+        "agent_task": "/root/h007_annotator_b",
+        "history": "fork_turns=none",
+        "path": "reviews/reviewer_b.json",
+        "sha256": "336705b3b79c025a5c15f0a3d06bcbcf6e66f69d0c24409443241a0fb815648d"
+      }
+    ],
+    "semantic_action_target_agreement": 8,
+    "unresolved_ids": [],
+    "minimum_target_bbox_iou": 0.8650366748166259,
+    "approved_region_basis": "union of independent pixel boxes with author reconciliation; generation geometry not promoted to independent labels"
+  },
+  "author_controls": {
+    "count": 46,
+    "status": "AUTHOR_CONTROLS_PASS",
+    "reference_rule_score": 1.0,
+    "independent_region_ledgers_full_credit": true,
+    "invalid_docx_before": 1.0,
+    "invalid_docx_after": 0.31916666666666665,
+    "missing_gt_and_review_gate_errors_preserved": true
+  },
+  "managed_worker": {
+    "status": "PASS",
+    "root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h007/qa/managed-worker-1793064681395176000",
+    "task_sha256": "16f735c00ff4b8b205cd5217fd0349d7db443cb053bf4cd78397cd38973526e8",
+    "core_version": "0.10.0",
+    "rule_score": 1.0,
+    "workspace_unchanged": true,
+    "source_gt_sha256": {
+      "evidence_requirements.json": "bb962116ab12bb78adca7a3bd94a7f44abbb2c2b1f024722ac39cf39cf49d7dc",
+      "author_expected.json": "9aa0f9e6542904ed434b2fa3163992c0362871b00ef9c38c0f8412e27b52e386",
+      "business_oracle.json": "7b5beded3b5458035f5a94bb1e62a2078ea966fb9be7d41793fdbcf8e963d73c",
+      "protected_sha256.json": "942165650690d80066e374232eba7b3ce9355bb72085ccb868a206b4a31eb97b",
+      "constructed_regions.json": "8b7d7bbb81c7a76d88e5fe65d147c0af8f280c833d302979b31e0c3a091a737d",
+      "author_oracle.json": "ef9b45efd30cb8ad9aa120cb701fcbd640ad6781e6ebbfd8580ba3e8ecf333e4",
+      "grader.py": "57f57c9f39d48dca58eec23b54f3ef0779887008798da2b33674a7a07c104655",
+      "expected.json": "c743455b374328ccf860b2cbc622b9460e9ad6bfda4d50b9a302b71aadf3768a",
+      "evidence_index.json": "6a43a45802255edab74067fa6b5ca41e8f08937fb27730092ab7cdb88d6133e1",
+      "native_docx.py": "9509967b8a0f037c7c2d3e110cf422b96c0f50085919279cf38bcbe3a4e931a8",
+      "annotation_status.json": "7a5a737227aadd63e5b0325c401bcacef646ab6ad9e5a9b38abc3706c4b50539",
+      "counterexamples.json": "a6fab5950e401ef79cd419178ffdf6c149d2c25abfab2883df01b70ac17edea9",
+      "structured_io.py": "9c4e96356dc71ee34eab346e431c2624b127c44b2aaab6cead1df909b40a9f14",
+      "authoring_validation.json": "5a47b4c3b29d564ff30cb67196e5eb55b28a4bda686211ea616a8be9ca0aab8f",
+      "declared_actions.json": "8d9add664822f0d12acb911c99a9aa0e8af190573499742c572291aac39488dc",
+      "artifact_contract.json": "e70b5e72d3fbf99502b26bf987fa2914514263608506ab6501325c0094149dec",
+      "validate_authoring.py": "c61f865e577b17f66992f9dd1fc4d8784901c35c7783d5a95313f9517ca7bee4",
+      "visual_regions.json": "b89e0d7ee473211548df0a26405f1efea5fa50551d9407af66ea0c0f74b3f070",
+      "reference/results/visual_changes.json": "55dff64c0b3ccc938c9a9f0ffba5074e1a86ce5627c6f298dd4e9eb5ab68c1bd",
+      "reference/results/handoff_revised.docx": "ddef3aa560e84cba48d3aba9d6b9df8be8da177a7db7e2dce720ce2b7ef40e04",
+      "reviews/reconciliation.json": "4d9ee0801c76c867d1a368c219af8f17b10c2e96211e99902d74efd798e196d4",
+      "reviews/reviewer_b.json": "336705b3b79c025a5c15f0a3d06bcbcf6e66f69d0c24409443241a0fb815648d",
+      "reviews/reviewer_a.json": "b7fd29de9311e5fe896311e61eedfcc74f0339c731a02ce958e8d1750f8fbc33"
+    }
+  },
+  "static_gate": {
+    "single_task": "PASS",
+    "whole_release": "FAIL",
+    "remaining_issue_codes": {
+      "TASK_ID_NOT_FOUND": 50
+    }
+  },
+  "regression": {
+    "observed_tool_session_id": 65086,
+    "test_count": 57,
+    "exit_code": 0,
+    "modules": [
+      "test_dataset_catalog",
+      "test_dataset_bundle",
+      "test_general_release_prepare",
+      "test_wildclawbench_case_generator"
+    ]
+  },
+  "inputs_sha256": {
+    "annotated_pages/page_01.png": "bc96cdb69201b0c0c3322e966c22c9f5f9407b58866056ce37d2deb62e9f3465",
+    "annotated_pages/page_02.png": "db80ec3f35de875cf0cc85430e11551bfab306a8d04800583777fb6640fcf954",
+    "annotated_pages/page_03.png": "b14f12865a2ba51078a768b57cba6cff1ebbf6773ddbf17e7924dcf75fef1f76",
+    "edit_scope.md": "34810b360ebd4e914907de349dab65b6447131e2294bd3445c3ddc3db3ebea51",
+    "handoff.docx": "80cef74cde39fd4ad8357b28823d25013c6cc38c254fb7a8074719a77e761d38"
+  },
+  "reference_docx_sha256": "ddef3aa560e84cba48d3aba9d6b9df8be8da177a7db7e2dce720ce2b7ef40e04",
+  "prior_three_page_reference_review_reused_unchanged": true,
+  "task_sha256": "16f735c00ff4b8b205cd5217fd0349d7db443cb053bf4cd78397cd38973526e8",
+  "artifact_bindings": [
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h007/qa/managed-worker-1793064681395176000/validation.json",
+      "sha256": "75d6eb274c80802be687b1319f97fbbf8b6573df0fc9d42075795ece318d5d90"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h007/qa/managed-worker-1793064681395176000/worker/request.json",
+      "sha256": "a4c3a578e94f47c9be43f78cd7be070a681209f26cb8635814a329d0a4049c70"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h007/qa/managed-worker-1793064681395176000/worker/result.json",
+      "sha256": "e8c9e7972638fe0aee7a7cd9fd6384cadb497ae72cc3cb5df20ebe8a09068778"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h007/qa/managed-worker-1793064681395176000/worker/stdout.log",
+      "sha256": "0dfc5ed8d22bd86010adba7f5be532aa575719a885ee215cc1a9130460f8d71d"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h007/qa/managed-worker-1793064681395176000/worker/stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h007/qa/static-final-worktree/20261027T013121Z_e05a20ea1c/report.json",
+      "sha256": "f612502f28b1ab4434fb25ffc865335722257cc2680962d8e8d71770b4f9eac2"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h007/qa/full-final-worktree/20261027T013233Z_e4b895207a/report.json",
+      "sha256": "9fb94efa4dc725a5e92c36d8a81334844c5f3f287df7472686e0e6a0618e8cee"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h007/qa/approved-author-controls-003/validation.json",
+      "sha256": "5a47b4c3b29d564ff30cb67196e5eb55b28a4bda686211ea616a8be9ca0aab8f"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h007/qa/native-package-contract-before/reproduction.json",
+      "sha256": "97c6992b8c3d5886fdb98977a5b9fc0d198b1a963562073a92a82a5bf63fa56b"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h007/authoring/reconcile_annotations.py",
+      "sha256": "43b040392bc7ac53d5a4d0a10059d456439d98c810b0f014a6586bcecf05b207"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h007/authoring/prepare_case_spec.py",
+      "sha256": "53961f35da7b8d8aa5bf6e7627ebc2301d8aed03d7f400de6203d031ccd76168"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h007/qa/run_managed_worker_worktree.py",
+      "sha256": "d08da9c595a1f1eeb4f283431bb3412ac116a63cd533d52887c54d73a982631f"
+    }
+  ],
+  "limits": [
+    "Two independent model reads plus author reconciliation, not human expert double labels.",
+    "Only author rule scores; 25 percent semantic Judge has not been run.",
+    "No actual Harness execution, four-client compatibility score or empirical difficulty/discrimination proof.",
+    "general-hard-v1 remains building without a frozen manifest; 50 tasks and 12-task calibration remain."
+  ]
+}

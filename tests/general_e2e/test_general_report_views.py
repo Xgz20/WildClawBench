@@ -171,6 +171,96 @@ class GeneralReportViewsTests(unittest.TestCase):
         del rows[0]["checkpoints"]["values"]["y"]
         self.assertEqual(VIEWS.capability_scores(rows, mapping)["code_generation"], {"score": 1, "known": 1, "total": 3})
 
+    def test_mixed_product_five_and_frozen_hard_seven_dimensions_keep_separate_coverage(self):
+        template = copy.deepcopy(next(row for row in self.data["tasks"] if row["score_status"] == "valid"))
+        categories = [
+            ("office_documents", "冻结文档与办公交付"), ("data_analysis", "冻结数据分析与表格建模"),
+            ("research_verification", "冻结研究检索与证据核验"), ("file_operations", "冻结文件与本地资源管理"),
+            ("software_engineering", "冻结软件工程与故障修复"), ("planning_coordination", "冻结规划决策与项目协作"),
+            ("content_operations", "冻结内容创作与运营"),
+        ]
+        hard = []
+        for index, ((category, label), dimension) in enumerate(zip(categories, VIEWS.CAPABILITIES)):
+            row = copy.deepcopy(template)
+            row.update(task_id=f"general_hard_{category}_task_001_example", category=category,
+                       score_status="valid", total_score=1., task_name=label)
+            contract = {"schema_version": "wildclawbench.dataset-report-contract/v1", "series_id": "general-hard",
+                        "category": category, "category_name": label, "category_order": index,
+                        "checkpoint_capabilities": {"automated.evidence": [dimension]}}
+            row["task_definition"] = {"status": "complete", "task_id": row["task_id"],
+                "task_sha256": str(index + 1) * 64, "contract_sha256": "a" * 64, "dataset_report": contract}
+            row["checkpoints"] = {"values": {} if index == 1 else {"automated.evidence": (index + 1) / 10}}
+            hard.append(row)
+        product = copy.deepcopy(template)
+        product.update(task_id="product_task", category="02_Office", score_status="evaluation_error", total_score=None)
+        product["checkpoints"] = {"values": {"overall_score": 1.}, "capability_values": {"llm_judge.first": .2, "llm_judge.second": 1.},
+            "independent_capability_eligible": True, "independent_capabilities": {
+                "profile": "independent-business-capability/v2",
+                "criteria": [{"key": key, "dimension": "tool_invocation", "score": value, "status": "judged"}
+                             for key, value in [("first", .2), ("second", 1.)]],
+                "dimensions": {"tool_invocation": {"score": .8}}}}
+        baseline = copy.deepcopy(template)
+        baseline.update(task_id="baseline_task", category="01_Productivity_Flow", total_score=.5)
+        baseline["checkpoints"] = {"values": {"automated.code": .25}}
+        unknown = copy.deepcopy(template)
+        unknown.update(task_id="unknown_task", category="unregistered", total_score=.99)
+        unknown["checkpoints"] = {"values": {"overall_score": .99}}
+        self.data["tasks"] = [unknown, product, baseline, *reversed(hard)]
+        unit = self.data["units"][0]
+        unit["score"] = REPORT.score_summary(self.data["tasks"])
+        unit["resources"] = REPORT.resource_summary(self.data["tasks"])
+        references = {**self.references,
+            "capabilities": {"baseline_task": {"automated.code": ["code_generation"]}},
+            "capabilities5": {"product_task": {"llm_judge.first": ["tool_invocation"], "llm_judge.second": ["tool_invocation"]}}}
+        original = copy.deepcopy((self.data, references))
+        view = VIEWS.build_views(self.data, references)
+        unit_id = unit["unit_id"]
+        self.assertEqual(view["capability_profile"], "legacy7")
+        self.assertEqual(view["tables"]["Agent能力对比"]["headers"][2:], list(VIEWS.CAPABILITIES.values()))
+        self.assertEqual(view["tables"]["Agent五维能力对比"]["headers"][1:], list(VIEWS.CAPABILITIES5.values()))
+        self.assertEqual(view["capability_coverage"][unit_id]["code_generation"], {"score": .175, "known": 2, "total": 2})
+        self.assertEqual(view["capability_coverage"][unit_id]["tool_use"], {"score": None, "known": 0, "total": 1})
+        self.assertEqual(view["capability_coverage5"][unit_id]["tool_invocation"], {"score": .8, "known": 1, "total": 1})
+        self.assertEqual(view["capability_coverage5"][unit_id]["state_awareness"], {"score": None, "known": 0, "total": 0})
+        self.assertEqual(view["score_coverage"]["valid_score_count"], 9)
+        self.assertEqual(view["score_coverage"]["evaluation_error_count"], 1)
+        self.assertEqual(len(view["dataset_reference_sources"]), 7)
+        self.assertEqual(view["tables"]["分类对比"]["headers"][2:9], [label + "平均分(1例)" for _, label in categories])
+        self.assertEqual([row[0] for row in view["case_comparison"]["rows"][:7]], [label for _, label in categories])
+        for detail in view["score_details"].values():
+            self.assertEqual([row[0] for row in detail["rows"][:7]], [label for _, label in categories])
+        self.assertEqual(view["resource_display"][unit_id]["average_tokens"]["denominator"], 10)
+        self.assertEqual((self.data, references), original)
+
+    def test_product_only_keeps_five_dimension_nulls_without_using_task_total(self):
+        row = copy.deepcopy(self.data["tasks"][0])
+        row.update(task_id="product_only", score_status="valid", total_score=1.)
+        row["checkpoints"] = {"values": {"overall_score": 1., "llm_judge.intent": 0.}}
+        self.data["tasks"] = [row]
+        self.data["units"][0]["score"] = REPORT.score_summary([row])
+        self.data["units"][0]["resources"] = REPORT.resource_summary([row])
+        references = {**self.references, "capabilities": {}, "capabilities5": {"product_only": {
+            "llm_judge.intent": ["intent_understanding"], "llm_judge.missing": ["state_awareness"]}}}
+        view = VIEWS.build_views(self.data, references)
+        self.assertEqual(view["capability_profile"], "general5")
+        self.assertEqual(view["tables"]["Agent能力对比"]["headers"][2:], list(VIEWS.CAPABILITIES5.values()))
+        self.assertNotIn("Agent五维能力对比", view["tables"])
+        coverage = view["capability_coverage"][row["unit_id"]]
+        self.assertEqual(coverage["intent_understanding"], {"score": 0., "known": 1, "total": 1})
+        self.assertEqual(coverage["state_awareness"], {"score": None, "known": 0, "total": 1})
+
+    def test_capability_rounds_keep_task_denominator_and_ignore_missing_evidence(self):
+        def run(task, value, status="valid"):
+            return {"task_id": task, "score_status": status, "total_score": 1.,
+                    "checkpoints": {"values": {} if value is None else {"automated.evidence": value}}}
+        mapping = {task: {"automated.evidence": ["retrieval_verification"]} for task in ["a", "b", "c"]}
+        rows = [{"task_id": "a", "rounds": [run("a", 0.), run("a", 1.)]},
+                {"task_id": "b", "rounds": [run("b", .25), run("b", None)]},
+                {"task_id": "c", "rounds": [run("c", 1., "evaluation_error")]}, run("unmapped", 1.)]
+        result = VIEWS.capability_scores(rows, mapping)
+        self.assertEqual(result["retrieval_verification"], {"score": .375, "known": 2, "total": 3})
+        self.assertEqual(result["code_generation"], {"score": None, "known": 0, "total": 0})
+
     def test_hybrid_rule_and_semantic_checkpoints_are_bound_to_frozen_evidence(self):
         path = self.root / "rules.json"
         write_json(path, {"status": "completed", "score": .8, "raw_scores": {"first": .6, "second": 1}})

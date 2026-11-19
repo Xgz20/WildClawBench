@@ -1,0 +1,34 @@
+{
+  "deliverables": [
+    "results/cleanup_plan.json",
+    "results/report.md"
+  ],
+  "native_formats": [
+    "JSON UTF-8 or UTF-8 BOM",
+    "Markdown UTF-8 or UTF-8 BOM"
+  ],
+  "allowed_summary_forms": [
+    "Markdown two-column table",
+    "fenced JSON object"
+  ],
+  "equivalence": [
+    "English/Chinese alias keys",
+    "NFC/NFD path equivalence",
+    "object and row reordering",
+    "integer numeric representations"
+  ],
+  "unknown": "JSON null, not numeric 0",
+  "input_membership": "82 original files; sandbox_tree contains exactly80",
+  "state": {
+    "confirmation": "pending",
+    "executed": false,
+    "selected_file_ids": []
+  },
+  "automated_obligation_ownership": {
+    "business_correctness": "one opportunity per unique input file; wrong/missing identity charged once; then classification and per-file allocation",
+    "boundary_cases": "internal .50 union/count/release math + .20 singleton math + .20 pending/unexecuted/unselected states + .10 external-target flags; dependent count/release checks neutral when inventory/classification upstream is wrong, avoiding cascade; singleton computation only on identity-valid delivered rows",
+    "delivery_integrity": "internal .50 input preservation + .20 JSON usable + .15 Markdown summary usable + .15 report factual mirror; wrong plan values are not charged again when the report is correct",
+    "evidence_binding": "internal .70 locators + .20 source hashes + .10 snapshot identity; only identity-valid delivered rows evaluated"
+  },
+  "missing": "candidate omission loses corresponding obligation; trusted context loss raises evaluation exception"
+}

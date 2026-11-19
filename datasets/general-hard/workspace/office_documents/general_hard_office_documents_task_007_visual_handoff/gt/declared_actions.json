@@ -1,0 +1,82 @@
+{
+  "schema_version": "h007-pre-raster-author-declaration/v1",
+  "status": "author_declared_pending_pixels_and_independent_annotations",
+  "actions": [
+    {
+      "id": "V01",
+      "page": 1,
+      "action": "replace",
+      "target": "current_window",
+      "old": "周一09:00",
+      "new": "周二10:30",
+      "protected_control": "history_window"
+    },
+    {
+      "id": "V02",
+      "page": 1,
+      "action": "replace_span",
+      "target": "owner_pair",
+      "old": "准备责任岗为值班小组A",
+      "new": "准备责任岗为值班小组B",
+      "preserve": "后备岗为值班小组A"
+    },
+    {
+      "id": "V03",
+      "page": 1,
+      "action": "delete_span",
+      "target": "customer_promise",
+      "old": "通知客户时承诺当日一定结案。",
+      "preserve": "依赖项未完成时应同步待办与当前状态。"
+    },
+    {
+      "id": "V04",
+      "page": 2,
+      "action": "replace_cell",
+      "target": "coordination_table/review_materials/截止时间",
+      "old": "16:00",
+      "new": "17:30",
+      "protected_control": "coordination_table/archive_receipt/截止时间"
+    },
+    {
+      "id": "V05",
+      "page": 2,
+      "action": "retain",
+      "target": "coordination_table/archive_receipt",
+      "reason": "圈选保留；旁边对归档17:30的提案被划除，不应应用"
+    },
+    {
+      "id": "V06",
+      "page": 2,
+      "action": "insert_after",
+      "target": "handoff_note",
+      "new": "缺回执不得标记为完成。",
+      "protected_control": "archive_note"
+    },
+    {
+      "id": "V07",
+      "page": 3,
+      "action": "reorder",
+      "target": "release_order",
+      "order": [
+        "step1",
+        "step3",
+        "step2",
+        "step4"
+      ],
+      "renumber": true
+    },
+    {
+      "id": "V08",
+      "page": 3,
+      "action": "reject_out_of_scope",
+      "target": "record_retention",
+      "reason": "批注提出删除，但五记录保留在保护范围，不采纳并记录范围依据"
+    }
+  ],
+  "annotation_review": {
+    "annotator_1": null,
+    "annotator_2": null,
+    "adjudication": null
+  },
+  "limit": "Initial author intent before screenshot construction; no claimed bbox/arrow observation or independent review."
+}

@@ -1,0 +1,90 @@
+{
+  "source_sha256": "905d9d9030d287dbd7dad7ae639073b6c8c0ae36e55a422d7feba16c4daf8536",
+  "result_sha256": "01af25214b1d7459b6a23b6676dfa5b39e3a8efaebe42b1e27103997544111fc",
+  "changes": [
+    {
+      "change_id": "C01",
+      "action": "modify",
+      "source_locations": [
+        "clause:费用与付款",
+        "table:付款节点/验收款/结算依据"
+      ],
+      "result_locations": [
+        "clause:费用与付款",
+        "table:付款节点/验收款/结算依据"
+      ],
+      "summary": "验收款付款期限由10个工作日改为15个工作日，同步付款表；签约款期限与金额保留。"
+    },
+    {
+      "change_id": "C02",
+      "action": "modify",
+      "source_locations": [
+        "clause:验收",
+        "table:服务联系/验收反馈/响应期限"
+      ],
+      "result_locations": [
+        "clause:验收",
+        "table:服务联系/验收反馈/响应期限"
+      ],
+      "summary": "书面验收意见由5个工作日改为7个工作日，同步验收反馈行，不改账单咨询时限。"
+    },
+    {
+      "change_id": "C03",
+      "action": "insert",
+      "source_locations": [
+        "clause:交付安排"
+      ],
+      "result_locations": [
+        "clause:交付安排",
+        "clause:交付确认"
+      ],
+      "summary": "原第3条后新增交付确认，确认仅表明接收，不替代验收；新增并更新原生REF，验收和保密现为第6条及第7条。"
+    },
+    {
+      "change_id": "C04",
+      "action": "modify",
+      "source_locations": [
+        "clause:终止"
+      ],
+      "result_locations": [
+        "clause:终止"
+      ],
+      "summary": "终止通知由30个自然日改为20个自然日，保密副本处理仍为30个自然日。"
+    },
+    {
+      "change_id": "C05",
+      "action": "modify",
+      "source_locations": [
+        "table:服务联系/接口重试支持/响应期限"
+      ],
+      "result_locations": [
+        "table:服务联系/接口重试支持/响应期限"
+      ],
+      "summary": "仅将接口重试支持响应由4小时改为2小时，一般咨询仍为4小时。"
+    },
+    {
+      "change_id": "C06",
+      "action": "delete",
+      "source_locations": [
+        "clause:现场培训",
+        "clause:服务支持"
+      ],
+      "result_locations": [
+        "absent:现场培训",
+        "clause:服务支持"
+      ],
+      "summary": "删除原现场培训条款及支持条款中的培训REF句，最终条号连续，保留其余支持约定。"
+    },
+    {
+      "change_id": "C07",
+      "action": "modify",
+      "source_locations": [
+        "table:服务联系/合同通知/渠道"
+      ],
+      "result_locations": [
+        "table:服务联系/合同通知/渠道"
+      ],
+      "summary": "合同通知邮箱显示与mailto均改为legal-notice@beiling.example，账单邮箱保留。"
+    }
+  ]
+}

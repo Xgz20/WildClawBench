@@ -1,0 +1,33 @@
+{
+  "schema_version": "h010-counterexamples/v1",
+  "boundaries": [
+    "double-tax inclusive B",
+    "combine tiers across phases",
+    "freight duplicated or charged once for project",
+    "capitalize operating costs",
+    "omit contingency or truncate cents",
+    "expired prices as firm base",
+    "overlapping or blackout/pre-delivery work dates",
+    "unknown as zero or factual savings",
+    "ledger correct but actual Word/HTML budget wrong",
+    "hardcoded caches or broken input response",
+    "missing/damaged delivery or altered source",
+    "unauthorized third phase in ledger"
+  ],
+  "infrastructure": [
+    "missing GT/helper",
+    "missing/drifted runtime or fonts",
+    "undeclared PDF dependencies",
+    "trusted Office failure"
+  ],
+  "equivalence": [
+    "logical table relocation and reordered columns/rows",
+    "equivalent formulas and single-cell source references",
+    "different feasible installation order/dates",
+    "Chinese budget headers and CNY formatting",
+    "different real evidence node ranges/IDs",
+    "combined recommended/alternative budget tables with plan column",
+    "canonical /tmp_workspace source path aliases",
+    "numeric driver in a separate sheet via single-cell reference"
+  ]
+}

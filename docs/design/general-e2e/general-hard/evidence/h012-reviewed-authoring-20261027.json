@@ -1,0 +1,507 @@
+{
+  "schema_version": "general-hard-h012-reviewed-authoring/v1",
+  "date_local": "2026-10-27",
+  "task_id": "general_hard_office_documents_task_012_visual_redlines",
+  "status": "registered_author_validation_pass",
+  "completed_dataset_task_count": 14,
+  "remaining_dataset_tasks": 46,
+  "repository_root": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard",
+  "branch": "feat/general-hard",
+  "base_commit_before_task": "cecc6d0f2a4e12a987d5b26d5a9f27381d9acc9e",
+  "input_sha256": {
+    "authority.md": "ab293194f5dad307b4435b6e4f65db324263ae5585cbde6f419e6220841a7f75",
+    "signed_pages/scan_01.png": "dd05680866db8cf875985ffc8304fdc95bd296eb80f16d8b9aa5e921a64d2025",
+    "signed_pages/scan_02.png": "4ad7b38d450b188cb78ba474bca7e93dac37862da7ffbcdb7e4ba93afcd727cf",
+    "signed_pages/scan_03.png": "fdf55771e617001247a94154b5fb0a062a30acc6851e500cded26d463e431c71",
+    "signed_pages/scan_04.png": "de5860efdd2fc00874cc1d3ac81827dda3e259db7a3d13983b79ca5de60fc780",
+    "signed_pages/scan_05.png": "43bc8f4ff9981546e98cb3dc60d66abaae1e964766788fd003ca801f8921531a",
+    "unsigned.docx": "c6e88db1e214f48a648e0bae22a4ec1273d041e986e2078ff2f0ff477b0c1d26"
+  },
+  "original_pixels_decoded_and_metadata_checked": true,
+  "visual_review": {
+    "independent_model_reviews": 2,
+    "human_expert": false,
+    "actual_png_reads_per_reviewer": 5,
+    "revisions": 17,
+    "annotation_disagreements": 0,
+    "intentionally_unknown_business_items": 3
+  },
+  "state_counts": {
+    "confirmed": 6,
+    "pending": 4,
+    "uncertain": 3,
+    "withdrawn": 2,
+    "rejected": 1,
+    "conditional": 1
+  },
+  "planned_visual_quota": {
+    "exact": 6,
+    "total": 60,
+    "ratio": 0.1,
+    "unchanged": true
+  },
+  "controls": {
+    "total": 51,
+    "positive": 11,
+    "negative": 33,
+    "infrastructure": 5,
+    "semantic_only_rule_full_credit": 2
+  },
+  "managed_worker": {
+    "report": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h012/qa/managed-worker-1793099995886910000/validation.json",
+    "rule_score": 1.0,
+    "workspace_unchanged": true,
+    "normal_and_archived_artifacts": 5,
+    "missing_dependency_is_evaluation_error": true
+  },
+  "regression": {
+    "unittest": {
+      "count": 44,
+      "status": "PASS",
+      "modules": [
+        "tests.general_e2e.test_dataset_catalog",
+        "tests.general_e2e.test_dataset_bundle",
+        "tools.report.tests.test_wildclawbench_case_generator"
+      ]
+    },
+    "static_selector_functions": 15,
+    "single_task": "PASS",
+    "release_issue_count": 46,
+    "release_issue_codes": [
+      "TASK_ID_NOT_FOUND"
+    ]
+  },
+  "files": [
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/tasks/office_documents/general_hard_office_documents_task_012_visual_redlines.md",
+      "sha256": "dee42e22622fab26b95f85353855127183f8ee852a8988e51b1b8e0865ab37cd",
+      "size": 9301
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/workspace/office_documents/general_hard_office_documents_task_012_visual_redlines/gt/decision_model.py",
+      "sha256": "73c73d26eba8432752935f5c167c1f43e830707f934435d202780ed1b0272c6b",
+      "size": 3397
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/workspace/office_documents/general_hard_office_documents_task_012_visual_redlines/gt/evidence_requirements.json",
+      "sha256": "680800cc0dfc66564b3318497c88fee0faf1fd191bb8a4a6a69a84c675fc3224",
+      "size": 616
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/workspace/office_documents/general_hard_office_documents_task_012_visual_redlines/gt/author_expected.json",
+      "sha256": "2848d2e64028fe9e2557e8e5dd24fcf99992a3b544bbaf61e97ae0ab92e846f5",
+      "size": 7804
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/workspace/office_documents/general_hard_office_documents_task_012_visual_redlines/gt/business_oracle.json",
+      "sha256": "60d1f4f6a8e868ba03203dda5905fca9e31dd895c7c2f56feacf4d6cda0edc1d",
+      "size": 1089
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/workspace/office_documents/general_hard_office_documents_task_012_visual_redlines/gt/protected_sha256.json",
+      "sha256": "a1555b142baabcdba14de11a3d6acf960c42e496681dc9038d077ca47ad0f30f",
+      "size": 666
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/workspace/office_documents/general_hard_office_documents_task_012_visual_redlines/gt/constructed_regions.json",
+      "sha256": "9125c471353dc398f6276e982d0608769526b28ff2113af0fe1ddafc9146d309",
+      "size": 19530
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/workspace/office_documents/general_hard_office_documents_task_012_visual_redlines/gt/office_runtime.py",
+      "sha256": "e789f06be15587ff28f280a67887f083f7dd473694b6f3059ce9da6cdca22534",
+      "size": 49901
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/workspace/office_documents/general_hard_office_documents_task_012_visual_redlines/gt/grader.py",
+      "sha256": "cf6f023e229873aec06b3ffa14d78925935d72e91d54eb50f356ece05118e510",
+      "size": 13545
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/workspace/office_documents/general_hard_office_documents_task_012_visual_redlines/gt/expected.json",
+      "sha256": "ed69d1a263f9c586925b58e2f05c7a3fb9bbfda390a216a1cdcb7e1fe3c0a7d1",
+      "size": 35583
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/workspace/office_documents/general_hard_office_documents_task_012_visual_redlines/gt/annotation_status.json",
+      "sha256": "d8e9c3aaf0ef8ecdd9cd477db19628a2d32c7432372bd011793f9841d686865f",
+      "size": 2462
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/workspace/office_documents/general_hard_office_documents_task_012_visual_redlines/gt/counterexamples.json",
+      "sha256": "a268837b1b1b9361fda66f16bcd47d7f253068db0c9d5e65046d64212b861722",
+      "size": 523
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/workspace/office_documents/general_hard_office_documents_task_012_visual_redlines/gt/structured_io.py",
+      "sha256": "7820ac3d0c65acfb8effbbe51039344083f030e57c672bc65395dc08c03573b2",
+      "size": 10873
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/workspace/office_documents/general_hard_office_documents_task_012_visual_redlines/gt/word_model.py",
+      "sha256": "01a8167879e075dd18c1af435acb97328c042b394e42014b039e4ec5ad07ba33",
+      "size": 11963
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/workspace/office_documents/general_hard_office_documents_task_012_visual_redlines/gt/authoring_validation.json",
+      "sha256": "fa74e7919df8e6b4fb2874e0d98570fcdc40f024bbad7fb99c8d14b2c49d37bc",
+      "size": 3953
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/workspace/office_documents/general_hard_office_documents_task_012_visual_redlines/gt/artifact_contract.json",
+      "sha256": "7b579c05bdce8fb62ff19bb77ac17d5018cc8c781cc31ed9e871476e39467979",
+      "size": 13201
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/workspace/office_documents/general_hard_office_documents_task_012_visual_redlines/gt/validate_authoring.py",
+      "sha256": "ad557900887c595e23754887300e29ed35d990fa40729d63ed56a2b656d72c0b",
+      "size": 14007
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/workspace/office_documents/general_hard_office_documents_task_012_visual_redlines/gt/native_text.py",
+      "sha256": "c92f7367c026497bc1594fc58b7e46809d0b163f9a930064fbfb027dacd5eb79",
+      "size": 39711
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/workspace/office_documents/general_hard_office_documents_task_012_visual_redlines/gt/visual_regions.json",
+      "sha256": "dafd9e21c06a6993e246a551b76b63a66aa62122555e0e540e76ade6f765f24e",
+      "size": 35706
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/workspace/office_documents/general_hard_office_documents_task_012_visual_redlines/gt/reference/results/redline_matrix.xlsx",
+      "sha256": "78cc121c015ebbd4b9fb04cb881f6191c547f5452cc30ede07082c9fc00cd06b",
+      "size": 9500
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/workspace/office_documents/general_hard_office_documents_task_012_visual_redlines/gt/reference/results/execution.docx",
+      "sha256": "56cbae6a29b8a075f89649155ea67dd9926efe8b25488e79634f10182734d989",
+      "size": 38464
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/workspace/office_documents/general_hard_office_documents_task_012_visual_redlines/gt/reference/results/uncertain.json",
+      "sha256": "90178f2c0f1f37586ab9c98d58fbca0580656b6af22d45c9daf054bb07f23003",
+      "size": 4985
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/workspace/office_documents/general_hard_office_documents_task_012_visual_redlines/gt/reviews/reconciliation.json",
+      "sha256": "6bb0ce28ff5b6b54fde93732bb60dfb2e7c985b6fdf57a7eaf166e873a6e3ad6",
+      "size": 8959
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/workspace/office_documents/general_hard_office_documents_task_012_visual_redlines/gt/reviews/reviewer_b.json",
+      "sha256": "799bce46034d3c4f1b7943631bbc6f1a91db300ccbf52c4471f627879c768953",
+      "size": 37864
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/workspace/office_documents/general_hard_office_documents_task_012_visual_redlines/gt/reviews/reviewer_a.json",
+      "sha256": "09819147702b19499a0ea2c603851b6815eb5d83def0c22fc8b2274a7ccd4024",
+      "size": 42495
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/workspace/office_documents/general_hard_office_documents_task_012_visual_redlines/exec/authority.md",
+      "sha256": "ab293194f5dad307b4435b6e4f65db324263ae5585cbde6f419e6220841a7f75",
+      "size": 4096
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/workspace/office_documents/general_hard_office_documents_task_012_visual_redlines/exec/unsigned.docx",
+      "sha256": "c6e88db1e214f48a648e0bae22a4ec1273d041e986e2078ff2f0ff477b0c1d26",
+      "size": 38650
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/workspace/office_documents/general_hard_office_documents_task_012_visual_redlines/exec/signed_pages/scan_04.png",
+      "sha256": "de5860efdd2fc00874cc1d3ac81827dda3e259db7a3d13983b79ca5de60fc780",
+      "size": 271412
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/workspace/office_documents/general_hard_office_documents_task_012_visual_redlines/exec/signed_pages/scan_05.png",
+      "sha256": "43bc8f4ff9981546e98cb3dc60d66abaae1e964766788fd003ca801f8921531a",
+      "size": 266799
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/workspace/office_documents/general_hard_office_documents_task_012_visual_redlines/exec/signed_pages/scan_01.png",
+      "sha256": "dd05680866db8cf875985ffc8304fdc95bd296eb80f16d8b9aa5e921a64d2025",
+      "size": 322990
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/workspace/office_documents/general_hard_office_documents_task_012_visual_redlines/exec/signed_pages/scan_02.png",
+      "sha256": "4ad7b38d450b188cb78ba474bca7e93dac37862da7ffbcdb7e4ba93afcd727cf",
+      "size": 303510
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/workspace/office_documents/general_hard_office_documents_task_012_visual_redlines/exec/signed_pages/scan_03.png",
+      "sha256": "fdf55771e617001247a94154b5fb0a062a30acc6851e500cded26d463e431c71",
+      "size": 279251
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h012/authoring/case-spec.json",
+      "sha256": "a972eabc1c44a5bf219034c1ba981ff846fb723709412babdd7998de9a3bbf66",
+      "size": 15717
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h012/authoring/prepare_contracts.py",
+      "sha256": "8e6dbaffd430e9370aa405f0e75dff3a79a75006ae0b7e56015588d119b58625",
+      "size": 5991
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h012/authoring/build_scanned_pages.mjs",
+      "sha256": "6dd74cc95fa3c74b45a23d033720b60f4e667b1a5106815846dc8a9ebbe0b149",
+      "size": 12184
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h012/authoring/run_managed_worker.py",
+      "sha256": "b789be05f15056b6faf8a96d9a109b5dac276f2d7d8f421f534f9a68ba158234",
+      "size": 5642
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h012/authoring/prepare_case_spec.py",
+      "sha256": "bb78db28f2829f8999b3c7efe8bbb67b334fbe429ef902ba8c463c882d2a0f24",
+      "size": 9499
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h012/authoring/construction_intent.json",
+      "sha256": "9528db62e965b45009d05262ddbe711ba5ca88c4cbdabe3786498f34251f9393",
+      "size": 10371
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h012/authoring/render_unsigned.py",
+      "sha256": "b14a9066a95f43bda3ebce71ff03bf372d58ad0d1362f1a969431297c8001bc8",
+      "size": 1289
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h012/authoring/marker_status.json",
+      "sha256": "502b2724ff9b6bdb59d61e6a5d1aaf517c4d3f59ab3554a2dba4067ead7e2a4e",
+      "size": 671
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h012/authoring/build_unsigned.py",
+      "sha256": "568c6071620cfdb24fda66deb25c4d556b68addaa231a44112e7261ca91bd9e9",
+      "size": 2662
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h012/authoring/reconcile_annotations.py",
+      "sha256": "197443389925805690db4db3590a2b145924a8ab56c692278ac99f13e77b928a",
+      "size": 8190
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h012/authoring/prepare_review_packet.py",
+      "sha256": "7e3d5a18638894a1ec1708628e2fc169d3549edf7e5c9e1ca4f599de7227000f",
+      "size": 6016
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h012/authoring/render_reference.py",
+      "sha256": "1d447e8b0d937afdf8c862d73d91f7e80451ff155658e12e12af49317de682f8",
+      "size": 1468
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h012/authoring/build_matrix.mjs",
+      "sha256": "b78ee0772702eca92cc430fd87aea18f14d230b5e94be387e9736b0c1d315168",
+      "size": 4091
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h012/authoring/build_reference.py",
+      "sha256": "f2051d9e5882f8c19b8c4c799bd88543cbf28448a7917f527e309edc9e414b00",
+      "size": 3870
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h012/authoring/blueprint-snapshot.json",
+      "sha256": "57df44ef8d1468eaf72b0abae1049d13e5bd0c7537d6069b27a25ff51dcf7a50",
+      "size": 15008
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h012/authoring/prepare_runtime.py",
+      "sha256": "89a523c30fe3c6a10da4f16ca5eadc588689749107c704182230ed5fcf764495",
+      "size": 899
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h012/authoring/verify_rule_model.py",
+      "sha256": "fb32500d818f86232e7f822e82a9fb3576fba091253169a4c3bac39701452907",
+      "size": 1781
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h012/authoring/declare_materials.py",
+      "sha256": "c8694b67f82751631dd2441ed7da92f0827ea725b494775d3644599180cecaff",
+      "size": 9801
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h012/qa/input-physical-validation.json",
+      "sha256": "98ae2950346c2e75a15e5f1a01509a0d4f02749de773f6187699c49e81623c52",
+      "size": 8449
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h012/qa/rule-model-validation.json",
+      "sha256": "4d4e5c4cc685933f0d2ed6e1aa615a00dbecb9064b0549cc17bb1e36ddd112f8",
+      "size": 387
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h012/qa/ocr-ablation-observation.json",
+      "sha256": "68946f40990bc67d755135679af7e34dd8b237e3d4a64712db664025b22e6b2f",
+      "size": 1493
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h012/qa/visual-review-final.json",
+      "sha256": "afb33a2929770596086acb92058bdfd008952df34215461a3bea22a3504fc730",
+      "size": 2208
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h012/qa/runtime/probe.json",
+      "sha256": "19e9b1223c96ecd6be81dc819d23dd5fbfd60eda51757396dd27631936a6f304",
+      "size": 982
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h012/qa/runtime/runtime-lock.json",
+      "sha256": "fcd54d44a453c2ac93c7e22c75bb21e5121fe7396fc19d1beb4113e9e5b1c18f",
+      "size": 45861
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h012/qa/author-controls-smoke-001/validation.json",
+      "sha256": "29dddbff9cd0656894974e302b1ff1fb0d91a8a44792628ae7c2c2ce71ebd2c5",
+      "size": 6324
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h012/qa/author-controls-full-001/validation.json",
+      "sha256": "357fa6034d170bebb3affca63019028919c32fc17ddb819a8d03d5a05f73b5c7",
+      "size": 23747
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h012/qa/static-selector-regression.json",
+      "sha256": "aef4f47b30848c1205f01f87aea3708fdcad8325cec7e1ced198a0fac5db64c0",
+      "size": 1742
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h012/qa/static-single/20261027T112033Z_55fb6d7c04/report.json",
+      "sha256": "7ac6c2ddce22e8e036a40d2f7eb87716c0d59e6ffabad9765ca8ca96b57042b7",
+      "size": 1215
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h012/qa/static-release/20261027T112036Z_361153ca6c/report.json",
+      "sha256": "762c6457895150784db4474a93efed5cf6247e673b45197668b2fce327195ee2",
+      "size": 37975
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h012/qa/managed-worker-1793099995886910000/validation.json",
+      "sha256": "2397e1e3ce47d6e4a4e635ae41a7c1ce910e87188797cc84fb179323042e0546",
+      "size": 10505
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h012/qa/managed-worker-1793099995886910000/worker-validation.json",
+      "sha256": "ae9c6f797d467bd3fa3f7fc0fc98cdca3e760d8734dcde7f75c08194b8088a4f",
+      "size": 5536
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h012/qa/managed-worker-1793099995886910000/worker/derived/h012-analysis.json",
+      "sha256": "03e8171dc22c20c6294a83094e0361abc9c95f656f1d00456b285391269f0dfa",
+      "size": 44111
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h012/qa/reference-matrix/evidence-4.png",
+      "sha256": "1d6f01ce96d4a621cd7a3d0df0affe79bc5886d0dcb5662f1f21cc34e71b39f1",
+      "size": 227450
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h012/qa/reference-matrix/matrix-1.png",
+      "sha256": "335e0d56633f2edac281ba1b8a7ec29e422b77f4a16c2629ca21b5dd03ddd9c9",
+      "size": 125247
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h012/qa/reference-matrix/matrix-2.png",
+      "sha256": "5cbe0f5d536108b1be1487dd7ffc20c98de25cc83357a9fc2b0e9799a36470df",
+      "size": 104169
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h012/qa/reference-matrix/matrix-3.png",
+      "sha256": "18de52bef7e0d9c82f134fa0512a60f17cfd7d1f0e90730aee9d7e7ca080748c",
+      "size": 61303
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h012/qa/reference-matrix/evidence-2.png",
+      "sha256": "fa5631809210c444c65b898167cf8a37c08596ffcf7935cdd20aa700c1a84e3d",
+      "size": 351552
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h012/qa/reference-matrix/evidence-3.png",
+      "sha256": "cdd185ae2334602bb4f6cb913f7fa25ed51b44699e41ba0a3d2261084fe2a37e",
+      "size": 357251
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h012/qa/reference-matrix/evidence-1.png",
+      "sha256": "3ee0ea3a127475d204d86391d56bc3a5ee569ab15733f0223dcfc8d64bc264a3",
+      "size": 407597
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h012/qa/reference-matrix/matrix-4.png",
+      "sha256": "7a3b9616193bbcf81ab0a72b8200bf8b1e2b10df388019a754c5f3d712db272e",
+      "size": 80012
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h012/qa/reference-matrix/inspection.ndjson",
+      "sha256": "c513fe0e8c29a18d8b23009d6721ccc8e339891eb8dda8ddf338e78f3244ab8d",
+      "size": 3181
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h012/qa/reference-matrix/export.ndjson",
+      "sha256": "fcec7c6ad53ebc12533cb69bb46ca3149297cb40bb2d245c3c492e41d9ae36a6",
+      "size": 157381
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h012/qa/reference-matrix/errors.ndjson",
+      "sha256": "acc0111e19cf44d2753fc9ecd164bf1b27fbd65597463a25cf48bd1c65e90146",
+      "size": 60
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h012/qa/reference-word-render-001/page-1.png",
+      "sha256": "8536fe39211f6e137763e325023ebf46990b218f62658c5a8b73e8bd95fb7f03",
+      "size": 202960
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h012/qa/reference-word-render-001/execution.pdf",
+      "sha256": "95fdf4eae8423ca1e7be6ff9c40f779638167df9b61488d09d2a8156119ec8f2",
+      "size": 164006
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h012/qa/reference-word-render-001/page-2.png",
+      "sha256": "3288048b908d69b770f60f2d0810bee46d72c54a8d705faaaf1f5cd1b77b7b3b",
+      "size": 467858
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h012/qa/reference-word-render-001/render-binding.json",
+      "sha256": "59167c4ce806ae30904874e2c45880f21021879d42c82ac649a619c1916ac325",
+      "size": 899
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h012/qa/managed-worker-1793099995886910000/worker-preview-1.png",
+      "sha256": "9fd14b495e13562ff99ee05cc7a0038642472243f274c9682ce7b54f145df520",
+      "size": 178766
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h012/qa/managed-worker-1793099995886910000/worker-preview-2.png",
+      "sha256": "1fe6016eed3a11b4d0cb451333d43520f1bb8f40ac3dd46f8525fa554d0e0d43",
+      "size": 413294
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h012/independent-review/README.md",
+      "sha256": "348cc6126688aad823de935fc78c137e34ed330023957227acb6f0f386d9e473",
+      "size": 1296
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h012/independent-review/input-sha256.json",
+      "sha256": "a1555b142baabcdba14de11a3d6acf960c42e496681dc9038d077ca47ad0f30f",
+      "size": 666
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h012/independent-review/reviewer_a.json",
+      "sha256": "09819147702b19499a0ea2c603851b6815eb5d83def0c22fc8b2274a7ccd4024",
+      "size": 42495
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h012/independent-review/reviewer_b.json",
+      "sha256": "799bce46034d3c4f1b7943631bbc6f1a91db300ccbf52c4471f627879c768953",
+      "size": 37864
+    }
+  ],
+  "limits": [
+    "Author controls are not independent semantic or Harness scores.",
+    "Two isolated model annotations may share model errors and are not human expert labels.",
+    "Rule checks cannot establish true pixel meaning or reality of business approvals.",
+    "Difficulty L4 is estimated; release remains building without a manifest; 12-case four-client calibration outstanding."
+  ]
+}

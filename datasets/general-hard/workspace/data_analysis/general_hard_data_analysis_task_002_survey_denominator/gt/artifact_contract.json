@@ -1,0 +1,24 @@
+{
+  "status": "material_phase_not_candidate_scoring",
+  "grading_type": "automated",
+  "required_files": [
+    "results/analysis.xlsx",
+    "results/summary.docx",
+    "results/exclusions.csv"
+  ],
+  "cleaned_rows": 240,
+  "kept_model_rows": 185,
+  "metric_rows": 8,
+  "exclusion_rows": 278,
+  "summary_value_fields": [
+    "raw_num",
+    "raw_den",
+    "raw_rate",
+    "weighted_num",
+    "weighted_den",
+    "weighted_rate"
+  ],
+  "summary_formula_required": true,
+  "equivalence": "Equivalent sheet names, row/column order, clear headers, marker implementations and formulas allowed; no author coordinate or literal-only marker requirement. Raw CSV fields retained, model markers and weights remain traceable.",
+  "limits": "Material/reference only. Formal graders and runtime adapter must be implemented before registration."
+}

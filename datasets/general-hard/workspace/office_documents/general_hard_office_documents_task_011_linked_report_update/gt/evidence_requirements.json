@@ -1,0 +1,16 @@
+{
+  "schema_version": "h011-evidence-requirements/v1",
+  "required_observations": [
+    "immutable input/output hashes",
+    "actual workbook numeric fields and original formula cells",
+    "locked Office cleared-cache baseline",
+    "three real input-response variants with audit receipts",
+    "native Word values and real note relationship graph",
+    "native PPTX values, series/category caches and actual embedded workbooks after cleared-cache calculation",
+    "shared explicit both-format lock and separate Word/PPTX PDF receipts",
+    "impact entries bound to actual values and current locators",
+    "independent visual Judge reviewing chart visibility, protected meaning, unsupported claims and readable delivery"
+  ],
+  "read_only": "Only external rule-evidence directory is writable. Frozen Workspace and candidate files stay unchanged.",
+  "semantic_boundary": "Lexical directions and factual token checks are observable necessary conditions, not semantic adjudication."
+}

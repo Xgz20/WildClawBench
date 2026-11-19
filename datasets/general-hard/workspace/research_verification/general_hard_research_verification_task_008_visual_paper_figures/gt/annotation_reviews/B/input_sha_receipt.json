@@ -1,0 +1,73 @@
+{
+  "schema_version": "h034-input-read-only-sha-receipt-v1",
+  "annotator": "model-annotator-B",
+  "input_root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h034/qa/independent-annotation-input-v1",
+  "algorithm": "SHA-256",
+  "before_phase": "After reading neutral annotation_instructions.md, before opening images and before reading paper_excerpts.md/reading_tolerance.json.",
+  "after_phase": "After all four original images were opened and raw observations and eight claim assessments were saved.",
+  "checked_at_utc": "2026-10-28 18:53:14 UTC",
+  "input_count": 7,
+  "all_inputs_byte_identical": true,
+  "files": [
+    {
+      "file": "figures/F01_budget.png",
+      "before_sha256": "08451e387cda7a74c9ffac2b6f15c96b8ab37b8a14aa938f61b2cc14343a7c61",
+      "after_sha256": "08451e387cda7a74c9ffac2b6f15c96b8ab37b8a14aa938f61b2cc14343a7c61",
+      "before_bytes": 77419,
+      "after_bytes": 77419,
+      "unchanged": true
+    },
+    {
+      "file": "figures/F02_intervals.png",
+      "before_sha256": "ff305b0b1bb655f73c71c087bf82f52bb9d89ac098da9f46610a83a3d80965b8",
+      "after_sha256": "ff305b0b1bb655f73c71c087bf82f52bb9d89ac098da9f46610a83a3d80965b8",
+      "before_bytes": 71201,
+      "after_bytes": 71201,
+      "unchanged": true
+    },
+    {
+      "file": "figures/F03_latency.png",
+      "before_sha256": "b9603a7773845b082db4a19162134af68bd09445f80731ef153cdae6f20b3eeb",
+      "after_sha256": "b9603a7773845b082db4a19162134af68bd09445f80731ef153cdae6f20b3eeb",
+      "before_bytes": 70616,
+      "after_bytes": 70616,
+      "unchanged": true
+    },
+    {
+      "file": "figures/F04_grouping.png",
+      "before_sha256": "bf38edc61ed6fef6fb715802324b81f537f0f10a2a844840e377a8186245e745",
+      "after_sha256": "bf38edc61ed6fef6fb715802324b81f537f0f10a2a844840e377a8186245e745",
+      "before_bytes": 68539,
+      "after_bytes": 68539,
+      "unchanged": true
+    },
+    {
+      "file": "paper_excerpts.md",
+      "before_sha256": "ff890163fc46f1292a70279a1df8a21625c5e3cf5d0fa9c5fcad2e72010c7318",
+      "after_sha256": "ff890163fc46f1292a70279a1df8a21625c5e3cf5d0fa9c5fcad2e72010c7318",
+      "before_bytes": 3629,
+      "after_bytes": 3629,
+      "unchanged": true
+    },
+    {
+      "file": "reading_tolerance.json",
+      "before_sha256": "35d038372eb3dba02e7a146975adfc22659ccef46ff64f0b4f397975ff05271b",
+      "after_sha256": "35d038372eb3dba02e7a146975adfc22659ccef46ff64f0b4f397975ff05271b",
+      "before_bytes": 1976,
+      "after_bytes": 1976,
+      "unchanged": true
+    },
+    {
+      "file": "annotation_instructions.md",
+      "before_sha256": "4772dd26b1c65e26e4ae8b64b0c63554fe61ecf78c3d6ea8e498e4ec92ba9ef3",
+      "after_sha256": "4772dd26b1c65e26e4ae8b64b0c63554fe61ecf78c3d6ea8e498e4ec92ba9ef3",
+      "before_bytes": 1704,
+      "after_bytes": 1704,
+      "unchanged": true
+    }
+  ],
+  "procedure": "Bundled Python standard-library hashlib and JSON only; inputs were read, never written. No external network, dependency installation, research code, Office generation, other annotator or GT access.",
+  "raw_observation_preclaim_hash": "d01226e1fcd8940135a5c770802993881667dcd0caa6ff942ae43d15af7b70a8",
+  "raw_observation_unchanged_since_preclaim_save": true,
+  "write_scope": "Only annotation-b-v1 output directory."
+}

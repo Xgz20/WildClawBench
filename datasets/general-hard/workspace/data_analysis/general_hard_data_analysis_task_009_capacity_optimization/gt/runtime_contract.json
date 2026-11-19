@@ -1,0 +1,32 @@
+{
+  "schema_version": "h025-runtime/v1",
+  "grading_type": "automated",
+  "scoring_runtime": {
+    "office": true
+  },
+  "core_version": "0.15.2",
+  "weights": {
+    "business_correctness": 0.55,
+    "boundary_cases": 0.25,
+    "delivery_integrity": 0.15,
+    "evidence_binding": 0.05
+  },
+  "business": "priority .65 / cost conditional on optimal full gap vector .20 / self-accounting .15",
+  "priority": "stages .50/.30/.20; later stage receives zero if any earlier gap is not optimal; otherwise normalized to attainable service, never reward lower priorities in exchange for higher ones",
+  "cost": "1 minus excess cents / remaining feasible budget span; only if full optimal gap vector; true improvement contradicting accepted oracle raises evaluation_error",
+  "boundary": "feasible integer hard constraints .60 / exact source impossibility certificate .40",
+  "caps": {
+    "infeasible_or_missing_plan": 0.25,
+    "missing_source_or_changed_input": 0.5
+  },
+  "native_sensitivity_required": false,
+  "candidate_solver_dependencies": null,
+  "grader_solver_dependencies": null,
+  "unimplemented": [
+    "unrestricted prose quality",
+    "solver execution claim verification",
+    "human supply-chain expert review",
+    "full visual quality",
+    "real Harness performance and measured difficulty"
+  ]
+}

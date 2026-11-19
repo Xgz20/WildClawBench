@@ -1,0 +1,10 @@
+{
+  "node": {
+    "path": "/Users/gzx/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node",
+    "version": "v24.22.1",
+    "sha256": "0744673c908e5120c87bb536172ade5f3e58067f5881c3680314cdde9d90af90"
+  },
+  "python": "3.11 or 3.12 stdlib sqlite3/http; no pip/npm install",
+  "scope": "actual local HTTP, SQLite persistence and synchronous/async JS controller+HTML semantics; no browser/Harness proof",
+  "os_security_sandbox": false
+}

@@ -1,0 +1,19 @@
+{
+  "schema_version": "h015-scoring-binding/v1",
+  "private_sha256": {
+    "expected.json": "2e8cf1a6d5911f170d7a98959aa56bb0ff37e0fc0aade1aa850e6366614dd667",
+    "business_oracle.json": "3272dfbebfa2c1292bc7f34c4f865e77030f59899bb13c879ee066cdb6eeba51",
+    "protected_sha256.json": "79c7b21e90b1269a1e5655d54eb26734fd62c087e3017f2dd5634ac3389e3f28",
+    "artifact_contract.json": "83400bcee397bb0f86c21d8316a00ee279895cfbd55e9e24bc60e2647a355ca0",
+    "evidence_requirements.json": "b073008123bd5c46155b7f1e8a36a55ae2996bac2eaee61ae29ce44e7090c0d3",
+    "office_runtime.py": "e789f06be15587ff28f280a67887f083f7dd473694b6f3059ce9da6cdca22534",
+    "native_text.py": "c92f7367c026497bc1594fc58b7e46809d0b163f9a930064fbfb027dacd5eb79",
+    "word_model.py": "01a8167879e075dd18c1af435acb97328c042b394e42014b039e4ec5ad07ba33",
+    "render_checks.py": "6d6fbf5923732ff5010517303ce8067e78bd9f5c2687c270095e5e9af5876a6d",
+    "artifact_io.py": "0d7d198261be293259009dd17f000e5e6730bae914e99c4ae8d9ab8b02ac2f8b",
+    "business_model.py": "7de3368f668749e333605193c53dd9823bd57d5aef480b91964fff0041ffc8cf",
+    "business_checks.py": "f7faec9ccf26b3bfbbcfcfca0ab12ee3a300eb94dd621a79bd4f0b300b89b509",
+    "prose_observations.py": "e74ed9f69890f7cfed3bc26da920f6a972af41e1f96aa59fb5239fdb3174e29b"
+  },
+  "limit": "source/helper integrity only; no candidate or semantic validation implied"
+}

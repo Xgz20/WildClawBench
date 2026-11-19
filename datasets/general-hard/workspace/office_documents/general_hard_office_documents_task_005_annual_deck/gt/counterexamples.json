@@ -1,0 +1,49 @@
+{
+  "schema_version": "h005-counterexamples/v1",
+  "groups": [
+    {
+      "key": "correction_and_units",
+      "kpis": [
+        "K01",
+        "K02",
+        "K03",
+        "K04",
+        "K05",
+        "K06",
+        "K12"
+      ]
+    },
+    {
+      "key": "weighted_denominators",
+      "kpis": [
+        "K07",
+        "K08",
+        "K09",
+        "K10"
+      ]
+    },
+    {
+      "key": "aging_and_scope",
+      "kpis": [
+        "K10",
+        "K11"
+      ]
+    }
+  ],
+  "required_controls": [
+    "zero_override",
+    "unit_mismatch",
+    "mean_of_rates",
+    "include_future_invoices",
+    "include_day30",
+    "ledger_only_correct",
+    "wrong_chart_cache",
+    "wrong_embedded_formula_correct_cache",
+    "rasterized_slides",
+    "font_too_small",
+    "text_overflow",
+    "equivalent_layout",
+    "missing_deliveries",
+    "missing_gt"
+  ]
+}

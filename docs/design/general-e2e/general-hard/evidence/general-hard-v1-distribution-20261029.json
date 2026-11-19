@@ -1,0 +1,46 @@
+{
+  "schema_version": "general-hard-v1-distribution-verification/v1",
+  "status": "BUILT_AND_INDEPENDENT_VERIFY_SUBCOMMAND_PASSED",
+  "dataset_id": "general-hard-v1",
+  "task_count": 60,
+  "dataset_digest": "a781532a1d8e9bc80d1fb4fd8b2d85a738f7d8e9386bc15a6a8fd14e9cfca8e5",
+  "frozen_source_revision": "541cfae0007fd0b2e25ba0424c334f3d3a7ece1d",
+  "freeze_commit": "e4593d47a2b2828ff617fa595a633c21c8a7b2ac",
+  "manifest_sha256": "66fd8732edf4756775d7a284482a6a5c4d7b1564b66562605e1bd0abb0773ea1",
+  "dataset_bundle": {
+    "path": "report-workspace/general-e2e/datasets/general-hard-v1/general-hard-v1.dataset.zip",
+    "sha256": "a861919455853fac4556f3ad1744eb8a90b93fa415a5ed5c13c592a600608a24",
+    "size": 49507681,
+    "verify_receipt": {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/final-acceptance-v1/distribution-verify.json",
+      "sha256": "4bfee24db1218b06f37bdd10c70a8a4c6ff5d778ae5d6525e16413736e6298ae"
+    }
+  },
+  "score_skill": {
+    "path": "report-workspace/general-e2e/datasets/general-hard-v1/score-general-e2e-skill-v0.28.0.zip",
+    "sha256": "a8981189234290bc2d8afa5dbe750339c125b2aedf52dac0f9fa07d4df4f3995",
+    "version": "0.28.0",
+    "source_revision": "eaa5e4c6cc1225c21a1037ecdfeef37ecda0ad01",
+    "origin": "Exact byte-for-byte independently installed/evaluated Skill ZIP, copied without rebuilding",
+    "author_FS_guard_included": false
+  },
+  "scope": {
+    "contains_private_GT": "Dataset ZIP is for preparation; candidate execution and private grading bundles must remain separated",
+    "real_Harness_or_semantic_Judge": false,
+    "difficulty_or_discrimination_calibrated": false,
+    "H031_author_filesystem_guard": "Used only for strict author copy validation on the current Mac; standard Skill is unchanged, guard is not a bareCLI/protocol guarantee",
+    "extra_N03_control": "Preserved source-extraction infrastructure failure, no Worker/A, not relabeled passed"
+  },
+  "final_static": {
+    "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/final-acceptance-v1/static-final/20261029T034336Z_56073bfaaa/report.json",
+    "sha256": "cc0e0feabaebe920ae77f1f945ff21205d7facf8b810dc7b1a22c03829f136ba",
+    "status": "PASS",
+    "tasks": 60,
+    "issues": 0
+  },
+  "final_quota_and_isolation_audit": {
+    "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/final-acceptance-v1/quota-audit-frozen.json",
+    "sha256": "0ed83f25b11f23e3979189f254a059fbc2b6d3b8e31e19d6682da5b076b39af0",
+    "status": "PASS"
+  }
+}

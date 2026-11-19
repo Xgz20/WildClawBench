@@ -1,0 +1,87 @@
+{
+  "schema_version": "general-hard-integrated-release-verification/v1",
+  "status": "RELEASE_AND_INDEPENDENT_PREPARATION_VERIFIED",
+  "checked_at": "2026-11-17T10:15:13.738505+00:00",
+  "branch": "feat/general-hard-integration",
+  "framework_merge_commit": "de3c24fe8db28fbf6da0ac4752ce50f322ae16bd",
+  "release_id": "general-hard-integration-20261117",
+  "catalog_digest": "c37230be996ce679e8707709c733d76bc11e3451e66d3244f5604c8782f41fda",
+  "source_revision": "de3c24fe8db28fbf6da0ac4752ce50f322ae16bd",
+  "artifacts": {
+    "suite": {
+      "path": "report-workspace/general-e2e/releases/general-hard-integration-20261117/general-e2e-suite-general-hard-integration-20261117.zip",
+      "sha256": "ba22587e12299cd9952829f4a173ffcd86ed7bd73abcaf73b2a2e80c093b2594",
+      "size": 15474962
+    },
+    "catalog": {
+      "path": "report-workspace/general-e2e/releases/general-hard-integration-20261117/release-catalog.json",
+      "sha256": "6a068409f37107a11d7c44de2a131fcbf9baa38ef6d567900bdfee4040af0392"
+    },
+    "dataset": {
+      "id": "general-hard-v1",
+      "path": "report-workspace/general-e2e/datasets/general-hard-v1/general-hard-v1.dataset.zip",
+      "sha256": "a861919455853fac4556f3ad1744eb8a90b93fa415a5ed5c13c592a600608a24",
+      "size": 49507681
+    }
+  },
+  "skills": [
+    {
+      "name": "prepare-general-e2e-workspaces",
+      "version": "0.3.5",
+      "zip_sha256": "34ab27efda6971daa48612c66bf4d860138692562cfbd9bb8fe0a07f8bf5020a"
+    },
+    {
+      "name": "execute-general-e2e",
+      "version": "0.15.11",
+      "zip_sha256": "714fa870002a58b958960f6056f8922de9b0b3fc9b42816f23ea486030ce989c"
+    },
+    {
+      "name": "collect-general-e2e",
+      "version": "0.12.16",
+      "zip_sha256": "f28430e65a5ba72f860974349c1e0af0d25bdfe51f5e6f58c5e86cb3ff1faed7"
+    },
+    {
+      "name": "orchestrate-general-e2e",
+      "version": "0.11.87",
+      "zip_sha256": "d1852c2d6e0c10bdef05058d08f5ac1baaabef37f93154601cc128d0fd9a324f"
+    },
+    {
+      "name": "score-general-e2e",
+      "version": "0.29.0",
+      "zip_sha256": "7a20768e86bceff003d06679dd35565363cbe7991f20cb457619e0ee2b12ab6b"
+    },
+    {
+      "name": "report-general-e2e",
+      "version": "0.10.0",
+      "zip_sha256": "4f1db959791f6297cfd71ca7c845cb51f14866adbe3a97ffeea3f51dbedb351b"
+    },
+    {
+      "name": "run-general-e2e",
+      "version": "0.7.29",
+      "zip_sha256": "458433016030bc6eb8b3129aa109d056c7752847382992e524303fc03f4bd861"
+    }
+  ],
+  "independent_suite_verify": {
+    "exit_code": 0,
+    "command": "python tools/e2e-build/build_general_release.py verify --suite report-workspace/general-e2e/releases/general-hard-integration-20261117/general-e2e-suite-general-hard-integration-20261117.zip"
+  },
+  "platform_prepare": {
+    "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-integration_20261117/platform-final.json",
+    "sha256": "78e258dd25358559682030e0d34b8597b8cc4746c69e133fd4df059ef21abf6e"
+  },
+  "standalone_prepare": {
+    "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-integration_20261117/standalone-prepare-final.json",
+    "sha256": "4192cbb2ae39c11f8f26aec50aa775e0fe9fb4db3e4ee0ec13dc48029512a483"
+  },
+  "frozen_data_and_original_checkout": {
+    "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-integration_20261117/protected-final.json",
+    "sha256": "1f711c82dd086b531bd309103a5f87db0920b8d946719780e15c022d9eb500ed"
+  },
+  "boundaries": {
+    "real_candidate_dispatch": false,
+    "real_Harness_or_semantic_Judge_evaluation": false,
+    "pilot_12_calibration": "planned_not_executed",
+    "push_or_main_branch_merge": false,
+    "code_changed_after_release_source_commit": false
+  }
+}

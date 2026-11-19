@@ -125,6 +125,8 @@ description: 校验并汇总 General E2E submission 和回传包，生成同源 
 
 # 汇总 General E2E 报告
 
+`0.10.0` 融合注册数据集的独立分类和七维映射，并保留独立业务/能力评分、五维映射、多轮覆盖、评分分母和资源展示语义。新任务在评分侧冻结题面中携带单行 JSON 形式的 `dataset_report`，分类中文名、顺序与检查点映射由来源数据集定义生成，并被题面 SHA 锁定。报告只从身份/哈希验证通过的冻结题面读取，冲突或未验证快照失败关闭；缺少快照时保持不可用，不读取当前仓库回填。分类表和用例明细使用同一分类顺序；`presentation.dataset_reference_sources` 记录任务 SHA 及快照摘要。产品五维与基础/Hard 七维分别统计、分别展示，不折算、不用任务总分填充能力分。旧题继续使用发行时冻结的公共字典，不改历史材料。该元数据属于私有评分题面，不进入被测端执行包。
+
 `0.8.12` 同步 general-resource-supplements 1.3.4 的 unified exec 计时审计分发。进程耗时与单次输出等待耗时分别保留，不合并为一个工具计时；报告原有任务耗时、资源、分数与分母口径不变。
 
 `0.8.10` 的研发索引引用 submission 实际采用且与 score SHA 绑定的 `scoring/execution-records`；初始正式采集记录单独保留路径与 SHA，不再把合法补采误报为原件漂移，也不声称新旧轨迹等价。原包成员、身份、评分绑定校验保持不变。
@@ -270,8 +272,8 @@ python scripts/report_general_e2e.py generate \
 
 ## 统计口径
 
-- 主均值分母仅含 `score_status=valid`；真实 `0.0` 是有效能力零分。
-- `evaluation_error` 和 `unscored` 保留在冻结全集但不进入能力均值。
+- 主均值分母仅含 `score_status=valid`；真实 `0.0` 保留为有效总分。
+- `evaluation_error` 和 `unscored` 保留在冻结全集但不进入整题均值。业务分无效时，只有经过独立能力协议核验为有效的能力项可进入其自身维度统计；缺证项继续为 `null`。
 - 分类、难度、unit 与裁判协议均复用同一任务运行集合；裁判按 protocol、model、reasoning effort 分组。
 - 每个资源字段独立统计。仅所有任务运行均完整覆盖时写 `total`；否则为 `null`，并展示 `known_subtotal`、任务运行覆盖和原生事件覆盖。
 - 批次壁钟按最早任务开始至最晚任务结束计算；任务耗时之和单独展示。
@@ -282,7 +284,7 @@ python scripts/report_general_e2e.py generate \
 - 总览不展示成本、超时数；拆分“任务耗时(s)”（原生请求/Agent 耗时之和）与“流程耗时(s)”（含发送及等待）。保留有效评分数、未评分数；评测异常数按执行基础设施异常或评分异常的任务并集计数。完成率仅指原生正常完成率，不是正确率。
 - 效率对比：模型@Harness、总 Token、平均 Token、普通输入 Token、缓存命中输入 Token、缓存写入输入 Token、输出 Token、缓存命中率。普通输入=归一化输入总量−Cache Read−Cache Write；三项完整可观测时才计算，未知缓存不能按 0 扣减。Cache Read/Write 分别映射 `cache_read_input_tokens`/`cache_creation_input_tokens`，缺失显示 `-`。平均 Token 分母为冻结任务运行数；缓存命中率仍使用缓存命中输入/含缓存的输入总量，不能改除普通输入。输入为 0 或覆盖不全时为空，不平均逐题比例或重复累加缓存。
 - 工具指标本版只展示调用数与按工具名分组的已知数量，标准 transcript 中每题 call ID 去重，与原指标对账后标注明细覆盖。`completed` 不等于工具成功；不实现格式准确率、执行成功率、不确定占比。
-- 七维能力复用公共 `checkpoint_capability_map7.yaml`。自动检查点来自评分引用并带 SHA 的 `rule-component.json/raw_scores`；语义检查点来自 score.criteria，按规则/语义命名空间对齐。任务内映射检查点均值再对任务取均值，缺少任一映射检查点的该任务不进入该维度；同时披露有效/涉及样本数，缺失不补零。不重做判分、不把任务总分替代未映射检查点。
+- 产品五维使用随发行冻结的独立 `checkpoint_capability_map5.yaml`；基础题七维复用公共 `checkpoint_capability_map7.yaml`，注册数据集七维只使用经验证的冻结题面 `dataset_report`。同时涉及五维和七维时分表展示，不跨体系折算。自动检查点来自评分引用并带 SHA 的 `rule-component.json/raw_scores`；语义检查点来自 score.criteria，按规则/语义命名空间对齐。任务内映射检查点均值再对任务取均值，缺少任一映射检查点的该任务不进入该维度；同时披露有效/涉及样本数，缺失不补零。不重做判分、不把任务总分替代未映射检查点。
 - 构建时冻结公共实体显示名和能力映射为 `data/report-reference.json`，随包携带 canonical YAML 及 SHA；脱仓报告无需 PyYAML。公共字典来源在 JSON 和资源审计表保留。
 - 分数展示统一为 0–100；底层评分与 CLI adapter 保持 0–1。Excel 和领导 Markdown 都读取 `presentation.tables`，禁止在渲染层另算分数。单元题目范围不同或模型/Harness 同时改变时，明确属于组合对照，不做单因果归因。
 

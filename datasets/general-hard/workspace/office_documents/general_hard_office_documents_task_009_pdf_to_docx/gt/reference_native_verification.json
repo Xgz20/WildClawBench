@@ -1,0 +1,93 @@
+{
+  "schema_version": "h009-reference-native-verification/v1",
+  "status": "pass",
+  "source_pdf_sha256": "1d1e5af01f4b05c2b38af9aeaf6553a946502f72c65cb27036333e24bc94b2bf",
+  "reference_sha256": "1b6c64614372d8f79b671fcb4ef9b7391a315281b4093f96e4273c29e2e8d926",
+  "source_expected_sha256": "941260c3b104b2d7d582db4f4f2d384fb296b8034f5fbad535ca89975d38ed85",
+  "native_helper_sha256": "c92f7367c026497bc1594fc58b7e46809d0b163f9a930064fbfb027dacd5eb79",
+  "native_engine": {
+    "name": "stdlib-word-ooxml",
+    "version": "wildclawbench.docx-text/v1"
+  },
+  "paragraph_units": 22,
+  "logical_tables": 4,
+  "anchor_cells": 203,
+  "merged_anchors": 14,
+  "native_footnotes": 6,
+  "correct_note_attachments": 6,
+  "audit_rows": 32,
+  "source_body_order_matches": true,
+  "note_bindings": {
+    "F01": {
+      "locator": "word/footnotes.xml/footnote:1",
+      "text": " [F01] 仅A03样本数按签收后的净样数登记，不含另行登记的复验件。",
+      "package_id": "1",
+      "part_sha256": "d5a4a7ae8a764f3b96fd624c11d65352da2f61fb9a3661efcf0a169258a95f86",
+      "attachment": {
+        "table": "T01",
+        "row": 4,
+        "column": 3,
+        "locator": "table:1/row:5/cell:4"
+      }
+    },
+    "F02": {
+      "locator": "word/footnotes.xml/footnote:2",
+      "text": " [F02] R04单价只覆盖标准复核，未包含加急服务或差旅费用。",
+      "package_id": "2",
+      "part_sha256": "d5a4a7ae8a764f3b96fd624c11d65352da2f61fb9a3661efcf0a169258a95f86",
+      "attachment": {
+        "table": "T02",
+        "row": 5,
+        "column": 3,
+        "locator": "table:2/row:6/cell:4"
+      }
+    },
+    "F03": {
+      "locator": "word/footnotes.xml/footnote:3",
+      "text": " [F03] R08数量0表示本期未送检，仍保留该编号，不表示单价或说明缺失。",
+      "package_id": "3",
+      "part_sha256": "d5a4a7ae8a764f3b96fd624c11d65352da2f61fb9a3661efcf0a169258a95f86",
+      "attachment": {
+        "table": "T02",
+        "row": 9,
+        "column": 2,
+        "locator": "table:2/row:10/cell:3"
+      }
+    },
+    "F04": {
+      "locator": "word/footnotes.xml/footnote:4",
+      "text": " [F04] R13单价只覆盖一次专项校验，追加轮次另行登记，不改变未税口径。",
+      "package_id": "4",
+      "part_sha256": "d5a4a7ae8a764f3b96fd624c11d65352da2f61fb9a3661efcf0a169258a95f86",
+      "attachment": {
+        "table": "T02",
+        "row": 14,
+        "column": 3,
+        "locator": "table:2/row:15/cell:4"
+      }
+    },
+    "F05": {
+      "locator": "word/footnotes.xml/footnote:5",
+      "text": " [F05] 本条待核状态属于M03；相邻M04虽文字相同，仍是另一条独立确认记录。",
+      "package_id": "5",
+      "part_sha256": "d5a4a7ae8a764f3b96fd624c11d65352da2f61fb9a3661efcf0a169258a95f86",
+      "attachment": {
+        "table": "T03",
+        "row": 3,
+        "column": 2,
+        "locator": "table:3/row:4/cell:3"
+      }
+    },
+    "F06": {
+      "locator": "word/footnotes.xml/footnote:6",
+      "text": " [F06] 1,200.00仅为S13中的历史显示示例，不属于当期费用表或付款确认。",
+      "package_id": "6",
+      "part_sha256": "d5a4a7ae8a764f3b96fd624c11d65352da2f61fb9a3661efcf0a169258a95f86",
+      "attachment": {
+        "paragraph": "S13",
+        "locator": "paragraph:24"
+      }
+    }
+  },
+  "limit": "Reference-only native structure verification against prior source labels; not a scoring rule, Harness execution or semantic Judge result."
+}

@@ -1,0 +1,31 @@
+{
+  "deliverables": [
+    "results/archive/",
+    "results/manifest.csv",
+    "results/exceptions.md"
+  ],
+  "input_files": 50,
+  "sources": 48,
+  "native_formats": [
+    "raw-byte copies",
+    "RFC4180 CSV UTF-8/BOM",
+    "Markdown"
+  ],
+  "equivalence": [
+    "arbitrary archive directory names and depth with semantic parent partition",
+    "any equal-SHA representative",
+    "reordered CSV rows/columns and Chinese aliases",
+    "NFC source paths/document keys",
+    "hash hex case",
+    "numeric version trailing zeros/v prefix",
+    "equivalent UTC instants",
+    "grouped exception source sets and natural wording"
+  ],
+  "automatic_ownership": {
+    "business_correctness": "one input-source opportunity: .50 metadata facets + .50 selected version; missing/duplicate ID consumes that one opportunity",
+    "boundary_cases": "internal .65 actual raw copy/dedup/parent partition per unique SHA + .15 actual format + .20 exception kind/source obligations; no fixed target path or exception template",
+    "delivery_integrity": "internal .60 original input SHA/membership + .20 native CSV + .20 parseable exception records; actual archive bytes belong only to boundary",
+    "evidence_binding": "source_id/path/raw SHA bindings on delivered unique valid IDs; omissions already owned by business"
+  },
+  "infrastructure": "Missing/drift GT, helper or trusted context raises; candidate malformed/omission scores corresponding obligations; never generic catch-to-zero."
+}

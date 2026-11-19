@@ -1,0 +1,3491 @@
+{
+  "status": "SOURCE_REGIONS_FROM_TWO_MODEL_ANNOTATORS",
+  "images": {
+    "A": {
+      "path": "chart_pages/chart_A.png",
+      "sha256": "af7a276449e94fadf92cdd24acb84e1fdfcabab8a745aee1404eee83f325c02e",
+      "width": 1467,
+      "height": 960
+    },
+    "B": {
+      "path": "chart_pages/chart_B.png",
+      "sha256": "73749d852b8e28c615066ec3e955b6f34a6fb64147079ae2e5471658516bb267",
+      "width": 1467,
+      "height": 960
+    },
+    "C": {
+      "path": "chart_pages/chart_C.png",
+      "sha256": "bb1888c11cd7d1df49bf8b8e3faeac032d3b14c21684647857872d72b98c3027",
+      "width": 1467,
+      "height": 960
+    },
+    "D": {
+      "path": "chart_pages/chart_D.png",
+      "sha256": "d1d8dc4960139618c5a62efd4c3db2c6cd5446639dc09cffc6f3f04ee5ac0465",
+      "width": 1467,
+      "height": 960
+    }
+  },
+  "reading_regions": {
+    "R01": {
+      "a": [
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/a/input/chart_pages/chart_A.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            373,
+            470,
+            400,
+            494
+          ],
+          "role": "data_marker",
+          "note": "09-18蓝色圆点。"
+        },
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/a/input/chart_pages/chart_A.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            117,
+            171,
+            343,
+            774
+          ],
+          "role": "axis",
+          "note": "蓝色左轴，活跃用户，单位千人，0至25。"
+        },
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/a/input/chart_pages/chart_A.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            352,
+            132,
+            541,
+            167
+          ],
+          "role": "legend",
+          "note": "蓝线圆点代表活跃用户。"
+        },
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/a/input/chart_pages/chart_A.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            348,
+            777,
+            430,
+            810
+          ],
+          "role": "period",
+          "note": "09-18横轴标签。"
+        }
+      ],
+      "b": [
+        {
+          "path": "input/chart_pages/chart_A.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            374,
+            468,
+            399,
+            494
+          ],
+          "role": "09-18蓝色数据圆点"
+        },
+        {
+          "path": "input/chart_pages/chart_A.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            108,
+            169,
+            347,
+            773
+          ],
+          "role": "左轴刻度及千人单位"
+        },
+        {
+          "path": "input/chart_pages/chart_A.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            355,
+            130,
+            538,
+            164
+          ],
+          "role": "蓝色圆点活跃用户图例"
+        },
+        {
+          "path": "input/chart_pages/chart_A.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            355,
+            778,
+            421,
+            809
+          ],
+          "role": "09-18横轴时点"
+        }
+      ]
+    },
+    "R02": {
+      "a": [
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/a/input/chart_pages/chart_A.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            374,
+            454,
+            400,
+            477
+          ],
+          "role": "data_marker",
+          "note": "09-18橙色方块。"
+        },
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/a/input/chart_pages/chart_A.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            1204,
+            170,
+            1357,
+            774
+          ],
+          "role": "axis",
+          "note": "橙色右轴，D1流失率，单位%，0至20。"
+        },
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/a/input/chart_pages/chart_A.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            779,
+            132,
+            984,
+            167
+          ],
+          "role": "legend",
+          "note": "橙色虚线方块代表D1流失率。"
+        },
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/a/input/chart_pages/chart_A.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            348,
+            777,
+            430,
+            810
+          ],
+          "role": "period",
+          "note": "09-18横轴标签。"
+        }
+      ],
+      "b": [
+        {
+          "path": "input/chart_pages/chart_A.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            376,
+            455,
+            398,
+            477
+          ],
+          "role": "09-18橙色方点"
+        },
+        {
+          "path": "input/chart_pages/chart_A.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            1205,
+            169,
+            1358,
+            773
+          ],
+          "role": "右轴百分比单位和刻度"
+        },
+        {
+          "path": "input/chart_pages/chart_A.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            783,
+            130,
+            963,
+            164
+          ],
+          "role": "橙色方点D1流失率图例"
+        },
+        {
+          "path": "input/chart_pages/chart_A.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            170,
+            832,
+            1070,
+            902
+          ],
+          "role": "D1定义及不同单位脚注"
+        }
+      ]
+    },
+    "R03": {
+      "a": [
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/a/input/chart_pages/chart_A.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            873,
+            366,
+            899,
+            393
+          ],
+          "role": "data_marker",
+          "note": "09-21蓝色圆点。"
+        },
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/a/input/chart_pages/chart_A.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            117,
+            171,
+            343,
+            774
+          ],
+          "role": "axis",
+          "note": "蓝色左轴，活跃用户，单位千人，0至25。"
+        },
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/a/input/chart_pages/chart_A.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            352,
+            132,
+            541,
+            167
+          ],
+          "role": "legend",
+          "note": "蓝线圆点代表活跃用户。"
+        },
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/a/input/chart_pages/chart_A.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            847,
+            777,
+            927,
+            810
+          ],
+          "role": "period",
+          "note": "09-21横轴标签。"
+        }
+      ],
+      "b": [
+        {
+          "path": "input/chart_pages/chart_A.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            874,
+            365,
+            899,
+            391
+          ],
+          "role": "09-21蓝色数据圆点"
+        },
+        {
+          "path": "input/chart_pages/chart_A.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            108,
+            169,
+            347,
+            773
+          ],
+          "role": "左轴刻度及千人单位"
+        },
+        {
+          "path": "input/chart_pages/chart_A.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            355,
+            130,
+            538,
+            164
+          ],
+          "role": "活跃用户图例"
+        },
+        {
+          "path": "input/chart_pages/chart_A.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            850,
+            778,
+            922,
+            809
+          ],
+          "role": "09-21横轴时点"
+        }
+      ]
+    },
+    "R04": {
+      "a": [
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/a/input/chart_pages/chart_A.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            873,
+            535,
+            899,
+            561
+          ],
+          "role": "data_marker",
+          "note": "09-21橙色方块。"
+        },
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/a/input/chart_pages/chart_A.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            1204,
+            170,
+            1357,
+            774
+          ],
+          "role": "axis",
+          "note": "橙色右轴，D1流失率，单位%，0至20。"
+        },
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/a/input/chart_pages/chart_A.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            779,
+            132,
+            984,
+            167
+          ],
+          "role": "legend",
+          "note": "橙色虚线方块代表D1流失率。"
+        },
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/a/input/chart_pages/chart_A.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            847,
+            777,
+            927,
+            810
+          ],
+          "role": "period",
+          "note": "09-21横轴标签。"
+        }
+      ],
+      "b": [
+        {
+          "path": "input/chart_pages/chart_A.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            875,
+            538,
+            899,
+            558
+          ],
+          "role": "09-21橙色方点"
+        },
+        {
+          "path": "input/chart_pages/chart_A.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            1205,
+            169,
+            1358,
+            773
+          ],
+          "role": "右轴百分比单位和刻度"
+        },
+        {
+          "path": "input/chart_pages/chart_A.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            783,
+            130,
+            963,
+            164
+          ],
+          "role": "D1流失率图例"
+        },
+        {
+          "path": "input/chart_pages/chart_A.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            170,
+            832,
+            1070,
+            902
+          ],
+          "role": "D1定义和不同单位脚注"
+        }
+      ]
+    },
+    "R05": {
+      "a": [
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/a/input/chart_pages/chart_B.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            773,
+            623,
+            934,
+            642
+          ],
+          "role": "segment_boundary",
+          "note": "6月蓝段上边界，约120人。"
+        },
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/a/input/chart_pages/chart_B.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            773,
+            750,
+            934,
+            768
+          ],
+          "role": "baseline",
+          "note": "6月蓝段下边界，0。"
+        },
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/a/input/chart_pages/chart_B.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            109,
+            170,
+            400,
+            774
+          ],
+          "role": "axis",
+          "note": "单纵轴的刻度与单位；从标记对照刻度估读，不恢复隐藏原值。"
+        },
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/a/input/chart_pages/chart_B.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            352,
+            132,
+            608,
+            166
+          ],
+          "role": "legend",
+          "note": "蓝色对应新用户流失人数。"
+        },
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/a/input/chart_pages/chart_B.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            829,
+            778,
+            878,
+            810
+          ],
+          "role": "period",
+          "note": "6月横轴标签。"
+        },
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/a/input/chart_pages/chart_B.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            169,
+            831,
+            1075,
+            903
+          ],
+          "role": "footnote",
+          "note": "同月自下而上堆叠，只给人数，未提供两类用户各自活跃基数。"
+        }
+      ],
+      "b": [
+        {
+          "path": "input/chart_pages/chart_B.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            780,
+            622,
+            928,
+            641
+          ],
+          "role": "6月蓝层上边界"
+        },
+        {
+          "path": "input/chart_pages/chart_B.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            105,
+            169,
+            330,
+            773
+          ],
+          "role": "单轴人数单位与刻度"
+        },
+        {
+          "path": "input/chart_pages/chart_B.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            350,
+            128,
+            622,
+            164
+          ],
+          "role": "蓝色新用户流失人数图例"
+        },
+        {
+          "path": "input/chart_pages/chart_B.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            830,
+            778,
+            875,
+            810
+          ],
+          "role": "6月横轴时点"
+        }
+      ]
+    },
+    "R06": {
+      "a": [
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/a/input/chart_pages/chart_B.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            773,
+            431,
+            934,
+            449
+          ],
+          "role": "segment_boundary",
+          "note": "6月堆顶约300人。"
+        },
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/a/input/chart_pages/chart_B.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            773,
+            623,
+            934,
+            642
+          ],
+          "role": "segment_boundary",
+          "note": "6月橙段下边界约120人。"
+        },
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/a/input/chart_pages/chart_B.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            109,
+            170,
+            400,
+            774
+          ],
+          "role": "axis",
+          "note": "单纵轴的刻度与单位；从标记对照刻度估读，不恢复隐藏原值。"
+        },
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/a/input/chart_pages/chart_B.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            779,
+            132,
+            1040,
+            166
+          ],
+          "role": "legend",
+          "note": "橙色对应老用户流失人数。"
+        },
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/a/input/chart_pages/chart_B.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            169,
+            831,
+            1075,
+            903
+          ],
+          "role": "footnote",
+          "note": "同月自下而上堆叠，只给人数，未提供两类用户各自活跃基数。"
+        }
+      ],
+      "b": [
+        {
+          "path": "input/chart_pages/chart_B.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            780,
+            433,
+            928,
+            641
+          ],
+          "role": "6月橙层的上下两个边界"
+        },
+        {
+          "path": "input/chart_pages/chart_B.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            105,
+            169,
+            330,
+            773
+          ],
+          "role": "单轴人数单位与刻度"
+        },
+        {
+          "path": "input/chart_pages/chart_B.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            780,
+            128,
+            1045,
+            164
+          ],
+          "role": "橙色老用户流失人数图例"
+        },
+        {
+          "path": "input/chart_pages/chart_B.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            170,
+            833,
+            1040,
+            901
+          ],
+          "role": "同月自下而上堆叠及未提供活跃基数脚注"
+        }
+      ]
+    },
+    "R07": {
+      "a": [
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/a/input/chart_pages/chart_B.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            773,
+            431,
+            934,
+            449
+          ],
+          "role": "stack_top",
+          "note": "6月完整堆顶。"
+        },
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/a/input/chart_pages/chart_B.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            109,
+            170,
+            400,
+            774
+          ],
+          "role": "axis",
+          "note": "单纵轴的刻度与单位；从标记对照刻度估读，不恢复隐藏原值。"
+        },
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/a/input/chart_pages/chart_B.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            352,
+            132,
+            608,
+            166
+          ],
+          "role": "legend",
+          "note": "蓝色对应新用户流失人数。"
+        },
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/a/input/chart_pages/chart_B.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            779,
+            132,
+            1040,
+            166
+          ],
+          "role": "legend",
+          "note": "橙色对应老用户流失人数。"
+        },
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/a/input/chart_pages/chart_B.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            169,
+            831,
+            1075,
+            903
+          ],
+          "role": "footnote",
+          "note": "同月自下而上堆叠，只给人数，未提供两类用户各自活跃基数。"
+        }
+      ],
+      "b": [
+        {
+          "path": "input/chart_pages/chart_B.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            780,
+            433,
+            928,
+            447
+          ],
+          "role": "6月堆叠柱顶"
+        },
+        {
+          "path": "input/chart_pages/chart_B.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            105,
+            169,
+            330,
+            773
+          ],
+          "role": "人数单轴"
+        },
+        {
+          "path": "input/chart_pages/chart_B.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            350,
+            128,
+            1045,
+            164
+          ],
+          "role": "新老用户两部分图例"
+        },
+        {
+          "path": "input/chart_pages/chart_B.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            170,
+            833,
+            1040,
+            901
+          ],
+          "role": "自下而上堆叠脚注"
+        }
+      ]
+    },
+    "R08": {
+      "a": [
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/a/input/chart_pages/chart_B.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            1046,
+            654,
+            1208,
+            674
+          ],
+          "role": "segment_boundary",
+          "note": "7月蓝段上边界，约90人。"
+        },
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/a/input/chart_pages/chart_B.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            1046,
+            750,
+            1208,
+            768
+          ],
+          "role": "baseline",
+          "note": "7月蓝段下边界，0。"
+        },
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/a/input/chart_pages/chart_B.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            109,
+            170,
+            400,
+            774
+          ],
+          "role": "axis",
+          "note": "单纵轴的刻度与单位；从标记对照刻度估读，不恢复隐藏原值。"
+        },
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/a/input/chart_pages/chart_B.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            352,
+            132,
+            608,
+            166
+          ],
+          "role": "legend",
+          "note": "蓝色对应新用户流失人数。"
+        },
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/a/input/chart_pages/chart_B.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            1101,
+            778,
+            1153,
+            810
+          ],
+          "role": "period",
+          "note": "7月横轴标签。"
+        },
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/a/input/chart_pages/chart_B.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            169,
+            831,
+            1075,
+            903
+          ],
+          "role": "footnote",
+          "note": "同月自下而上堆叠，只给人数，未提供两类用户各自活跃基数。"
+        }
+      ],
+      "b": [
+        {
+          "path": "input/chart_pages/chart_B.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            1050,
+            654,
+            1201,
+            673
+          ],
+          "role": "7月蓝层上边界"
+        },
+        {
+          "path": "input/chart_pages/chart_B.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            105,
+            169,
+            330,
+            773
+          ],
+          "role": "单轴人数单位与刻度"
+        },
+        {
+          "path": "input/chart_pages/chart_B.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            350,
+            128,
+            622,
+            164
+          ],
+          "role": "蓝色新用户流失人数图例"
+        },
+        {
+          "path": "input/chart_pages/chart_B.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            1105,
+            778,
+            1150,
+            810
+          ],
+          "role": "7月横轴时点"
+        }
+      ]
+    },
+    "R09": {
+      "a": [
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/a/input/chart_pages/chart_B.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            1046,
+            431,
+            1208,
+            449
+          ],
+          "role": "segment_boundary",
+          "note": "7月堆顶约300人。"
+        },
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/a/input/chart_pages/chart_B.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            1046,
+            654,
+            1208,
+            674
+          ],
+          "role": "segment_boundary",
+          "note": "7月橙段下边界约90人。"
+        },
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/a/input/chart_pages/chart_B.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            109,
+            170,
+            400,
+            774
+          ],
+          "role": "axis",
+          "note": "单纵轴的刻度与单位；从标记对照刻度估读，不恢复隐藏原值。"
+        },
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/a/input/chart_pages/chart_B.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            779,
+            132,
+            1040,
+            166
+          ],
+          "role": "legend",
+          "note": "橙色对应老用户流失人数。"
+        },
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/a/input/chart_pages/chart_B.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            169,
+            831,
+            1075,
+            903
+          ],
+          "role": "footnote",
+          "note": "同月自下而上堆叠，只给人数，未提供两类用户各自活跃基数。"
+        }
+      ],
+      "b": [
+        {
+          "path": "input/chart_pages/chart_B.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            1050,
+            433,
+            1201,
+            673
+          ],
+          "role": "7月橙层上下边界"
+        },
+        {
+          "path": "input/chart_pages/chart_B.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            105,
+            169,
+            330,
+            773
+          ],
+          "role": "单轴人数单位与刻度"
+        },
+        {
+          "path": "input/chart_pages/chart_B.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            780,
+            128,
+            1045,
+            164
+          ],
+          "role": "橙色老用户流失人数图例"
+        },
+        {
+          "path": "input/chart_pages/chart_B.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            170,
+            833,
+            1040,
+            901
+          ],
+          "role": "堆叠及未提供活跃基数脚注"
+        }
+      ]
+    },
+    "R10": {
+      "a": [
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/a/input/chart_pages/chart_B.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            1046,
+            431,
+            1208,
+            449
+          ],
+          "role": "stack_top",
+          "note": "7月完整堆顶。"
+        },
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/a/input/chart_pages/chart_B.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            109,
+            170,
+            400,
+            774
+          ],
+          "role": "axis",
+          "note": "单纵轴的刻度与单位；从标记对照刻度估读，不恢复隐藏原值。"
+        },
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/a/input/chart_pages/chart_B.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            352,
+            132,
+            608,
+            166
+          ],
+          "role": "legend",
+          "note": "蓝色对应新用户流失人数。"
+        },
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/a/input/chart_pages/chart_B.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            779,
+            132,
+            1040,
+            166
+          ],
+          "role": "legend",
+          "note": "橙色对应老用户流失人数。"
+        },
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/a/input/chart_pages/chart_B.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            169,
+            831,
+            1075,
+            903
+          ],
+          "role": "footnote",
+          "note": "同月自下而上堆叠，只给人数，未提供两类用户各自活跃基数。"
+        }
+      ],
+      "b": [
+        {
+          "path": "input/chart_pages/chart_B.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            1050,
+            433,
+            1201,
+            447
+          ],
+          "role": "7月堆叠柱顶"
+        },
+        {
+          "path": "input/chart_pages/chart_B.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            105,
+            169,
+            330,
+            773
+          ],
+          "role": "人数单轴"
+        },
+        {
+          "path": "input/chart_pages/chart_B.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            350,
+            128,
+            1045,
+            164
+          ],
+          "role": "新老两部分图例"
+        },
+        {
+          "path": "input/chart_pages/chart_B.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            170,
+            833,
+            1040,
+            901
+          ],
+          "role": "自下而上堆叠脚注"
+        }
+      ]
+    },
+    "R11": {
+      "a": [
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/a/input/chart_pages/chart_C.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            805,
+            453,
+            832,
+            481
+          ],
+          "role": "data_marker",
+          "note": "W4累计圆点。"
+        },
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/a/input/chart_pages/chart_C.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            109,
+            170,
+            400,
+            774
+          ],
+          "role": "axis",
+          "note": "单纵轴的刻度与单位；从标记对照刻度估读，不恢复隐藏原值。"
+        },
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/a/input/chart_pages/chart_C.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            565,
+            132,
+            849,
+            167
+          ],
+          "role": "legend",
+          "note": "绿色折线为周末累计新增用户。"
+        },
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/a/input/chart_pages/chart_C.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            797,
+            778,
+            841,
+            810
+          ],
+          "role": "period",
+          "note": "W4横轴标签。"
+        },
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/a/input/chart_pages/chart_C.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            169,
+            831,
+            1120,
+            903
+          ],
+          "role": "footnote",
+          "note": "各点是周末累计值，六周使用同一累计起点；无逐点原值标签。"
+        }
+      ],
+      "b": [
+        {
+          "path": "input/chart_pages/chart_C.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            806,
+            455,
+            830,
+            478
+          ],
+          "role": "W4累计值圆点"
+        },
+        {
+          "path": "input/chart_pages/chart_C.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            105,
+            169,
+            400,
+            773
+          ],
+          "role": "单轴累计新增用户千人单位及刻度"
+        },
+        {
+          "path": "input/chart_pages/chart_C.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            568,
+            130,
+            864,
+            164
+          ],
+          "role": "周末累计值图例"
+        },
+        {
+          "path": "input/chart_pages/chart_C.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            796,
+            778,
+            840,
+            810
+          ],
+          "role": "W4时点"
+        }
+      ]
+    },
+    "R12": {
+      "a": [
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/a/input/chart_pages/chart_C.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            1002,
+            346,
+            1030,
+            373
+          ],
+          "role": "data_marker",
+          "note": "W5累计圆点。"
+        },
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/a/input/chart_pages/chart_C.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            109,
+            170,
+            400,
+            774
+          ],
+          "role": "axis",
+          "note": "单纵轴的刻度与单位；从标记对照刻度估读，不恢复隐藏原值。"
+        },
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/a/input/chart_pages/chart_C.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            565,
+            132,
+            849,
+            167
+          ],
+          "role": "legend",
+          "note": "绿色折线为周末累计新增用户。"
+        },
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/a/input/chart_pages/chart_C.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            992,
+            778,
+            1039,
+            810
+          ],
+          "role": "period",
+          "note": "W5横轴标签。"
+        },
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/a/input/chart_pages/chart_C.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            169,
+            831,
+            1120,
+            903
+          ],
+          "role": "footnote",
+          "note": "各点是周末累计值，六周使用同一累计起点；无逐点原值标签。"
+        }
+      ],
+      "b": [
+        {
+          "path": "input/chart_pages/chart_C.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            1003,
+            348,
+            1028,
+            371
+          ],
+          "role": "W5累计值圆点"
+        },
+        {
+          "path": "input/chart_pages/chart_C.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            105,
+            169,
+            400,
+            773
+          ],
+          "role": "单轴累计新增用户千人单位及刻度"
+        },
+        {
+          "path": "input/chart_pages/chart_C.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            568,
+            130,
+            864,
+            164
+          ],
+          "role": "周末累计值图例"
+        },
+        {
+          "path": "input/chart_pages/chart_C.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            993,
+            778,
+            1038,
+            810
+          ],
+          "role": "W5时点"
+        }
+      ]
+    },
+    "R13": {
+      "a": [
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/a/input/chart_pages/chart_C.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            805,
+            453,
+            832,
+            481
+          ],
+          "role": "data_marker",
+          "note": "W4累计点。"
+        },
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/a/input/chart_pages/chart_C.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            1002,
+            346,
+            1030,
+            373
+          ],
+          "role": "data_marker",
+          "note": "W5累计点。"
+        },
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/a/input/chart_pages/chart_C.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            109,
+            170,
+            400,
+            774
+          ],
+          "role": "axis",
+          "note": "单纵轴的刻度与单位；从标记对照刻度估读，不恢复隐藏原值。"
+        },
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/a/input/chart_pages/chart_C.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            169,
+            831,
+            1120,
+            903
+          ],
+          "role": "footnote",
+          "note": "各点是周末累计值，六周使用同一累计起点；无逐点原值标签。"
+        }
+      ],
+      "b": [
+        {
+          "path": "input/chart_pages/chart_C.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            806,
+            455,
+            830,
+            478
+          ],
+          "role": "相减输入W4圆点"
+        },
+        {
+          "path": "input/chart_pages/chart_C.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            1003,
+            348,
+            1028,
+            371
+          ],
+          "role": "相减输入W5圆点"
+        },
+        {
+          "path": "input/chart_pages/chart_C.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            105,
+            169,
+            400,
+            773
+          ],
+          "role": "千人单轴"
+        },
+        {
+          "path": "input/chart_pages/chart_C.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            170,
+            833,
+            1050,
+            901
+          ],
+          "role": "累计时点、同一累计起点及无原值表脚注"
+        }
+      ]
+    },
+    "R14": {
+      "a": [
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/a/input/chart_pages/chart_D.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            389,
+            635,
+            585,
+            651
+          ],
+          "role": "sample_value",
+          "note": "A组柱顶。"
+        },
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/a/input/chart_pages/chart_D.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            109,
+            170,
+            400,
+            774
+          ],
+          "role": "axis",
+          "note": "单纵轴的刻度与单位；从标记对照刻度估读，不恢复隐藏原值。"
+        },
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/a/input/chart_pages/chart_D.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            564,
+            132,
+            875,
+            168
+          ],
+          "role": "legend",
+          "note": "紫色样本显示值及误差线图例。"
+        },
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/a/input/chart_pages/chart_D.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            462,
+            777,
+            515,
+            810
+          ],
+          "role": "group",
+          "note": "A组标签。"
+        },
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/a/input/chart_pages/chart_D.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            169,
+            832,
+            1075,
+            904
+          ],
+          "role": "footnote",
+          "note": "纵轴起点45%；未给样本量、误差线含义或随机化设计。"
+        }
+      ],
+      "b": [
+        {
+          "path": "input/chart_pages/chart_D.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            390,
+            637,
+            583,
+            651
+          ],
+          "role": "A组紫柱顶"
+        },
+        {
+          "path": "input/chart_pages/chart_D.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            110,
+            169,
+            405,
+            773
+          ],
+          "role": "样本流失率%单轴，45%至50%刻度"
+        },
+        {
+          "path": "input/chart_pages/chart_D.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            462,
+            778,
+            514,
+            812
+          ],
+          "role": "A组横轴分组"
+        },
+        {
+          "path": "input/chart_pages/chart_D.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            168,
+            833,
+            1110,
+            899
+          ],
+          "role": "45%截断柱底及样本、误差线说明脚注"
+        }
+      ]
+    },
+    "R15": {
+      "a": [
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/a/input/chart_pages/chart_D.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            888,
+            454,
+            1085,
+            470
+          ],
+          "role": "sample_value",
+          "note": "B组柱顶。"
+        },
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/a/input/chart_pages/chart_D.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            109,
+            170,
+            400,
+            774
+          ],
+          "role": "axis",
+          "note": "单纵轴的刻度与单位；从标记对照刻度估读，不恢复隐藏原值。"
+        },
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/a/input/chart_pages/chart_D.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            564,
+            132,
+            875,
+            168
+          ],
+          "role": "legend",
+          "note": "紫色样本显示值及误差线图例。"
+        },
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/a/input/chart_pages/chart_D.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            963,
+            777,
+            1018,
+            810
+          ],
+          "role": "group",
+          "note": "B组标签。"
+        },
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/a/input/chart_pages/chart_D.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            169,
+            832,
+            1075,
+            904
+          ],
+          "role": "footnote",
+          "note": "纵轴起点45%；未给样本量、误差线含义或随机化设计。"
+        }
+      ],
+      "b": [
+        {
+          "path": "input/chart_pages/chart_D.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            890,
+            455,
+            1083,
+            470
+          ],
+          "role": "B组紫柱顶"
+        },
+        {
+          "path": "input/chart_pages/chart_D.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            110,
+            169,
+            405,
+            773
+          ],
+          "role": "样本流失率%单轴"
+        },
+        {
+          "path": "input/chart_pages/chart_D.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            961,
+            778,
+            1015,
+            812
+          ],
+          "role": "B组横轴分组"
+        },
+        {
+          "path": "input/chart_pages/chart_D.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            168,
+            833,
+            1110,
+            899
+          ],
+          "role": "轴起点和缺失统计设计信息脚注"
+        }
+      ]
+    },
+    "R16": {
+      "a": [
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/a/input/chart_pages/chart_D.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            457,
+            730,
+            517,
+            747
+          ],
+          "role": "errorbar_cap",
+          "note": "A组下端横帽。"
+        },
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/a/input/chart_pages/chart_D.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            109,
+            170,
+            400,
+            774
+          ],
+          "role": "axis",
+          "note": "单纵轴的刻度与单位；从标记对照刻度估读，不恢复隐藏原值。"
+        },
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/a/input/chart_pages/chart_D.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            564,
+            132,
+            875,
+            168
+          ],
+          "role": "legend",
+          "note": "紫色样本显示值及误差线图例。"
+        },
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/a/input/chart_pages/chart_D.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            169,
+            832,
+            1075,
+            904
+          ],
+          "role": "footnote",
+          "note": "纵轴起点45%；未给样本量、误差线含义或随机化设计。"
+        }
+      ],
+      "b": [
+        {
+          "path": "input/chart_pages/chart_D.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            460,
+            731,
+            513,
+            746
+          ],
+          "role": "A组误差线下端横帽"
+        },
+        {
+          "path": "input/chart_pages/chart_D.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            110,
+            211,
+            179,
+            773
+          ],
+          "role": "单轴45%至50%刻度"
+        },
+        {
+          "path": "input/chart_pages/chart_D.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            462,
+            778,
+            514,
+            812
+          ],
+          "role": "A组分组"
+        },
+        {
+          "path": "input/chart_pages/chart_D.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            168,
+            873,
+            1110,
+            899
+          ],
+          "role": "误差线含义未提供脚注"
+        }
+      ]
+    },
+    "R17": {
+      "a": [
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/a/input/chart_pages/chart_D.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            457,
+            538,
+            517,
+            555
+          ],
+          "role": "errorbar_cap",
+          "note": "A组上端横帽。"
+        },
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/a/input/chart_pages/chart_D.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            109,
+            170,
+            400,
+            774
+          ],
+          "role": "axis",
+          "note": "单纵轴的刻度与单位；从标记对照刻度估读，不恢复隐藏原值。"
+        },
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/a/input/chart_pages/chart_D.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            564,
+            132,
+            875,
+            168
+          ],
+          "role": "legend",
+          "note": "紫色样本显示值及误差线图例。"
+        },
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/a/input/chart_pages/chart_D.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            169,
+            832,
+            1075,
+            904
+          ],
+          "role": "footnote",
+          "note": "纵轴起点45%；未给样本量、误差线含义或随机化设计。"
+        }
+      ],
+      "b": [
+        {
+          "path": "input/chart_pages/chart_D.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            460,
+            539,
+            513,
+            554
+          ],
+          "role": "A组误差线上端横帽"
+        },
+        {
+          "path": "input/chart_pages/chart_D.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            110,
+            211,
+            179,
+            773
+          ],
+          "role": "单轴百分比刻度"
+        },
+        {
+          "path": "input/chart_pages/chart_D.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            462,
+            778,
+            514,
+            812
+          ],
+          "role": "A组分组"
+        },
+        {
+          "path": "input/chart_pages/chart_D.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            168,
+            873,
+            1110,
+            899
+          ],
+          "role": "未提供误差线含义脚注"
+        }
+      ]
+    },
+    "R18": {
+      "a": [
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/a/input/chart_pages/chart_D.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            957,
+            581,
+            1017,
+            599
+          ],
+          "role": "errorbar_cap",
+          "note": "B组下端横帽。"
+        },
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/a/input/chart_pages/chart_D.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            109,
+            170,
+            400,
+            774
+          ],
+          "role": "axis",
+          "note": "单纵轴的刻度与单位；从标记对照刻度估读，不恢复隐藏原值。"
+        },
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/a/input/chart_pages/chart_D.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            564,
+            132,
+            875,
+            168
+          ],
+          "role": "legend",
+          "note": "紫色样本显示值及误差线图例。"
+        },
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/a/input/chart_pages/chart_D.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            169,
+            832,
+            1075,
+            904
+          ],
+          "role": "footnote",
+          "note": "纵轴起点45%；未给样本量、误差线含义或随机化设计。"
+        }
+      ],
+      "b": [
+        {
+          "path": "input/chart_pages/chart_D.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            959,
+            583,
+            1014,
+            597
+          ],
+          "role": "B组误差线下端横帽"
+        },
+        {
+          "path": "input/chart_pages/chart_D.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            110,
+            211,
+            179,
+            773
+          ],
+          "role": "单轴百分比刻度"
+        },
+        {
+          "path": "input/chart_pages/chart_D.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            961,
+            778,
+            1015,
+            812
+          ],
+          "role": "B组分组"
+        },
+        {
+          "path": "input/chart_pages/chart_D.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            168,
+            873,
+            1110,
+            899
+          ],
+          "role": "未提供误差线含义脚注"
+        }
+      ]
+    },
+    "R19": {
+      "a": [
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/a/input/chart_pages/chart_D.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            957,
+            325,
+            1017,
+            343
+          ],
+          "role": "errorbar_cap",
+          "note": "B组上端横帽。"
+        },
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/a/input/chart_pages/chart_D.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            109,
+            170,
+            400,
+            774
+          ],
+          "role": "axis",
+          "note": "单纵轴的刻度与单位；从标记对照刻度估读，不恢复隐藏原值。"
+        },
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/a/input/chart_pages/chart_D.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            564,
+            132,
+            875,
+            168
+          ],
+          "role": "legend",
+          "note": "紫色样本显示值及误差线图例。"
+        },
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/a/input/chart_pages/chart_D.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            169,
+            832,
+            1075,
+            904
+          ],
+          "role": "footnote",
+          "note": "纵轴起点45%；未给样本量、误差线含义或随机化设计。"
+        }
+      ],
+      "b": [
+        {
+          "path": "input/chart_pages/chart_D.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            959,
+            327,
+            1014,
+            342
+          ],
+          "role": "B组误差线上端横帽"
+        },
+        {
+          "path": "input/chart_pages/chart_D.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            110,
+            211,
+            179,
+            773
+          ],
+          "role": "单轴百分比刻度"
+        },
+        {
+          "path": "input/chart_pages/chart_D.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            961,
+            778,
+            1015,
+            812
+          ],
+          "role": "B组分组"
+        },
+        {
+          "path": "input/chart_pages/chart_D.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            168,
+            873,
+            1110,
+            899
+          ],
+          "role": "未提供误差线含义脚注"
+        }
+      ]
+    },
+    "R20": {
+      "a": [
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/a/input/chart_pages/chart_D.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            389,
+            635,
+            585,
+            651
+          ],
+          "role": "sample_value",
+          "note": "A组柱顶。"
+        },
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/a/input/chart_pages/chart_D.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            888,
+            454,
+            1085,
+            470
+          ],
+          "role": "sample_value",
+          "note": "B组柱顶。"
+        },
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/a/input/chart_pages/chart_D.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            109,
+            170,
+            400,
+            774
+          ],
+          "role": "axis",
+          "note": "单纵轴的刻度与单位；从标记对照刻度估读，不恢复隐藏原值。"
+        },
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/a/input/chart_pages/chart_D.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            169,
+            832,
+            1075,
+            904
+          ],
+          "role": "footnote",
+          "note": "纵轴起点45%；未给样本量、误差线含义或随机化设计。"
+        }
+      ],
+      "b": [
+        {
+          "path": "input/chart_pages/chart_D.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            390,
+            637,
+            583,
+            651
+          ],
+          "role": "分母A组柱顶"
+        },
+        {
+          "path": "input/chart_pages/chart_D.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            890,
+            455,
+            1083,
+            470
+          ],
+          "role": "分子B组柱顶"
+        },
+        {
+          "path": "input/chart_pages/chart_D.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            110,
+            169,
+            405,
+            773
+          ],
+          "role": "实际百分比轴及45%起点"
+        },
+        {
+          "path": "input/chart_pages/chart_D.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            168,
+            833,
+            1110,
+            899
+          ],
+          "role": "柱底截断及未给统计设计信息脚注"
+        }
+      ]
+    }
+  },
+  "claim_regions": {
+    "C01": {
+      "a": [
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/v2/a/input/chart_pages/chart_A.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            373,
+            470,
+            400,
+            494
+          ],
+          "role": "data_marker",
+          "note": "09-18蓝色圆点。"
+        },
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/v2/a/input/chart_pages/chart_A.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            117,
+            171,
+            343,
+            774
+          ],
+          "role": "axis",
+          "note": "蓝色左轴，活跃用户，单位千人，0至25。"
+        },
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/v2/a/input/chart_pages/chart_A.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            352,
+            132,
+            541,
+            167
+          ],
+          "role": "legend",
+          "note": "蓝线圆点代表活跃用户。"
+        },
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/v2/a/input/chart_pages/chart_A.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            348,
+            777,
+            430,
+            810
+          ],
+          "role": "period",
+          "note": "09-18横轴标签。"
+        },
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/v2/a/input/chart_pages/chart_A.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            374,
+            454,
+            400,
+            477
+          ],
+          "role": "data_marker",
+          "note": "09-18橙色方块。"
+        },
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/v2/a/input/chart_pages/chart_A.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            1204,
+            170,
+            1357,
+            774
+          ],
+          "role": "axis",
+          "note": "橙色右轴，D1流失率，单位%，0至20。"
+        },
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/v2/a/input/chart_pages/chart_A.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            779,
+            132,
+            984,
+            167
+          ],
+          "role": "legend",
+          "note": "橙色虚线方块代表D1流失率。"
+        },
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/v2/a/input/chart_pages/chart_A.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            873,
+            366,
+            899,
+            393
+          ],
+          "role": "data_marker",
+          "note": "09-21蓝色圆点。"
+        },
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/v2/a/input/chart_pages/chart_A.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            847,
+            777,
+            927,
+            810
+          ],
+          "role": "period",
+          "note": "09-21横轴标签。"
+        },
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/v2/a/input/chart_pages/chart_A.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            873,
+            535,
+            899,
+            561
+          ],
+          "role": "data_marker",
+          "note": "09-21橙色方块。"
+        }
+      ],
+      "b": [
+        {
+          "path": "input/chart_pages/chart_A.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            374,
+            455,
+            399,
+            494
+          ],
+          "role": "09-18蓝圆点及橙方点"
+        },
+        {
+          "path": "input/chart_pages/chart_A.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            874,
+            365,
+            899,
+            558
+          ],
+          "role": "09-21上方蓝圆点与下方橙方点"
+        },
+        {
+          "path": "input/chart_pages/chart_A.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            108,
+            169,
+            347,
+            773
+          ],
+          "role": "活跃用户千人左轴"
+        },
+        {
+          "path": "input/chart_pages/chart_A.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            1205,
+            169,
+            1358,
+            773
+          ],
+          "role": "D1流失率百分比右轴"
+        },
+        {
+          "path": "input/chart_pages/chart_A.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            355,
+            130,
+            963,
+            164
+          ],
+          "role": "蓝圆点和橙方点图例"
+        }
+      ]
+    },
+    "C02": {
+      "a": [
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/v2/a/input/chart_pages/chart_A.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            873,
+            366,
+            899,
+            393
+          ],
+          "role": "data_marker",
+          "note": "09-21蓝色圆点。"
+        },
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/v2/a/input/chart_pages/chart_A.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            117,
+            171,
+            343,
+            774
+          ],
+          "role": "axis",
+          "note": "蓝色左轴，活跃用户，单位千人，0至25。"
+        },
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/v2/a/input/chart_pages/chart_A.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            352,
+            132,
+            541,
+            167
+          ],
+          "role": "legend",
+          "note": "蓝线圆点代表活跃用户。"
+        },
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/v2/a/input/chart_pages/chart_A.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            847,
+            777,
+            927,
+            810
+          ],
+          "role": "period",
+          "note": "09-21横轴标签。"
+        },
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/v2/a/input/chart_pages/chart_A.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            873,
+            535,
+            899,
+            561
+          ],
+          "role": "data_marker",
+          "note": "09-21橙色方块。"
+        },
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/v2/a/input/chart_pages/chart_A.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            1204,
+            170,
+            1357,
+            774
+          ],
+          "role": "axis",
+          "note": "橙色右轴，D1流失率，单位%，0至20。"
+        },
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/v2/a/input/chart_pages/chart_A.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            779,
+            132,
+            984,
+            167
+          ],
+          "role": "legend",
+          "note": "橙色虚线方块代表D1流失率。"
+        },
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/v2/a/input/chart_pages/chart_A.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            168,
+            870,
+            1060,
+            903
+          ],
+          "role": "footnote",
+          "note": "图未逐点标出原值，活跃人数与流失率属不同单位。"
+        }
+      ],
+      "b": [
+        {
+          "path": "input/chart_pages/chart_A.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            874,
+            365,
+            899,
+            391
+          ],
+          "role": "09-21活跃用户蓝圆点"
+        },
+        {
+          "path": "input/chart_pages/chart_A.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            875,
+            538,
+            899,
+            558
+          ],
+          "role": "09-21流失率橙方点"
+        },
+        {
+          "path": "input/chart_pages/chart_A.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            108,
+            169,
+            347,
+            773
+          ],
+          "role": "千人左轴"
+        },
+        {
+          "path": "input/chart_pages/chart_A.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            1205,
+            169,
+            1358,
+            773
+          ],
+          "role": "百分比右轴"
+        },
+        {
+          "path": "input/chart_pages/chart_A.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            170,
+            832,
+            1070,
+            902
+          ],
+          "role": "D1定义与不同单位脚注"
+        }
+      ]
+    },
+    "C03": {
+      "a": [
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/v2/a/input/chart_pages/chart_B.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            773,
+            623,
+            934,
+            642
+          ],
+          "role": "segment_boundary",
+          "note": "6月蓝段上边界，约120人。"
+        },
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/v2/a/input/chart_pages/chart_B.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            773,
+            750,
+            934,
+            768
+          ],
+          "role": "baseline",
+          "note": "6月蓝段下边界，0。"
+        },
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/v2/a/input/chart_pages/chart_B.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            109,
+            170,
+            400,
+            774
+          ],
+          "role": "axis",
+          "note": "单纵轴的刻度与单位；从标记对照刻度估读，不恢复隐藏原值。"
+        },
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/v2/a/input/chart_pages/chart_B.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            352,
+            132,
+            608,
+            166
+          ],
+          "role": "legend",
+          "note": "蓝色对应新用户流失人数。"
+        },
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/v2/a/input/chart_pages/chart_B.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            829,
+            778,
+            878,
+            810
+          ],
+          "role": "period",
+          "note": "6月横轴标签。"
+        },
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/v2/a/input/chart_pages/chart_B.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            169,
+            831,
+            1075,
+            903
+          ],
+          "role": "footnote",
+          "note": "同月自下而上堆叠，只给人数，未提供两类用户各自活跃基数。"
+        },
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/v2/a/input/chart_pages/chart_B.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            773,
+            431,
+            934,
+            449
+          ],
+          "role": "segment_boundary",
+          "note": "6月堆顶约300人。"
+        },
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/v2/a/input/chart_pages/chart_B.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            779,
+            132,
+            1040,
+            166
+          ],
+          "role": "legend",
+          "note": "橙色对应老用户流失人数。"
+        },
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/v2/a/input/chart_pages/chart_B.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            773,
+            431,
+            934,
+            449
+          ],
+          "role": "stack_top",
+          "note": "6月完整堆顶。"
+        }
+      ],
+      "b": [
+        {
+          "path": "input/chart_pages/chart_B.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            780,
+            622,
+            928,
+            641
+          ],
+          "role": "6月蓝色新用户层上边界"
+        },
+        {
+          "path": "input/chart_pages/chart_B.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            780,
+            433,
+            928,
+            447
+          ],
+          "role": "6月合计柱顶"
+        },
+        {
+          "path": "input/chart_pages/chart_B.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            105,
+            169,
+            330,
+            773
+          ],
+          "role": "流失人数单轴和人单位"
+        },
+        {
+          "path": "input/chart_pages/chart_B.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            350,
+            128,
+            1045,
+            164
+          ],
+          "role": "新老用户颜色图例"
+        },
+        {
+          "path": "input/chart_pages/chart_B.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            170,
+            833,
+            1040,
+            901
+          ],
+          "role": "同月自下而上堆叠脚注"
+        }
+      ]
+    },
+    "C04": {
+      "a": [
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/v2/a/input/chart_pages/chart_B.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            773,
+            623,
+            934,
+            642
+          ],
+          "role": "segment_boundary",
+          "note": "6月蓝段上边界，约120人。"
+        },
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/v2/a/input/chart_pages/chart_B.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            773,
+            750,
+            934,
+            768
+          ],
+          "role": "baseline",
+          "note": "6月蓝段下边界，0。"
+        },
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/v2/a/input/chart_pages/chart_B.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            109,
+            170,
+            400,
+            774
+          ],
+          "role": "axis",
+          "note": "单纵轴的刻度与单位；从标记对照刻度估读，不恢复隐藏原值。"
+        },
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/v2/a/input/chart_pages/chart_B.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            352,
+            132,
+            608,
+            166
+          ],
+          "role": "legend",
+          "note": "蓝色对应新用户流失人数。"
+        },
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/v2/a/input/chart_pages/chart_B.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            829,
+            778,
+            878,
+            810
+          ],
+          "role": "period",
+          "note": "6月横轴标签。"
+        },
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/v2/a/input/chart_pages/chart_B.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            169,
+            831,
+            1075,
+            903
+          ],
+          "role": "footnote",
+          "note": "同月自下而上堆叠，只给人数，未提供两类用户各自活跃基数。"
+        },
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/v2/a/input/chart_pages/chart_B.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            773,
+            431,
+            934,
+            449
+          ],
+          "role": "segment_boundary",
+          "note": "6月堆顶约300人。"
+        },
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/v2/a/input/chart_pages/chart_B.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            779,
+            132,
+            1040,
+            166
+          ],
+          "role": "legend",
+          "note": "橙色对应老用户流失人数。"
+        },
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/v2/a/input/chart_pages/chart_B.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            773,
+            431,
+            934,
+            449
+          ],
+          "role": "stack_top",
+          "note": "6月完整堆顶。"
+        },
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/v2/a/input/chart_pages/chart_B.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            1046,
+            654,
+            1208,
+            674
+          ],
+          "role": "segment_boundary",
+          "note": "7月蓝段上边界，约90人。"
+        },
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/v2/a/input/chart_pages/chart_B.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            1046,
+            750,
+            1208,
+            768
+          ],
+          "role": "baseline",
+          "note": "7月蓝段下边界，0。"
+        },
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/v2/a/input/chart_pages/chart_B.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            1101,
+            778,
+            1153,
+            810
+          ],
+          "role": "period",
+          "note": "7月横轴标签。"
+        },
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/v2/a/input/chart_pages/chart_B.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            1046,
+            431,
+            1208,
+            449
+          ],
+          "role": "segment_boundary",
+          "note": "7月堆顶约300人。"
+        },
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/v2/a/input/chart_pages/chart_B.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            1046,
+            431,
+            1208,
+            449
+          ],
+          "role": "stack_top",
+          "note": "7月完整堆顶。"
+        }
+      ],
+      "b": [
+        {
+          "path": "input/chart_pages/chart_B.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            780,
+            433,
+            928,
+            641
+          ],
+          "role": "6月堆顶与蓝橙分界"
+        },
+        {
+          "path": "input/chart_pages/chart_B.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            1050,
+            433,
+            1201,
+            673
+          ],
+          "role": "7月堆顶与蓝橙分界"
+        },
+        {
+          "path": "input/chart_pages/chart_B.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            105,
+            169,
+            330,
+            773
+          ],
+          "role": "人数单轴"
+        },
+        {
+          "path": "input/chart_pages/chart_B.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            350,
+            128,
+            1045,
+            164
+          ],
+          "role": "两类用户颜色图例"
+        },
+        {
+          "path": "input/chart_pages/chart_B.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            170,
+            833,
+            1040,
+            901
+          ],
+          "role": "堆叠规则及未给活跃基数脚注"
+        }
+      ]
+    },
+    "C05": {
+      "a": [
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/v2/a/input/chart_pages/chart_C.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            805,
+            453,
+            832,
+            481
+          ],
+          "role": "data_marker",
+          "note": "W4累计圆点。"
+        },
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/v2/a/input/chart_pages/chart_C.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            109,
+            170,
+            400,
+            774
+          ],
+          "role": "axis",
+          "note": "单纵轴的刻度与单位；从标记对照刻度估读，不恢复隐藏原值。"
+        },
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/v2/a/input/chart_pages/chart_C.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            565,
+            132,
+            849,
+            167
+          ],
+          "role": "legend",
+          "note": "绿色折线为周末累计新增用户。"
+        },
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/v2/a/input/chart_pages/chart_C.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            797,
+            778,
+            841,
+            810
+          ],
+          "role": "period",
+          "note": "W4横轴标签。"
+        },
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/v2/a/input/chart_pages/chart_C.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            169,
+            831,
+            1120,
+            903
+          ],
+          "role": "footnote",
+          "note": "各点是周末累计值，六周使用同一累计起点；无逐点原值标签。"
+        },
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/v2/a/input/chart_pages/chart_C.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            1002,
+            346,
+            1030,
+            373
+          ],
+          "role": "data_marker",
+          "note": "W5累计圆点。"
+        },
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/v2/a/input/chart_pages/chart_C.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            992,
+            778,
+            1039,
+            810
+          ],
+          "role": "period",
+          "note": "W5横轴标签。"
+        }
+      ],
+      "b": [
+        {
+          "path": "input/chart_pages/chart_C.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            806,
+            455,
+            830,
+            478
+          ],
+          "role": "W4累计圆点"
+        },
+        {
+          "path": "input/chart_pages/chart_C.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            1003,
+            348,
+            1028,
+            371
+          ],
+          "role": "W5累计圆点"
+        },
+        {
+          "path": "input/chart_pages/chart_C.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            105,
+            169,
+            400,
+            773
+          ],
+          "role": "累计新增千人单轴"
+        },
+        {
+          "path": "input/chart_pages/chart_C.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            568,
+            130,
+            864,
+            164
+          ],
+          "role": "周末累计值图例"
+        },
+        {
+          "path": "input/chart_pages/chart_C.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            170,
+            833,
+            1050,
+            901
+          ],
+          "role": "周末累计与同一累计起点脚注"
+        }
+      ]
+    },
+    "C06": {
+      "a": [
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/v2/a/input/chart_pages/chart_C.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            805,
+            453,
+            832,
+            481
+          ],
+          "role": "data_marker",
+          "note": "W4累计圆点。"
+        },
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/v2/a/input/chart_pages/chart_C.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            109,
+            170,
+            400,
+            774
+          ],
+          "role": "axis",
+          "note": "单纵轴的刻度与单位；从标记对照刻度估读，不恢复隐藏原值。"
+        },
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/v2/a/input/chart_pages/chart_C.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            565,
+            132,
+            849,
+            167
+          ],
+          "role": "legend",
+          "note": "绿色折线为周末累计新增用户。"
+        },
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/v2/a/input/chart_pages/chart_C.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            797,
+            778,
+            841,
+            810
+          ],
+          "role": "period",
+          "note": "W4横轴标签。"
+        },
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/v2/a/input/chart_pages/chart_C.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            169,
+            831,
+            1120,
+            903
+          ],
+          "role": "footnote",
+          "note": "各点是周末累计值，六周使用同一累计起点；无逐点原值标签。"
+        },
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/v2/a/input/chart_pages/chart_C.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            1002,
+            346,
+            1030,
+            373
+          ],
+          "role": "data_marker",
+          "note": "W5累计圆点。"
+        },
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/v2/a/input/chart_pages/chart_C.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            992,
+            778,
+            1039,
+            810
+          ],
+          "role": "period",
+          "note": "W5横轴标签。"
+        }
+      ],
+      "b": [
+        {
+          "path": "input/chart_pages/chart_C.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            806,
+            455,
+            830,
+            478
+          ],
+          "role": "W4累计读数输入"
+        },
+        {
+          "path": "input/chart_pages/chart_C.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            1003,
+            348,
+            1028,
+            371
+          ],
+          "role": "W5累计读数输入"
+        },
+        {
+          "path": "input/chart_pages/chart_C.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            105,
+            169,
+            400,
+            773
+          ],
+          "role": "千人单轴及50千人刻度间距"
+        },
+        {
+          "path": "input/chart_pages/chart_C.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            170,
+            833,
+            1050,
+            901
+          ],
+          "role": "同一起点、没有原始表或逐点标签的脚注"
+        }
+      ]
+    },
+    "C07": {
+      "a": [
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/v2/a/input/chart_pages/chart_D.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            389,
+            635,
+            585,
+            651
+          ],
+          "role": "sample_value",
+          "note": "A组柱顶。"
+        },
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/v2/a/input/chart_pages/chart_D.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            109,
+            170,
+            400,
+            774
+          ],
+          "role": "axis",
+          "note": "单纵轴的刻度与单位；从标记对照刻度估读，不恢复隐藏原值。"
+        },
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/v2/a/input/chart_pages/chart_D.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            564,
+            132,
+            875,
+            168
+          ],
+          "role": "legend",
+          "note": "紫色样本显示值及误差线图例。"
+        },
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/v2/a/input/chart_pages/chart_D.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            462,
+            777,
+            515,
+            810
+          ],
+          "role": "group",
+          "note": "A组标签。"
+        },
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/v2/a/input/chart_pages/chart_D.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            169,
+            832,
+            1075,
+            904
+          ],
+          "role": "footnote",
+          "note": "纵轴起点45%；未给样本量、误差线含义或随机化设计。"
+        },
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/v2/a/input/chart_pages/chart_D.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            888,
+            454,
+            1085,
+            470
+          ],
+          "role": "sample_value",
+          "note": "B组柱顶。"
+        },
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/v2/a/input/chart_pages/chart_D.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            963,
+            777,
+            1018,
+            810
+          ],
+          "role": "group",
+          "note": "B组标签。"
+        }
+      ],
+      "b": [
+        {
+          "path": "input/chart_pages/chart_D.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            390,
+            637,
+            583,
+            761
+          ],
+          "role": "A组从45%起的可见柱及柱顶"
+        },
+        {
+          "path": "input/chart_pages/chart_D.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            890,
+            455,
+            1083,
+            761
+          ],
+          "role": "B组从45%起的可见柱及柱顶"
+        },
+        {
+          "path": "input/chart_pages/chart_D.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            110,
+            169,
+            405,
+            773
+          ],
+          "role": "45%至50%截断百分比轴"
+        },
+        {
+          "path": "input/chart_pages/chart_D.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            462,
+            778,
+            1015,
+            812
+          ],
+          "role": "A、B组标签"
+        },
+        {
+          "path": "input/chart_pages/chart_D.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            168,
+            833,
+            1110,
+            899
+          ],
+          "role": "柱形从45%起及样本统计限制脚注"
+        }
+      ]
+    },
+    "C08": {
+      "a": [
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/v2/a/input/chart_pages/chart_D.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            389,
+            635,
+            585,
+            651
+          ],
+          "role": "sample_value",
+          "note": "A组柱顶。"
+        },
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/v2/a/input/chart_pages/chart_D.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            109,
+            170,
+            400,
+            774
+          ],
+          "role": "axis",
+          "note": "单纵轴的刻度与单位；从标记对照刻度估读，不恢复隐藏原值。"
+        },
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/v2/a/input/chart_pages/chart_D.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            564,
+            132,
+            875,
+            168
+          ],
+          "role": "legend",
+          "note": "紫色样本显示值及误差线图例。"
+        },
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/v2/a/input/chart_pages/chart_D.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            462,
+            777,
+            515,
+            810
+          ],
+          "role": "group",
+          "note": "A组标签。"
+        },
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/v2/a/input/chart_pages/chart_D.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            169,
+            832,
+            1075,
+            904
+          ],
+          "role": "footnote",
+          "note": "纵轴起点45%；未给样本量、误差线含义或随机化设计。"
+        },
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/v2/a/input/chart_pages/chart_D.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            888,
+            454,
+            1085,
+            470
+          ],
+          "role": "sample_value",
+          "note": "B组柱顶。"
+        },
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/v2/a/input/chart_pages/chart_D.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            963,
+            777,
+            1018,
+            810
+          ],
+          "role": "group",
+          "note": "B组标签。"
+        },
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/v2/a/input/chart_pages/chart_D.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            457,
+            730,
+            517,
+            747
+          ],
+          "role": "errorbar_cap",
+          "note": "A组下端横帽。"
+        },
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/v2/a/input/chart_pages/chart_D.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            457,
+            538,
+            517,
+            555
+          ],
+          "role": "errorbar_cap",
+          "note": "A组上端横帽。"
+        },
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/v2/a/input/chart_pages/chart_D.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            957,
+            581,
+            1017,
+            599
+          ],
+          "role": "errorbar_cap",
+          "note": "B组下端横帽。"
+        },
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/v2/a/input/chart_pages/chart_D.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            957,
+            325,
+            1017,
+            343
+          ],
+          "role": "errorbar_cap",
+          "note": "B组上端横帽。"
+        }
+      ],
+      "b": [
+        {
+          "path": "input/chart_pages/chart_D.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            390,
+            539,
+            583,
+            746
+          ],
+          "role": "A组样本柱顶及误差线上下横帽"
+        },
+        {
+          "path": "input/chart_pages/chart_D.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            890,
+            327,
+            1083,
+            597
+          ],
+          "role": "B组样本柱顶及误差线上下横帽"
+        },
+        {
+          "path": "input/chart_pages/chart_D.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            110,
+            169,
+            405,
+            773
+          ],
+          "role": "样本D1流失率百分比单轴"
+        },
+        {
+          "path": "input/chart_pages/chart_D.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            569,
+            130,
+            864,
+            164
+          ],
+          "role": "样本显示值及误差线图例"
+        },
+        {
+          "path": "input/chart_pages/chart_D.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            168,
+            833,
+            1110,
+            899
+          ],
+          "role": "缺少样本量、误差线含义和随机化设计脚注"
+        }
+      ]
+    }
+  },
+  "equivalence": "Alternative focused regions can be valid. Reviewer rectangles are evidence examples, not mandatory author coordinates."
+}

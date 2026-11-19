@@ -1,0 +1,24 @@
+{
+  "schema_version": "h018-scoring-contract/v1",
+  "checkpoint_weights": {
+    "business_correctness": 0.55,
+    "boundary_cases": 0.25,
+    "delivery_integrity": 0.15,
+    "evidence_binding": 0.05
+  },
+  "private_sha256": {
+    "expected.json": "9ae801e62bead6270b4bb79904cbc061031cce3352aaf57ba287cf0414eec3d8",
+    "protected_sha256.json": "e9c7c65b282a77e1e4793728d5060c15a9297cf7cea97a150013edded5b414c0",
+    "runtime_contract.json": "0d2f821950bb427bdfcd79de9252a0a5d6a23be35b0728cfc8628aefd0704892",
+    "office_runtime.py": "68e9ffa05a0f4b48706c6a705b8981120a398c545b1f7d6032712e23153f6f0b",
+    "xlsx_observations.py": "c8585b2d6ce34401699ae7443000819bfd03eb29b1b2824826a8f0bd9d61d3c1",
+    "word_model.py": "01a8167879e075dd18c1af435acb97328c042b394e42014b039e4ec5ad07ba33",
+    "survey_io.py": "cb1b82eef1e1db247897abe572dd1f40243584707dd2da9ac135778ca644c127",
+    "report_checks.py": "a6250f13a98d29464ab3018d27e133687c23d1616fc58bf0e57f0c2c017e738f",
+    "business_checks.py": "a3cee9bc5d77ed8a317d66240d297dda25c9277f255f27ffe8b6aa96f3df281f",
+    "response_checks.py": "50f28ce0e3364c9d52a14e89354aa7688ca825f94e56e8821fc4d1f1d8a73506",
+    "grader.py": "5da353147226a595b7805239913cc7d05f95c1eca43f2407d72865a4a93c6171"
+  },
+  "grading_type": "automated",
+  "semantic_judge_required": false
+}

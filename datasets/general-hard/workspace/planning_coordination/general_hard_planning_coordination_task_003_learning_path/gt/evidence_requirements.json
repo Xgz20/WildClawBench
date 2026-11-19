@@ -1,0 +1,22 @@
+{
+  "schema": "h055.evidence/v1",
+  "candidate": "Source locators resolve to original profile/course/week/month/milestone sections; future evidence_status remains not_assessed",
+  "trusted": [
+    "candidate original and immutable source SHA",
+    "fresh Office baseline and hour/endpoint/one-time-fee intervention receipts",
+    "native DOCX render source/font/renderer custody"
+  ],
+  "formal_later": [
+    "冻结输入和产物SHA",
+    "绑定的执行attempt和终态",
+    "实际工具结果及错误恢复",
+    "规则/Judge逐项证据"
+  ],
+  "runtime_boundary": "Actual no-account/no-message/no-reminder behavior needs bound real tool traces, never a self-reported setting alone",
+  "limits": [
+    "No real candidate Harness/model/Judge/finalize",
+    "No new dependencies/network/accounts/messages or reminders",
+    "Model review is not human expert review",
+    "Four clients require preflight; L3/discrimination unmeasured"
+  ]
+}

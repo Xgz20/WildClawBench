@@ -1,0 +1,107 @@
+{
+  "semantic_judge_required": true,
+  "faq": {
+    "K01": [
+      "F01"
+    ],
+    "K02": [
+      "F02"
+    ],
+    "K03": [
+      "F03"
+    ],
+    "K04": [
+      "F04"
+    ],
+    "K05": [
+      "F05"
+    ],
+    "K06": [
+      "F06"
+    ],
+    "K07": [
+      "F07"
+    ],
+    "K08": [
+      "F08"
+    ],
+    "K09": [
+      "F09"
+    ],
+    "K10": [
+      "F10"
+    ],
+    "K11": [
+      "F11"
+    ],
+    "K12": [
+      "F12"
+    ]
+  },
+  "cases": {
+    "C01": [
+      "F02"
+    ],
+    "C02": [
+      "F02"
+    ],
+    "C03": [
+      "F03"
+    ],
+    "C04": [
+      "F08"
+    ],
+    "C05": [
+      "F05"
+    ],
+    "C06": [
+      "F10"
+    ],
+    "C07": [
+      "F02"
+    ],
+    "C08": [
+      "F03"
+    ],
+    "C09": [
+      "F03"
+    ],
+    "C10": [
+      "F08"
+    ],
+    "C11": [
+      "F06"
+    ],
+    "C12": [
+      "F10"
+    ],
+    "C13": [
+      "F02"
+    ],
+    "C14": [
+      "F04"
+    ],
+    "C15": [
+      "F08"
+    ],
+    "C16": [
+      "F09"
+    ],
+    "C17": [
+      "F11"
+    ],
+    "C18": [
+      "F10"
+    ]
+  },
+  "locator_format": "release_notes.md#Fxx; main fact locator required; all other semantic support checked independently by Judge",
+  "semantic_primary_sources": [
+    "release_notes.md",
+    "terms.csv",
+    "support_cases.csv",
+    "faq_old/zh.md",
+    "faq_old/en.md",
+    "faq_old/vi.md"
+  ],
+  "semantic_procedure": "Read sources, all 36 real editable FAQ answers, all 18 replies, terms and trusted preview pages. Compare each to private allowed/prohibited/unknown claims; do not treat reference phrasing or string presence as proof."
+}

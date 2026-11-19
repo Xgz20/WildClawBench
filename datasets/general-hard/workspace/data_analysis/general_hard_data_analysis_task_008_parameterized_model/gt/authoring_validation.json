@@ -1,0 +1,359 @@
+{
+  "schema_version": "h024-authoring-validation/v1",
+  "status": "AUTHOR_RULES_AND_NATIVE_REFERENCE_VERIFIED",
+  "controls": {
+    "status": "PASS",
+    "count": 21,
+    "cases": [
+      {
+        "name": "reference",
+        "status": "PASS",
+        "scores": {
+          "business_correctness": 1.0,
+          "boundary_cases": 1.0,
+          "delivery_integrity": 1.0,
+          "evidence_binding": 1.0,
+          "overall_score": 1.0
+        },
+        "infrastructure_error": null,
+        "workspace_unchanged": true,
+        "elapsed_seconds": 20.823,
+        "root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h024/qa/controls-1793167633923170000",
+        "kind": "positive"
+      },
+      {
+        "name": "renamed_sheets",
+        "status": "PASS",
+        "scores": {
+          "business_correctness": 1.0,
+          "boundary_cases": 1.0,
+          "delivery_integrity": 1.0,
+          "evidence_binding": 1.0,
+          "overall_score": 1.0
+        },
+        "infrastructure_error": null,
+        "workspace_unchanged": true,
+        "elapsed_seconds": 20.443,
+        "root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h024/qa/controls-1793167633923170000",
+        "kind": "positive"
+      },
+      {
+        "name": "chinese_headers",
+        "status": "PASS",
+        "scores": {
+          "business_correctness": 1.0,
+          "boundary_cases": 1.0,
+          "delivery_integrity": 1.0,
+          "evidence_binding": 1.0,
+          "overall_score": 1.0
+        },
+        "infrastructure_error": null,
+        "workspace_unchanged": true,
+        "elapsed_seconds": 20.661,
+        "root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h024/qa/controls-1793167633923170000",
+        "kind": "positive"
+      },
+      {
+        "name": "static_correct_values",
+        "status": "PASS",
+        "scores": {
+          "business_correctness": 0.5,
+          "boundary_cases": 0.4,
+          "delivery_integrity": 0.0,
+          "evidence_binding": 1.0,
+          "overall_score": 0.425
+        },
+        "infrastructure_error": null,
+        "workspace_unchanged": true,
+        "elapsed_seconds": 18.667,
+        "root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h024/qa/controls-1793167633923170000",
+        "kind": "negative"
+      },
+      {
+        "name": "constant_formula_model",
+        "status": "PASS",
+        "scores": {
+          "business_correctness": 0.5,
+          "boundary_cases": 0.4,
+          "delivery_integrity": 0.0,
+          "evidence_binding": 1.0,
+          "overall_score": 0.425
+        },
+        "infrastructure_error": null,
+        "workspace_unchanged": true,
+        "elapsed_seconds": 19.156,
+        "root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h024/qa/controls-1793167633923170000",
+        "kind": "negative"
+      },
+      {
+        "name": "static_comparison_only",
+        "status": "PASS",
+        "scores": {
+          "business_correctness": 1.0,
+          "boundary_cases": 0.918319327731,
+          "delivery_integrity": 0.0,
+          "evidence_binding": 1.0,
+          "overall_score": 0.829579831933
+        },
+        "infrastructure_error": null,
+        "workspace_unchanged": true,
+        "elapsed_seconds": 22.885,
+        "root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h024/qa/controls-1793167633923170000",
+        "kind": "negative"
+      },
+      {
+        "name": "negative_salary_clamped",
+        "status": "PASS",
+        "scores": {
+          "business_correctness": 0.999108910891,
+          "boundary_cases": 0.639497354497,
+          "delivery_integrity": 0.0,
+          "evidence_binding": 1.0,
+          "overall_score": 0.759384239614
+        },
+        "infrastructure_error": null,
+        "workspace_unchanged": true,
+        "elapsed_seconds": 21.549,
+        "root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h024/qa/controls-1793167633923170000",
+        "kind": "negative"
+      },
+      {
+        "name": "repeat_prior_clawback",
+        "status": "PASS",
+        "scores": {
+          "business_correctness": 0.999653121903,
+          "boundary_cases": 0.758932461874,
+          "delivery_integrity": 0.0,
+          "evidence_binding": 1.0,
+          "overall_score": 0.789542332515
+        },
+        "infrastructure_error": null,
+        "workspace_unchanged": true,
+        "elapsed_seconds": 20.483,
+        "root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h024/qa/controls-1793167633923170000",
+        "kind": "negative"
+      },
+      {
+        "name": "zero_cap_as_unlimited",
+        "status": "PASS",
+        "scores": {
+          "business_correctness": 1.0,
+          "boundary_cases": 0.88,
+          "delivery_integrity": 0.0,
+          "evidence_binding": 1.0,
+          "overall_score": 0.82
+        },
+        "infrastructure_error": null,
+        "workspace_unchanged": true,
+        "elapsed_seconds": 20.198,
+        "root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h024/qa/controls-1793167896135975000",
+        "kind": "negative"
+      },
+      {
+        "name": "missing_validation",
+        "status": "PASS",
+        "scores": {
+          "business_correctness": 1.0,
+          "boundary_cases": 1.0,
+          "delivery_integrity": 0.0,
+          "evidence_binding": 0.4,
+          "overall_score": 0.82
+        },
+        "infrastructure_error": null,
+        "workspace_unchanged": true,
+        "elapsed_seconds": 20.247,
+        "root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h024/qa/controls-1793167896135975000",
+        "kind": "negative"
+      },
+      {
+        "name": "false_parameter_locator",
+        "status": "PASS",
+        "scores": {
+          "business_correctness": 1.0,
+          "boundary_cases": 1.0,
+          "delivery_integrity": 0.0,
+          "evidence_binding": 0.957142857143,
+          "overall_score": 0.847857142857
+        },
+        "infrastructure_error": null,
+        "workspace_unchanged": true,
+        "elapsed_seconds": 20.494,
+        "root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h024/qa/controls-1793167896135975000",
+        "kind": "negative"
+      },
+      {
+        "name": "false_reported_after",
+        "status": "PASS",
+        "scores": {
+          "business_correctness": 1.0,
+          "boundary_cases": 1.0,
+          "delivery_integrity": 0.0,
+          "evidence_binding": 0.957142857143,
+          "overall_score": 0.847857142857
+        },
+        "infrastructure_error": null,
+        "workspace_unchanged": true,
+        "elapsed_seconds": 20.407,
+        "root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h024/qa/controls-1793167896135975000",
+        "kind": "negative"
+      },
+      {
+        "name": "missing_native_raw_employee",
+        "status": "PASS",
+        "scores": {
+          "business_correctness": 0.5,
+          "boundary_cases": 0.0,
+          "delivery_integrity": 0.0,
+          "evidence_binding": 0.6,
+          "overall_score": 0.305
+        },
+        "infrastructure_error": null,
+        "workspace_unchanged": true,
+        "elapsed_seconds": 20.781,
+        "root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h024/qa/controls-1793167896135975000",
+        "kind": "negative"
+      },
+      {
+        "name": "malformed_workbook",
+        "status": "PASS",
+        "scores": {
+          "business_correctness": 0.0,
+          "boundary_cases": 0.0,
+          "delivery_integrity": 0.0,
+          "evidence_binding": 0.0,
+          "overall_score": 0.0
+        },
+        "infrastructure_error": null,
+        "workspace_unchanged": true,
+        "elapsed_seconds": 0.046,
+        "root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h024/qa/controls-1793167896135975000",
+        "kind": "negative"
+      },
+      {
+        "name": "protected_input_changed",
+        "status": "PASS",
+        "scores": {
+          "business_correctness": 0.5,
+          "boundary_cases": 0.0,
+          "delivery_integrity": 0.0,
+          "evidence_binding": 0.0,
+          "overall_score": 0.275
+        },
+        "infrastructure_error": null,
+        "workspace_unchanged": true,
+        "elapsed_seconds": 3.443,
+        "root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h024/qa/controls-1793167896135975000",
+        "kind": "negative"
+      },
+      {
+        "name": "missing_gt_is_error",
+        "status": "PASS",
+        "scores": null,
+        "infrastructure_error": {
+          "type": "FileNotFoundError",
+          "message": "[Errno 2] No such file or directory: '/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h024/qa/controls-1793167896135975000/missing_gt_is_error/workspace/gt/expected.json'"
+        },
+        "workspace_unchanged": true,
+        "elapsed_seconds": 0.011,
+        "root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h024/qa/controls-1793167896135975000",
+        "kind": "infrastructure"
+      },
+      {
+        "name": "private_helper_drift_is_error",
+        "status": "PASS",
+        "scores": null,
+        "infrastructure_error": {
+          "type": "ValueError",
+          "message": "H024 private scoring drift model_io.py"
+        },
+        "workspace_unchanged": true,
+        "elapsed_seconds": 0.011,
+        "root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h024/qa/controls-1793167896135975000",
+        "kind": "infrastructure"
+      },
+      {
+        "name": "missing_managed_environment_is_error",
+        "status": "PASS",
+        "scores": null,
+        "infrastructure_error": {
+          "type": "RuntimeError",
+          "message": "H024 missing managed runtime GENERAL_E2E_OFFICE_LOCK"
+        },
+        "workspace_unchanged": true,
+        "elapsed_seconds": 0.045,
+        "root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h024/qa/controls-1793167896135975000",
+        "kind": "infrastructure"
+      },
+      {
+        "name": "engine_identity_drift_is_error",
+        "status": "PASS",
+        "scores": null,
+        "infrastructure_error": {
+          "type": "OfficeRuntimeError",
+          "message": "OFFICE_EXECUTABLE_DRIFT: /Users/gzx/.cache/codex-runtimes/codex-primary-runtime/dependencies/bin/override/soffice"
+        },
+        "workspace_unchanged": true,
+        "elapsed_seconds": 0.047,
+        "root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h024/qa/controls-1793167896135975000",
+        "kind": "infrastructure"
+      },
+      {
+        "name": "per_sale_rounding",
+        "status": "PASS",
+        "scores": {
+          "business_correctness": 0.999108910891,
+          "boundary_cases": 0.758932461874,
+          "delivery_integrity": 0.0,
+          "evidence_binding": 1.0,
+          "overall_score": 0.789243016459
+        },
+        "infrastructure_error": null,
+        "workspace_unchanged": true,
+        "elapsed_seconds": 20.359,
+        "root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h024/qa/controls-1793168138329301000",
+        "kind": "negative"
+      },
+      {
+        "name": "whole_amount_at_highest_tier",
+        "status": "PASS",
+        "scores": {
+          "business_correctness": 0.999108910891,
+          "boundary_cases": 0.758615001556,
+          "delivery_integrity": 0.0,
+          "evidence_binding": 1.0,
+          "overall_score": 0.789163651379
+        },
+        "infrastructure_error": null,
+        "workspace_unchanged": true,
+        "elapsed_seconds": 20.091,
+        "root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h024/qa/controls-1793168179286340000",
+        "kind": "negative"
+      }
+    ],
+    "logs": [
+      "run-controls-v1.log",
+      "run-controls-v2.log",
+      "run-controls-v3.log",
+      "run-controls-v4.log"
+    ],
+    "recovery": "First10 cases passed. Zero-cap fixture generation matched curve-unit formulas too, so its selector was narrowed and remaining cases resumed. Mechanism review found initial per_sale_rounding only tested a wrong cent value; v3 replaces it with source-derived E02 July per-sale rounded100.00 versus correct monthly99.99. The highest-tier fixture is also refined to a correctly cent-rounded250.03 so it isolates the wrong tier application; v4 replaces its earlier250.025 version. Both historical PASS records remain diagnostic and are excluded from accepted21. No grader/private contract/reference changed; no failed, mislabeled or unrun case counted as accepted proof.",
+    "counts": {
+      "positive": 3,
+      "negative": 14,
+      "infrastructure": 4
+    }
+  },
+  "native_cases": 7,
+  "native_checks": 37275,
+  "supplemental_same_copy_restore_checks": 5566,
+  "source_truth_checks": 16848,
+  "source_rows": 192,
+  "parameter_rows": 9,
+  "visible_raw_checks": 206,
+  "visual_previews_actually_opened": 10,
+  "reference_sha256": {
+    "validation.md": "4242a24306ef05da96e65bcbf3bca87bcb3b7cd08e4979f8b1f406ff8771a4ed",
+    "compensation_model.xlsx": "8560f8143e2989bd1bf71e5999c1153680ffec5100569c83cd44e814507eb98b"
+  },
+  "limit": "Author acceptance; formal MD/Worker registration recorded separately. No payroll expert, actual Harness/model scores or measured L4/discrimination."
+}

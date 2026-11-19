@@ -1,0 +1,31 @@
+{
+  "groups": [
+    "subject_declarations",
+    "numeric_locale",
+    "dates_and_unapproved_change",
+    "work_units_and_origins",
+    "polarity_and_authority_declarations",
+    "fixed_term_consistency",
+    "unchanged_controls"
+  ],
+  "author_controls": [
+    "wrong provider/client assignment",
+    "thousand separator or zero inflation",
+    "unapproved date extension",
+    "work-hours versus work-days",
+    "calendar hours versus document-complete work-days",
+    "negation and sending claims in typed facts",
+    "fixed term drift",
+    "unknown becoming completed",
+    "ledger-only numerical correctness",
+    "missing native documents",
+    "wrong or unrelated refs",
+    "input mutation",
+    "missing GT/helper"
+  ],
+  "semantic_boundary_controls": [
+    "Same typed facts and literal values but reversed Vietnamese subject roles",
+    "Missing Vietnamese prohibition while typed polarity remains correct"
+  ],
+  "limit": "The last controls may retain full rule score and must fail semantic criteria; author testing cannot substitute independent semantic scoring."
+}

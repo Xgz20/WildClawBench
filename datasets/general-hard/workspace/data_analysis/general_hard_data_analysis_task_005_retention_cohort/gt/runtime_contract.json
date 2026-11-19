@@ -1,0 +1,289 @@
+{
+  "schema_version": "h021-runtime/v1",
+  "grading_type": "automated",
+  "scoring_runtime": {
+    "office": true,
+    "html_render": true
+  },
+  "sdk_core": "0.15.0",
+  "html_helper": "html_runtime_v015.py",
+  "aliases": {
+    "metric_date": [
+      "metric_date",
+      "基准日",
+      "指标日期",
+      "日期",
+      "统计日期"
+    ],
+    "activity_date": [
+      "activity_date",
+      "活动日期",
+      "活跃日期",
+      "活动日",
+      "活跃日"
+    ],
+    "first_active_date": [
+      "first_active_date",
+      "首次有效活动日",
+      "首次活跃日",
+      "首次活动日期",
+      "首次有效活跃日"
+    ],
+    "cohort": [
+      "cohort",
+      "队列",
+      "用户类型",
+      "新老用户",
+      "群组"
+    ],
+    "denominator": [
+      "denominator",
+      "分母",
+      "基准人数",
+      "活跃人数"
+    ],
+    "numerator": [
+      "numerator",
+      "分子",
+      "流失人数",
+      "D1流失人数"
+    ],
+    "rate": [
+      "rate",
+      "流失率",
+      "D1流失率",
+      "次日流失率"
+    ],
+    "observable": [
+      "observable",
+      "观察状态",
+      "观测状态",
+      "是否完成观察",
+      "是否可观察"
+    ],
+    "reason": [
+      "reason",
+      "原因",
+      "不可计算原因",
+      "空值原因"
+    ],
+    "user_id": [
+      "user_id",
+      "用户ID",
+      "用户编号",
+      "用户"
+    ],
+    "record_id": [
+      "record_id",
+      "记录ID",
+      "记录编号",
+      "原记录ID"
+    ],
+    "canonical_record_id": [
+      "canonical_record_id",
+      "规范记录ID",
+      "规范记录编号",
+      "关联规范记录"
+    ],
+    "source_row": [
+      "source_row",
+      "原始行号",
+      "CSV物理行",
+      "来源行号",
+      "物理行号"
+    ],
+    "decision": [
+      "decision",
+      "判定",
+      "处理结果",
+      "清洗判定"
+    ],
+    "event_ids": [
+      "event_ids",
+      "事件ID集合",
+      "有效事件ID",
+      "事件集合"
+    ],
+    "record_ids": [
+      "record_ids",
+      "记录ID集合",
+      "规范记录集合",
+      "有效记录ID"
+    ],
+    "returned_next": [
+      "returned_next",
+      "次日返回",
+      "次日是否活跃",
+      "次日活跃"
+    ],
+    "lost": [
+      "lost",
+      "是否流失",
+      "流失标记",
+      "D1流失标记"
+    ],
+    "base_event_ids": [
+      "base_event_ids",
+      "基准事件ID",
+      "当日事件集合",
+      "基准日事件集合"
+    ],
+    "next_event_ids": [
+      "next_event_ids",
+      "次日事件ID",
+      "次日事件集合",
+      "返回事件集合"
+    ]
+  },
+  "tables": {
+    "summaries": [
+      "metric_date",
+      "cohort",
+      "denominator",
+      "numerator",
+      "rate",
+      "observable",
+      "reason"
+    ],
+    "memberships": [
+      "metric_date",
+      "cohort",
+      "user_id",
+      "first_active_date",
+      "returned_next",
+      "lost",
+      "base_event_ids",
+      "next_event_ids"
+    ],
+    "user_days": [
+      "user_id",
+      "activity_date",
+      "first_active_date",
+      "event_ids",
+      "record_ids"
+    ],
+    "audit": [
+      "record_id",
+      "source_row",
+      "decision",
+      "canonical_record_id"
+    ]
+  },
+  "decision_aliases": {
+    "active": [
+      "active",
+      "有效活动",
+      "有效活跃"
+    ],
+    "duplicate_transport": [
+      "duplicate_transport",
+      "重传重复",
+      "相同事件重传",
+      "重复传输"
+    ],
+    "after_deactivation": [
+      "after_deactivation",
+      "注销后活动",
+      "注销后",
+      "注销时点及之后"
+    ],
+    "ineffective": [
+      "ineffective",
+      "inactive",
+      "业务无效",
+      "非有效活动",
+      "无效业务活动"
+    ],
+    "invalid_format": [
+      "invalid_format",
+      "基础格式无效",
+      "格式错误",
+      "格式无效"
+    ],
+    "deactivation": [
+      "deactivation",
+      "成功注销",
+      "注销事件",
+      "注销"
+    ],
+    "after_cutoff": [
+      "after_cutoff",
+      "超过截止",
+      "未来事件",
+      "截止后"
+    ],
+    "conflicting_event": [
+      "conflicting_event",
+      "事件冲突",
+      "冲突事件",
+      "冲突隔离"
+    ]
+  },
+  "cohort_aliases": {
+    "new": [
+      "new",
+      "新",
+      "新用户",
+      "新增用户"
+    ],
+    "old": [
+      "old",
+      "老",
+      "老用户",
+      "存量用户"
+    ]
+  },
+  "reason_aliases": {
+    "": [
+      "",
+      "正常",
+      "适用",
+      "none"
+    ],
+    "empty_cohort": [
+      "empty_cohort",
+      "空队列",
+      "分母为0",
+      "无基准用户"
+    ],
+    "unobserved": [
+      "unobserved",
+      "待观察",
+      "未完成观察",
+      "观察窗未完成"
+    ]
+  },
+  "mechanism_aliases": {
+    "duplicate_event_rows": [
+      "duplicate_event_rows",
+      "重传记录计权",
+      "重复事件计数",
+      "重传重复计数"
+    ],
+    "utc_day_cutover": [
+      "utc_day_cutover",
+      "UTC切日错误",
+      "UTC日期错分",
+      "UTC错分"
+    ],
+    "wrong_cohort_denominator": [
+      "wrong_cohort_denominator",
+      "错误队列分母",
+      "误用新用户分母",
+      "新老分母混用"
+    ]
+  },
+  "weights": {
+    "business_correctness": 0.55,
+    "boundary_cases": 0.25,
+    "delivery_integrity": 0.15,
+    "evidence_binding": 0.05
+  },
+  "static_auditable_detail_allowed": true,
+  "numeric_tolerance": 1e-09,
+  "observation": "Use actual visible tables and native geometric/pixel evidence. Unsupported legitimate renderers are evaluation_error, never invented ability zero.",
+  "authority": "New runtime/scoring contracts govern the registered rule; material-stage contracts and all previously bound files remain historical and unchanged.",
+  "input_revision": "received-metadata-v2",
+  "protected_file": "protected_received_v2.json",
+  "received_metadata_revision": "12 canonical active receipts cross Shanghai days, including the final observation day. Only received_at changed; original v1 inputs/material evidence and business truth/reference bytes are preserved."
+}

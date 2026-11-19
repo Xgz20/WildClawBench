@@ -1,0 +1,26 @@
+{
+  "schema_version": "h043-rule-runtime/v1",
+  "grading_type": "automated",
+  "weights": {
+    "business_correctness": 0.55,
+    "boundary_cases": 0.25,
+    "delivery_integrity": 0.15,
+    "evidence_binding": 0.05
+  },
+  "score_version": "0.27.1",
+  "core_version": "0.15.3",
+  "source_first_freeze_sha256": "d3bec75d6b6c6d1fe2e1c42dd5fb7d93e08857501512652e34daa21c312d4211",
+  "oracle_ownership_v2_sha256": "85ed6304dc596c4df9304ef0aeb7fc383febfacdb6c53b2d66a49eb3572f11a8",
+  "authority": "Independent observable opaque-provider tests; reference code is not a runtime oracle.",
+  "owner_denominators": {
+    "business_correctness": 5,
+    "boundary_cases": 5
+  },
+  "candidate_code_execution": "Actual isolated Python child; stdout/stderr/returncode/source/test hashes and actual scenarios archived. In-memory stdlib providers only.",
+  "input_protection": "Only protection obligation; trusted __init__/resources copied for business tests. No global clear from protected input drift.",
+  "failure_ownership": "B02 errors, B03 caller cancellation, B04 expiry, B05 submission failures. E slots independently observe ownership/cleanup/terminal/isolation instead of repeating an exception-label loss.",
+  "standard_library_only": true,
+  "dependencies_installed": false,
+  "Harness_Judge_or_standard_finalization": false,
+  "score_entry_sha256": "794b08db5c61890a5c7067c12361b9bea6b204ea792c84371da0c032c0d006c6"
+}

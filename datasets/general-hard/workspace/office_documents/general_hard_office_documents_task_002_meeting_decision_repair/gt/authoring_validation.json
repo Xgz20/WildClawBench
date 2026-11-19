@@ -1,0 +1,191 @@
+{
+  "schema_version": "h002-author-validation/v1",
+  "status": "PASS",
+  "controls": {
+    "reference": {
+      "business_correctness": 1.0,
+      "boundary_cases": 1.0,
+      "delivery_integrity": 1.0,
+      "evidence_binding": 1.0,
+      "overall_score": 1.0
+    },
+    "equivalent_csv": {
+      "business_correctness": 1.0,
+      "boundary_cases": 1.0,
+      "delivery_integrity": 1.0,
+      "evidence_binding": 1.0,
+      "overall_score": 1.0
+    },
+    "promote_proposals": {
+      "business_correctness": 0.8823529411764706,
+      "boundary_cases": 0.6666666666666666,
+      "delivery_integrity": 1.0,
+      "evidence_binding": 1.0,
+      "overall_score": 0.8519607843137256
+    },
+    "forget_withdrawals": {
+      "business_correctness": 0.9294117647058824,
+      "boundary_cases": 0.75,
+      "delivery_integrity": 1.0,
+      "evidence_binding": 1.0,
+      "overall_score": 0.8986764705882353
+    },
+    "swap_same_name": {
+      "business_correctness": 0.9647058823529411,
+      "boundary_cases": 0.8333333333333334,
+      "delivery_integrity": 1.0,
+      "evidence_binding": 1.0,
+      "overall_score": 0.9389215686274509
+    },
+    "apply_unauthorized": {
+      "business_correctness": 0.9647058823529411,
+      "boundary_cases": 0.8333333333333334,
+      "delivery_integrity": 1.0,
+      "evidence_binding": 1.0,
+      "overall_score": 0.9389215686274509
+    },
+    "file_order": {
+      "business_correctness": 0.9823529411764705,
+      "boundary_cases": 0.9166666666666666,
+      "delivery_integrity": 1.0,
+      "evidence_binding": 0.9411764705882353,
+      "overall_score": 0.9665196078431373
+    },
+    "never_reinstate": {
+      "business_correctness": 0.9588235294117647,
+      "boundary_cases": 0.9166666666666666,
+      "delivery_integrity": 1.0,
+      "evidence_binding": 0.9411764705882353,
+      "overall_score": 0.953578431372549
+    },
+    "stale_evidence": {
+      "business_correctness": 1.0,
+      "boundary_cases": 1.0,
+      "delivery_integrity": 1.0,
+      "evidence_binding": 0.0,
+      "overall_score": 0.9500000000000001
+    },
+    "duplicate_issue": {
+      "business_correctness": 0.9411764705882353,
+      "boundary_cases": 1.0,
+      "delivery_integrity": 0.7882352941176471,
+      "evidence_binding": 0.9411764705882353,
+      "overall_score": 0.9329411764705883
+    },
+    "missing_field": {
+      "business_correctness": 1.0,
+      "boundary_cases": 1.0,
+      "delivery_integrity": 0.6,
+      "evidence_binding": 1.0,
+      "overall_score": 0.9400000000000001
+    },
+    "missing_owner_column": {
+      "business_correctness": 0.8,
+      "boundary_cases": 0.0,
+      "delivery_integrity": 0.8,
+      "evidence_binding": 1.0,
+      "overall_score": 0.6100000000000001
+    },
+    "malformed_csv": {
+      "business_correctness": 0.0,
+      "boundary_cases": 0.0,
+      "delivery_integrity": 0.4,
+      "evidence_binding": 0.0,
+      "overall_score": 0.06
+    },
+    "missing_minutes": {
+      "business_correctness": 1.0,
+      "boundary_cases": 1.0,
+      "delivery_integrity": 0.8,
+      "evidence_binding": 1.0,
+      "overall_score": 0.9700000000000001
+    },
+    "missing_actions": {
+      "business_correctness": 0.0,
+      "boundary_cases": 0.0,
+      "delivery_integrity": 0.4,
+      "evidence_binding": 0.0,
+      "overall_score": 0.06
+    },
+    "protected_change": {
+      "business_correctness": 1.0,
+      "boundary_cases": 0.0,
+      "delivery_integrity": 0.0,
+      "evidence_binding": 0.0,
+      "overall_score": 0.55
+    },
+    "missing_gt": {
+      "status": "evaluation_error",
+      "error": "FileNotFoundError",
+      "score": null
+    },
+    "actual_md_reference": {
+      "business_correctness": 1.0,
+      "boundary_cases": 1.0,
+      "delivery_integrity": 1.0,
+      "evidence_binding": 1.0,
+      "overall_score": 1.0
+    }
+  },
+  "gt_sha256": {
+    "artifact_contract.json": "125d86aa943bad4de8fa3bd15005c6445d1f17316774bc370875bb0df0e8c9dc",
+    "business_oracle.json": "297f020cb40ef269075a93d32c320a9f616881c8470472934ba01829a7be51fc",
+    "counterexamples.json": "6a0aff12970759b04fc51f75cfa5cca1c4a4cb351658b0c6be7020f7865fba79",
+    "decision_model.py": "19b0244cd0d63c1f527e29be1e424fd116565c6a3ecc1261f5e9a910f6e5acf7",
+    "events.json": "8fd26bbd281134ee2b16f473e9018c156b48e7717a70212de00ab5e3f97d25ca",
+    "evidence_index.json": "5d00f81e2a9a7f936f17d927f690b7e7db856aee794954dcb802e9e9d1a0e6cd",
+    "evidence_requirements.json": "31b5cc8183fdf9b6f9bb6df8c25203e0b5e93fdf0cc3539bdfffb412d74d749f",
+    "expected.json": "1d610f7de4157c44031276d96472c21de7a195d5de025c393ac116d0f298d88c",
+    "grader.py": "4a1c05092e5369c1479b28bec83c69a9e02d2cb582a56e117f71f7540a79b557",
+    "model_validation.json": "419f2723737399ebe4b0e980e92b9366bdaeeca3a7c1a01034827f96f6ad045d",
+    "native_text.py": "98e69250a1ad9b00c69a5b07640c2a4f3a3f9d950681268add44a95ec3cf5f01",
+    "protected_sha256.json": "b2a53f7ef3fb6a33812540752d330456db488be55b460f51496e031f431c7d75",
+    "reference/results/actions.csv": "414920a7e954b1a45db44cbc8628f8ecbf7e20cdcbd1304c547ca91a4134bc61",
+    "reference/results/minutes.docx": "4bd6ca8d4059232040a74803fcdaa77bf680d9a531fa1239515086b148065f10",
+    "validate_authoring.py": "1b50ec0e9a48bdaa341431963c0b3fefcd8b58f2513c5e7fe3db20062e44c933"
+  },
+  "state_fold_audit": {
+    "accepted_meeting": [
+      "S007",
+      "S012",
+      "S017",
+      "S022",
+      "S027",
+      "S032",
+      "S037",
+      "S042",
+      "S047",
+      "S052",
+      "S057",
+      "S060",
+      "S062",
+      "S067",
+      "S070",
+      "S072",
+      "S075",
+      "S077",
+      "S082",
+      "S087"
+    ],
+    "accepted_corrections": [
+      "E01",
+      "E03",
+      "E04",
+      "E02"
+    ],
+    "rejected_corrections": [
+      {
+        "event_id": "E05",
+        "actual_role": "研发接口负责人",
+        "reason": "no_approval_authority"
+      },
+      {
+        "event_id": "E06",
+        "actual_role": "平台负责人",
+        "reason": "no_approval_authority"
+      }
+    ],
+    "ignored_after_cutoff": []
+  },
+  "limit": "Author controls and source-bound state calculation, not independent human annotation, semantic Judge or four-Harness calibration."
+}

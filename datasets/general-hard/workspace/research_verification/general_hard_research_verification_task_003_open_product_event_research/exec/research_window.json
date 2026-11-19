@@ -1,0 +1,15 @@
+{
+  "schema_version": "h029-research-window/v1",
+  "timezone": "Asia/Shanghai",
+  "start_inclusive": "2026-09-01T00:00:00+08:00",
+  "end_exclusive": "2026-10-01T00:00:00+08:00",
+  "scope": "AI搜索产品的功能、可用范围或正式生命周期状态变更",
+  "capture_date_is_not_event_date": true,
+  "reference_pool_is_non_exhaustive": true,
+  "answer_product_list_provided": false,
+  "answer_urls_provided": false,
+  "selection_clock": "event_or_announcement_occurrence",
+  "date_precision_policy": "event_contract.json",
+  "research_as_of_exclusive": "2026-10-01T00:00:00+08:00",
+  "historical_evidence_limit": "Sources may be acquired after the window; record later acquisition and historical basis. Do not claim a contemporaneous capture or backfill later GA into the window."
+}

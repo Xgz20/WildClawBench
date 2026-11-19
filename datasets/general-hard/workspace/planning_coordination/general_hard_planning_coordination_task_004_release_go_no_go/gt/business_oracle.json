@@ -1,0 +1,1155 @@
+{
+  "tasks": {
+    "T01": {
+      "summary": "冻结提案与成功条件",
+      "duration": 1,
+      "owner": "PM",
+      "venue": "NONE",
+      "selection_group": "mandatory",
+      "prerequisite_groups": [],
+      "fixed_cost": 200,
+      "hours": {
+        "PM": 4,
+        "DESIGN": 0,
+        "DEV": 0,
+        "QA": 0,
+        "SEC": 0,
+        "OPS": 0,
+        "LEGAL": 0
+      },
+      "acceptance": "去身份化范围清单与验收口径"
+    },
+    "T02": {
+      "summary": "准备演示内容与素材",
+      "duration": 2,
+      "owner": "DESIGN",
+      "venue": "NONE",
+      "selection_group": "mandatory",
+      "prerequisite_groups": [
+        [
+          "T01"
+        ]
+      ],
+      "fixed_cost": 600,
+      "hours": {
+        "PM": 0,
+        "DESIGN": 6,
+        "DEV": 0,
+        "QA": 0,
+        "SEC": 0,
+        "OPS": 0,
+        "LEGAL": 0
+      },
+      "acceptance": "演示素材版本固定且可检查"
+    },
+    "T03": {
+      "summary": "配置演示构建与站点",
+      "duration": 2,
+      "owner": "DEV",
+      "venue": "NONE",
+      "selection_group": "mandatory",
+      "prerequisite_groups": [
+        [
+          "T01"
+        ]
+      ],
+      "fixed_cost": 800,
+      "hours": {
+        "PM": 0,
+        "DESIGN": 0,
+        "DEV": 6,
+        "QA": 0,
+        "SEC": 0,
+        "OPS": 0,
+        "LEGAL": 0
+      },
+      "acceptance": "隔离演示构建与配置清单"
+    },
+    "T04": {
+      "summary": "核对资料与隐私边界",
+      "duration": 1,
+      "owner": "LEGAL",
+      "venue": "NONE",
+      "selection_group": "mandatory",
+      "prerequisite_groups": [
+        [
+          "T01"
+        ]
+      ],
+      "fixed_cost": 300,
+      "hours": {
+        "PM": 0,
+        "DESIGN": 0,
+        "DEV": 0,
+        "QA": 0,
+        "SEC": 2,
+        "OPS": 0,
+        "LEGAL": 4
+      },
+      "acceptance": "不含真实用户数据，未决项有人复核"
+    },
+    "T05": {
+      "summary": "内容校验",
+      "duration": 1,
+      "owner": "QA",
+      "venue": "NONE",
+      "selection_group": "mandatory",
+      "prerequisite_groups": [
+        [
+          "T02"
+        ]
+      ],
+      "fixed_cost": 200,
+      "hours": {
+        "PM": 0,
+        "DESIGN": 2,
+        "DEV": 0,
+        "QA": 4,
+        "SEC": 0,
+        "OPS": 0,
+        "LEGAL": 0
+      },
+      "acceptance": "叙述、数字与引用逐项核对"
+    },
+    "T06": {
+      "summary": "功能与失败路径验证",
+      "duration": 2,
+      "owner": "QA",
+      "venue": "NONE",
+      "selection_group": "mandatory",
+      "prerequisite_groups": [
+        [
+          "T03"
+        ]
+      ],
+      "fixed_cost": 400,
+      "hours": {
+        "PM": 0,
+        "DESIGN": 0,
+        "DEV": 2,
+        "QA": 6,
+        "SEC": 0,
+        "OPS": 0,
+        "LEGAL": 0
+      },
+      "acceptance": "正反用例及失败恢复记录"
+    },
+    "T07": {
+      "summary": "操作员培训",
+      "duration": 1,
+      "owner": "OPS",
+      "venue": "NONE",
+      "selection_group": "mandatory",
+      "prerequisite_groups": [
+        [
+          "T05"
+        ]
+      ],
+      "fixed_cost": 250,
+      "hours": {
+        "PM": 2,
+        "DESIGN": 0,
+        "DEV": 0,
+        "QA": 0,
+        "SEC": 0,
+        "OPS": 4,
+        "LEGAL": 0
+      },
+      "acceptance": "隔离场景操作与求助路径可复现"
+    },
+    "T08": {
+      "summary": "演练回滚与恢复",
+      "duration": 1,
+      "owner": "OPS",
+      "venue": "NONE",
+      "selection_group": "mandatory",
+      "prerequisite_groups": [
+        [
+          "T06"
+        ]
+      ],
+      "fixed_cost": 350,
+      "hours": {
+        "PM": 0,
+        "DESIGN": 0,
+        "DEV": 4,
+        "QA": 0,
+        "SEC": 0,
+        "OPS": 4,
+        "LEGAL": 0
+      },
+      "acceptance": "回滚版本/快照及恢复验证记录"
+    },
+    "T09A": {
+      "summary": "现场路径彩排",
+      "duration": 2,
+      "owner": "OPS",
+      "venue": "HALL",
+      "selection_group": "DELIVERY_ONE",
+      "prerequisite_groups": [
+        [
+          "T07"
+        ]
+      ],
+      "fixed_cost": 1600,
+      "hours": {
+        "PM": 0,
+        "DESIGN": 2,
+        "DEV": 0,
+        "QA": 0,
+        "SEC": 0,
+        "OPS": 6,
+        "LEGAL": 0
+      },
+      "acceptance": "现场两日连排，场地批准仍待确认"
+    },
+    "T09B": {
+      "summary": "远程路径彩排",
+      "duration": 1,
+      "owner": "OPS",
+      "venue": "STUDIO",
+      "selection_group": "DELIVERY_ONE",
+      "prerequisite_groups": [
+        [
+          "T07"
+        ]
+      ],
+      "fixed_cost": 450,
+      "hours": {
+        "PM": 0,
+        "DESIGN": 2,
+        "DEV": 0,
+        "QA": 0,
+        "SEC": 0,
+        "OPS": 4,
+        "LEGAL": 0
+      },
+      "acceptance": "远程演示、字幕和故障切换演练"
+    },
+    "T10": {
+      "summary": "集成复核",
+      "duration": 1,
+      "owner": "DEV",
+      "venue": "NONE",
+      "selection_group": "mandatory",
+      "prerequisite_groups": [
+        [
+          "T05"
+        ],
+        [
+          "T06"
+        ]
+      ],
+      "fixed_cost": 400,
+      "hours": {
+        "PM": 0,
+        "DESIGN": 0,
+        "DEV": 4,
+        "QA": 4,
+        "SEC": 0,
+        "OPS": 0,
+        "LEGAL": 0
+      },
+      "acceptance": "集成演示口径和构建一致"
+    },
+    "T11": {
+      "summary": "安全评审",
+      "duration": 1,
+      "owner": "SEC",
+      "venue": "NONE",
+      "selection_group": "mandatory",
+      "prerequisite_groups": [
+        [
+          "T10"
+        ],
+        [
+          "T04"
+        ]
+      ],
+      "fixed_cost": 500,
+      "hours": {
+        "PM": 0,
+        "DESIGN": 0,
+        "DEV": 0,
+        "QA": 0,
+        "SEC": 6,
+        "OPS": 0,
+        "LEGAL": 0
+      },
+      "acceptance": "安全问题分级与关闭证据"
+    },
+    "T12": {
+      "summary": "无障碍与字幕验证",
+      "duration": 2,
+      "owner": "QA",
+      "venue": "NONE",
+      "selection_group": "optional_base",
+      "prerequisite_groups": [
+        [
+          "T05"
+        ],
+        [
+          "T10"
+        ]
+      ],
+      "fixed_cost": 600,
+      "hours": {
+        "PM": 0,
+        "DESIGN": 2,
+        "DEV": 0,
+        "QA": 4,
+        "SEC": 0,
+        "OPS": 0,
+        "LEGAL": 0
+      },
+      "acceptance": "基础为可选一日；必须按有效变更复核"
+    },
+    "T13": {
+      "summary": "编制发布证据包",
+      "duration": 1,
+      "owner": "PM",
+      "venue": "NONE",
+      "selection_group": "mandatory",
+      "prerequisite_groups": [
+        [
+          "T11"
+        ],
+        [
+          "T12"
+        ],
+        [
+          "T08"
+        ],
+        [
+          "T09A",
+          "T09B"
+        ]
+      ],
+      "fixed_cost": 250,
+      "hours": {
+        "PM": 4,
+        "DESIGN": 0,
+        "DEV": 0,
+        "QA": 0,
+        "SEC": 0,
+        "OPS": 0,
+        "LEGAL": 2
+      },
+      "acceptance": "汇总真实验证证据，不把计划当已通过"
+    },
+    "T14": {
+      "summary": "发布前放行评审",
+      "duration": 1,
+      "owner": "LEGAL",
+      "venue": "NONE",
+      "selection_group": "mandatory",
+      "prerequisite_groups": [
+        [
+          "T13"
+        ]
+      ],
+      "fixed_cost": 200,
+      "hours": {
+        "PM": 0,
+        "DESIGN": 0,
+        "DEV": 0,
+        "QA": 0,
+        "SEC": 2,
+        "OPS": 0,
+        "LEGAL": 4
+      },
+      "acceptance": "检查范围、预算、资源和Q_RELEASE，未知不放行"
+    },
+    "T15": {
+      "summary": "预留发布窗口",
+      "duration": 1,
+      "owner": "OPS",
+      "venue": "PATH_VENUE",
+      "selection_group": "mandatory",
+      "prerequisite_groups": [
+        [
+          "T14"
+        ]
+      ],
+      "fixed_cost": 800,
+      "hours": {
+        "PM": 0,
+        "DESIGN": 0,
+        "DEV": 2,
+        "QA": 0,
+        "SEC": 0,
+        "OPS": 6,
+        "LEGAL": 0
+      },
+      "acceptance": "条件性窗口，未获批准不实际发布"
+    },
+    "T16": {
+      "summary": "发布后观察与回退确认",
+      "duration": 1,
+      "owner": "QA",
+      "venue": "NONE",
+      "selection_group": "mandatory",
+      "prerequisite_groups": [
+        [
+          "T15"
+        ]
+      ],
+      "fixed_cost": 200,
+      "hours": {
+        "PM": 0,
+        "DESIGN": 0,
+        "DEV": 0,
+        "QA": 4,
+        "SEC": 0,
+        "OPS": 2,
+        "LEGAL": 0
+      },
+      "acceptance": "观察失败指标并核对可恢复状态"
+    },
+    "T17": {
+      "summary": "移交值守与遗留项",
+      "duration": 1,
+      "owner": "PM",
+      "venue": "NONE",
+      "selection_group": "mandatory",
+      "prerequisite_groups": [
+        [
+          "T16"
+        ]
+      ],
+      "fixed_cost": 200,
+      "hours": {
+        "PM": 2,
+        "DESIGN": 0,
+        "DEV": 0,
+        "QA": 0,
+        "SEC": 0,
+        "OPS": 2,
+        "LEGAL": 0
+      },
+      "acceptance": "责任、未决项及停止条件完整交接"
+    }
+  },
+  "days": [
+    {
+      "day_id": "D01",
+      "date": "2027-05-03"
+    },
+    {
+      "day_id": "D02",
+      "date": "2027-05-04"
+    },
+    {
+      "day_id": "D03",
+      "date": "2027-05-05"
+    },
+    {
+      "day_id": "D04",
+      "date": "2027-05-06"
+    },
+    {
+      "day_id": "D05",
+      "date": "2027-05-07"
+    },
+    {
+      "day_id": "D06",
+      "date": "2027-05-10"
+    },
+    {
+      "day_id": "D07",
+      "date": "2027-05-11"
+    },
+    {
+      "day_id": "D08",
+      "date": "2027-05-12"
+    },
+    {
+      "day_id": "D09",
+      "date": "2027-05-13"
+    },
+    {
+      "day_id": "D10",
+      "date": "2027-05-14"
+    },
+    {
+      "day_id": "D11",
+      "date": "2027-05-17"
+    },
+    {
+      "day_id": "D12",
+      "date": "2027-05-18"
+    },
+    {
+      "day_id": "D13",
+      "date": "2027-05-19"
+    },
+    {
+      "day_id": "D14",
+      "date": "2027-05-20"
+    },
+    {
+      "day_id": "D15",
+      "date": "2027-05-21"
+    },
+    {
+      "day_id": "D16",
+      "date": "2027-05-24"
+    },
+    {
+      "day_id": "D17",
+      "date": "2027-05-25"
+    },
+    {
+      "day_id": "D18",
+      "date": "2027-05-26"
+    }
+  ],
+  "roles": [
+    "PM",
+    "DESIGN",
+    "DEV",
+    "QA",
+    "SEC",
+    "OPS",
+    "LEGAL"
+  ],
+  "capacities": {
+    "D01": {
+      "PM": 6,
+      "DESIGN": 6,
+      "DEV": 6,
+      "QA": 6,
+      "SEC": 6,
+      "OPS": 6,
+      "LEGAL": 6
+    },
+    "D02": {
+      "PM": 6,
+      "DESIGN": 6,
+      "DEV": 6,
+      "QA": 6,
+      "SEC": 6,
+      "OPS": 6,
+      "LEGAL": 6
+    },
+    "D03": {
+      "PM": 6,
+      "DESIGN": 6,
+      "DEV": 6,
+      "QA": 6,
+      "SEC": 6,
+      "OPS": 6,
+      "LEGAL": 6
+    },
+    "D04": {
+      "PM": 6,
+      "DESIGN": 6,
+      "DEV": 6,
+      "QA": 6,
+      "SEC": 6,
+      "OPS": 6,
+      "LEGAL": 6
+    },
+    "D05": {
+      "PM": 6,
+      "DESIGN": 6,
+      "DEV": 6,
+      "QA": 6,
+      "SEC": 6,
+      "OPS": 6,
+      "LEGAL": 6
+    },
+    "D06": {
+      "PM": 6,
+      "DESIGN": 6,
+      "DEV": 6,
+      "QA": 6,
+      "SEC": 6,
+      "OPS": 6,
+      "LEGAL": 6
+    },
+    "D07": {
+      "PM": 6,
+      "DESIGN": 6,
+      "DEV": 0,
+      "QA": 6,
+      "SEC": 6,
+      "OPS": 6,
+      "LEGAL": 6
+    },
+    "D08": {
+      "PM": 6,
+      "DESIGN": 6,
+      "DEV": 6,
+      "QA": 6,
+      "SEC": 6,
+      "OPS": 6,
+      "LEGAL": 6
+    },
+    "D09": {
+      "PM": 6,
+      "DESIGN": 6,
+      "DEV": 6,
+      "QA": 6,
+      "SEC": 6,
+      "OPS": 6,
+      "LEGAL": 6
+    },
+    "D10": {
+      "PM": 6,
+      "DESIGN": 6,
+      "DEV": 6,
+      "QA": 6,
+      "SEC": 6,
+      "OPS": 6,
+      "LEGAL": 6
+    },
+    "D11": {
+      "PM": 6,
+      "DESIGN": 6,
+      "DEV": 6,
+      "QA": 6,
+      "SEC": 6,
+      "OPS": 6,
+      "LEGAL": 6
+    },
+    "D12": {
+      "PM": 6,
+      "DESIGN": 6,
+      "DEV": 6,
+      "QA": 6,
+      "SEC": 6,
+      "OPS": 6,
+      "LEGAL": 6
+    },
+    "D13": {
+      "PM": 6,
+      "DESIGN": 6,
+      "DEV": 6,
+      "QA": 6,
+      "SEC": 6,
+      "OPS": 6,
+      "LEGAL": 6
+    },
+    "D14": {
+      "PM": 6,
+      "DESIGN": 6,
+      "DEV": 6,
+      "QA": 6,
+      "SEC": 6,
+      "OPS": 6,
+      "LEGAL": 6
+    },
+    "D15": {
+      "PM": 6,
+      "DESIGN": 6,
+      "DEV": 6,
+      "QA": 6,
+      "SEC": 6,
+      "OPS": 6,
+      "LEGAL": 6
+    },
+    "D16": {
+      "PM": 6,
+      "DESIGN": 6,
+      "DEV": 6,
+      "QA": 6,
+      "SEC": 6,
+      "OPS": 6,
+      "LEGAL": 6
+    },
+    "D17": {
+      "PM": 6,
+      "DESIGN": 6,
+      "DEV": 6,
+      "QA": 6,
+      "SEC": 6,
+      "OPS": 6,
+      "LEGAL": 6
+    },
+    "D18": {
+      "PM": 6,
+      "DESIGN": 6,
+      "DEV": 6,
+      "QA": 6,
+      "SEC": 6,
+      "OPS": 6,
+      "LEGAL": 6
+    }
+  },
+  "venues": {
+    "D01": {
+      "HALL": 0,
+      "STUDIO": 1
+    },
+    "D02": {
+      "HALL": 0,
+      "STUDIO": 1
+    },
+    "D03": {
+      "HALL": 0,
+      "STUDIO": 1
+    },
+    "D04": {
+      "HALL": 0,
+      "STUDIO": 1
+    },
+    "D05": {
+      "HALL": 0,
+      "STUDIO": 1
+    },
+    "D06": {
+      "HALL": 0,
+      "STUDIO": 1
+    },
+    "D07": {
+      "HALL": 0,
+      "STUDIO": 1
+    },
+    "D08": {
+      "HALL": 1,
+      "STUDIO": 1
+    },
+    "D09": {
+      "HALL": 1,
+      "STUDIO": 1
+    },
+    "D10": {
+      "HALL": 0,
+      "STUDIO": 1
+    },
+    "D11": {
+      "HALL": 0,
+      "STUDIO": 1
+    },
+    "D12": {
+      "HALL": 0,
+      "STUDIO": 1
+    },
+    "D13": {
+      "HALL": 1,
+      "STUDIO": 1
+    },
+    "D14": {
+      "HALL": 0,
+      "STUDIO": 1
+    },
+    "D15": {
+      "HALL": 0,
+      "STUDIO": 1
+    },
+    "D16": {
+      "HALL": 1,
+      "STUDIO": 1
+    },
+    "D17": {
+      "HALL": 0,
+      "STUDIO": 1
+    },
+    "D18": {
+      "HALL": 0,
+      "STUDIO": 1
+    }
+  },
+  "windows": {
+    "W0": "D10",
+    "W1": "D13",
+    "W2": "D16"
+  },
+  "effective_state": {
+    "target_window": "W0",
+    "budget_cap": 7000,
+    "T12_required": true,
+    "T12_duration": 2
+  },
+  "effective_events": [
+    {
+      "event_id": "E01",
+      "status": "applied"
+    },
+    {
+      "event_id": "E02",
+      "status": "applied"
+    },
+    {
+      "event_id": "E03",
+      "status": "applied"
+    },
+    {
+      "event_id": "E04",
+      "status": "rejected"
+    }
+  ],
+  "approvals": {
+    "Q_RELEASE": {
+      "status": "unknown",
+      "owner": "LEGAL"
+    },
+    "Q_VENUE": {
+      "status": "unknown",
+      "owner": "OPS"
+    }
+  },
+  "source_sha256": {
+    "changes.jsonl": "356d96578f14deb12ef416e62265f3d4563d540a4ff84e609aae927cf7607c5f",
+    "gates.md": "8b7d77340e1c2755bd428d404bfa62d87c93bec191d9b9039172c1d2b1684e5f",
+    "resources.xlsx": "407e02cfaebd07316a89e43c9b289bd7abd4da92b7a9c41254dd62a99e955c68",
+    "work_breakdown.csv": "b773fd4965175a7b33254a08729873533c6141094bcc3071dff579589e4b43ea"
+  },
+  "cpms": {
+    "A": {
+      "records": {
+        "T01": {
+          "duration": 1,
+          "es": 0,
+          "ef": 1,
+          "ls": 0,
+          "lf": 1,
+          "total_float": 0,
+          "critical": 1
+        },
+        "T02": {
+          "duration": 2,
+          "es": 1,
+          "ef": 3,
+          "ls": 2,
+          "lf": 4,
+          "total_float": 1,
+          "critical": 0
+        },
+        "T03": {
+          "duration": 2,
+          "es": 1,
+          "ef": 3,
+          "ls": 1,
+          "lf": 3,
+          "total_float": 0,
+          "critical": 1
+        },
+        "T04": {
+          "duration": 1,
+          "es": 1,
+          "ef": 2,
+          "ls": 6,
+          "lf": 7,
+          "total_float": 5,
+          "critical": 0
+        },
+        "T05": {
+          "duration": 1,
+          "es": 3,
+          "ef": 4,
+          "ls": 4,
+          "lf": 5,
+          "total_float": 1,
+          "critical": 0
+        },
+        "T06": {
+          "duration": 2,
+          "es": 3,
+          "ef": 5,
+          "ls": 3,
+          "lf": 5,
+          "total_float": 0,
+          "critical": 1
+        },
+        "T07": {
+          "duration": 1,
+          "es": 4,
+          "ef": 5,
+          "ls": 5,
+          "lf": 6,
+          "total_float": 1,
+          "critical": 0
+        },
+        "T08": {
+          "duration": 1,
+          "es": 5,
+          "ef": 6,
+          "ls": 7,
+          "lf": 8,
+          "total_float": 2,
+          "critical": 0
+        },
+        "T09A": {
+          "duration": 2,
+          "es": 5,
+          "ef": 7,
+          "ls": 6,
+          "lf": 8,
+          "total_float": 1,
+          "critical": 0
+        },
+        "T10": {
+          "duration": 1,
+          "es": 5,
+          "ef": 6,
+          "ls": 5,
+          "lf": 6,
+          "total_float": 0,
+          "critical": 1
+        },
+        "T11": {
+          "duration": 1,
+          "es": 6,
+          "ef": 7,
+          "ls": 7,
+          "lf": 8,
+          "total_float": 1,
+          "critical": 0
+        },
+        "T12": {
+          "duration": 2,
+          "es": 6,
+          "ef": 8,
+          "ls": 6,
+          "lf": 8,
+          "total_float": 0,
+          "critical": 1
+        },
+        "T13": {
+          "duration": 1,
+          "es": 8,
+          "ef": 9,
+          "ls": 8,
+          "lf": 9,
+          "total_float": 0,
+          "critical": 1
+        },
+        "T14": {
+          "duration": 1,
+          "es": 9,
+          "ef": 10,
+          "ls": 9,
+          "lf": 10,
+          "total_float": 0,
+          "critical": 1
+        },
+        "T15": {
+          "duration": 1,
+          "es": 10,
+          "ef": 11,
+          "ls": 10,
+          "lf": 11,
+          "total_float": 0,
+          "critical": 1
+        },
+        "T16": {
+          "duration": 1,
+          "es": 11,
+          "ef": 12,
+          "ls": 11,
+          "lf": 12,
+          "total_float": 0,
+          "critical": 1
+        },
+        "T17": {
+          "duration": 1,
+          "es": 12,
+          "ef": 13,
+          "ls": 12,
+          "lf": 13,
+          "total_float": 0,
+          "critical": 1
+        }
+      },
+      "duration": 13,
+      "critical_paths": [
+        [
+          "T01",
+          "T03",
+          "T06",
+          "T10",
+          "T12",
+          "T13",
+          "T14",
+          "T15",
+          "T16",
+          "T17"
+        ]
+      ]
+    },
+    "B": {
+      "records": {
+        "T01": {
+          "duration": 1,
+          "es": 0,
+          "ef": 1,
+          "ls": 0,
+          "lf": 1,
+          "total_float": 0,
+          "critical": 1
+        },
+        "T02": {
+          "duration": 2,
+          "es": 1,
+          "ef": 3,
+          "ls": 2,
+          "lf": 4,
+          "total_float": 1,
+          "critical": 0
+        },
+        "T03": {
+          "duration": 2,
+          "es": 1,
+          "ef": 3,
+          "ls": 1,
+          "lf": 3,
+          "total_float": 0,
+          "critical": 1
+        },
+        "T04": {
+          "duration": 1,
+          "es": 1,
+          "ef": 2,
+          "ls": 6,
+          "lf": 7,
+          "total_float": 5,
+          "critical": 0
+        },
+        "T05": {
+          "duration": 1,
+          "es": 3,
+          "ef": 4,
+          "ls": 4,
+          "lf": 5,
+          "total_float": 1,
+          "critical": 0
+        },
+        "T06": {
+          "duration": 2,
+          "es": 3,
+          "ef": 5,
+          "ls": 3,
+          "lf": 5,
+          "total_float": 0,
+          "critical": 1
+        },
+        "T07": {
+          "duration": 1,
+          "es": 4,
+          "ef": 5,
+          "ls": 6,
+          "lf": 7,
+          "total_float": 2,
+          "critical": 0
+        },
+        "T08": {
+          "duration": 1,
+          "es": 5,
+          "ef": 6,
+          "ls": 7,
+          "lf": 8,
+          "total_float": 2,
+          "critical": 0
+        },
+        "T09B": {
+          "duration": 1,
+          "es": 5,
+          "ef": 6,
+          "ls": 7,
+          "lf": 8,
+          "total_float": 2,
+          "critical": 0
+        },
+        "T10": {
+          "duration": 1,
+          "es": 5,
+          "ef": 6,
+          "ls": 5,
+          "lf": 6,
+          "total_float": 0,
+          "critical": 1
+        },
+        "T11": {
+          "duration": 1,
+          "es": 6,
+          "ef": 7,
+          "ls": 7,
+          "lf": 8,
+          "total_float": 1,
+          "critical": 0
+        },
+        "T12": {
+          "duration": 2,
+          "es": 6,
+          "ef": 8,
+          "ls": 6,
+          "lf": 8,
+          "total_float": 0,
+          "critical": 1
+        },
+        "T13": {
+          "duration": 1,
+          "es": 8,
+          "ef": 9,
+          "ls": 8,
+          "lf": 9,
+          "total_float": 0,
+          "critical": 1
+        },
+        "T14": {
+          "duration": 1,
+          "es": 9,
+          "ef": 10,
+          "ls": 9,
+          "lf": 10,
+          "total_float": 0,
+          "critical": 1
+        },
+        "T15": {
+          "duration": 1,
+          "es": 10,
+          "ef": 11,
+          "ls": 10,
+          "lf": 11,
+          "total_float": 0,
+          "critical": 1
+        },
+        "T16": {
+          "duration": 1,
+          "es": 11,
+          "ef": 12,
+          "ls": 11,
+          "lf": 12,
+          "total_float": 0,
+          "critical": 1
+        },
+        "T17": {
+          "duration": 1,
+          "es": 12,
+          "ef": 13,
+          "ls": 12,
+          "lf": 13,
+          "total_float": 0,
+          "critical": 1
+        }
+      },
+      "duration": 13,
+      "critical_paths": [
+        [
+          "T01",
+          "T03",
+          "T06",
+          "T10",
+          "T12",
+          "T13",
+          "T14",
+          "T15",
+          "T16",
+          "T17"
+        ]
+      ]
+    }
+  },
+  "minimum_blocker_sets": [
+    {
+      "path": "B",
+      "window_id": "W0",
+      "blockers": [
+        "G_TIME",
+        "G_APPROVAL"
+      ]
+    }
+  ]
+}

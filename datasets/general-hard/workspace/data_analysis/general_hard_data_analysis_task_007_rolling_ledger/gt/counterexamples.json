@@ -1,0 +1,38 @@
+{
+  "schema_version": "h023-counterexamples/v1",
+  "interventions": [
+    {
+      "name": "late_invoice",
+      "record_id": "O169",
+      "field": "entered_at",
+      "new_shanghai_local": "2026-10-04T12:00:00",
+      "truth": "scenarios/late_invoice/source_expected.json"
+    },
+    {
+      "name": "late_receipt",
+      "record_id": "P073",
+      "field": "entered_at",
+      "new_shanghai_local": "2026-10-04T12:00:00",
+      "truth": "scenarios/late_receipt/source_expected.json"
+    },
+    {
+      "name": "late_refund",
+      "record_id": "P086",
+      "field": "entered_at",
+      "new_shanghai_local": "2026-10-04T12:00:00",
+      "truth": "scenarios/late_refund/source_expected.json"
+    }
+  ],
+  "negative_mechanisms": [
+    "physical row order",
+    "cross-customer balance carry",
+    "invoice document number without customer",
+    "entered-month instead of business-month",
+    "drop unresolved negative bank cash",
+    "sum conflicting bank values",
+    "clamp advance to zero",
+    "age by invoice date",
+    "totals-only/static baseline",
+    "missing raw late records"
+  ]
+}

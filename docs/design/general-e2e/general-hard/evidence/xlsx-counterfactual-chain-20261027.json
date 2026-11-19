@@ -1,0 +1,483 @@
+{
+  "schema_version": "general-hard-xlsx-counterfactual-chain/v1",
+  "date_local": "2026-10-27",
+  "repository_root": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard",
+  "branch": "feat/general-hard",
+  "base_commit_before_work": "46cc274f1014c3fad55c61cbd687a0be36cf42fc",
+  "source_revision_limit": "ZIPs built from the listed base plus then-uncommitted changes. Actual content SHA bindings are authoritative; base commit alone did not contain this change.",
+  "grading_core_version": "0.11.0",
+  "score_skill_version": "0.19.0",
+  "status": "author_real_runtime_and_detached_cli_verified",
+  "completed_dataset_task_count": 11,
+  "canonical_h010_registered": false,
+  "h010_materials": {
+    "source_files": 6,
+    "quotes_native_pdf_pages": 3,
+    "baseline_assets": 12,
+    "baseline_unknowns": 3,
+    "enumerated_combinations": 81,
+    "decimal_and_integer_fraction_all_match": true,
+    "valid_base_combinations": [
+      [
+        "AABB",
+        "178012.15"
+      ],
+      [
+        "BBBB",
+        "179354.05"
+      ],
+      [
+        "BABB",
+        "179685.85"
+      ],
+      [
+        "ABBB",
+        "179990.35"
+      ]
+    ],
+    "reference_files": {
+      "assumptions.json": "437f996ea1f9658435d95741f4fe26a6ac72af5fd630a5175b85ef2fee13472e",
+      "budget.xlsx": "9716c616edca7f3dc1848db1861395e3d0da69a924af46b4d66cbc4b5deadf6d",
+      "application.docx": "7e81723cc3303e6bd4d40f0381e67e97014897c0a75dc87a52a8079b894b5fdf",
+      "plan.html": "c1ac1de4eb88c9371d6b5d9319b4c3527303349d489499494476dcd404f98603"
+    },
+    "source_unchanged": true,
+    "reviewed_page_or_range_images": 16,
+    "html_visual_review": {
+      "kind": "actual IAB full-page screenshot and accessibility readback",
+      "url": "http://127.0.0.1:18767/plan.html",
+      "html_sha256": "c1ac1de4eb88c9371d6b5d9319b4c3527303349d489499494476dcd404f98603",
+      "local_server_stopped": true,
+      "temporary_tab_closed": true,
+      "screenshot_retained_in": "conversation tool output only"
+    },
+    "default_docx_preview_font_issue": "First default-font preview was missing CJK. Explicit fontconfig corrected rendering without source changes; only render-final images are accepted."
+  },
+  "runtime": {
+    "kind": "author-real-workbook-input-response-protocol",
+    "root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/real-counterfactual-1793073556772237000",
+    "attempt_root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/real-counterfactual-1793073556772237000/protocol-fixture/attempts/batch-fixture__unit-fixture/task-fixture/real-input-response",
+    "case_count": 7,
+    "numeric_checks": 273,
+    "variant_count": 6,
+    "protocol_score": 1.0,
+    "workspace_unchanged": true,
+    "normal_and_archived_match": true,
+    "verified_artifact_count": 28,
+    "helper_sha256": "f03a57190986d78eed8da3378d91e1a44896e43f870c7a5940513e2f6446cdd0"
+  },
+  "detached_cli": {
+    "root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/detached-counterfactual-1793073711695560000",
+    "cases": 7,
+    "numeric_checks": 273,
+    "calls": [
+      {
+        "name": "prepare",
+        "argv": [
+          "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.venv/bin/python",
+          "-I",
+          "-X",
+          "utf8",
+          "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/detached-counterfactual-1793073711695560000/installed/score-general-e2e/scripts/score_general_e2e.py",
+          "prepare",
+          "--unit-root",
+          "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/real-counterfactual-1793073556772237000/protocol-fixture/unit",
+          "--execution-record",
+          "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/real-counterfactual-1793073556772237000/protocol-fixture/unit/evidence/execution-record.json",
+          "--scoring-package",
+          "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/real-counterfactual-1793073556772237000/protocol-fixture/scoring.zip",
+          "--task-id",
+          "task-fixture",
+          "--scoring-attempt-id",
+          "detached-input-response",
+          "--output-root",
+          "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/detached-counterfactual-1793073711695560000/attempts",
+          "--runtime-lock",
+          "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/real-counterfactual-1793073556772237000/runtime-with-office.json",
+          "--legacy-transcript-only"
+        ],
+        "return_code": 0
+      },
+      {
+        "name": "run-rules",
+        "argv": [
+          "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.venv/bin/python",
+          "-I",
+          "-X",
+          "utf8",
+          "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/detached-counterfactual-1793073711695560000/installed/score-general-e2e/scripts/score_general_e2e.py",
+          "run-rules",
+          "--attempt-root",
+          "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/detached-counterfactual-1793073711695560000/attempts/batch-fixture__unit-fixture/task-fixture/detached-input-response",
+          "--runtime-python",
+          "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.venv/bin/python",
+          "--timeout-seconds",
+          "180"
+        ],
+        "return_code": 0
+      },
+      {
+        "name": "prepare-semantics",
+        "argv": [
+          "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.venv/bin/python",
+          "-I",
+          "-X",
+          "utf8",
+          "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/detached-counterfactual-1793073711695560000/installed/score-general-e2e/scripts/score_general_e2e.py",
+          "prepare-semantics",
+          "--attempt-root",
+          "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/detached-counterfactual-1793073711695560000/attempts/batch-fixture__unit-fixture/task-fixture/detached-input-response"
+        ],
+        "return_code": 0
+      },
+      {
+        "name": "finalize",
+        "argv": [
+          "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.venv/bin/python",
+          "-I",
+          "-X",
+          "utf8",
+          "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/detached-counterfactual-1793073711695560000/installed/score-general-e2e/scripts/score_general_e2e.py",
+          "finalize",
+          "--attempt-root",
+          "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/detached-counterfactual-1793073711695560000/attempts/batch-fixture__unit-fixture/task-fixture/detached-input-response"
+        ],
+        "return_code": 0
+      },
+      {
+        "name": "verify-normal",
+        "argv": [
+          "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.venv/bin/python",
+          "-I",
+          "-X",
+          "utf8",
+          "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/detached-counterfactual-1793073711695560000/installed/score-general-e2e/scripts/score_general_e2e.py",
+          "verify-score",
+          "--attempt-root",
+          "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/detached-counterfactual-1793073711695560000/attempts/batch-fixture__unit-fixture/task-fixture/detached-input-response"
+        ],
+        "return_code": 0
+      },
+      {
+        "name": "verify-archived",
+        "argv": [
+          "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.venv/bin/python",
+          "-I",
+          "-X",
+          "utf8",
+          "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/detached-counterfactual-1793073711695560000/installed/score-general-e2e/scripts/score_general_e2e.py",
+          "verify-score",
+          "--attempt-root",
+          "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/detached-counterfactual-1793073711695560000/attempts/batch-fixture__unit-fixture/task-fixture/detached-input-response",
+          "--archived"
+        ],
+        "return_code": 0
+      }
+    ],
+    "isolated_python": true,
+    "empty_path": true,
+    "actually_executed_zip_sha256": "9e265ee68fec20d0117027434d4836e13cbe30d4f94419a9e7a6196c09a24dae",
+    "final_zip_sha256": "16682f1fd4acf0e14d86f427df31647613910f9aff907420d024276e14c6e1ee",
+    "final_zip_verification": "PASS",
+    "final_zip_diff_from_executed": [
+      "score-general-e2e/references/office-recalculation.md"
+    ],
+    "all_executed_python_and_vendor_bytes_identical": true,
+    "nonruntime_change": "Removed one extra EOF newline from Office reference documentation; immutable tested ZIP retained."
+  },
+  "regression": {
+    "runtime_suite": {
+      "tests": 49,
+      "exit_code": 0,
+      "observed_tool_session_id": 78431
+    },
+    "layout_build_dataset_suite": {
+      "tests": 45,
+      "initial_pass": 44,
+      "initial_failure": "Expected old core version literal 0.10.0 in detached-import assertion",
+      "corrected_expected_version": "0.11.0",
+      "focused_recheck_tests": 1,
+      "focused_recheck_exit_code": 0,
+      "initial_session_id": 30405,
+      "recheck_session_id": 89841
+    }
+  },
+  "limits": [
+    "Only author fixtures; no actual Harness attempt or H010 business grader score.",
+    "No independent semantic result, four-client compatibility, measured difficulty or discrimination.",
+    "H010 still lacks final task MD/canonical Workspace, business grader and positive/negative controls.",
+    "general-hard-v1 remains building with 11 of 60 authored tasks and no manifest; 12-task calibration remains undone."
+  ],
+  "bound_files": [
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/eval_general_e2e/stages.py",
+      "size": 5181,
+      "sha256": "6eb2e43c6e7c2e9ba6b7a2068b22db7ac2fc7ecd1c7d23f65e2fd66e32ffa64d"
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/eval_general_e2e/adapters/components.py",
+      "size": 12847,
+      "sha256": "5833c9da5bd2575d822b05a031075a433ca7f79a0a8b66038873d3a4293539d3"
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/src/wildclawbench_grading_core/__init__.py",
+      "size": 1648,
+      "sha256": "6ef9c98bbd84b56a09053fe817d6562a99791683619d924bd168e460d2035f61"
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/src/wildclawbench_grading_core/office_runtime.py",
+      "size": 49123,
+      "sha256": "f03a57190986d78eed8da3378d91e1a44896e43f870c7a5940513e2f6446cdd0"
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/tools/report/e2e-shared/components.json",
+      "size": 5310,
+      "sha256": "71760a4a2da90efe5f730a58c74e95a72ab96047d24da7f3052496e0f8a8d556"
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/tools/report/skills/general-e2e/score-general-e2e/skill-metadata.json",
+      "size": 284,
+      "sha256": "fd14be09f44612d35f214b501d238b74453c0f220447ac7717ff768fe04073ee"
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/tools/report/skills/general-e2e/score-general-e2e/scripts/score_general_e2e.py",
+      "size": 278439,
+      "sha256": "2062c318d64ec23e18ff5e290836a1c9deb410b6e72221c4c89426be6e6f72c0"
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/tools/report/skills/general-e2e/score-general-e2e/SKILL.md",
+      "size": 17561,
+      "sha256": "af504efc35700961eee366f9469fd596a85bc3ea68f45ff4e8f1a9f54034eeca"
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/tools/report/skills/general-e2e/score-general-e2e/references/grading-core.md",
+      "size": 10026,
+      "sha256": "79747b022bec24b6a37a49ecd0b60987567b992ed208df9528388b9c3f1843f4"
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/tools/report/skills/general-e2e/score-general-e2e/references/office-recalculation.md",
+      "size": 7978,
+      "sha256": "9660e82d2b93b290bdbc9aaba547fc97239c6190645ed555c7f651bceffc70e7"
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/tests/general_e2e/test_counterfactual_office_evidence.py",
+      "size": 9715,
+      "sha256": "8009fdb3aba00c893fc77acda42586e2cc6291fa6c73008f792efecc0f00ab16"
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/tests/general_e2e/test_skill_layout.py",
+      "size": 6337,
+      "sha256": "652a6786b0a696d8e950573d47bc885a21b1bbca0debd8e72e39557da697ea9a"
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/tests/general_e2e/test_e2e_build.py",
+      "size": 37159,
+      "sha256": "4807e0180d8b44bff59cb4e211ea6abdd4a60d5f6e166aadcee82dada2127fbd"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/exec/approval.docx",
+      "size": 37384,
+      "sha256": "c59233ed40d34ed86a6cfa82744c89e98fd2456017ca35eb3d8298c260726c35"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/exec/baseline.xlsx",
+      "size": 5906,
+      "sha256": "840e4c987eea88016f1830fe79fc5da26f0fec2971a9a50ebc1c16e3c311287a"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/exec/constraints.md",
+      "size": 7282,
+      "sha256": "f23c13920c760a89b322df8140ce42cfc787605857eb42b358319655a94f3d45"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/exec/quotes/quote_A.pdf",
+      "size": 64065,
+      "sha256": "2a09f48efd2df86493cdfcba65c3b3bf2bd5e2d8471dcad849174df58657034c"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/exec/quotes/quote_C.pdf",
+      "size": 64132,
+      "sha256": "ff52ba00bcebebb35fd032eb2f110493e8343eb989a04a8a1d6b3fa2ba79187d"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/exec/quotes/quote_B.pdf",
+      "size": 65372,
+      "sha256": "9c908322842335072ad1d4b46af1eb6b6edc1b3d50518fa9653594352382e682"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/gt/protected_sha256.json",
+      "size": 541,
+      "sha256": "b843723b2aee957a7b218f481f76dc2d33094f7a27f732e4b5a6a2036c1b5667"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/gt/expected.json",
+      "size": 267954,
+      "sha256": "9c354ddd677e7623ccfa1cd21284be5939dad6b677dbd00b255a370973824801"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/gt/reference_native_verification.json",
+      "size": 1958,
+      "sha256": "14f0eb15c811fbfa5f55725081e102ee9d15c9298d00bb9149eb87e093a74154"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/gt/source_verification.json",
+      "size": 4797,
+      "sha256": "2cfd2155388f15dac42c2f189b71e8023d25c37deaa60d47752f608b975bdf16"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/gt/reference/results/assumptions.json",
+      "size": 3445,
+      "sha256": "437f996ea1f9658435d95741f4fe26a6ac72af5fd630a5175b85ef2fee13472e"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/gt/reference/results/budget.xlsx",
+      "size": 9284,
+      "sha256": "9716c616edca7f3dc1848db1861395e3d0da69a924af46b4d66cbc4b5deadf6d"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/gt/reference/results/application.docx",
+      "size": 40306,
+      "sha256": "7e81723cc3303e6bd4d40f0381e67e97014897c0a75dc87a52a8079b894b5fdf"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/gt/reference/results/plan.html",
+      "size": 3469,
+      "sha256": "c1ac1de4eb88c9371d6b5d9319b4c3527303349d489499494476dcd404f98603"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/real-counterfactual-1793073556772237000/validation.json",
+      "size": 6716,
+      "sha256": "ff00f0d3c1e3c00c44f5f3802955dccbb98ceeb0568a26456b03249236b339d7"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/detached-counterfactual-1793073711695560000/validation.json",
+      "size": 6290,
+      "sha256": "9661ba2eae1138d5839cd30b810ef93dafb1158e1c15c0ff0bd5b22808daeedd"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/render-manifest.json",
+      "size": 1925,
+      "sha256": "c5e67f7ca3d6fb15319224c849cba714a5266f93a5bbafd6978b912356a34092"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/authoring/business_facts.json",
+      "size": 5459,
+      "sha256": "47ae52bd46b1532868c0eabc5dedb429d7d0d1e3dd9bc74c2da15a9e2d4d66a5"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/authoring/verify_sources_and_oracle.py",
+      "size": 10739,
+      "sha256": "0a216b0760fd69d59bc48f1c82380930aea8c2d95a0e1b4b88dadc38cbdd4c88"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/authoring/validate_counterfactual_runtime.py",
+      "size": 10420,
+      "sha256": "9e3d2c9d802c4158fd869d2387fba2008f0819d776e66853c2631f5757f62fb2"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/authoring/validate_counterfactual_distribution.py",
+      "size": 3947,
+      "sha256": "ef9b143d5d2ce4eff45e832db3f626be466bd13d1ce3c0dc33a8a6c13412d791"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/authoring/verify_reference_packet.py",
+      "size": 6533,
+      "sha256": "683857995a876073b4b7431917298899fc6299ddf39de40f2c4d1822ee79909f"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/quote-A-page-1.png",
+      "size": 165673,
+      "sha256": "36690da9e79905031c19311e03dc68a903e43c5a1ca3017b8afc30ef9a9ccf9f"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/quote-B-page-1.png",
+      "size": 168094,
+      "sha256": "b4fd2790a512ebfafddbfc276f7f6c49eea8dd6fae1013ccf157e011e63785c1"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/quote-C-page-1.png",
+      "size": 164970,
+      "sha256": "3d47f2daffa0435005f2d7acab150fa93a274bc4b85c61d1c96902fdfe1d9fb1"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/baseline-assets.png",
+      "size": 85540,
+      "sha256": "9f801d5a306c4cd6ecbc5df05389776b06fe2b53da8445fb7297a2a6445a8db2"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/baseline-energy.png",
+      "size": 45497,
+      "sha256": "1ac4278ef61d624efce7b8cc66b38359adbca3f3ef33d6efc79a79ca9fd29641"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/render-final/approval/page-1.png",
+      "size": 213140,
+      "sha256": "bccaa1bcea6c05a999371b5d43ae03dbed1222e3786daf50f1ee39299d3a7112"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/render-final/application/page-1.png",
+      "size": 293038,
+      "sha256": "24f3eaa67fb3262e88340455e06bf5b4dc98ccb23f58b6730a24f56d72ae9cac"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/render-final/application/page-2.png",
+      "size": 193755,
+      "sha256": "1330909babf18bf785d846150c515c79ed796903fbba29f6d50a6f92c05892a3"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/render-final/application/page-3.png",
+      "size": 354914,
+      "sha256": "7628040ae98e8c3bf4e8aefe723ddc3eccee287ca12816109927276a3a9115e1"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/budget-summary-costs.png",
+      "size": 46188,
+      "sha256": "7607fdf2084fadd560c798fc5390d9d8b91b4c4a960191a4386a3a87aae3390c"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/budget-summary-funding.png",
+      "size": 32713,
+      "sha256": "7251cf23327835274096ec49ced62f6997a056934d3fcb87ff516b0b1c57a033"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/budget-summary-bottom-full.png",
+      "size": 19377,
+      "sha256": "0a0aa0c6523e08ef351052c52ef1e6d8e429515862a81073b841c8b5dc4e7b05"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/budget-lines-price.png",
+      "size": 47159,
+      "sha256": "35d0773d9cf580c0fdbb79d21283612e418f4ace224354840535b6224e94b353"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/budget-lines-calculation.png",
+      "size": 46746,
+      "sha256": "90b2aceb8c36aaa27eccd12a569798c6117b39c165528975d1188d1a7016fec0"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/budget-fees.png",
+      "size": 32566,
+      "sha256": "7a462420aba1ef88b4d8ced37f741a92b233e3ad076013c42ea114f5cbd1d122"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/budget-options.png",
+      "size": 65752,
+      "sha256": "ccc5e71337dd285fb42b26bd10839f39218cd1f98351514fc0920bb7ce15718e"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/counterfactual-distribution/score-general-e2e-skill-v0.19.0.zip",
+      "size": 570797,
+      "sha256": "9e265ee68fec20d0117027434d4836e13cbe30d4f94419a9e7a6196c09a24dae"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/counterfactual-distribution-final/score-general-e2e-skill-v0.19.0.zip",
+      "size": 570796,
+      "sha256": "16682f1fd4acf0e14d86f427df31647613910f9aff907420d024276e14c6e1ee"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/counterfactual-distribution-final/skills-build-manifest.json",
+      "size": 1954,
+      "sha256": "9768949e241a9cfc5505457f95f289ce09d8fe4146c8f41e1b629b8363ff71bb"
+    }
+  ]
+}
