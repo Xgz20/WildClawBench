@@ -227,8 +227,11 @@ export async function verifyArchivedLoomy(index, state, traceRoot) {
     requireValue(digest(proof.observed_runtime) === digest(effectiveRuntime)
       && runtimeChain.some(row => digest(row) === digest(proof.original_runtime)), 'ARCHIVE_TERMINAL_RUNTIME_MISMATCH');
   }
-  if (requiresSendGuards) requireValue(normalized.binding.root.time_created >= Date.parse(journal.sent_at)
-    && normalized.binding.user.time_created >= normalized.binding.root.time_created, 'ARCHIVE_NATIVE_SESSION_PREDATES_DISPATCH');
+  if (requiresSendGuards) {
+    requireValue(normalized.binding.root.time_created >= Date.parse(journal.sent_at)
+      && normalized.binding.user.time_created >= normalized.binding.root.time_created, 'ARCHIVE_NATIVE_SESSION_PREDATES_DISPATCH');
+    requireValue(normalized.binding.full_access_context_part_id, 'ARCHIVE_NATIVE_ACCESS_CONTEXT_MISSING');
+  }
   const old = verifyBinding(terminal.native, { workspace: state.session.cwd, prompt, baseline: journal.baseline,
     sessionId: state.session.session_id, terminal: state.phase === 'COMPLETED' });
   checkNativeModel(old);

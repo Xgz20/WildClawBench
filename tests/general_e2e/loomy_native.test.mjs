@@ -363,6 +363,24 @@ test('Loomy retains its native memory prefix separately from the exact frozen ta
   assert.throws(() => verifyBinding(native, options), /PROMPT_MISMATCH/);
 });
 
+test('Loomy binds the fixed full-access prelude and still requires the original prompt exactly once', () => {
+  const fullAccess = "<system-reminder>\n当前会话处于完全访问模式（用户已显式开启）。\n先前指令中的 Workspace 边界约束已被用户解除：你可以自由读、写、编辑用户机器上任意路径的文件，并执行联网命令，无需触发权限申请。\n仍然被禁止的操作：递归删除（rm -rf）、调用 task 子代理工具。\n在执行可能造成数据损失的操作前，仍需在消息中明确说明将要做什么。\n</system-reminder>";
+  const native = fixture();
+  const prefix = (id, text) => ({ ...native.parts[0], id, data: JSON.stringify({ type: 'text', text }) });
+  native.parts.unshift(prefix('part_memory', EMPTY_MEMORY_CONTEXT), prefix('part_permission', fullAccess));
+  const strict = { ...options, requireAccessContext: true };
+  const binding = verifyBinding(native, strict);
+  assert.equal(binding.full_access_context_part_id, 'part_permission');
+  const normalized = normalizeTrace(native, { state: state(), prompt, baseline: [] });
+  assert.deepEqual(normalized.events.filter(row => row.type === 'user_message').map(row => row.content), [prompt]);
+  assert.equal(normalized.events.find(row => row.native_type === 'client-full-access-context').content, fullAccess);
+  native.parts[1] = prefix('part_permission', fullAccess + ' ');
+  assert.throws(() => verifyBinding(native, strict), /PROMPT_MISMATCH/);
+  native.parts.splice(1, 1);
+  assert.throws(() => verifyBinding(native, strict), /PROMPT_MISMATCH/);
+  assert.equal(verifyBinding(native, options).full_access_context_part_id, null);
+});
+
 test('Loomy source repair requires exact frozen inputs and never resets an armed send counter', async () => {
   const root = await realpath(await mkdtemp(join(tmpdir(), 'loomy-repair-test-')));
   try {

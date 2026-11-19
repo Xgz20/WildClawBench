@@ -11,7 +11,7 @@ import { LOOMY_APP_PROFILE } from '../desktop-app-discovery/profiles.mjs';
 import { inspectMacGuiSession, assertMacGuiReady } from '../desktop-gui/macos.mjs';
 import { requireFullAccess } from '../desktop-gui/formal-permission.mjs';
 
-export const COMPONENT_VERSION = '0.1.18';
+export const COMPONENT_VERSION = '0.1.19';
 export const SEND_GUARD_PROFILE = 'loomy-exact-workspace-ax-send/v1';
 export const MEMORY_CONTEXT_PREFIX = '## 可用记忆条目\n\n';
 export const EMPTY_MEMORY_CONTEXT = MEMORY_CONTEXT_PREFIX + '当前没有可用记忆条目。不要调用 Read 读取记忆文件，也不要猜测任何文件路径；直接基于本轮对话自然回复。';
@@ -19,6 +19,9 @@ export const MEMORY_CONTEXT_SUFFIX = '\n\n只在条目与当前请求明确相�
 export const isMemoryContext = text => text === EMPTY_MEMORY_CONTEXT || typeof text === 'string'
   && text.startsWith(MEMORY_CONTEXT_PREFIX) && text.endsWith(MEMORY_CONTEXT_SUFFIX)
   && text.slice(MEMORY_CONTEXT_PREFIX.length, -MEMORY_CONTEXT_SUFFIX.length).trim().length > 0;
+// Loomy 0.9.39 src/lib/access-mode-prompts.js. The installed renderer adds
+// this exact, separate user text part only for its full_access mode.
+export const FULL_ACCESS_CONTEXT_SHA256 = '267cad0f8fa5bf4cc143a3a679db6e75117accba8e18bfdb4771947d2dc46ffe';
 export const PROFILE = 'loomy-opencode-sqlite/v1';
 export const DEFAULT_DATABASE = join(homedir(), '.local/share/loomy/opencode/opencode.db');
 export const MODEL_LABEL = 'Spark-X2.6 正式版 高';
@@ -495,7 +498,7 @@ export async function probe({ appPath = '', database = DEFAULT_DATABASE, cacheRo
   return { status: 'PASS', config, gui, ui: snapshot, native, runtime_status: status };
 }
 
-export function verifyBinding(native, { workspace, prompt, baseline = [], sessionId = null, terminal = false }) {
+export function verifyBinding(native, { workspace, prompt, baseline = [], sessionId = null, terminal = false, requireAccessContext = false }) {
   requireValue(native.profile === PROFILE && native.snapshot?.method === 'readonly-source-sqlite-online-backup', 'BINDING_PROFILE_INVALID');
   const roots = native.sessions.filter(row => row.parent_id === null && row.directory === workspace && !baseline.includes(row.id) && (!sessionId || row.id === sessionId));
   requireValue(roots.length === 1, 'NATIVE_SESSION_BINDING_AMBIGUOUS');
@@ -511,9 +514,15 @@ export function verifyBinding(native, { workspace, prompt, baseline = [], sessio
   requireValue(users.length === 1, 'NATIVE_USER_COUNT_INVALID');
   const userParts = parts.filter(row => row.message_id === users[0].id && row.parsed.type === 'text' && !row.parsed.synthetic && !row.parsed.ignored);
   const promptParts = userParts.filter(row => row.parsed.text === prompt);
-  requireValue(promptParts.length === 1 && (userParts.length === 1 || userParts.length === 2
-    && userParts[1].id === promptParts[0].id && isMemoryContext(userParts[0].parsed.text)), 'NATIVE_PROMPT_MISMATCH');
-  const contextParts = userParts.filter(row => row.id !== promptParts[0].id);
+  const contextParts = userParts.slice(0, -1);
+  const clientContext = [...contextParts];
+  if (isMemoryContext(clientContext[0]?.parsed.text)) clientContext.shift();
+  const accessContext = clientContext[0];
+  const accessPartId = typeof accessContext?.parsed.text === 'string'
+    && sha(Buffer.from(accessContext.parsed.text)) === FULL_ACCESS_CONTEXT_SHA256 ? accessContext.id : null;
+  if (accessPartId) clientContext.shift();
+  requireValue(promptParts.length === 1 && userParts.at(-1).id === promptParts[0].id
+    && clientContext.length === 0 && (!requireAccessContext || accessPartId), 'NATIVE_PROMPT_MISMATCH');
   const assistants = messages.filter(row => row.session_id === root.id && row.parsed.role === 'assistant');
   const last = assistants.at(-1);
   if (terminal) {
@@ -525,5 +534,5 @@ export function verifyBinding(native, { workspace, prompt, baseline = [], sessio
     }
   }
   return { root, messages, parts, user: users[0], final: last, session_ids: [...ids],
-    prompt_part_ids: promptParts.map(row => row.id), client_context_part_ids: contextParts.map(row => row.id) };
+    prompt_part_ids: promptParts.map(row => row.id), client_context_part_ids: contextParts.map(row => row.id), full_access_context_part_id: accessPartId };
 }

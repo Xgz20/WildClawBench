@@ -292,7 +292,7 @@ export async function observe(context, journal, allowedSessionIds = []) {
     return row.message_id === users[0].id && part.type === 'text' && part.text === context.prompt;
   }))) return pendingAcceptance();
   const binding = verifyBinding(native, { workspace: context.workspace, prompt: context.prompt,
-    baseline: journal.baseline, sessionId });
+    baseline: journal.baseline, sessionId, requireAccessContext: context.config.send_guard_profile === SEND_GUARD_PROFILE });
   checkNativeModel(binding);
   requireValue(!binding.parts.some(row => row.parsed.type === 'tool' && row.parsed.tool === 'question'
     && !['completed', 'error'].includes(row.parsed.state?.status)), 'PENDING_QUESTION_REQUIRES_INTERVENTION');

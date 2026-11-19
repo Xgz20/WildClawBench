@@ -39,7 +39,9 @@ export function normalizeTrace(native, { state, prompt, baseline, nativeFailure 
       is_subagent: row.session_id !== binding.root.id,
       source: { adapter: PROFILE, raw_ref: 'raw/native-part-rows.jsonl#L' + (position + 1), redacted: false } };
     if (binding.client_context_part_ids.includes(row.id)) {
-      append({ ...common, type: 'status', native_type: 'client-memory-context', native_role: 'user', content: part.text });
+      append({ ...common, type: 'status',
+        native_type: row.id === binding.full_access_context_part_id ? 'client-full-access-context' : 'client-memory-context',
+        native_role: 'user', content: part.text });
     } else if (part.type === 'text' && !part.synthetic && !part.ignored) {
       requireValue(typeof part.text === 'string' && ['user', 'assistant'].includes(message.parsed.role), 'NATIVE_TEXT_INVALID');
       const values = grouped.get(row.message_id) || []; values.push({ row, common }); grouped.set(row.message_id, values);
