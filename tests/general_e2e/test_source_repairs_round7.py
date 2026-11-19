@@ -9,7 +9,9 @@ import operator
 import re
 import tempfile
 import unittest
+from unittest.mock import patch
 import importlib.util
+import sys
 import csv
 from types import SimpleNamespace
 
@@ -43,7 +45,9 @@ class Round7SourceRepairTests(unittest.TestCase):
     def test_native_repairs_are_opted_in_and_historical_manifests_keep_old_source(self):
         path=ROOT/'tools/report/skills/general-e2e/score-general-e2e/scripts/shared_source_repairs.py'
         spec=importlib.util.spec_from_file_location('round7_bridge',path)
-        module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
+        module = importlib.util.module_from_spec(spec)
+        with patch("sys.path", [str(path.parent), *sys.path]):
+            spec.loader.exec_module(module)
         for row in self.historical_profiles().values():
             _,_,old,new=sources(row['task_id'])
             contract={'task_id':row['task_id'],'automated_checks':old}
@@ -57,7 +61,9 @@ class Round7SourceRepairTests(unittest.TestCase):
     def test_failure_retirement_requires_exact_unscored_source_and_original_error(self):
         path=ROOT/'tools/report/skills/general-e2e/orchestrate-general-e2e/scripts/registered_rule_source_failures.py'
         spec=importlib.util.spec_from_file_location('round7_failure',path)
-        module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
+        module = importlib.util.module_from_spec(spec)
+        with patch("sys.path", [str(path.parent), *sys.path]):
+            spec.loader.exec_module(module)
         read=lambda p:json.loads(p.read_text())
         sha=lambda p:hashlib.sha256(p.read_bytes()).hexdigest()
         rt=SimpleNamespace(_read_json=read,_sha256_file=sha)
@@ -85,7 +91,9 @@ class Round7SourceRepairTests(unittest.TestCase):
     def test_preworker_failure_cannot_claim_an_exited_worker_or_hide_changed_runtime(self):
         path=ROOT/'tools/report/skills/general-e2e/orchestrate-general-e2e/scripts/registered_rule_source_failures.py'
         spec=importlib.util.spec_from_file_location('round7_preworker',path)
-        module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
+        module = importlib.util.module_from_spec(spec)
+        with patch("sys.path", [str(path.parent), *sys.path]):
+            spec.loader.exec_module(module)
         tid='02_Office_task_015_procurement_reconciliation';row=module.ROWS[tid]
         _,_,old,_=sources(tid)
         with tempfile.TemporaryDirectory() as tmp:

@@ -124,7 +124,7 @@ target.write_bytes(b'%PDF-1.4\\nprotocol-only\\n%%EOF\\n')
         refs,_=RUNTIME._semantic_reference_inputs(attempt,json.loads((attempt/'attempt-manifest.json').read_text()),[])
         self.assertTrue({'worker/derived/word/rendered.pdf','worker/derived/slides/rendered.pdf'}<={v['path'] for v in refs})
         RUNTIME.prepare_semantics_attempt(attempt_root=attempt);RUNTIME.finalize_score_attempt(attempt_root=attempt)
-        self.binary.unlink();self.font.unlink();shutil.rmtree(attempt/'runtime')
+        self.binary.unlink();self.font.unlink();RUNTIME._remove_tree(attempt/'runtime')
         self.assertTrue(RUNTIME.verify_score_attempt(attempt,archived=True)['score_valid'])
 
     def test_wrong_single_lock_still_fails_worker_without_score(self):

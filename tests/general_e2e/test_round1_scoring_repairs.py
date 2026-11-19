@@ -4,6 +4,7 @@ from io import BytesIO
 import json
 import hashlib
 import importlib.util
+import sys
 from pathlib import Path
 import tempfile
 from types import SimpleNamespace
@@ -67,7 +68,8 @@ class Round1ScoringRepairTests(unittest.TestCase):
         p = ROOT / 'tools/report/skills/general-e2e/orchestrate-general-e2e/scripts/registered_rule_source_failures.py'
         spec = importlib.util.spec_from_file_location('_round1_source_failure_tests', p)
         module = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(module)
+        with patch("sys.path", [str(p.parent), *sys.path]):
+            spec.loader.exec_module(module)
         return module
 
     def test_hr_failure_retirement_rejects_changed_identity_error_judge_and_source(self):
