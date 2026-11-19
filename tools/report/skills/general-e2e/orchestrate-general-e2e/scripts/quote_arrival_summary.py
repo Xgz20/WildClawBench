@@ -8,16 +8,20 @@ CONTRACT='35838d318be427d0d292b7ae866761c4a66f0ada24c977e69ea4e15d9607fb13'
 SOURCE='9db04e9b4d6dd9abbfbe990454b84022847355ca37093c52109770674ba4a5ee'
 BASE='530705542b2aca0a8c638f2ad642e4bc996c4feaae9a63b5ea832867eb0567e0'
 DATASET={'id':'general-custom70-v6','digest':'20f9383bd124402703bf106d5d306cf64674cac6f83d1f7daa8e1859c3e03288'}
-PROFILE='quote-explicit-arrival-and-mode-summary/v1'
+PROFILE_V1='quote-explicit-arrival-and-mode-summary/v1'
+PROFILE='quote-explicit-arrival-and-mode-summary/v2'
+V1_EFFECTIVE='f34b07bdbe29b1ca41121f453806d056cdb17d268345718405bd8958a4a604ed'
 ERROR_KIND='quote-native-arrival-heading-review/v1'
 RUNTIME_KEY='quote_arrival_summary_profile'
 
-def marker(contract,sha,dataset):
+def marker(contract,sha,dataset,*,profile=None):
+    profile=PROFILE if profile is None else profile
+    if profile not in {PROFILE_V1,PROFILE}:return None
     if (contract.get('task_id')==TASK and sha==CONTRACT
             and {k:dataset.get(k) for k in DATASET}==DATASET
             and hashlib.sha256(contract.get('automated_checks','').encode()).hexdigest()==SOURCE):
-        return {'profile':PROFILE,'contract_sha256':CONTRACT,'source_sha256':SOURCE,
-                'base_effective_source_sha256':BASE,'heading':{'Estimated arrival time':'elapsed'},
+        return {'profile':profile,'contract_sha256':CONTRACT,'source_sha256':SOURCE,
+                'base_effective_source_sha256':BASE,'heading':({'Estimated arrival time':'elapsed'} if profile==PROFILE_V1 else {'Estimated arrival time':'elapsed','Est. delivery incl. lead time':'elapsed'}),
                 'summary_policy':'visible explicit total, two-cell addition, one original EXW reference and one explicitly named recommended freight-mode reference; no total synthesis'}
     return None
 
@@ -60,27 +64,37 @@ def _quote_arrival_extract(self):
 Book.extract=_quote_arrival_extract
 '''
 
+
+BRIDGE_V2=r'''
+_quote_total_heading_previous_role=role
+def role(value):
+    return _quote_total_heading_previous_role(value) or ('elapsed' if norm(value)=='estdeliveryinclleadtime' else None)
+'''
+
 def effective_source(manifest,original,current,prior):
     frozen=manifest.get('runtime',{}).get(RUNTIME_KEY)
     if frozen is None:return current,prior
     expected=marker({'task_id':manifest['identity']['task_id'],'automated_checks':original},
-                    manifest['digests']['contract_sha256'],manifest['dataset'])
+                    manifest['digests']['contract_sha256'],manifest['dataset'],profile=frozen.get('profile'))
     if expected is None or frozen!=expected or hashlib.sha256(current.encode()).hexdigest()!=BASE:
         raise ValueError('QUOTE_ARRIVAL_SUMMARY_PROFILE_MISMATCH')
-    effective=current+'\n'+BRIDGE
-    receipt={'schema_version':'wildclawbench.general-e2e-rule-source-correction/v1','correction_id':PROFILE,
+    effective=current+'\n'+BRIDGE+(BRIDGE_V2 if frozen['profile']==PROFILE else '')
+    receipt={'schema_version':'wildclawbench.general-e2e-rule-source-correction/v1','correction_id':frozen['profile'],
         'task_id':TASK,'contract_sha256':CONTRACT,'original_source_sha256':SOURCE,
         'effective_source_sha256':hashlib.sha256(effective.encode()).hexdigest(),
         'candidate_rewritten':False,'numeric_decisions_assigned':False,'rubric_and_weights_changed':False,
         'reason':'仅识别明确的Estimated arrival time表头；单方式汇总须由原公式引用原EXW及明确recommended模式运费，读取原公式结果，不为其他方式补算。保留原可见性、安全公式、数值比较、重大事件封顶、分母和60/40。',
         'prior_correction':prior}
+    if frozen['profile']==PROFILE:receipt['reason']+=' 新版仅增加明确包含lead time的Est. delivery表头别名，原总交期函数/数值与限分完全保持。'
     return effective,receipt
 
 def blocker_paths(attempt):
+    if (attempt/'evaluator-extraction-issue.json').exists():return [attempt/'evaluator-extraction-issue.json']
     return [attempt/name for name in ['scoring-infrastructure-review.json','judge-readonly-workbook-check.py',
                                       'semantic-response-draft-not-imported.json']]
 
 def validate_blocker(rt,attempt,manifest,contract,task):
+    if (attempt/'evaluator-extraction-issue.json').exists():return validate_v1_heading_blocker(rt,attempt,manifest,contract,task)
     if (marker(contract,manifest['digests']['contract_sha256'],manifest['dataset']) is None
             or manifest.get('runtime',{}).get(RUNTIME_KEY) is not None
             or (task.get('thread') or {}).get('status')!='COMPLETED' or task.get('score') is not None
@@ -135,6 +149,55 @@ def validate_blocker(rt,attempt,manifest,contract,task):
                or sheet.row_dimensions[c.row].hidden for c in reported):
             raise ValueError('QUOTE_ARRIVAL_REPORTED_TOTAL_NOT_PROVEN')
     finally:workbook.close()
-    return {'profile':PROFILE,'candidate_sha256':rt._sha256_file(files[0]),
+    return {'profile':PROFILE_V1,'candidate_sha256':rt._sha256_file(files[0]),
             'old_elapsed_fields_missing':True,'explicit_arrival_heading_preserved':True,
             'numeric_score_assigned':False,'old_draft_not_imported':True}
+
+
+def validate_v1_heading_blocker(rt,attempt,manifest,contract,task):
+    if (manifest.get('runtime',{}).get(RUNTIME_KEY)!=marker(contract,CONTRACT,DATASET,profile=PROFILE_V1)
+        or manifest.get('dataset')!=DATASET or manifest.get('digests',{}).get('contract_sha256')!=CONTRACT
+        or hashlib.sha256(contract.get('automated_checks','').encode()).hexdigest()!=SOURCE
+        or (task.get('thread') or {}).get('status')!='COMPLETED' or task.get('score') is not None
+        or any((attempt/p).exists() for p in ['score.json','semantic/response.json','semantic/semantic-component.json'])):
+        raise ValueError('QUOTE_TOTAL_HEADING_FAILURE_IDENTITY_INVALID')
+    request=rt._read_json(attempt/'worker/request.json');worker=rt._read_json(attempt/'worker/result.json');audit=rt._read_json(attempt/'rule-audit.json')
+    if (hashlib.sha256(request.get('automated_checks','').encode()).hexdigest()!=V1_EFFECTIVE
+        or worker.get('ok') is not True or worker.get('raw_result',{}).get('elapsed_time')!=0
+        or audit.get('status')!='completed' or audit.get('identity')!=manifest['identity']
+        or audit.get('worker',{}).get('return_code')!=0
+        or audit.get('worker',{}).get('request_sha256')!=rt._sha256_file(attempt/'worker/request.json')
+        or audit.get('worker',{}).get('process_tree_cleanup',{}).get('remaining') is not False
+        or not (attempt/'rule-component.json').is_file()):raise ValueError('QUOTE_TOTAL_HEADING_FAILURE_WORKER_INVALID')
+    issue=rt._read_json(attempt/'evaluator-extraction-issue.json')
+    identity={k:manifest['identity'][k] for k in ['task_id','scoring_attempt_id','execution_attempt_id']}
+    requests=issue.get('decision_requests',[])
+    if (issue.get('schema_version')!='general-e2e-evaluator-extraction-issue/v1' or issue.get('identity')!=identity
+        or issue.get('status')!='evaluation_error_requires_extractor_repair' or issue.get('total_score') is not None
+        or any(issue.get(k) is not False for k in ['candidate_changed','rules_rerun','semantic_response_imported','score_finalized','verify_score_passed'])
+        or len(requests)!=1 or requests[0].get('criterion_key')!='automated.elapsed_time'
+        or requests[0].get('origin')!='evaluator' or V1_EFFECTIVE not in ' '.join(requests[0].get('evidence_checked',[]))):
+        raise ValueError('QUOTE_TOTAL_HEADING_NATIVE_ISSUE_INVALID')
+    extracted=worker['raw_result']['diagnostics']['extracted']
+    if (set(extracted)!={'air','sea','road'} or any(extracted[k].get('order_to_arrival_days') is not None
+        or extracted[k].get('elapsed_assessment',{}).get('classification')!='missing_or_unreadable' for k in extracted)):
+        raise ValueError('QUOTE_TOTAL_HEADING_OMISSION_NOT_PROVEN')
+    overview=rt._read_json(attempt/'grader-evidence/files/evaluator_evidence/task024/overview.json')
+    if overview.get('extracted_options')!=extracted:raise ValueError('QUOTE_TOTAL_HEADING_EVIDENCE_DRIFT')
+    files=[p for p in (attempt/manifest['paths']['candidate_original']/'results').glob('*.xlsx') if p.is_file() and not p.is_symlink()]
+    if len(files)!=1:raise ValueError('QUOTE_TOTAL_HEADING_WORKBOOK_AMBIGUOUS')
+    import openpyxl
+    book=openpyxl.load_workbook(BytesIO(files[0].read_bytes()),data_only=False,keep_links=False)
+    try:
+        found=[(sh,cell) for sh in book for row in sh for cell in row if cell.value=='Est. delivery incl. lead time'
+            and sh.sheet_state=='visible' and not sh.row_dimensions[cell.row].hidden
+            and not sh.column_dimensions[cell.column_letter].hidden and cell.number_format.replace(' ','') not in (';;;',';;;;')]
+        if len(found)!=1:raise ValueError('QUOTE_TOTAL_HEADING_NOT_UNIQUE_VISIBLE')
+        sh,header=found[0];cells=[sh.cell(extracted[k]['row'],header.column) for k in ['air','sea','road']]
+        if (header.row!=24 or sh.title!='Quotation' or [c.row for c in cells]!=[25,26,27]
+            or any(not isinstance(c.value,str) or 'days' not in c.value or sh.row_dimensions[c.row].hidden for c in cells)
+            or not isinstance(sh['A23'].value,str) or not all(x in sh['A23'].value.lower() for x in ['est. delivery','lead time','transit'])):
+            raise ValueError('QUOTE_TOTAL_HEADING_REPORTED_SCOPE_INVALID')
+    finally:book.close()
+    return {'profile':PROFILE,'candidate_sha256':rt._sha256_file(files[0]),'old_effective_source_sha256':V1_EFFECTIVE,
+        'old_elapsed_fields_missing':True,'explicit_total_heading_preserved':True,'numeric_score_assigned':False,'old_draft_not_imported':True}

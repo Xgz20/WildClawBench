@@ -113,4 +113,43 @@ class QuoteArrivalSummaryTests(unittest.TestCase):
         orchestration=REPO_ROOT/'tools/report/skills/general-e2e/orchestrate-general-e2e/scripts/quote_arrival_summary.py'
         self.assertEqual(score.read_bytes(),orchestration.read_bytes())
 
+    def test_v1_exact_replay_and_v2_explicit_total_delivery_alias(self):
+        old=deepcopy(self.m);old['runtime'][P.RUNTIME_KEY]=P.marker(self.contract,P.CONTRACT,P.DATASET,profile=P.PROFILE_V1)
+        code,receipt=RUNTIME._effective_rule_source(old,self.source)
+        self.assertEqual(hashlib.sha256(code.encode()).hexdigest(),P.V1_EFFECTIVE)
+        self.assertEqual(receipt['correction_id'],P.PROFILE_V1)
+        before={};exec(code,before);after,_,_=self.scope()
+        self.assertIsNone(before['role']('Est. delivery incl. lead time'))
+        self.assertEqual(after['role']('Est. delivery incl. lead time'),'elapsed')
+        self.assertIsNone(after['role']('Est. delivery'))
+        with tempfile.TemporaryDirectory() as folder:
+            path=Path(folder)/'synthetic.xlsx';self.workbook(path)
+            w=openpyxl.load_workbook(path);w.active['C8']='Est. delivery incl. lead time';w.save(path);w.close()
+            sha=hashlib.sha256(path.read_bytes()).hexdigest();b=after['Book'](path)
+            try:self.assertEqual([b.extract()[1][k][0]['elapsed']['cell'] for k in ['air','sea','road']],['C9','C10','C11'])
+            finally:b.w.close();b.cache.close()
+            self.assertEqual(hashlib.sha256(path.read_bytes()).hexdigest(),sha)
+
+    def test_native_v1_total_heading_issue_requires_exact_old_source_and_no_score(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root,m,rt,task,write,_=self.fixture(folder)
+            m['runtime'][P.RUNTIME_KEY]=P.marker(self.contract,P.CONTRACT,P.DATASET,profile=P.PROFILE_V1)
+            path=root/'candidate-original/results/synthetic.xlsx';w=openpyxl.Workbook();s=w.active;s.title='Quotation'
+            s['A23']='Est. delivery equals lead time + transit';s['E24']='Est. delivery incl. lead time'
+            for row,days in [(25,'24–26'),(26,'46–51'),(27,'36–42')]:s.cell(row,5,'~'+days+' days')
+            w.save(path);w.close()
+            old=self.base+'\n'+P.BRIDGE;write('worker/request.json',{'automated_checks':old})
+            audit=rt._read_json(root/'rule-audit.json');audit['worker']['request_sha256']=rt._sha256_file(root/'worker/request.json');write('rule-audit.json',audit)
+            worker=rt._read_json(root/'worker/result.json');worker['raw_result']['elapsed_time']=0
+            for row,mode in [(25,'air'),(26,'sea'),(27,'road')]:worker['raw_result']['diagnostics']['extracted'][mode]['row']=row
+            write('worker/result.json',worker);write('grader-evidence/files/evaluator_evidence/task024/overview.json',{'extracted_options':worker['raw_result']['diagnostics']['extracted']})
+            issue={'schema_version':'general-e2e-evaluator-extraction-issue/v1','identity':{k:m['identity'][k] for k in ['task_id','scoring_attempt_id','execution_attempt_id']},
+                'status':'evaluation_error_requires_extractor_repair','total_score':None,
+                **{k:False for k in ['candidate_changed','rules_rerun','semantic_response_imported','score_finalized','verify_score_passed']},
+                'decision_requests':[{'criterion_key':'automated.elapsed_time','origin':'evaluator','evidence_checked':[P.V1_EFFECTIVE]}]}
+            write('evaluator-extraction-issue.json',issue)
+            result=P.validate_blocker(rt,root,m,self.contract,task);self.assertFalse(result['numeric_score_assigned'])
+            issue['rules_rerun']=True;write('evaluator-extraction-issue.json',issue)
+            with self.assertRaises(ValueError):P.validate_blocker(rt,root,m,self.contract,task)
+
 if __name__=='__main__':unittest.main()

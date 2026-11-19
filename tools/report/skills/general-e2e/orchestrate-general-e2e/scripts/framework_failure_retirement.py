@@ -37,7 +37,7 @@ def failure_kind(rt,root,state,task):
     if contract.get('task_id') == funnel_summary_tables.TASK and (attempt / 'evaluator-issue.json').is_file():
         funnel_summary_tables.validate_blocker(rt,attempt,m,contract,task)
         return funnel_summary_tables.ERROR_KIND
-    if contract.get('task_id')==quote_arrival_summary.TASK and (attempt/'scoring-infrastructure-review.json').is_file():
+    if contract.get('task_id')==quote_arrival_summary.TASK and any((attempt/name).is_file() for name in ['scoring-infrastructure-review.json','evaluator-extraction-issue.json']):
         quote_arrival_summary.validate_blocker(rt,attempt,m,contract,task)
         return quote_arrival_summary.ERROR_KIND
     if contract.get('task_id')==sterilization_quote_layout.TASK and task.get('thread') is None:
