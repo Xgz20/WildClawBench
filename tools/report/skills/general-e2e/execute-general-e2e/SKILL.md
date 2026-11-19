@@ -3,6 +3,8 @@ name: execute-general-e2e
 description: 在 AstronStudio 等桌面 Harness 中执行单个或批量 General E2E 用例；用于自动或人机协作做题，不负责正式证据收口、评分或报告。
 ---
 
+`0.15.25` Loomy 权限菜单切换时由原生 helper 在当前唯一控件上核验并执行已知授权操作，避免门户树重排造成路径失效。
+
 `0.15.24` Loomy 逐目录通过公开 UI 准备完全访问。新发送在意图前及原生 AX 动作内选择精确目录并回读模型、权限和全文，保留可离线复验的原生证明；同目录历史会话只留作零发送基线，不读取旧候选正文。
 
 `0.15.23` AStudio 队列由独立采集进程续采原生日志，异常自动封存到队列本地目录，关联 Worker、任务、原生进程及 SQLite 和主机 I/O。轮转、写盘失败和采样中断均记录证据断点。详见[队列异常取证](references/astronstudio-incident-evidence.md)。

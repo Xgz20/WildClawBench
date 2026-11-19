@@ -71,6 +71,41 @@ func safeComposer(_ nodes: [AXUIElement], _ pid: Int32) -> Bool {
                 || attribute(element, "AXModal") as? Bool == true
         })
 }
+func publicPermissionTarget(_ app: AXUIElement, _ pid: Int32, _ stage: String) throws -> AXUIElement {
+    let nodes = try descendants(app)
+    let dialogs = nodes.filter { string($0, kAXSubroleAttribute).hasSuffix("Dialog") }
+    var surface: [AXUIElement]
+    let expectedRole: String, expectedLabel: String
+    switch stage {
+    case "open":
+        guard safeComposer(nodes, pid),
+              nodes.filter({ string($0, kAXRoleAttribute) == "AXTextArea" })
+                .map({ string($0, kAXValueAttribute) }) == [""] else {
+            throw Failure.invalid("AX_PERMISSION_REQUIRES_EMPTY_COMPOSER")
+        }
+        surface = nodes
+        expectedRole = "AXPopUpButton"
+        expectedLabel = "默认权限"
+    case "option", "confirm":
+        let isMenu = stage == "option"
+        let subrole = isMenu ? "AXApplicationDialog" : "AXApplicationAlertDialog"
+        guard dialogs.count == 1, string(dialogs[0], kAXSubroleAttribute) == subrole,
+              isMenu || label(dialogs[0]) == "开启完全访问？" else {
+            throw Failure.invalid("AX_PERMISSION_SURFACE_CHANGED")
+        }
+        surface = try descendants(dialogs[0])
+        let heading = isMenu ? "当前工作区权限" : "开启完全访问？"
+        guard surface.contains(where: { string($0, kAXRoleAttribute) == "AXStaticText"
+            && string($0, kAXValueAttribute) == heading }) else { throw Failure.invalid("AX_PERMISSION_HEADING_CHANGED") }
+        expectedRole = "AXButton"
+        expectedLabel = isMenu ? "完全访问 突破工作区边界；所有操作免询问。" : "我已了解风险，开启完全访问"
+    default:
+        throw Failure.invalid("AX_PERMISSION_ACTION_UNKNOWN")
+    }
+    let targets = surface.filter { string($0, kAXRoleAttribute) == expectedRole && label($0) == expectedLabel }
+    guard targets.count == 1 else { throw Failure.invalid("AX_PERMISSION_TARGET_AMBIGUOUS") }
+    return targets[0]
+}
 func guardedSend(_ app: AXUIElement, _ pid: Int32, _ guardValues: [String: String],
                  press: Bool) throws -> [String: Any] {
     guard let prompt = guardValues["prompt"], !prompt.isEmpty,
@@ -191,6 +226,8 @@ func main() throws -> [String: Any] {
     let target: AXUIElement
     if action == "press", let folder = request["workspace_guard"] as? String {
         target = try registeredWorkspace(descendants(app), folder)
+    } else if action == "press", let permissionStage = request["public_permission_guard"] as? String {
+        target = try publicPermissionTarget(app, pid, permissionStage)
     } else {
         target = try resolve(app, path)
     }

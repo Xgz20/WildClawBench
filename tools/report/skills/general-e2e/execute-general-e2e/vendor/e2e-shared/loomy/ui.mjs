@@ -144,14 +144,14 @@ async function prepareFullAccess(config, selected, save) {
   if (ui.permission_label === '完全访问') return selected;
   requireValue(ui.permission_label === '默认权限', 'PERMISSION_PROVISION_UNRECOGNIZED_MODE');
   await save('workspace-before-permission', selected);
-  await act(config, uniqueNode(selected, permissionButton(ui.permission_label), 'workspace-permission'));
+  await act(config, uniqueNode(selected, permissionButton(ui.permission_label), 'workspace-permission'), 'press', { public_permission_guard: 'open' });
   const menu = await waitUi(config, row => row.nodes.some(isButton(permissionOption)), 'workspace-permission-menu');
   const menuGroup = uniqueNode(menu, n => n.subrole === 'AXApplicationDialog', 'workspace-permission-menu-group');
   const within = (snapshot, group) => ({ nodes: snapshot.nodes.filter(node => group.path.every((part, i) => node.path[i] === part)) });
   const menuContents = within(menu, menuGroup);
   requireValue(menuContents.nodes.some(n => n.role === 'AXStaticText' && n.value === '当前工作区权限'), 'PERMISSION_MENU_TITLE_CHANGED');
   await save('workspace-permission-menu', menu);
-  await act(config, uniqueNode(menuContents, isButton(permissionOption), 'exact-full-access-option'));
+  await act(config, uniqueNode(menuContents, isButton(permissionOption), 'exact-full-access-option'), 'press', { public_permission_guard: 'option' });
   const dialog = await waitUi(config, row => row.nodes.some(isButton(confirmationButton)), 'workspace-permission-confirmation');
   const alert = uniqueNode(dialog, n => n.subrole === 'AXApplicationAlertDialog' && nodeLabel(n) === confirmationTitle, 'workspace-permission-alert');
   const contents = within(dialog, alert);
@@ -159,7 +159,7 @@ async function prepareFullAccess(config, selected, save) {
     && contents.nodes.some(isButton('取消'))
     && contents.nodes.filter(n => n.role === 'AXButton').length === 2, 'PERMISSION_CONFIRMATION_CHANGED');
   await save('workspace-permission-confirmation', dialog);
-  await act(config, uniqueNode(contents, isButton(confirmationButton), 'confirm-exact-full-access-option'));
+  await act(config, uniqueNode(contents, isButton(confirmationButton), 'confirm-exact-full-access-option'), 'press', { public_permission_guard: 'confirm' });
   return waitUi(config, row => !row.nodes.some(n => /Dialog$/u.test(n.subrole || ''))
     && row.nodes.some(permissionButton('完全访问')), 'workspace-full-access-readback');
 }
