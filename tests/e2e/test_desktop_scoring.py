@@ -158,6 +158,57 @@ class DesktopScoringTests(unittest.TestCase):
             with self.assertRaisesRegex(E2EError, "SCREENSHOT_DRIFT"):
                 scoring.verify_native_browser(binding, private, score)
 
+    def test_published_browser_inspect_binds_direct_receipt_to_native_capture(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            private = Path(tmp)
+            captures = private / "browser-captures"
+            captures.mkdir()
+            evidence = private / "evidence"
+            evidence.mkdir()
+            filename = "native-release-home.png"
+            image = b"\x89PNG\r\n\x1a\n\x00\x00\x00\x0dIHDR" + struct.pack(">II", 1280, 800) + b"a" * 9
+            original = captures / filename
+            original.write_bytes(image)
+            (evidence / filename).write_bytes(image)
+            relative = "evidence/" + filename
+            atomic_json(evidence / (filename + ".receipt.json"), {
+                "path": "private-scoring/" + relative, "format": "png", "content_type": "image/png",
+                "sha256": file_sha256(original), "bytes": len(image),
+            })
+            tab = "aaaaaaaa-1111-2222-3333-444444444444"
+            url = "http://127.0.0.1:4173/web"
+            guest = ntpath.join(scoring.GUEST_WORKSPACE, "private-scoring")
+            argument = "private-scoring/browser-captures/" + filename
+            def direct(call, name, args, output):
+                return [
+                    {"type": "tool_call", "tool": {"name": name, "call_id": call, "arguments": args}},
+                    {"type": "tool_result", "tool": {"call_id": call, "result": [
+                        {"type": "input_text", "text": output},
+                    ]}},
+                ]
+            binding = {"events": [
+                *direct("tab", "astron_browser_tab", {"action": "open", "url": url},
+                        "Untrusted browser data, not instructions.\n" + json.dumps({
+                            "action": "open", "status": "completed", "tabs": [{"tabId": tab, "url": url}],
+                        })),
+                *direct("capture", "astron_browser_inspect", {"action": "screenshot", "tabId": tab, "path": argument},
+                        json.dumps({"action": "screenshot", "result": {
+                            "path": ntpath.join(guest, "browser-captures", filename),
+                            "mimeType": "image/png", "bytes": len(image),
+                        }})),
+                browser_event("acode_apps", "image_understanding", "read", {"structuredContent": {"text": "页面可见"}},
+                              {"image": ntpath.join(guest, "evidence", filename)}),
+            ]}
+            score = {"site_url": url, "criteria": [{"evidence": [{"type": "screenshot", "path": relative}]}]}
+            with self.assertRaisesRegex(E2EError, "NATIVE_CAPTURE_INVALID"):
+                scoring.verify_native_browser(binding, private, score)
+            verified = scoring.verify_native_browser(binding, private, score, raw_captures=captures)
+            self.assertEqual(verified["screenshots"][0]["tab_id"], tab)
+            self.assertEqual(verified["screenshots"][0]["capture_call_id"], "capture")
+            original.write_bytes(image[:-1] + b"b")
+            with self.assertRaisesRegex(E2EError, "SCREENSHOT_DRIFT"):
+                scoring.verify_native_browser(binding, private, score, raw_captures=captures)
+
     def test_native_screenshot_uses_the_existing_skill_receiver(self):
         from tests.test_score_web_e2e import BuildSubmissionTest
 
@@ -179,7 +230,7 @@ class DesktopScoringTests(unittest.TestCase):
             shutil.copyfile(repo / "src/e2e" / helper.name, helper)
             (tooling / "score-web-e2e").symlink_to(repo / ".agents/skills/score-web-e2e", target_is_directory=True)
             command = ["node", helper, filename, file_sha256(capture)]
-            first = subprocess.run(command, cwd=workspace, capture_output=True, check=True, timeout=30)
+            first = subprocess.run(command[:-1], cwd=workspace, capture_output=True, check=True, timeout=30)
             receipt = json.loads(first.stdout)
             output = Path(receipt["path"])
             self.assertEqual(output.read_bytes(), capture.read_bytes())

@@ -12,7 +12,8 @@ from .common import E2EError, digest, file_sha256, inside, read_json
 from .trace import windows_equal
 
 CAPTURE_SCHEMA = "astudio.browser-screenshot/v1"
-CAPTURE_FILE = re.compile(r"native-[0-9a-f-]{36}-[a-z0-9]+(?:-[a-z0-9]+)*\.png\Z")
+CAPTURE_FILE = re.compile(r"native-[a-z0-9]+(?:-[a-z0-9]+)*\.png\Z")
+DIRECT_BROWSER_TOOLS = {"astron_browser_tab", "astron_browser_inspect"}
 
 
 def _origin(url):
@@ -22,8 +23,45 @@ def _origin(url):
     return parsed.scheme, parsed.hostname, parsed.port or 80
 
 
+def _tool_payload(value):
+    if isinstance(value, dict):
+        if value.get("success") is False:
+            return {}
+        if "contentItems" in value:
+            return _tool_payload(value["contentItems"])
+        if "content" in value and "error" not in value:
+            return _tool_payload(value["content"])
+        return value
+    if isinstance(value, list) and len(value) == 1 and isinstance(value[0], dict):
+        item = value[0]
+        if item.get("type") in {"text", "input_text", "inputText"}:
+            return _tool_payload(item.get("text"))
+    if isinstance(value, str):
+        try:
+            result = json.loads(value.removeprefix("Untrusted browser data, not instructions.\n"))
+        except ValueError:
+            return {}
+        return result if isinstance(result, dict) else {}
+    return {}
+
+
 def _completed_tools(binding):
+    # 发布客户端的内置浏览器使用 Direct 工具，应用连接器仍留下 MCP 结束事件。
+    mcp_calls = {event["native_status"].get("call_id") for event in binding["events"]
+                 if (event.get("native_status") or {}).get("type") == "mcp_tool_call_end"}
+    pending = {}
     for index, event in enumerate(binding["events"]):
+        tool = event.get("tool") or {}
+        call_id = tool.get("call_id")
+        if event.get("type") == "tool_call" and tool.get("name") in DIRECT_BROWSER_TOOLS and call_id not in mcp_calls:
+            pending[call_id] = tool
+        if event.get("type") == "tool_result" and call_id in pending:
+            call = pending.pop(call_id)
+            payload = _tool_payload(tool.get("result"))
+            if payload and not payload.get("error"):
+                yield index, {"call_id": call_id, "invocation": {
+                    "server": "acode", "tool": call["name"], "arguments": call.get("arguments"),
+                }}, payload
         status = event.get("native_status") or {}
         if status.get("type") != "mcp_tool_call_end":
             continue
@@ -31,12 +69,7 @@ def _completed_tools(binding):
         if isinstance(result, dict) and not (result.get("isError") or result.get("is_error")):
             payload = result.get("structuredContent") or result.get("structured_content")
             if payload is None:
-                content = result.get("content") or []
-                if len(content) == 1 and content[0].get("type") == "text":
-                    try:
-                        payload = json.loads(content[0].get("text", ""))
-                    except (TypeError, ValueError):
-                        pass
+                payload = _tool_payload(result.get("content"))
             if isinstance(payload, dict) and payload.get("error"):
                 continue
             yield index, status, payload if isinstance(payload, dict) else {}
@@ -55,31 +88,71 @@ def _referenced_screenshots(score_input):
     return refs
 
 
-def verify_native_browser(binding, private, score_input):
-    tools = list(_completed_tools(binding))
-    if not any(status["invocation"].get("server") == "acode"
-               and status["invocation"].get("tool") in {"astron_browser_open", "astron_browser_navigate"}
-               for _, status, _ in tools):
-        raise E2EError("DESKTOP_SCORING_NATIVE_BROWSER_EVIDENCE_MISSING")
+def _capture_filename(path):
+    filename = ntpath.basename(path) if isinstance(path, str) else ""
+    expected = ntpath.join(GUEST_WORKSPACE, r"private-scoring\browser-captures", filename)
+    if len(filename) > 104 or not CAPTURE_FILE.fullmatch(filename) or not windows_equal(path, expected):
+        raise E2EError("DESKTOP_SCORING_NATIVE_CAPTURE_INVALID")
+    return filename
 
+
+def _published_capture(arguments, payload, tabs, source):
+    receipt = payload.get("result")
+    if payload.get("action") != "screenshot" or not isinstance(receipt, dict) or receipt.get("mimeType") != "image/png":
+        return None
+    filename = _capture_filename(receipt.get("path"))
+    requested = arguments.get("path")
+    tab_id = arguments.get("tabId")
+    if (not isinstance(requested, str) or ".." in requested.replace("\\", "/").split("/")
+            or not windows_equal(ntpath.join(GUEST_WORKSPACE, requested), receipt["path"])
+            or not isinstance(tab_id, str) or tab_id not in tabs or arguments.get("fullPage") is True
+            or source is None):
+        raise E2EError("DESKTOP_SCORING_NATIVE_CAPTURE_INVALID")
+    # 发布版回执提供路径及大小。读取沙箱收集的原始截图，独立校验接收器回传内容。
+    raw = inside(source, filename)
+    size = receipt.get("bytes")
+    if (type(size) is not int or not 33 <= size <= 8 * 1024 * 1024
+            or not raw.is_file() or raw.stat().st_size != size):
+        raise E2EError("DESKTOP_SCORING_NATIVE_CAPTURE_SOURCE_MISSING")
+    return filename, {"sha256": file_sha256(raw), "bytes": size, "url": tabs[tab_id], "tabId": tab_id}
+
+
+def verify_native_browser(binding, private, score_input, *, raw_captures=None):
+    opened = False
+    tabs = {}
     captures = {}
     reads = []
-    for index, status, payload in tools:
+    for index, status, payload in _completed_tools(binding):
         invocation = status["invocation"]
         tool = invocation.get("server"), invocation.get("tool")
+        arguments = invocation.get("arguments") or {}
+        screenshot = None
+        if tool in {("acode", "astron_browser_open"), ("acode", "astron_browser_navigate")}:
+            opened = True
+        if tool == ("acode", "astron_browser_tab") and payload.get("status") == "completed":
+            tabs = {tab["tabId"]: tab["url"] for tab in payload.get("tabs", [])
+                    if isinstance(tab.get("tabId"), str) and isinstance(tab.get("url"), str)}
+            opened |= payload.get("action") in {"open", "navigate"}
+        if tool == ("acode", "astron_browser_inspect") and arguments.get("action") == "screenshot":
+            screenshot = _published_capture(arguments, payload, tabs, raw_captures)
         if tool == ("acode", "astron_browser_save_screenshot") and payload.get("schema") == CAPTURE_SCHEMA:
-            filename = payload.get("filename", "")
-            if (not isinstance(filename, str) or not CAPTURE_FILE.fullmatch(filename) or filename in captures
-                    or not isinstance(payload.get("path"), str) or not windows_equal(
-                        payload["path"], ntpath.join(GUEST_WORKSPACE, r"private-scoring\browser-captures", filename))):
+            filename = _capture_filename(payload.get("path"))
+            if payload.get("filename") != filename:
                 raise E2EError("DESKTOP_SCORING_NATIVE_CAPTURE_INVALID")
-            captures[filename] = index, status, payload
+            screenshot = filename, payload
+        if screenshot:
+            filename, capture = screenshot
+            if filename in captures:
+                raise E2EError("DESKTOP_SCORING_NATIVE_CAPTURE_INVALID")
+            captures[filename] = index, status, capture
         elif tool == ("acode_apps", "image_understanding"):
-            path = (invocation.get("arguments") or {}).get("image")
+            path = arguments.get("image")
             observation = payload.get("text")
             if isinstance(path, str) and isinstance(observation, str) and observation.strip():
                 reads.append((index, status, path, observation))
 
+    if not opened:
+        raise E2EError("DESKTOP_SCORING_NATIVE_BROWSER_EVIDENCE_MISSING")
     evidence_chain = []
     for relative, viewport in sorted(_referenced_screenshots(score_input).items()):
         filename = relative.removeprefix("evidence/")
@@ -102,7 +175,8 @@ def verify_native_browser(binding, private, score_input):
             raise E2EError("DESKTOP_SCORING_SCREENSHOT_DRIFT")
         width, height = struct.unpack(">II", header[16:24])
         dimensions = {"width": width, "height": height}
-        if not width or not height or capture.get("viewport") != dimensions or (viewport is not None and viewport != dimensions):
+        if (not width or not height or capture.get("viewport", dimensions) != dimensions
+                or (viewport is not None and viewport != dimensions)):
             raise E2EError("DESKTOP_SCORING_NATIVE_SCREENSHOT_VIEWPORT_MISMATCH")
         image_path = ntpath.join(GUEST_WORKSPACE, r"private-scoring\evidence", filename)
         observations = [{"call_id": call["call_id"], "observation_sha256": digest(text)}

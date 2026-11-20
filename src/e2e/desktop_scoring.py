@@ -95,7 +95,7 @@ def _prompt(scene, task_id, record, archive, attempt):
         return header + (
             "先读 desktop-scoring-tooling/desktop_web_browser.md。工作目录已包含 Web Skill 所需的 workspace 和 private-scoring。按实际项目说明在运行时副本中启动站点，"
             "只通过 127.0.0.1 服务。使用 AStudio 原生浏览器操作页面、观察实际状态并保存宽屏和窄屏证据。"
-            "用 astron_browser_save_screenshot 保存原生 PNG，经专用脚本回传到 evidence，再调用 image_understanding 读图。"
+            "用 AStudio 原生截图工具保存 PNG，经专用脚本回传到 evidence，再调用 image_understanding 读图。"
             "以 AStudio 工具清单中的原生接口执行，遇到工具和证据链故障填写 evaluation_error。"
             "完成后保存 private-scoring/score_input.json，运行 finalize_score，停止受管服务并清理运行时副本。\n"
         )
@@ -358,7 +358,7 @@ def _read_web(work, returned, context, binding, driver):
             shutil.copyfile(child, private / child.name)
     score_input = read_json(private / "score_input.json")
     if score_input.get("evaluation_status", "completed") == "completed":
-        visual = verify_native_browser(binding, private, score_input)
+        visual = verify_native_browser(binding, private, score_input, raw_captures=guest / "browser-captures")
         if visual["screenshots"]:
             atomic_json(private / "evidence/native-visual-verification.json", visual)
     score_input["scorer"] = {"harness": "astronstudio", "model": MODEL, "native_model": binding["actual_model"],
