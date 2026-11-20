@@ -140,7 +140,7 @@ releases:
         directed_web_retrieval: 3
         local_evidence: 2
   general-challenge-v3:
-    status: ready
+    status: frozen
     created_at: '2026-11-20T00:00:00+08:00'
     manifest: datasets/general/challenge/manifests/general-challenge-v3.json
     task_ids:
