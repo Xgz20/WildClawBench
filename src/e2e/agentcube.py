@@ -93,6 +93,8 @@ class AgentCubeConfig:
 
 
 def validate_chatgpt_gateway(value: str) -> None:
+    if not isinstance(value, str) or not value:
+        raise E2EError("CHATGPT_GATEWAY_URL_INVALID")
     try:
         endpoint = urlsplit(value)
     except (TypeError, ValueError) as error:

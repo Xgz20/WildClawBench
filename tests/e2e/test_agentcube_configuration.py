@@ -68,3 +68,22 @@ class AgentCubeConfigurationTests(unittest.TestCase):
             driver.preflight()
         self.assertEqual(self.load({}).required_expire_ttl(600), 3000)
         self.assertEqual(driver.config.required_expire_ttl(600), 3900)
+
+
+    def test_private_upload_does_not_include_the_gateway_error_body(self):
+        client = AgentCubeClient(self.load({}))
+        self.addCleanup(client.close)
+        response = Mock(status_code=502, text="synthetic-secret")
+        client.http.request = Mock(return_value=response)
+        with self.assertRaisesRegex(PlatformError, "^AGENTCUBE_PRIVATE_UPLOAD_FAILED$"):
+            client.upload_private("session", "/run/wgui/.key", b"synthetic-secret")
+        self.assertEqual(client.http.request.call_args.kwargs["data"], {
+            "path": "/run/wgui/.key", "mode": "0600",
+        })
+
+    def test_chatgpt_gateway_requires_a_credential_free_https_url(self):
+        good = "https://gateway.example/v1"
+        self.assertEqual(self.load({"chatgpt_gateway_url": good}).public()["chatgpt_gateway_url"], good)
+        for url in (2, "", "http://gateway/v1", "https://u:p@gateway/v1", "https://gateway/v1?token=secret"):
+            with self.subTest(url=url), self.assertRaisesRegex(E2EError, "CHATGPT_GATEWAY_URL_INVALID"):
+                self.load({"chatgpt_gateway_url": url})
