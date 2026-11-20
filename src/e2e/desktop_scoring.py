@@ -329,11 +329,14 @@ def _build_web_on_guest(driver, package, skill):
     driver.client.windows_execute(sid, powershell(unpack), timeout=120)
     unit = guest + r"\contents\unit"
     submission = unit + r"\submission.json"
+    # AgentCube 文件接口会包装 JSON；通过二进制别名取回 Windows 校验器生成的字节。
+    binary_submission = guest + r"\submission.bin"
     script = ("$ErrorActionPreference='Stop';& '" + node + "' '" + guest
               + r"\contents\verifier\scripts\build_submission.mjs" + "' --package-root '" + unit
-              + "' --output '" + submission + "';if($LASTEXITCODE -ne 0){exit $LASTEXITCODE}")
+              + "' --output '" + submission + "';if($LASTEXITCODE -ne 0){exit $LASTEXITCODE};"
+              + "Copy-Item -LiteralPath '" + submission + "' -Destination '" + binary_submission + "' -Force")
     driver.client.windows_execute(sid, powershell(script), timeout=90)
-    (package / "submission.json").write_bytes(driver.client.windows_download(sid, submission))
+    (package / "submission.json").write_bytes(driver.client.windows_download(sid, binary_submission))
 
 
 def _read_web(work, returned, context, binding, driver):

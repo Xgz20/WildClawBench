@@ -269,6 +269,27 @@ class DesktopScoringTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "WEB_BUNDLE_DRIFT"):
                 unpack(guest, file_sha256(upload))
 
+    def test_web_submission_download_uses_binary_alias_to_preserve_json_bytes(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            package = root / "unit"
+            package.mkdir()
+            skill = root / "skill"
+            skill.mkdir()
+            stage = root / "stage"
+            stage.mkdir()
+            atomic_json(stage / "installation.json", {"node": r"C:\node\node.exe"})
+            driver = Mock()
+            driver.staging = stage
+            driver.store.get.return_value = {"session_id": "sandbox"}
+            document = b'{ "schema_version": "wildclawbench.web-e2e-submission/v1" }\r\n'
+            driver.client.windows_download.return_value = document
+            scoring._build_web_on_guest(driver, package, skill)
+            sid, name = driver.client.windows_download.call_args.args
+            self.assertEqual(sid, "sandbox")
+            self.assertTrue(name.endswith(r"\submission.bin"))
+            self.assertEqual((package / "submission.json").read_bytes(), document)
+
     def test_general_rejects_a_score_for_a_different_frozen_execution(self):
         with tempfile.TemporaryDirectory() as tmp:
             work = Path(tmp)
