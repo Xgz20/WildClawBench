@@ -34,11 +34,20 @@ class DatasetDefinition:
     capability_map_path: str = "tools/report/data/checkpoint_capability_map7.yaml"
     manifest_path: str = "eval_general_e2e/datasets/manifests/general-custom60-v1.json"
     revision_scope: tuple[str, ...] = ("tasks/extension", "workspace/extension")
+    category_directory_task_ids: bool = False
     task_id_prefix: str = ""
     legacy_task_id_prefixes: tuple[str, ...] = ()
     series_id: str = ""
     category_labels: Mapping[str, str] = field(default_factory=dict)
     constraints: Mapping[str, Any] = field(default_factory=dict)
+
+    def category_directory(self, category: str) -> str:
+        return next((directory for directory, key in self.category_directories if key == category), category)
+
+    def task_id_stems(self, category: str) -> tuple[str, ...]:
+        if self.category_directory_task_ids:
+            return (self.category_directory(category),)
+        return tuple(prefix + category for prefix in (self.task_id_prefix, *self.legacy_task_id_prefixes))
 
 
 DEFAULT_DEFINITION = DatasetDefinition(

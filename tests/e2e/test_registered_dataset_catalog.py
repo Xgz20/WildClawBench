@@ -20,17 +20,17 @@ class RegisteredPlatformCatalogTests(unittest.TestCase):
         self.repo = Path('/unused/source-checkout')
         self.definition = object()
         self.registered = SimpleNamespace(status='frozen', definition=self.definition,
-                                          manifest_path=Path('/unused/hard-v1.json'))
-        self.manifest = {'dataset_id': 'general-hard-v1', 'dataset_digest': 'a' * 64,
+                                          manifest_path=Path('/unused/general-challenge-v3.json'))
+        self.manifest = {'dataset_id': 'general-challenge-v3', 'dataset_digest': 'a' * 64,
                          'source': {'revision': 'b' * 40},
-                         'tasks': [{'task_id': 'general_hard_case', 'category': 'data_analysis'}]}
+                         'tasks': [{'task_id': '02_Data_Analysis_task_001_fixture', 'category': 'data_analysis'}]}
 
     def test_series_alias_preserves_release_identity_and_frozen_source_pin(self):
         with patch('eval_general_e2e.datasets.catalog.load_registered_dataset', return_value=self.registered), \
              patch('eval_general_e2e.datasets.bundle.load_manifest_lock', return_value=self.manifest), \
              patch('eval_general_e2e.datasets.bundle.compile_dataset', return_value=(self.manifest, [])) as compile_source:
-            tasks, _, manifest = _general_catalog(self.repo, 'general-hard')
-        self.assertEqual(tasks[0]['dataset'], {'id': 'general-hard-v1', 'digest': 'a' * 64})
+            tasks, _, manifest = _general_catalog(self.repo, 'general-challenge')
+        self.assertEqual(tasks[0]['dataset'], {'id': 'general-challenge-v3', 'digest': 'a' * 64})
         self.assertEqual(manifest, self.manifest)
         compile_source.assert_called_once_with(self.repo, definition=self.definition,
                                                source_revision='b' * 40)
@@ -40,7 +40,7 @@ class RegisteredPlatformCatalogTests(unittest.TestCase):
         with patch('eval_general_e2e.datasets.catalog.load_registered_dataset', return_value=self.registered), \
              patch('eval_general_e2e.datasets.bundle.compile_dataset') as compile_source, \
              self.assertRaisesRegex(E2EError, 'GENERAL_DATASET_NOT_FROZEN'):
-            _general_catalog(self.repo, 'general-hard')
+            _general_catalog(self.repo, 'general-challenge')
         compile_source.assert_not_called()
 
     def test_registered_source_drift_is_rejected(self):
@@ -50,7 +50,7 @@ class RegisteredPlatformCatalogTests(unittest.TestCase):
              patch('eval_general_e2e.datasets.bundle.load_manifest_lock', return_value=self.manifest), \
              patch('eval_general_e2e.datasets.bundle.compile_dataset', return_value=(drifted, [])), \
              self.assertRaisesRegex(E2EError, 'GENERAL_DATASET_SOURCE_DRIFT'):
-            _general_catalog(self.repo, 'general-hard-v1')
+            _general_catalog(self.repo, 'general-challenge-v3')
 
     def test_builtin_selection_retains_its_existing_contract(self):
         with patch.dict('eval_general_e2e.datasets.bundle.DATASETS', {'sample-builtin': self.definition}), \
@@ -64,13 +64,13 @@ class RegisteredPlatformCatalogTests(unittest.TestCase):
     def test_cli_selectors_are_mutually_exclusive(self):
         parser = build_run_batch_parser('fixture', 1)
         with patch('sys.stderr'), self.assertRaises(SystemExit):
-            parser.parse_args(['--dataset', 'general-custom70-v5', '--dataset-id', 'general-hard-v1'])
+            parser.parse_args(['--dataset', 'general-custom70-v5', '--dataset-id', 'general-challenge-v3'])
 
     def test_output_scope_accepts_same_registered_identity_but_rejects_other_digest(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             path = root / 'evaluation_scope.json'
-            value = {'tasks': [{'dataset': {'series_id': 'general-hard', 'release_id': 'general-hard-v1',
+            value = {'tasks': [{'dataset': {'series_id': 'general-challenge', 'release_id': 'general-challenge-v3',
                                             'dataset_digest': 'a' * 64, 'manifest_sha256': 'f' * 64}}]}
             path.write_text(json.dumps(value))
             require_dataset_output_scope(root, self.manifest)
@@ -83,9 +83,9 @@ class RegisteredPlatformCatalogTests(unittest.TestCase):
         from eval import run_batch
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
-            task = {'task_id': 'general_hard_fixture', 'category': 'data_analysis',
+            task = {'task_id': '02_Data_Analysis_task_002_fixture', 'category': 'data_analysis',
                     'file_path': str(root / 'absent-task.md'),
-                    'dataset_selection': {'series_id': 'general-hard', 'release_id': 'general-hard-v1',
+                    'dataset_selection': {'series_id': 'general-challenge', 'release_id': 'general-challenge-v3',
                                           'dataset_digest': 'a' * 64}}
             run_batch._write_evaluation_scope(root, [task], mode='dataset',
                 categories=['data_analysis'], modality=None, include_tags=set(),

@@ -10,8 +10,8 @@ from .bundle import compile_dataset, load_manifest_lock
 from .catalog import load_registered_dataset
 from eval_general_e2e.shared.dataset_bundle.verify import _validate_manifest, sha256_file
 from src.utils.task_parser import parse_task_md
-from .source_history import dataset_task_path
-from .layout import load_layout, relocated_task
+from .source_history import archived_source_revision, dataset_task_path
+from .layout import relocated_task
 from .workspaces import materialize_verified_workspaces
 
 
@@ -34,7 +34,7 @@ def discover_frozen_tasks(
     compiled, members = compile_dataset(root, definition=registered.definition, source_revision=manifest["source"]["revision"])
     if compiled != manifest:
         raise ValueError("dataset sources differ from the frozen manifest; publish a new release")
-    historical = manifest["dataset_id"] in load_layout(root).get("historical_releases", ())
+    historical = archived_source_revision(root, manifest["dataset_id"]) is not None
     frozen_root = (materialize_verified_workspaces(manifest, members, workspace_cache, include_task_files=historical)
                    if workspace_cache is not None else None)
     identity = {"series_id": registered.series_id, "release_id": registered.definition.dataset_id,

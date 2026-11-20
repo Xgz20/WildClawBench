@@ -353,7 +353,8 @@ def parse_task_md(task_file: Path, *, repo_root: Path | None = None, raw: str | 
         "timeout_seconds":  timeout_seconds,
         "file_path":        str(task_file.resolve()),
         "category":         (str(metadata.get('category') or task_file.parent.name)
-                             if judge_evidence.get('semantic_status_profile') == 'evidence-aware-v1'
+                             if (judge_evidence.get('semantic_status_profile') == 'evidence-aware-v1'
+                                 or isinstance(metadata.get("dataset_report"), dict))
                              else task_file.parent.name),
         "modality":         str(metadata.get("modality", "")).strip(),
         "tags":             tags,

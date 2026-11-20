@@ -3,8 +3,6 @@ datasets:
   general-custom60-v1:
     kind: legacy
     manifest: eval_general_e2e/datasets/manifests/general-custom60-v1.json
-  general-hard:
-    definition: datasets/general-hard/dataset.yaml
   general-custom116-v1:
     kind: builtin
     manifest: eval_general_e2e/datasets/manifests/general-custom116-v1.json

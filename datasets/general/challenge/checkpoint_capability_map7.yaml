@@ -1,4 +1,4 @@
-general_hard_software_engineering_task_001_delimiter_validation:
+05_Software_Engineering_task_001_delimiter_validation:
   business_correctness:
     - code_generation
   boundary_cases:
@@ -7,7 +7,7 @@ general_hard_software_engineering_task_001_delimiter_validation:
     - verification_delivery
   evidence_binding:
     - verification_delivery
-general_hard_software_engineering_task_002_sqlite_import:
+05_Software_Engineering_task_002_sqlite_import:
   business_correctness:
     - code_generation
   boundary_cases:
@@ -16,7 +16,7 @@ general_hard_software_engineering_task_002_sqlite_import:
     - verification_delivery
   evidence_binding:
     - verification_delivery
-general_hard_office_documents_task_001_policy_crosswalk:
+01_Office_Documents_task_001_policy_crosswalk:
   automated.business_correctness:
     - data_processing
   automated.boundary_cases:
@@ -29,7 +29,7 @@ general_hard_office_documents_task_001_policy_crosswalk:
     - data_processing
   llm_judge.usable_handoff:
     - verification_delivery
-general_hard_office_documents_task_002_meeting_decision_repair:
+01_Office_Documents_task_002_meeting_decision_repair:
   automated.business_correctness:
     - data_processing
   automated.boundary_cases:
@@ -42,7 +42,7 @@ general_hard_office_documents_task_002_meeting_decision_repair:
     - data_processing
   llm_judge.usable_handoff:
     - verification_delivery
-general_hard_office_documents_task_003_docx_clause_patch:
+01_Office_Documents_task_003_docx_clause_patch:
   automated.business_correctness:
     - data_processing
   automated.boundary_cases:
@@ -55,7 +55,7 @@ general_hard_office_documents_task_003_docx_clause_patch:
     - data_processing
   llm_judge.usable_handoff:
     - verification_delivery
-general_hard_office_documents_task_004_bid_compliance:
+01_Office_Documents_task_004_bid_compliance:
   automated.business_correctness:
     - data_processing
   automated.boundary_cases:
@@ -68,7 +68,7 @@ general_hard_office_documents_task_004_bid_compliance:
     - data_processing
   llm_judge.usable_handoff:
     - verification_delivery
-general_hard_office_documents_task_005_annual_deck:
+01_Office_Documents_task_005_annual_deck:
   automated.business_correctness:
     - data_processing
   automated.boundary_cases:
@@ -81,7 +81,7 @@ general_hard_office_documents_task_005_annual_deck:
     - data_processing
   llm_judge.usable_handoff:
     - verification_delivery
-general_hard_office_documents_task_006_sop_knowledge_pack:
+01_Office_Documents_task_006_sop_knowledge_pack:
   automated.business_correctness:
     - data_processing
   automated.boundary_cases:
@@ -94,7 +94,7 @@ general_hard_office_documents_task_006_sop_knowledge_pack:
     - data_processing
   llm_judge.usable_handoff:
     - verification_delivery
-general_hard_office_documents_task_008_bilingual_revision:
+01_Office_Documents_task_008_bilingual_revision:
   automated.business_correctness:
     - data_processing
   automated.boundary_cases:
@@ -107,7 +107,7 @@ general_hard_office_documents_task_008_bilingual_revision:
     - data_processing
   llm_judge.usable_handoff:
     - verification_delivery
-general_hard_office_documents_task_007_visual_handoff:
+01_Office_Documents_task_007_visual_handoff:
   automated.business_correctness:
     - data_processing
   automated.boundary_cases:
@@ -120,7 +120,7 @@ general_hard_office_documents_task_007_visual_handoff:
     - data_processing
   llm_judge.usable_handoff:
     - verification_delivery
-general_hard_office_documents_task_009_pdf_to_docx:
+01_Office_Documents_task_009_pdf_to_docx:
   automated.business_correctness:
     - data_processing
   automated.boundary_cases:
@@ -133,7 +133,7 @@ general_hard_office_documents_task_009_pdf_to_docx:
     - data_processing
   llm_judge.usable_handoff:
     - verification_delivery
-general_hard_office_documents_task_010_capex_packet:
+01_Office_Documents_task_010_capex_packet:
   automated.business_correctness:
     - data_processing
   automated.boundary_cases:
@@ -146,7 +146,7 @@ general_hard_office_documents_task_010_capex_packet:
     - data_processing
   llm_judge.usable_handoff:
     - verification_delivery
-general_hard_office_documents_task_011_linked_report_update:
+01_Office_Documents_task_011_linked_report_update:
   automated.business_correctness:
     - data_processing
   automated.boundary_cases:
@@ -159,7 +159,7 @@ general_hard_office_documents_task_011_linked_report_update:
     - data_processing
   llm_judge.usable_handoff:
     - verification_delivery
-general_hard_office_documents_task_012_visual_redlines:
+01_Office_Documents_task_012_visual_redlines:
   automated.business_correctness:
     - data_processing
   automated.boundary_cases:
@@ -172,7 +172,7 @@ general_hard_office_documents_task_012_visual_redlines:
     - data_processing
   llm_judge.usable_handoff:
     - verification_delivery
-general_hard_office_documents_task_013_proposal_delivery:
+01_Office_Documents_task_013_proposal_delivery:
   automated.business_correctness:
     - data_processing
   automated.boundary_cases:
@@ -185,7 +185,7 @@ general_hard_office_documents_task_013_proposal_delivery:
     - data_processing
   llm_judge.usable_handoff:
     - verification_delivery
-general_hard_office_documents_task_015_board_decision_pack:
+01_Office_Documents_task_015_board_decision_pack:
   automated.business_correctness:
     - data_processing
   automated.boundary_cases:
@@ -198,7 +198,7 @@ general_hard_office_documents_task_015_board_decision_pack:
     - data_processing
   llm_judge.usable_handoff:
     - verification_delivery
-general_hard_office_documents_task_016_docx_structure_repair:
+01_Office_Documents_task_016_docx_structure_repair:
   automated.business_correctness:
     - data_processing
   automated.boundary_cases:
@@ -211,7 +211,7 @@ general_hard_office_documents_task_016_docx_structure_repair:
     - data_processing
   llm_judge.usable_handoff:
     - verification_delivery
-general_hard_data_analysis_task_001_heterogeneous_join:
+02_Data_Analysis_task_001_heterogeneous_join:
   business_correctness:
     - data_processing
   boundary_cases:
@@ -220,7 +220,7 @@ general_hard_data_analysis_task_001_heterogeneous_join:
     - verification_delivery
   evidence_binding:
     - verification_delivery
-general_hard_data_analysis_task_002_survey_denominator:
+02_Data_Analysis_task_002_survey_denominator:
   business_correctness:
     - data_processing
   boundary_cases:
@@ -229,7 +229,7 @@ general_hard_data_analysis_task_002_survey_denominator:
     - verification_delivery
   evidence_binding:
     - verification_delivery
-general_hard_data_analysis_task_003_formula_repair:
+02_Data_Analysis_task_003_formula_repair:
   business_correctness:
     - data_processing
   boundary_cases:
@@ -238,7 +238,7 @@ general_hard_data_analysis_task_003_formula_repair:
     - verification_delivery
   evidence_binding:
     - verification_delivery
-general_hard_data_analysis_task_004_financial_reconcile:
+02_Data_Analysis_task_004_financial_reconcile:
   automated.business_correctness:
     - data_processing
   automated.boundary_cases:
@@ -251,7 +251,7 @@ general_hard_data_analysis_task_004_financial_reconcile:
     - data_processing
   llm_judge.usable_handoff:
     - verification_delivery
-general_hard_data_analysis_task_005_retention_cohort:
+02_Data_Analysis_task_005_retention_cohort:
   business_correctness:
     - data_processing
   boundary_cases:
@@ -260,7 +260,7 @@ general_hard_data_analysis_task_005_retention_cohort:
     - verification_delivery
   evidence_binding:
     - verification_delivery
-general_hard_office_documents_task_014_support_localization:
+01_Office_Documents_task_014_support_localization:
   automated.case_routing:
     - reasoning_planning
   automated.faq_coverage:
@@ -278,7 +278,7 @@ general_hard_office_documents_task_014_support_localization:
     - content_generation
   llm_judge.usable_handoff:
     - verification_delivery
-general_hard_data_analysis_task_006_visual_chart_audit:
+02_Data_Analysis_task_006_visual_chart_audit:
   automated.business_correctness:
     - data_processing
   automated.boundary_cases:
@@ -292,7 +292,7 @@ general_hard_data_analysis_task_006_visual_chart_audit:
     - reasoning_planning
   llm_judge.usable_handoff:
     - verification_delivery
-general_hard_data_analysis_task_007_rolling_ledger:
+02_Data_Analysis_task_007_rolling_ledger:
   business_correctness:
     - data_processing
   boundary_cases:
@@ -301,7 +301,7 @@ general_hard_data_analysis_task_007_rolling_ledger:
     - verification_delivery
   evidence_binding:
     - verification_delivery
-general_hard_data_analysis_task_008_parameterized_model:
+02_Data_Analysis_task_008_parameterized_model:
   business_correctness:
     - data_processing
   boundary_cases:
@@ -310,7 +310,7 @@ general_hard_data_analysis_task_008_parameterized_model:
     - verification_delivery
   evidence_binding:
     - verification_delivery
-general_hard_data_analysis_task_009_capacity_optimization:
+02_Data_Analysis_task_009_capacity_optimization:
   business_correctness:
     - data_processing
   boundary_cases:
@@ -319,7 +319,7 @@ general_hard_data_analysis_task_009_capacity_optimization:
     - verification_delivery
   evidence_binding:
     - verification_delivery
-general_hard_data_analysis_task_010_visual_voucher_match:
+02_Data_Analysis_task_010_visual_voucher_match:
   automated.business_correctness:
     - data_processing
   automated.boundary_cases:
@@ -333,7 +333,7 @@ general_hard_data_analysis_task_010_visual_voucher_match:
     - reasoning_planning
   llm_judge.usable_handoff:
     - verification_delivery
-general_hard_research_verification_task_001_open_mineral_fact_discovery:
+03_Research_Verification_task_001_open_mineral_fact_discovery:
   automated.record_contract:
     - verification_delivery
   automated.time_and_scope:
@@ -349,7 +349,7 @@ general_hard_research_verification_task_001_open_mineral_fact_discovery:
     - reasoning_planning
   llm_judge.bounded_conclusions:
     - reasoning_planning
-general_hard_research_verification_task_002_api_spec_crosscheck:
+03_Research_Verification_task_002_api_spec_crosscheck:
   automated.business_correctness:
     - retrieval_verification
   automated.boundary_cases:
@@ -362,7 +362,7 @@ general_hard_research_verification_task_002_api_spec_crosscheck:
     - retrieval_verification
   llm_judge.usable_handoff:
     - verification_delivery
-general_hard_research_verification_task_003_open_product_event_research:
+03_Research_Verification_task_003_open_product_event_research:
   automated.record_contract:
     - verification_delivery
   automated.time_and_scope:
@@ -378,7 +378,7 @@ general_hard_research_verification_task_003_open_product_event_research:
     - reasoning_planning
   llm_judge.bounded_conclusions:
     - reasoning_planning
-general_hard_research_verification_task_004_site_search_literature_screening:
+03_Research_Verification_task_004_site_search_literature_screening:
   automated.record_contract:
     - verification_delivery
   automated.time_and_scope:
@@ -394,7 +394,7 @@ general_hard_research_verification_task_004_site_search_literature_screening:
     - reasoning_planning
   llm_judge.bounded_conclusions:
     - reasoning_planning
-general_hard_file_operations_task_001_cleanup_plan:
+04_File_Operations_task_001_cleanup_plan:
   automated.business_correctness:
     - data_processing
   automated.boundary_cases:
@@ -407,7 +407,7 @@ general_hard_file_operations_task_001_cleanup_plan:
     - data_processing
   llm_judge.usable_handoff:
     - verification_delivery
-general_hard_research_verification_task_006_paper_comparison:
+03_Research_Verification_task_006_paper_comparison:
   automated.business_correctness:
     - retrieval_verification
   automated.boundary_cases:
@@ -420,7 +420,7 @@ general_hard_research_verification_task_006_paper_comparison:
     - retrieval_verification
   llm_judge.usable_handoff:
     - verification_delivery
-general_hard_file_operations_task_002_versioned_archive:
+04_File_Operations_task_002_versioned_archive:
   business_correctness:
     - data_processing
   boundary_cases:
@@ -429,7 +429,7 @@ general_hard_file_operations_task_002_versioned_archive:
     - verification_delivery
   evidence_binding:
     - verification_delivery
-general_hard_file_operations_task_003_nested_archives:
+04_File_Operations_task_003_nested_archives:
   business_correctness:
     - data_processing
   boundary_cases:
@@ -438,7 +438,7 @@ general_hard_file_operations_task_003_nested_archives:
     - verification_delivery
   evidence_binding:
     - verification_delivery
-general_hard_research_verification_task_008_visual_paper_figures:
+03_Research_Verification_task_008_visual_paper_figures:
   automated.business_correctness:
     - retrieval_verification
   automated.boundary_cases:
@@ -451,7 +451,7 @@ general_hard_research_verification_task_008_visual_paper_figures:
     - retrieval_verification
   llm_judge.usable_handoff:
     - verification_delivery
-general_hard_file_operations_task_004_resumable_inventory:
+04_File_Operations_task_004_resumable_inventory:
   business_correctness:
     - data_processing
   boundary_cases:
@@ -460,7 +460,7 @@ general_hard_file_operations_task_004_resumable_inventory:
     - verification_delivery
   evidence_binding:
     - verification_delivery
-general_hard_research_verification_task_007_directed_notice_timeline:
+03_Research_Verification_task_007_directed_notice_timeline:
   automated.record_contract:
     - data_processing
   automated.time_and_scope:
@@ -475,7 +475,7 @@ general_hard_research_verification_task_007_directed_notice_timeline:
     - retrieval_verification
   llm_judge.bounded_conclusions:
     - reasoning_planning
-general_hard_file_operations_task_006_visual_file_mapping:
+04_File_Operations_task_006_visual_file_mapping:
   business_correctness:
     - data_processing
   boundary_cases:
@@ -484,7 +484,7 @@ general_hard_file_operations_task_006_visual_file_mapping:
     - verification_delivery
   evidence_binding:
     - verification_delivery
-general_hard_file_operations_task_005_split_bundle_restore:
+04_File_Operations_task_005_split_bundle_restore:
   business_correctness:
     - data_processing
   boundary_cases:
@@ -493,7 +493,7 @@ general_hard_file_operations_task_005_split_bundle_restore:
     - verification_delivery
   evidence_binding:
     - verification_delivery
-general_hard_software_engineering_task_003_async_lifecycle:
+05_Software_Engineering_task_003_async_lifecycle:
   business_correctness:
     - code_generation
   boundary_cases:
@@ -503,7 +503,7 @@ general_hard_software_engineering_task_003_async_lifecycle:
     - verification_delivery
   evidence_binding:
     - verification_delivery
-general_hard_software_engineering_task_004_rbac_export:
+05_Software_Engineering_task_004_rbac_export:
   business_correctness:
     - code_generation
   boundary_cases:
@@ -512,7 +512,7 @@ general_hard_software_engineering_task_004_rbac_export:
     - verification_delivery
   evidence_binding:
     - verification_delivery
-general_hard_software_engineering_task_005_sql_compatibility:
+05_Software_Engineering_task_005_sql_compatibility:
   business_correctness:
     - code_generation
   boundary_cases:
@@ -521,7 +521,7 @@ general_hard_software_engineering_task_005_sql_compatibility:
     - verification_delivery
   evidence_binding:
     - verification_delivery
-general_hard_planning_coordination_task_001_measurable_roadmap:
+06_Planning_Coordination_task_001_measurable_roadmap:
   automated.business_correctness:
     - reasoning_planning
   automated.boundary_cases:
@@ -534,7 +534,7 @@ general_hard_planning_coordination_task_001_measurable_roadmap:
     - reasoning_planning
   llm_judge.usable_handoff:
     - verification_delivery
-general_hard_software_engineering_task_006_config_migration:
+05_Software_Engineering_task_006_config_migration:
   business_correctness:
     - code_generation
   boundary_cases:
@@ -543,7 +543,7 @@ general_hard_software_engineering_task_006_config_migration:
     - verification_delivery
   evidence_binding:
     - verification_delivery
-general_hard_planning_coordination_task_002_identity_cutover:
+06_Planning_Coordination_task_002_identity_cutover:
   automated.business_correctness:
     - reasoning_planning
   automated.boundary_cases:
@@ -556,7 +556,7 @@ general_hard_planning_coordination_task_002_identity_cutover:
     - reasoning_planning
   llm_judge.usable_handoff:
     - verification_delivery
-general_hard_software_engineering_task_008_sse_state:
+05_Software_Engineering_task_008_sse_state:
   business_correctness:
     - code_generation
   boundary_cases:
@@ -565,7 +565,7 @@ general_hard_software_engineering_task_008_sse_state:
     - verification_delivery
   evidence_binding:
     - verification_delivery
-general_hard_software_engineering_task_007_bounded_performance:
+05_Software_Engineering_task_007_bounded_performance:
   business_correctness:
     - code_generation
   boundary_cases:
@@ -574,7 +574,7 @@ general_hard_software_engineering_task_007_bounded_performance:
     - verification_delivery
   evidence_binding:
     - verification_delivery
-general_hard_content_operations_task_001_article_rewrite:
+07_Content_Operations_task_001_article_rewrite:
   automated.business_correctness:
     - content_generation
   automated.boundary_cases:
@@ -587,7 +587,7 @@ general_hard_content_operations_task_001_article_rewrite:
     - content_generation
   llm_judge.usable_handoff:
     - verification_delivery
-general_hard_software_engineering_task_010_multiview_state:
+05_Software_Engineering_task_010_multiview_state:
   business_correctness:
     - code_generation
   boundary_cases:
@@ -596,7 +596,7 @@ general_hard_software_engineering_task_010_multiview_state:
     - verification_delivery
   evidence_binding:
     - verification_delivery
-general_hard_software_engineering_task_009_package_migration:
+05_Software_Engineering_task_009_package_migration:
   business_correctness:
     - code_generation
   boundary_cases:
@@ -605,7 +605,7 @@ general_hard_software_engineering_task_009_package_migration:
     - verification_delivery
   evidence_binding:
     - verification_delivery
-general_hard_planning_coordination_task_003_learning_path:
+06_Planning_Coordination_task_003_learning_path:
   automated.business_correctness:
     - reasoning_planning
   automated.boundary_cases:
@@ -618,7 +618,7 @@ general_hard_planning_coordination_task_003_learning_path:
     - reasoning_planning
   llm_judge.usable_handoff:
     - verification_delivery
-general_hard_content_operations_task_002_source_bound_campaign:
+07_Content_Operations_task_002_source_bound_campaign:
   automated.business_correctness:
     - content_generation
   automated.boundary_cases:
@@ -631,7 +631,7 @@ general_hard_content_operations_task_002_source_bound_campaign:
     - content_generation
   llm_judge.usable_handoff:
     - verification_delivery
-general_hard_software_engineering_task_012_prd_full_delivery:
+05_Software_Engineering_task_012_prd_full_delivery:
   business_correctness:
     - code_generation
   boundary_cases:
@@ -640,7 +640,7 @@ general_hard_software_engineering_task_012_prd_full_delivery:
     - verification_delivery
   evidence_binding:
     - verification_delivery
-general_hard_planning_coordination_task_004_release_go_no_go:
+06_Planning_Coordination_task_004_release_go_no_go:
   automated.business_correctness:
     - reasoning_planning
   automated.boundary_cases:
@@ -653,7 +653,7 @@ general_hard_planning_coordination_task_004_release_go_no_go:
     - reasoning_planning
   llm_judge.usable_handoff:
     - verification_delivery
-general_hard_software_engineering_task_011_security_regression:
+05_Software_Engineering_task_011_security_regression:
   business_correctness:
     - code_generation
   boundary_cases:
@@ -662,7 +662,7 @@ general_hard_software_engineering_task_011_security_regression:
     - verification_delivery
   evidence_binding:
     - verification_delivery
-general_hard_content_operations_task_003_marketing_evidence:
+07_Content_Operations_task_003_marketing_evidence:
   automated.business_correctness:
     - content_generation
   automated.boundary_cases:
@@ -675,7 +675,7 @@ general_hard_content_operations_task_003_marketing_evidence:
     - content_generation
   llm_judge.usable_handoff:
     - verification_delivery
-general_hard_content_operations_task_004_multichannel_update:
+07_Content_Operations_task_004_multichannel_update:
   automated.business_correctness:
     - content_generation
   automated.boundary_cases:
@@ -688,7 +688,7 @@ general_hard_content_operations_task_004_multichannel_update:
     - content_generation
   llm_judge.usable_handoff:
     - verification_delivery
-general_hard_research_verification_task_005_open_long_horizon_agent_research:
+03_Research_Verification_task_005_open_long_horizon_agent_research:
   automated.record_contract:
     - verification_delivery
   automated.time_and_scope:

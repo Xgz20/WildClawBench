@@ -895,7 +895,7 @@ def generate_capability_matrix(
         )
 
     source_by_id = {}
-    if definition.task_id_prefix:
+    if definition.series_id:
         registry_bytes = next(member.data for member in members if member.path == "provenance/task_sources.yaml")
         source_by_id = {entry["task_id"]: entry for entry in json.loads(registry_bytes)["tasks"]}
     # Read the exact verified bundle bytes, including historical source overrides.

@@ -23,6 +23,24 @@ def relocated_task(repo: Path, path: Path) -> Path:
     return repo / destination if destination else (path if path.is_absolute() else repo / path)
 
 
+def relocated_category(repo: Path, layout: dict, directory: str) -> Path | None:
+    """Resolve a category alias only when its original files share a current directory."""
+    targets = {Path(new).parent for old, new in layout.get("task_paths", {}).items()
+               if Path(old).parent.as_posix() == directory}
+    return repo / targets.pop() if len(targets) == 1 else None
+
+
+def current_task_id(repo: Path, task_id: str) -> str:
+    return load_layout(repo).get("task_id_aliases", {}).get(task_id, task_id)
+
+
+def task_id_conflicts(tasks_root: Path, excluded_root: Path, task_ids: set[str]) -> list[Path]:
+    ids = {task_id.casefold() for task_id in task_ids}
+    return sorted(path for path in tasks_root.rglob("*_task_*.md")
+                  if path.stem.casefold() in ids and not path.is_relative_to(excluded_root)
+                  and not is_reading_or_archived_task(tasks_root, path))
+
+
 def workspace_for_task(repo: Path, path: Path) -> Path:
     """Use the current workspace, with fallback for upstream downloaded inputs."""
     layout = load_layout(repo)
@@ -50,10 +68,14 @@ def cli_category_paths(tasks_root: Path, category: str) -> list[Path]:
     """Keep the legacy category as the original upstream + extension selection."""
     if category.startswith("/") or "\\" in category or any(p in {"", ".", ".."} for p in category.split("/")):
         raise ValueError(f"invalid task category: {category!r}")
-    if not load_layout(tasks_root.parent) or tasks_root.name != "tasks":
+    layout = load_layout(tasks_root.parent)
+    if not layout or tasks_root.name != "tasks":
         roots = [tasks_root / category, tasks_root / "extension" / category]
     elif "/" in category:
         root = tasks_root / category
+        if category.startswith("general/challenge/") and not root.is_dir():
+            relocated = relocated_category(tasks_root.parent, layout, f"tasks/{category}")
+            root = relocated or root
         return sorted(p for p in root.rglob("*task_*.md")
                       if not is_reading_or_archived_task(tasks_root, p))
     elif category == "07_Website_Generation":
@@ -73,8 +95,9 @@ def cli_task_path(repo: Path, tasks_root: Path, argument: str) -> Path:
         path = path.absolute()
     candidate = relocated_task(repo, path)
     if not candidate.is_file() and path.name == argument and path.suffix != ".md":
-        matches = [p for p in tasks_root.rglob(f"{path.name}.md")
-                   if p.stem == path.name and not is_reading_or_archived_task(tasks_root, p)]
+        task_id = current_task_id(repo, argument)
+        matches = [p for p in tasks_root.rglob(f"{task_id}.md")
+                   if p.stem == task_id and not is_reading_or_archived_task(tasks_root, p)]
         if len(matches) > 1:
             raise ValueError(f"ambiguous task ID: {argument}")
         if matches:

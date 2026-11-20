@@ -32,7 +32,7 @@ description: 将真实用户 Query 和可选本地素材转换、登记为 WildC
 6. 检查新任务、Workspace 和两份登记文件的差异。至少人工确认题意无歧义、输入足够、真值未泄露、评分点彼此独立、自动评分不会误杀合理答案、Rubric 档位可判、难度与超时合理。
 
 
-注册数据集示例：在spec中设`"dataset_id": "general-challenge"`，或在命令中加`--dataset-id general-challenge`。规划清单内的编号只能生成同ID、同slug且状态为`building`的任务；`ready/frozen`版本的编号不可复用。新增源池任务不自动改变任何版本清单。注册数据集要求真实GT，首次创建来源表和能力映射时若最终门禁失败，也会移除本次创建的登记文件。正式整版验收另运行`validate_eval_dataset.py --dataset-id general-challenge-v2`，逐题生成通过不能代替60题齐全及配额检查。
+注册数据集示例：在spec中设`"dataset_id": "general-challenge"`，或在命令中加`--dataset-id general-challenge`。规划清单内的编号只能生成同ID、同slug且状态为`building`的任务；`ready/frozen`版本的编号不可复用。新增源池任务不自动改变任何版本清单。注册数据集要求真实GT，首次创建来源表和能力映射时若最终门禁失败，也会移除本次创建的登记文件。正式整版验收另运行`validate_eval_dataset.py --dataset-id general-challenge`，逐题生成通过不能代替60题齐全及配额检查。
 
 ## 交付说明
 

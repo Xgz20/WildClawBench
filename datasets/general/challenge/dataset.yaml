@@ -32,73 +32,82 @@ categories:
   content_operations:
     name: 内容创作与运营
     description: 基于事实材料的改写、策划和多渠道交付；不单设抽象创意类。
-default_release: general-challenge-v2
+task_id_style: category_directory
+category_directories:
+  01_Office_Documents: office_documents
+  02_Data_Analysis: data_analysis
+  03_Research_Verification: research_verification
+  04_File_Operations: file_operations
+  05_Software_Engineering: software_engineering
+  06_Planning_Coordination: planning_coordination
+  07_Content_Operations: content_operations
+default_release: general-challenge-v3
 releases:
-  general-challenge-v2:
+  general-challenge-v3:
     status: frozen
-    created_at: '2026-11-19T00:00:00+08:00'
-    manifest: datasets/general/challenge/manifests/general-challenge-v2.json
+    created_at: '2026-11-20T00:00:00+08:00'
+    manifest: datasets/general/challenge/manifests/general-challenge-v3.json
     task_ids:
-    - general_hard_office_documents_task_001_policy_crosswalk
-    - general_hard_office_documents_task_002_meeting_decision_repair
-    - general_hard_office_documents_task_003_docx_clause_patch
-    - general_hard_office_documents_task_004_bid_compliance
-    - general_hard_office_documents_task_005_annual_deck
-    - general_hard_office_documents_task_006_sop_knowledge_pack
-    - general_hard_office_documents_task_007_visual_handoff
-    - general_hard_office_documents_task_008_bilingual_revision
-    - general_hard_office_documents_task_009_pdf_to_docx
-    - general_hard_office_documents_task_010_capex_packet
-    - general_hard_office_documents_task_011_linked_report_update
-    - general_hard_office_documents_task_012_visual_redlines
-    - general_hard_office_documents_task_013_proposal_delivery
-    - general_hard_office_documents_task_014_support_localization
-    - general_hard_office_documents_task_015_board_decision_pack
-    - general_hard_office_documents_task_016_docx_structure_repair
-    - general_hard_data_analysis_task_001_heterogeneous_join
-    - general_hard_data_analysis_task_002_survey_denominator
-    - general_hard_data_analysis_task_003_formula_repair
-    - general_hard_data_analysis_task_004_financial_reconcile
-    - general_hard_data_analysis_task_005_retention_cohort
-    - general_hard_data_analysis_task_006_visual_chart_audit
-    - general_hard_data_analysis_task_007_rolling_ledger
-    - general_hard_data_analysis_task_008_parameterized_model
-    - general_hard_data_analysis_task_009_capacity_optimization
-    - general_hard_data_analysis_task_010_visual_voucher_match
-    - general_hard_research_verification_task_001_open_mineral_fact_discovery
-    - general_hard_research_verification_task_002_api_spec_crosscheck
-    - general_hard_research_verification_task_003_open_product_event_research
-    - general_hard_research_verification_task_004_site_search_literature_screening
-    - general_hard_research_verification_task_005_open_long_horizon_agent_research
-    - general_hard_research_verification_task_006_paper_comparison
-    - general_hard_research_verification_task_007_directed_notice_timeline
-    - general_hard_research_verification_task_008_visual_paper_figures
-    - general_hard_file_operations_task_001_cleanup_plan
-    - general_hard_file_operations_task_002_versioned_archive
-    - general_hard_file_operations_task_003_nested_archives
-    - general_hard_file_operations_task_004_resumable_inventory
-    - general_hard_file_operations_task_005_split_bundle_restore
-    - general_hard_file_operations_task_006_visual_file_mapping
-    - general_hard_software_engineering_task_001_delimiter_validation
-    - general_hard_software_engineering_task_002_sqlite_import
-    - general_hard_software_engineering_task_003_async_lifecycle
-    - general_hard_software_engineering_task_004_rbac_export
-    - general_hard_software_engineering_task_005_sql_compatibility
-    - general_hard_software_engineering_task_006_config_migration
-    - general_hard_software_engineering_task_007_bounded_performance
-    - general_hard_software_engineering_task_008_sse_state
-    - general_hard_software_engineering_task_009_package_migration
-    - general_hard_software_engineering_task_010_multiview_state
-    - general_hard_software_engineering_task_011_security_regression
-    - general_hard_software_engineering_task_012_prd_full_delivery
-    - general_hard_planning_coordination_task_001_measurable_roadmap
-    - general_hard_planning_coordination_task_002_identity_cutover
-    - general_hard_planning_coordination_task_003_learning_path
-    - general_hard_planning_coordination_task_004_release_go_no_go
-    - general_hard_content_operations_task_001_article_rewrite
-    - general_hard_content_operations_task_002_source_bound_campaign
-    - general_hard_content_operations_task_003_marketing_evidence
-    - general_hard_content_operations_task_004_multichannel_update
+    - 01_Office_Documents_task_001_policy_crosswalk
+    - 01_Office_Documents_task_002_meeting_decision_repair
+    - 01_Office_Documents_task_003_docx_clause_patch
+    - 01_Office_Documents_task_004_bid_compliance
+    - 01_Office_Documents_task_005_annual_deck
+    - 01_Office_Documents_task_006_sop_knowledge_pack
+    - 01_Office_Documents_task_007_visual_handoff
+    - 01_Office_Documents_task_008_bilingual_revision
+    - 01_Office_Documents_task_009_pdf_to_docx
+    - 01_Office_Documents_task_010_capex_packet
+    - 01_Office_Documents_task_011_linked_report_update
+    - 01_Office_Documents_task_012_visual_redlines
+    - 01_Office_Documents_task_013_proposal_delivery
+    - 01_Office_Documents_task_014_support_localization
+    - 01_Office_Documents_task_015_board_decision_pack
+    - 01_Office_Documents_task_016_docx_structure_repair
+    - 02_Data_Analysis_task_001_heterogeneous_join
+    - 02_Data_Analysis_task_002_survey_denominator
+    - 02_Data_Analysis_task_003_formula_repair
+    - 02_Data_Analysis_task_004_financial_reconcile
+    - 02_Data_Analysis_task_005_retention_cohort
+    - 02_Data_Analysis_task_006_visual_chart_audit
+    - 02_Data_Analysis_task_007_rolling_ledger
+    - 02_Data_Analysis_task_008_parameterized_model
+    - 02_Data_Analysis_task_009_capacity_optimization
+    - 02_Data_Analysis_task_010_visual_voucher_match
+    - 03_Research_Verification_task_001_open_mineral_fact_discovery
+    - 03_Research_Verification_task_002_api_spec_crosscheck
+    - 03_Research_Verification_task_003_open_product_event_research
+    - 03_Research_Verification_task_004_site_search_literature_screening
+    - 03_Research_Verification_task_005_open_long_horizon_agent_research
+    - 03_Research_Verification_task_006_paper_comparison
+    - 03_Research_Verification_task_007_directed_notice_timeline
+    - 03_Research_Verification_task_008_visual_paper_figures
+    - 04_File_Operations_task_001_cleanup_plan
+    - 04_File_Operations_task_002_versioned_archive
+    - 04_File_Operations_task_003_nested_archives
+    - 04_File_Operations_task_004_resumable_inventory
+    - 04_File_Operations_task_005_split_bundle_restore
+    - 04_File_Operations_task_006_visual_file_mapping
+    - 05_Software_Engineering_task_001_delimiter_validation
+    - 05_Software_Engineering_task_002_sqlite_import
+    - 05_Software_Engineering_task_003_async_lifecycle
+    - 05_Software_Engineering_task_004_rbac_export
+    - 05_Software_Engineering_task_005_sql_compatibility
+    - 05_Software_Engineering_task_006_config_migration
+    - 05_Software_Engineering_task_007_bounded_performance
+    - 05_Software_Engineering_task_008_sse_state
+    - 05_Software_Engineering_task_009_package_migration
+    - 05_Software_Engineering_task_010_multiview_state
+    - 05_Software_Engineering_task_011_security_regression
+    - 05_Software_Engineering_task_012_prd_full_delivery
+    - 06_Planning_Coordination_task_001_measurable_roadmap
+    - 06_Planning_Coordination_task_002_identity_cutover
+    - 06_Planning_Coordination_task_003_learning_path
+    - 06_Planning_Coordination_task_004_release_go_no_go
+    - 07_Content_Operations_task_001_article_rewrite
+    - 07_Content_Operations_task_002_source_bound_campaign
+    - 07_Content_Operations_task_003_marketing_evidence
+    - 07_Content_Operations_task_004_multichannel_update
     expected_statistics:
       task_count: 60
       category_counts:
@@ -128,6 +137,4 @@ releases:
         open_search: 3
         directed_web_retrieval: 3
         local_evidence: 2
-legacy_task_id_prefixes:
-- general_hard_
 layout_root: general/challenge

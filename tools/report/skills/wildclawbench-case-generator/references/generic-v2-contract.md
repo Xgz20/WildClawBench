@@ -2,7 +2,7 @@
 
 ## 任务与目录
 
-以下路径为旧扩展集默认值。注册数据集以`datasets/catalog.yaml`和系列`dataset.yaml`为准，例如`general_hard_<category>_task_<NNN>_<slug>`、`datasets/general-hard/tasks/<category>/<task_id>.md`和`datasets/general-hard/workspace/<category>/<task_id>/{exec,gt}`；不能复用旧六类或省略Workspace分类层。
+以下路径为旧扩展集默认值。注册数据集以`datasets/catalog.yaml`和系列`dataset.yaml`为准，例如挑战集使用`<编号分类>_task_<NNN>_<slug>`，题面在`tasks/general/challenge/<编号分类>/<task_id>.md`，素材在`workspace/general/challenge/<编号分类>/<task_id>/{exec,gt}`。题面的`category`使用系列定义的逻辑分类键。
 
 - task ID：`<Category>_task_<NNN>_<slug>`；`NNN` 为分类内三位编号，已存在、已登记或 invalid 保留编号都不可复用。
 - 任务文件：`tasks/extension/<Category>/<task_id>.md`。
