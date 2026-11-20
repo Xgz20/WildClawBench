@@ -81,6 +81,7 @@ def describe(repo: Path) -> dict:
             "windows-astudio-runtime-bootstrap",
             preprocessing.CAPABILITY,
             "windows-preprocess-validation",
+            "managed-preprocess-validation-template-v1",
             "execution",
             "events",
             "artifacts",

@@ -109,6 +109,8 @@ class AgentCubeClient:
         try:
             response = self.http.request(method, url, headers=headers, timeout=(10, timeout), **kwargs)
         except requests.RequestException as error:
+            if method == "POST" and url == self.manager and isinstance(error, requests.Timeout):
+                raise PlatformError("AGENTCUBE_CREATE_REQUEST_TIMEOUT", uncertain=True) from error
             raise PlatformError(str(redact(str(error), self.config.auth_token)),
                                 uncertain=method in {"POST", "DELETE"}) from error
         return response

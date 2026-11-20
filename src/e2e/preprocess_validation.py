@@ -10,6 +10,7 @@ import time
 from .agentcube import AgentCubeConfig, PlatformError
 from .backend import DRIVERS, ObservationPaused, WGUI, powershell
 from .common import E2EError, atomic_json, identifier, utc_now
+from .preparation import normalize_template_binding
 from .preprocessing import budget, normalize_recipe
 from .protocol import profiles
 from .windows_preprocess import apply_recipe, diagnostic_code
@@ -47,7 +48,8 @@ class ValidationStore:
 
 
 def _request(raw):
-    if (set(raw) != {"profile_id", "model", "recipe"}
+    legacy_fields = {"profile_id", "model", "recipe"}
+    if (not isinstance(raw, dict) or set(raw) not in (legacy_fields, legacy_fields | {"template", "template_binding"})
             or not isinstance(raw["profile_id"], str) or not isinstance(raw["model"], str)):
         raise E2EError("PREPROCESS_VALIDATION_REQUEST_INVALID")
     profile = next((item for item in profiles() if item["id"] == raw["profile_id"] and item["enabled"]), None)
@@ -56,6 +58,12 @@ def _request(raw):
     if raw["model"] not in {row["id"] for row in profile["models"]}:
         raise E2EError("PREPROCESS_VALIDATION_MODEL_UNAVAILABLE")
     unit = {"harness": profile["harness"], "template": profile["template"], "model": raw["model"]}
+    if "template_binding" in raw:
+        binding = normalize_template_binding(raw["template_binding"])
+        if binding["profile_id"] != profile["id"]:
+            raise E2EError("PREPROCESS_VALIDATION_PROFILE_UNAVAILABLE")
+        unit["template"] = identifier(raw["template"], "template")
+        unit["template_binding"] = binding
     return unit, normalize_recipe(raw["recipe"], unit["harness"])
 
 

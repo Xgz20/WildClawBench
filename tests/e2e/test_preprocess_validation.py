@@ -3,7 +3,9 @@ from tempfile import TemporaryDirectory
 import unittest
 from unittest.mock import Mock, patch
 
-from src.e2e.agentcube import AgentCubeConfig, PlatformError
+from requests.exceptions import ReadTimeout
+
+from src.e2e.agentcube import AgentCubeClient, AgentCubeConfig, PlatformError
 from src.e2e.common import E2EError, read_json
 from src.e2e.preprocess_validation import run_validation
 from src.e2e.windows_preprocess import public_diagnostics
@@ -21,7 +23,7 @@ REQUEST = {
 
 
 class ValidationTests(unittest.TestCase):
-    def run_fixture(self, driver, *, config=None, script_error=None):
+    def run_fixture(self, driver, *, config=None, script_error=None, request=REQUEST):
         config = config or AgentCubeConfig(user_id="test-user")
         with (TemporaryDirectory() as directory,
               patch("src.e2e.preprocess_validation.profiles", return_value=[PROFILE]),
@@ -29,7 +31,7 @@ class ValidationTests(unittest.TestCase):
               patch("src.e2e.preprocess_validation.apply_recipe", side_effect=script_error)):
             root = Path(directory) / "validation-fixture"
             root.mkdir()
-            result = run_validation(root, REQUEST, None, driver_factory=Mock(return_value=driver))
+            result = run_validation(root, request, None, driver_factory=Mock(return_value=driver))
             self.assertEqual(result, read_json(root / "validation.json"))
             return result
 
@@ -46,6 +48,31 @@ class ValidationTests(unittest.TestCase):
         driver.client.create_session.assert_called_once_with()
         driver.client.delete_session.assert_called_once_with("original-session")
         self.assertIn(("preprocessing", "passed"), [(row["stage"], row["status"]) for row in result["events"]])
+
+    def test_managed_template_is_used_and_recorded(self):
+        driver = Mock()
+        driver.client.create_session.return_value = "fixture-session"
+        driver.client.delete_session.return_value = {"confirmed": True}
+        binding = {"id": 1, "namespace": "managed-windows", "image_digest": "sha256:" + "f" * 64,
+                   "profile_id": PROFILE["id"], "waa_revision": "a" * 40}
+        result = self.run_fixture(driver, request={**REQUEST, "template": "managed-template", "template_binding": binding})
+        self.assertEqual(result["status"], "passed")
+        self.assertEqual(result["target"]["template"], "managed-template")
+        self.assertEqual(result["target"]["template_binding"], binding)
+
+    def test_creation_timeout_keeps_release_unconfirmed_and_skips_steps(self):
+        client = AgentCubeClient(AgentCubeConfig())
+        driver = Mock()
+        driver.client.create_session = client.create_session
+        with patch.object(client.http, "request", side_effect=ReadTimeout("private request data")):
+            result = self.run_fixture(driver)
+        client.close()
+        self.assertEqual(result["error"], "AGENTCUBE_CREATE_REQUEST_TIMEOUT")
+        self.assertEqual(result["cleanup"], "unconfirmed")
+        self.assertNotIn("session_id", result)
+        self.assertNotIn("private", str(result))
+        self.assertFalse(any(row["stage"] == "preprocessing" for row in result["events"]))
+        driver.client.delete_session.assert_not_called()
 
     def test_validation_still_rejects_insufficient_session_lifetime(self):
         driver = Mock()

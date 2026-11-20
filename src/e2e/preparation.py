@@ -224,6 +224,20 @@ def _write_web(task: dict, destination: Path, repo: Path, web) -> dict:
     return {"prompt_mapping": mapping, "requirements": {"env": "", "skills": "", "warmup": ""}}
 
 
+def normalize_template_binding(binding: object) -> dict:
+    if (not isinstance(binding, dict)
+            or set(binding) != {"id", "namespace", "image_digest", "profile_id", "waa_revision"}
+            or type(binding["id"]) is not int or binding["id"] < 1
+            or not isinstance(binding["image_digest"], str)
+            or not re.fullmatch(r"sha256:[a-f0-9]{64}", binding["image_digest"])
+            or not isinstance(binding["waa_revision"], str)
+            or not re.fullmatch(r"[a-f0-9]{7,40}", binding["waa_revision"])):
+        raise E2EError("AGENTCUBE_TEMPLATE_BINDING_INVALID")
+    identifier(binding["namespace"], "namespace")
+    identifier(binding["profile_id"], "profile_id")
+    return dict(binding)
+
+
 def normalize_plan(raw: dict) -> dict:
     if not isinstance(raw, dict):
         raise E2EError("BATCH_PLAN_OBJECT_REQUIRED")
@@ -295,18 +309,7 @@ def normalize_plan(raw: dict) -> dict:
         elif unit["harness"] == "workbuddy" and unit["template"] == DEFAULT_AGENTCUBE_TEMPLATE:
             unit["workbuddy_full_access"] = True
         if "template_binding" in raw_unit:
-            binding = raw_unit["template_binding"]
-            if (not isinstance(binding, dict)
-                    or set(binding) != {"id", "namespace", "image_digest", "profile_id", "waa_revision"}
-                    or type(binding["id"]) is not int or binding["id"] < 1
-                    or not isinstance(binding["image_digest"], str)
-                    or not re.fullmatch(r"sha256:[a-f0-9]{64}", binding["image_digest"])
-                    or not isinstance(binding["waa_revision"], str)
-                    or not re.fullmatch(r"[a-f0-9]{7,40}", binding["waa_revision"])):
-                raise E2EError("AGENTCUBE_TEMPLATE_BINDING_INVALID")
-            identifier(binding["namespace"], "namespace")
-            identifier(binding["profile_id"], "profile_id")
-            unit["template_binding"] = dict(binding)
+            unit["template_binding"] = normalize_template_binding(raw_unit["template_binding"])
         if "preprocessing" in raw_unit:
             unit["preprocessing"] = preprocessing.normalize_binding(raw_unit["preprocessing"], unit["harness"])
         unit["unit_id"] = raw_unit.get("unit_id") or unit["harness"] + "-" + digest(unit)[:12]
