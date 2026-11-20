@@ -20,6 +20,7 @@ from typing import Any, Iterable, Mapping, Optional, Sequence
 from .source_history import FrozenSources, pre_migration_sources
 
 from .catalog import load_mapping, load_registered_dataset, repository_path
+from .layout import task_id_conflicts
 from .definition import (
     DATASETS, DEFAULT_DEFINITION, DatasetDefinition, GENERAL116_DEFINITION,
     GENERAL70_V2_DEFINITION, GENERAL70_V3_DEFINITION, GENERAL70_V4_DEFINITION,
@@ -438,7 +439,9 @@ def _registered_registry_bytes(
         "dataset_contract": {
             "dataset_id": definition.dataset_id, "created_at": definition.created_at,
             "task_root": definition.task_root, "workspace_root": definition.workspace_root,
-            "task_id_prefix": definition.task_id_prefix,
+            "task_id_prefix": "" if definition.category_directory_task_ids else definition.task_id_prefix,
+            **({"category_directories": dict(definition.category_directories)}
+               if definition.category_directory_task_ids else {}),
             "required_tags": list(definition.include_tags), "exclude_tags": list(definition.exclude_tags),
             "task_ids": list(task_ids),
             "category_labels": {key: definition.category_labels[key]
@@ -491,7 +494,7 @@ def _compile_source_tree(
     registry_items = registry.get("tasks") if isinstance(registry, dict) else None
     if not isinstance(registry_items, list):
         raise ValueError(f"{definition.registry_path} must contain a tasks list")
-    if definition.task_id_prefix:
+    if definition.series_id:
         registry = load_mapping(registry_path)
         registry_items = registry.get("tasks")
         if not isinstance(registry_items, list):
@@ -501,7 +504,7 @@ def _compile_source_tree(
         for item in registry_items
         if isinstance(item, dict)
     }
-    if definition.task_id_prefix and (
+    if definition.series_id and (
         "" in registry_ids or len(registry_ids) != len(registry_items)
     ):
         raise ValueError("source registry tasks must be mappings with unique task IDs")
@@ -515,7 +518,7 @@ def _compile_source_tree(
     if len(expected_ids) != len(definition.task_ids):
         raise ValueError("release task IDs must be unique")
     for task_path in sorted(tasks_root.glob(definition.task_glob)):
-        if definition.task_id_prefix and expected_ids and task_path.stem not in expected_ids:
+        if definition.series_id and expected_ids and task_path.stem not in expected_ids:
             continue
         _within(task_path, tasks_root, label="task source")
         metadata, sections, raw = _parse_task_source(task_path, raw=sources.read_bytes(task_path))
@@ -535,7 +538,11 @@ def _compile_source_tree(
     missing_registry = sorted(set(task_ids) - registry_ids)
     if missing_registry:
         raise ValueError(f"selected tasks are missing from task_sources.yaml: {missing_registry}")
-    if definition.task_id_prefix:
+    if definition.category_directory_task_ids:
+        conflicts = task_id_conflicts(repo_root / "tasks", tasks_root, expected_ids)
+        if conflicts:
+            raise ValueError(f"selected task IDs already exist outside this dataset: {conflicts}")
+    if definition.series_id:
         if not expected_ids:
             raise ValueError("registered datasets require explicit release task IDs")
         _assert_release_constraints(definition, parsed, registry_by_id)
@@ -551,7 +558,7 @@ def _compile_source_tree(
     grading_counts: Counter[str] = Counter()
     difficulty_counts: Counter[str] = Counter()
     timeout_counts: Counter[str] = Counter()
-    report_capabilities = json.loads(registry_bytes)["checkpoint_capability_map7"] if definition.task_id_prefix else {}
+    report_capabilities = json.loads(registry_bytes)["checkpoint_capability_map7"] if definition.series_id else {}
 
     for order, (task_path, metadata, sections, raw) in enumerate(parsed, start=1):
         task_id = str(metadata.get("id") or "").strip()
@@ -562,12 +569,12 @@ def _compile_source_tree(
         expected_category = dict(definition.category_directories).get(category_directory, task_path.parent.name)
         if category != expected_category:
             raise ValueError(f"category/path mismatch for {task_id}")
-        if definition.task_id_prefix:
+        if definition.series_id:
             if category not in definition.category_labels:
                 raise ValueError(f"unregistered category for {task_id}: {category}")
-            prefixes = (definition.task_id_prefix, *definition.legacy_task_id_prefixes)
-            if (not task_id.startswith(tuple(f"{prefix}{category}_task_" for prefix in prefixes))
-                    or task_path.name != f"{task_id}.md"):
+            stems = definition.task_id_stems(category)
+            if (task_id.split("_task_", 1)[0] not in stems or task_path.name != f"{task_id}.md"
+                    or task_path.parent != tasks_root / definition.category_directory(category)):
                 raise ValueError(f"task namespace/path mismatch: {task_id}")
             report_contract = metadata.get("dataset_report")
             inline_contract = re.search(r"^dataset_report:[ \t]*(\{[^\n]*\})[ \t]*$", raw.decode("utf-8").split("\n---", 1)[0], re.M)
@@ -586,8 +593,8 @@ def _compile_source_tree(
         workspace_text = _strip_codeblock(sections.get("Workspace Path", ""))
         workspace_rel = _safe_relative_path(workspace_text, label="workspace path")
         workspace_root = _within(repo_root / Path(*workspace_rel.parts), repo_root, label="workspace")
-        if definition.task_id_prefix:
-            expected_workspace = workspace_base / category / task_id
+        if definition.series_id:
+            expected_workspace = workspace_base / definition.category_directory(category) / task_id
             if (workspace_text != expected_workspace.relative_to(repo_root).as_posix()
                     or workspace_root != expected_workspace
                     or not workspace_root.is_relative_to(workspace_base)):
@@ -605,7 +612,7 @@ def _compile_source_tree(
         scoring_tree, scoring_members = _tree_materials(
             workspace_root / "gt", f"{task_root}/private-scoring/gt", sources=sources
         )
-        if definition.task_id_prefix and not any(entry["kind"] == "file" and entry["size"] > 0
+        if definition.series_id and not any(entry["kind"] == "file" and entry["size"] > 0
                                                  and Path(entry["path"]).name != ".gitkeep"
                                                  for entry in scoring_tree["entries"]):
             raise ValueError(f"private scoring materials must not be empty: {task_id}")

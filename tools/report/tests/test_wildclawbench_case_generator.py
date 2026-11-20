@@ -404,6 +404,25 @@ class RegisteredCaseGeneratorTest(unittest.TestCase):
         self.assertFalse((self.base / "tasks").exists())
         self.assertEqual(before, (self.registry_path.read_bytes(), self.map_path.read_bytes()))
 
+    def test_category_directory_task_ids_use_numbered_paths_and_reject_cross_pool_collision(self):
+        directory = "03_Research_Verification"
+        task_id = f"{directory}_task_001_local_fact_summary"
+        self.family.update({"task_id_style": "category_directory", "category_directories": {directory: "research"}})
+        self.family["releases"]["sample-v1"]["task_ids"] = [task_id]
+        self.save_family()
+        self.install_validator_wrapper()
+        conflict = self.repo / "tasks/general/other" / f"{task_id}.md"
+        conflict.parent.mkdir(parents=True)
+        conflict.touch()
+        with self.assertRaisesRegex(generator.SpecError, "其它数据集占用"):
+            generator.assemble_case(self.spec(), repo_root=self.repo, spec_dir=self.repo, dry_run=True)
+        conflict.unlink()
+        result = generator.assemble_case(self.spec(), repo_root=self.repo, spec_dir=self.repo)
+        self.assertEqual(result["validation"], "PASS")
+        self.assertEqual(result["task_id"], task_id)
+        self.assertEqual(Path(result["task_path"]), (self.base / "tasks" / directory / f"{task_id}.md").resolve())
+        self.assertEqual(Path(result["workspace_path"]), (self.base / "workspace" / directory / task_id).resolve())
+
     def test_registered_creation_passes_the_real_validator_and_preserves_legacy_sources(self):
         before = (self.registry_path.read_bytes(), self.map_path.read_bytes())
         self.install_validator_wrapper()

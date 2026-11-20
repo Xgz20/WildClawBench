@@ -91,6 +91,10 @@ def _select(tasks: list[dict], selection: dict, repo: Path, web) -> list[dict]:
         ids = [candidates[0]["task_id"]]
     known = {task["task_id"] for task in tasks}
     if set(ids) - known:
+        from eval_general_e2e.datasets.layout import load_layout
+        aliases = load_layout(repo).get("task_id_aliases", {})
+        ids = [task_id if task_id in known else aliases.get(task_id, task_id) for task_id in ids]
+    if set(ids) - known:
         raise E2EError("TASK_IDS_UNKNOWN: " + ",".join(sorted(set(ids) - known)))
     categories = set(selection.get("categories") or []) - {"all"}
     if categories - {str(task["category"]) for task in tasks}:

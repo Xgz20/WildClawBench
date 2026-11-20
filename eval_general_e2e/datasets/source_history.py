@@ -17,16 +17,27 @@ import tempfile
 from .layout import load_layout, relocated_task
 
 
+def archived_source_revision(repo: Path, dataset_id: str) -> str | None:
+    layout = load_layout(repo)
+    revisions = layout.get("historical_source_revisions", {})
+    if dataset_id in revisions:
+        revision = revisions[dataset_id]
+    elif dataset_id in layout.get("historical_releases", ()):
+        revision = layout.get("historical_source_revision")
+    else:
+        return None
+    if not isinstance(revision, str) or not re.fullmatch(r"[0-9a-f]{40}", revision):
+        raise ValueError(f"invalid pre-migration source revision for {dataset_id}")
+    return revision
+
+
 @contextmanager
 def pre_migration_sources(repo: Path, definition, *, additional_paths=()):
     """Expose the verified legacy layout as a temporary source tree."""
-    layout = load_layout(repo)
-    if definition.dataset_id not in layout.get("historical_releases", ()):
+    revision = archived_source_revision(repo, definition.dataset_id)
+    if revision is None:
         yield None
         return
-    revision = layout.get("historical_source_revision", "")
-    if not re.fullmatch(r"[0-9a-f]{40}", revision):
-        raise ValueError("invalid pre-migration source revision")
     paths = [definition.task_root, definition.workspace_root, definition.registry_path,
              definition.capability_map_path, *additional_paths]
     if definition.frozen_source_index:

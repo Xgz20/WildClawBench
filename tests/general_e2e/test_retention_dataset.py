@@ -14,9 +14,9 @@ from eval_general_e2e.datasets.bundle import _task_contracts
 from tools.report.lib.eval_dataset.task_files import parse_task_document
 
 ROOT = Path(__file__).resolve().parents[2]
-ID = 'general_hard_data_analysis_task_005_retention_cohort'
-WORK = ROOT / 'workspace/general/challenge/data_analysis' / ID
-TASK = ROOT / 'tasks/general/challenge/data_analysis' / (ID + '.md')
+ID = '02_Data_Analysis_task_005_retention_cohort'
+WORK = ROOT / 'workspace/general/challenge/02_Data_Analysis' / ID
+TASK = ROOT / 'tasks/general/challenge/02_Data_Analysis' / (ID + '.md')
 
 
 class RetentionDatasetTests(unittest.TestCase):

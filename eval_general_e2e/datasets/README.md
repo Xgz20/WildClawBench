@@ -4,12 +4,12 @@
 目录迁移保留旧60题和70题的冻结 ID、清单及评分身份。旧版本从
 `datasets/layout.json` 指定的迁移前 Git 提交及当时的题源快照重建。浅克隆需要先获取对应历史。
 
-新批次可以按系列选择冻结版本。例如，明确选用基础60题、真实工作70题 v6 和挑战60题 v2：
+新批次可以按系列选择冻结版本。例如，明确选用基础60题、真实工作70题 v6 和挑战60题 v3：
 
 ```bash
 python -m eval_general_e2e.datasets.bundle build --dataset-id general-regression --release-id general-custom60-v1
 python -m eval_general_e2e.datasets.bundle build --dataset-id general-work --release-id general-custom70-v6
-python -m eval_general_e2e.datasets.bundle build --dataset-id general-challenge --release-id general-challenge-v2
+python -m eval_general_e2e.datasets.bundle build --dataset-id general-challenge --release-id general-challenge-v3
 ```
 
 以上命令用于准备冻结数据集包。现有 `--dataset <历史版本ID>` 仍可用于构建相应旧版。
@@ -27,7 +27,8 @@ python -m eval_general_e2e.datasets.bundle build --dataset-id general-challenge 
 | `general-custom70-v6` | 保留v5并补齐Info001冻结题源及参考 | 70 | 同一70题范围及独立五维 |
 | `general-hard-v1` | `datasets/general-hard/`，按系列定义与冻结清单选择 | 60 | 独立七维，7类，含6道必须理解视觉信息的题目 |
 
-挑战集使用注册系列入口构建，保留全部旧 `--dataset` 命令：
+挑战集 v3 的题号形如 `01_Office_Documents_task_001_policy_crosswalk`。历史挑战集使用
+`general-challenge-v2` 或 `general-hard-v1` 选取原题号。以下命令示范重建和校验历史 v1。
 
 ```bash
 python -m eval_general_e2e.datasets.bundle build --dataset-id general-hard-v1

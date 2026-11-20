@@ -16,7 +16,7 @@ from .definition import DATASETS, DEFAULT_DEFINITION, DatasetDefinition
 
 
 ID_RE = re.compile(r"^[a-z0-9][a-z0-9._-]*$")
-TASK_ID_RE = re.compile(r"^[a-z][a-z0-9_]*_task_[0-9]{3,}_[a-z0-9_]+$")
+TASK_ID_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_]*_task_[0-9]{3,}_[a-z0-9_]+$")
 
 
 class CatalogError(ValueError):
@@ -196,7 +196,7 @@ def _family_release(root: Path, series_id: str, path: Path, release_id: str | No
     legacy_prefixes = _strings(data.get("legacy_task_id_prefixes", []), "legacy task ID prefixes", empty=True)
     prefixes = (prefix, *legacy_prefixes)
     if (len(set(prefixes)) != len(prefixes) or any(not re.fullmatch(r"[a-z][a-z0-9_]*_", p) for p in prefixes)
-            or any(not t.startswith(prefixes) or not TASK_ID_RE.fullmatch(t) for t in task_ids)):
+            or any(not TASK_ID_RE.fullmatch(task_id) for task_id in task_ids)):
         raise CatalogError("release task IDs must use the declared namespace")
     statistics = release.get("expected_statistics")
     if not isinstance(statistics, dict):
@@ -207,11 +207,21 @@ def _family_release(root: Path, series_id: str, path: Path, release_id: str | No
     category_counts = _counts(statistics.get("category_counts"), "category_counts", count)
     if set(category_counts) - set(labels):
         raise CatalogError("release contains an unregistered category")
-    for task_id in task_ids:
-        namespace = max((p for p in prefixes if task_id.startswith(p)), key=len)
-        category = task_id[len(namespace):].split("_task_", 1)[0]
-        if category not in category_counts:
-            raise CatalogError(f"release task ID has an unregistered category: {task_id}")
+    directories = release.get("category_directories", data.get("category_directories", {}))
+    if (not isinstance(directories, dict)
+            or any(not isinstance(directory, str) or not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_]*", directory)
+                   or not isinstance(category, str) or category not in labels
+                   for directory, category in directories.items())
+            or len({directory.casefold() for directory in directories}) != len(directories)
+            or len(set(directories.values())) != len(directories)
+            or len({name.casefold() for name in (*directories, *(labels.keys() - directories.values()))})
+               != len(labels)):
+        raise CatalogError("category_directories must map distinct relative directories to distinct category keys")
+    task_id_style = release.get("task_id_style", data.get("task_id_style", "series_prefix"))
+    if task_id_style not in ("series_prefix", "category_directory"):
+        raise CatalogError("task_id_style must be series_prefix or category_directory")
+    if task_id_style == "category_directory" and set(directories.values()) != set(labels):
+        raise CatalogError("category-directory task IDs require a directory for every category")
     include = _strings(data.get("required_tags"), "required tags")
     exclude = _strings(data.get("exclude_tags", ["invalid"]), "exclude tags", empty=True)
     if any(tag != tag.lower() or "," in tag for tag in (*include, *exclude)) or set(include) & set(exclude):
@@ -237,9 +247,15 @@ def _family_release(root: Path, series_id: str, path: Path, release_id: str | No
         registry_path=paths["source_registry"], capability_map_path=paths["capability_map"],
         manifest_path=manifest.relative_to(root).as_posix(), revision_scope=scope,
         task_ids=task_ids, task_id_prefix=prefix, legacy_task_id_prefixes=legacy_prefixes,
+        category_directories=tuple(directories.items()),
+        category_directory_task_ids=task_id_style == "category_directory",
         series_id=series_id, category_labels=labels,
         constraints=_constraints(release.get("constraints", {}), count),
     )
+    allowed_stems = {stem for category in category_counts for stem in definition.task_id_stems(category)}
+    for task_id in task_ids:
+        if task_id.split("_task_", 1)[0] not in allowed_stems:
+            raise CatalogError(f"release task ID has an unregistered category or namespace: {task_id}")
     if status == "frozen":
         try:
             locked = json.loads(manifest.read_text(encoding="utf-8"))

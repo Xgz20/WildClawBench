@@ -15,6 +15,7 @@ from eval_general_e2e.datasets.catalog import CatalogError, load_registered_data
 from eval_general_e2e.datasets.capability_audit import generate_capability_matrix
 from eval_general_e2e.datasets.definition import DATASETS, DatasetDefinition
 from eval_general_e2e.datasets.discovery import discover_frozen_tasks
+from eval_general_e2e.datasets.layout import cli_category_paths, cli_task_path, load_layout
 from eval_general_e2e.datasets.source_history import dataset_task_path
 from src.utils.task_parser import parse_task_md
 from tools.report.lib.eval_dataset.selectors import select_task_files
@@ -48,18 +49,34 @@ class DatasetIntegrationTests(unittest.TestCase):
                     load_registered_dataset(REPO_ROOT, dataset_id, release_id="general-hard-v1")
 
     def test_explicit_selections_keep_logical_paths_and_exact_release_membership(self) -> None:
-        for dataset_id in (*DATASETS, "general-hard-v1"):
+        for dataset_id in (*DATASETS, "general-hard-v1", "general-challenge-v2", "general-challenge-v3"):
             with self.subTest(dataset_id=dataset_id):
                 registered = load_registered_dataset(REPO_ROOT, dataset_id)
                 result = select_task_files(REPO_ROOT, dataset_id=dataset_id)
                 self.assertEqual(result.issues, [])
                 self.assertEqual(len(result.files), registered.definition.expected_task_count)
-                self.assertEqual({path.stem for path in result.files}, set(registered.definition.task_ids))
+                aliases = load_layout(REPO_ROOT)["task_id_aliases"]
+                self.assertEqual({path.stem for path in result.files},
+                                 {aliases.get(task_id, task_id) for task_id in registered.definition.task_ids})
                 self.assertTrue(all(path.is_relative_to(REPO_ROOT / "tasks") for path in result.files))
         legacy = select_task_files(REPO_ROOT, dataset_id="general-custom60-v1").files[0]
         outside = select_task_files(REPO_ROOT, dataset_id="general-hard-v1", task_paths=[legacy])
         self.assertEqual(outside.files, [])
         self.assertEqual([issue.code for issue in outside.issues], ["DATASET_TASK_OUTSIDE_ROOT"])
+
+    def test_numbered_challenge_cli_categories_and_legacy_task_aliases(self) -> None:
+        tasks_root = REPO_ROOT / "tasks"
+        old_id = "general_hard_office_documents_task_001_policy_crosswalk"
+        new_id = "01_Office_Documents_task_001_policy_crosswalk"
+        task = cli_task_path(REPO_ROOT, tasks_root, new_id)
+        self.assertEqual(task, cli_task_path(REPO_ROOT, tasks_root, old_id))
+        self.assertEqual(task, cli_task_path(REPO_ROOT, tasks_root,
+                         f"tasks/general/challenge/office_documents/{old_id}.md"))
+        self.assertEqual(parse_task_md(task, repo_root=REPO_ROOT)["category"], "office_documents")
+        old_category = cli_category_paths(tasks_root, "general/challenge/office_documents")
+        self.assertEqual(old_category, cli_category_paths(tasks_root, "general/challenge/01_Office_Documents"))
+        self.assertEqual(len(old_category), 16)
+        self.assertIn(task, old_category)
 
     def test_historical_discovery_and_both_build_interfaces_read_the_same_snapshot(self) -> None:
         definition = DATASETS["general-info004-open-v1"]
@@ -121,7 +138,7 @@ class FrozenDatasetCompilationTests(unittest.TestCase):
     def test_all_builtin_and_hard_releases_match_their_original_locks(self) -> None:
         # This matrix intentionally compiles one release at a time. Keep it out
         # of parallel test invocations: some products include large workspaces.
-        for dataset_id in (*DATASETS, "general-hard-v1"):
+        for dataset_id in (*DATASETS, "general-hard-v1", "general-challenge-v2", "general-challenge-v3"):
             with self.subTest(dataset_id=dataset_id):
                 registered = load_registered_dataset(REPO_ROOT, dataset_id)
                 locked = bundle.load_manifest_lock(registered.manifest_path)

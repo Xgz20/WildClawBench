@@ -11,7 +11,7 @@ import yaml
 
 from eval_general_e2e.datasets.catalog import load_registered_dataset
 from eval_general_e2e.datasets.layout import is_reading_or_archived_task, relocated_task, load_layout
-from eval_general_e2e.datasets.source_history import FrozenSources
+from eval_general_e2e.datasets.source_history import FrozenSources, archived_source_revision
 from .contracts import FAIL, Issue
 
 
@@ -91,6 +91,11 @@ def select_task_files(
     selectors: list[str] = []
     registered = None
     sources = None
+    historical = False
+    layout = load_layout(repo_root)
+    aliases = layout.get("task_id_aliases", {})
+    release_ids: set[str] = set()
+    visible_release_ids: set[str] = set()
     if release_id and not dataset_id:
         return SelectionResult(issues=[Issue(FAIL, "DATASET_DEFINITION_INVALID", "release_id需要dataset_id")])
     if dataset_id:
@@ -102,8 +107,11 @@ def select_task_files(
         try:
             registered = load_registered_dataset(repo_root, dataset_id, release_id=release_id)
             default_root = registered.definition.task_root
-            if registered.definition.dataset_id in load_layout(repo_root).get("historical_releases", ()):
-                default_root = historical_roots[default_root]
+            release_ids = set(registered.definition.task_ids)
+            historical = archived_source_revision(repo_root, registered.definition.dataset_id) is not None
+            visible_release_ids = {aliases.get(task_id, task_id) for task_id in release_ids} if historical else release_ids
+            if historical:
+                default_root = historical_roots.get(default_root, default_root)
             else:
                 sources = FrozenSources(repo_root, registered.definition.frozen_source_index,
                                         registered.definition.current_source_paths)
@@ -121,7 +129,7 @@ def select_task_files(
         if not candidate.exists() or not candidate.is_dir():
             if candidate.is_relative_to(repo_root):
                 prefix = candidate.relative_to(repo_root).as_posix() + "/"
-                relocated = [repo_root / new for old, new in load_layout(repo_root).get("task_paths", {}).items()
+                relocated = [repo_root / new for old, new in layout.get("task_paths", {}).items()
                              if old.startswith(prefix)]
                 if relocated:
                     selected.extend(path for path in relocated if path.is_file()
@@ -167,7 +175,8 @@ def select_task_files(
                     selected.append(candidate)
                     selectors.append(str(candidate.resolve()))
                     continue
-            matches = matches_by_id.get(raw_id, [])
+            matches = (matches_by_id.get(aliases.get(raw_id, raw_id), [])
+                       if not historical or raw_id in release_ids else [])
             selectors.append(raw_id)
             if not matches:
                 issues.append(Issue(FAIL, "TASK_ID_NOT_FOUND", f"未找到任务 ID: {raw_id}", task_id=raw_id))
@@ -186,7 +195,7 @@ def select_task_files(
             if not path.resolve().is_relative_to(root):
                 issues.append(Issue(FAIL, "DATASET_TASK_OUTSIDE_ROOT", "任务越出所选数据集根目录", location=str(path)))
                 continue
-            if _task_id(path, sources) not in set(registered.definition.task_ids):
+            if _task_id(path, sources) not in visible_release_ids:
                 issues.append(Issue(FAIL, "DATASET_TASK_OUT_OF_RELEASE", "任务不在所选冻结版本清单", task_id=_task_id(path, sources), location=str(path)))
                 continue
         unique[str(path.resolve())] = path.resolve()

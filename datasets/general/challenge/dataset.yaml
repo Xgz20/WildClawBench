@@ -32,10 +32,21 @@ categories:
   content_operations:
     name: 内容创作与运营
     description: 基于事实材料的改写、策划和多渠道交付；不单设抽象创意类。
-default_release: general-challenge-v2
+task_id_style: category_directory
+category_directories:
+  01_Office_Documents: office_documents
+  02_Data_Analysis: data_analysis
+  03_Research_Verification: research_verification
+  04_File_Operations: file_operations
+  05_Software_Engineering: software_engineering
+  06_Planning_Coordination: planning_coordination
+  07_Content_Operations: content_operations
+default_release: general-challenge-v3
 releases:
   general-challenge-v2:
     status: frozen
+    task_id_style: series_prefix
+    category_directories: {}
     created_at: '2026-11-19T00:00:00+08:00'
     manifest: datasets/general/challenge/manifests/general-challenge-v2.json
     task_ids:
@@ -99,6 +110,100 @@ releases:
     - general_hard_content_operations_task_002_source_bound_campaign
     - general_hard_content_operations_task_003_marketing_evidence
     - general_hard_content_operations_task_004_multichannel_update
+    expected_statistics:
+      task_count: 60
+      category_counts:
+        office_documents: 16
+        data_analysis: 10
+        research_verification: 8
+        file_operations: 6
+        software_engineering: 12
+        planning_coordination: 4
+        content_operations: 4
+      grading_type_counts:
+        hybrid: 36
+        automated: 24
+      difficulty_counts:
+        L2: 12
+        L3: 24
+        L4: 24
+      timeout_counts:
+        '900': 60
+    constraints:
+      multimodal_exact: 6
+      multimodal_max_ratio: 0.1
+      production_backed_min: 40
+      coding_primary_max: 20
+      controlled_network_max: 12
+      research_retrieval_group_counts:
+        open_search: 3
+        directed_web_retrieval: 3
+        local_evidence: 2
+  general-challenge-v3:
+    status: ready
+    created_at: '2026-11-20T00:00:00+08:00'
+    manifest: datasets/general/challenge/manifests/general-challenge-v3.json
+    task_ids:
+    - 01_Office_Documents_task_001_policy_crosswalk
+    - 01_Office_Documents_task_002_meeting_decision_repair
+    - 01_Office_Documents_task_003_docx_clause_patch
+    - 01_Office_Documents_task_004_bid_compliance
+    - 01_Office_Documents_task_005_annual_deck
+    - 01_Office_Documents_task_006_sop_knowledge_pack
+    - 01_Office_Documents_task_007_visual_handoff
+    - 01_Office_Documents_task_008_bilingual_revision
+    - 01_Office_Documents_task_009_pdf_to_docx
+    - 01_Office_Documents_task_010_capex_packet
+    - 01_Office_Documents_task_011_linked_report_update
+    - 01_Office_Documents_task_012_visual_redlines
+    - 01_Office_Documents_task_013_proposal_delivery
+    - 01_Office_Documents_task_014_support_localization
+    - 01_Office_Documents_task_015_board_decision_pack
+    - 01_Office_Documents_task_016_docx_structure_repair
+    - 02_Data_Analysis_task_001_heterogeneous_join
+    - 02_Data_Analysis_task_002_survey_denominator
+    - 02_Data_Analysis_task_003_formula_repair
+    - 02_Data_Analysis_task_004_financial_reconcile
+    - 02_Data_Analysis_task_005_retention_cohort
+    - 02_Data_Analysis_task_006_visual_chart_audit
+    - 02_Data_Analysis_task_007_rolling_ledger
+    - 02_Data_Analysis_task_008_parameterized_model
+    - 02_Data_Analysis_task_009_capacity_optimization
+    - 02_Data_Analysis_task_010_visual_voucher_match
+    - 03_Research_Verification_task_001_open_mineral_fact_discovery
+    - 03_Research_Verification_task_002_api_spec_crosscheck
+    - 03_Research_Verification_task_003_open_product_event_research
+    - 03_Research_Verification_task_004_site_search_literature_screening
+    - 03_Research_Verification_task_005_open_long_horizon_agent_research
+    - 03_Research_Verification_task_006_paper_comparison
+    - 03_Research_Verification_task_007_directed_notice_timeline
+    - 03_Research_Verification_task_008_visual_paper_figures
+    - 04_File_Operations_task_001_cleanup_plan
+    - 04_File_Operations_task_002_versioned_archive
+    - 04_File_Operations_task_003_nested_archives
+    - 04_File_Operations_task_004_resumable_inventory
+    - 04_File_Operations_task_005_split_bundle_restore
+    - 04_File_Operations_task_006_visual_file_mapping
+    - 05_Software_Engineering_task_001_delimiter_validation
+    - 05_Software_Engineering_task_002_sqlite_import
+    - 05_Software_Engineering_task_003_async_lifecycle
+    - 05_Software_Engineering_task_004_rbac_export
+    - 05_Software_Engineering_task_005_sql_compatibility
+    - 05_Software_Engineering_task_006_config_migration
+    - 05_Software_Engineering_task_007_bounded_performance
+    - 05_Software_Engineering_task_008_sse_state
+    - 05_Software_Engineering_task_009_package_migration
+    - 05_Software_Engineering_task_010_multiview_state
+    - 05_Software_Engineering_task_011_security_regression
+    - 05_Software_Engineering_task_012_prd_full_delivery
+    - 06_Planning_Coordination_task_001_measurable_roadmap
+    - 06_Planning_Coordination_task_002_identity_cutover
+    - 06_Planning_Coordination_task_003_learning_path
+    - 06_Planning_Coordination_task_004_release_go_no_go
+    - 07_Content_Operations_task_001_article_rewrite
+    - 07_Content_Operations_task_002_source_bound_campaign
+    - 07_Content_Operations_task_003_marketing_evidence
+    - 07_Content_Operations_task_004_multichannel_update
     expected_statistics:
       task_count: 60
       category_counts:

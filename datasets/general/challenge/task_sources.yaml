@@ -10,7 +10,7 @@ registry_contract:
     planning_coordination: 4
     content_operations: 4
 tasks:
-  - task_id: general_hard_software_engineering_task_001_delimiter_validation
+  - task_id: 05_Software_Engineering_task_001_delimiter_validation
     origin:
       mode: production_adapted_with_open_benchmark_methods
       production_refs:
@@ -54,7 +54,7 @@ tasks:
       requires_visual_input: false
       coding_primary: true
       difficulty_status: estimated_before_pilot
-  - task_id: general_hard_software_engineering_task_002_sqlite_import
+  - task_id: 05_Software_Engineering_task_002_sqlite_import
     origin:
       mode: production_adapted_with_open_benchmark_methods
       production_refs:
@@ -98,7 +98,7 @@ tasks:
       requires_visual_input: false
       coding_primary: true
       difficulty_status: estimated_before_pilot
-  - task_id: general_hard_office_documents_task_001_policy_crosswalk
+  - task_id: 01_Office_Documents_task_001_policy_crosswalk
     origin:
       mode: production_adapted_with_open_benchmark_methods
       production_refs:
@@ -145,7 +145,7 @@ tasks:
       requires_visual_input: false
       coding_primary: false
       difficulty_status: estimated_before_pilot
-  - task_id: general_hard_office_documents_task_002_meeting_decision_repair
+  - task_id: 01_Office_Documents_task_002_meeting_decision_repair
     origin:
       mode: production_adapted_with_open_benchmark_methods
       production_refs:
@@ -192,7 +192,7 @@ tasks:
       requires_visual_input: false
       coding_primary: false
       difficulty_status: estimated_before_pilot
-  - task_id: general_hard_office_documents_task_003_docx_clause_patch
+  - task_id: 01_Office_Documents_task_003_docx_clause_patch
     origin:
       mode: open_benchmark_method_inspired_new_task
       production_refs: []
@@ -227,7 +227,7 @@ tasks:
       requires_visual_input: false
       coding_primary: false
       difficulty_status: estimated_before_pilot
-  - task_id: general_hard_office_documents_task_004_bid_compliance
+  - task_id: 01_Office_Documents_task_004_bid_compliance
     origin:
       mode: production_adapted_with_open_benchmark_methods
       production_refs:
@@ -274,7 +274,7 @@ tasks:
       requires_visual_input: false
       coding_primary: false
       difficulty_status: estimated_before_pilot
-  - task_id: general_hard_office_documents_task_005_annual_deck
+  - task_id: 01_Office_Documents_task_005_annual_deck
     origin:
       mode: production_adapted_with_open_benchmark_methods
       production_refs:
@@ -320,7 +320,7 @@ tasks:
       requires_visual_input: false
       coding_primary: false
       difficulty_status: estimated_before_pilot
-  - task_id: general_hard_office_documents_task_006_sop_knowledge_pack
+  - task_id: 01_Office_Documents_task_006_sop_knowledge_pack
     origin:
       mode: open_benchmark_method_inspired_new_task
       production_refs: []
@@ -355,7 +355,7 @@ tasks:
       requires_visual_input: false
       coding_primary: false
       difficulty_status: estimated_before_pilot
-  - task_id: general_hard_office_documents_task_008_bilingual_revision
+  - task_id: 01_Office_Documents_task_008_bilingual_revision
     origin:
       mode: production_adapted_with_open_benchmark_methods
       production_refs:
@@ -402,7 +402,7 @@ tasks:
       requires_visual_input: false
       coding_primary: false
       difficulty_status: estimated_before_pilot
-  - task_id: general_hard_office_documents_task_007_visual_handoff
+  - task_id: 01_Office_Documents_task_007_visual_handoff
     origin:
       mode: production_adapted_with_open_benchmark_methods
       production_refs:
@@ -428,7 +428,7 @@ tasks:
       requires_visual_input: true
       coding_primary: false
       difficulty_status: estimated_before_pilot
-  - task_id: general_hard_office_documents_task_009_pdf_to_docx
+  - task_id: 01_Office_Documents_task_009_pdf_to_docx
     origin:
       mode: open_benchmark_method_inspired_new_task
       production_refs: []
@@ -443,7 +443,7 @@ tasks:
       requires_visual_input: false
       coding_primary: false
       difficulty_status: estimated_before_pilot
-  - task_id: general_hard_office_documents_task_010_capex_packet
+  - task_id: 01_Office_Documents_task_010_capex_packet
     origin:
       mode: production_adapted_with_open_benchmark_methods
       production_refs:
@@ -469,7 +469,7 @@ tasks:
       requires_visual_input: false
       coding_primary: false
       difficulty_status: estimated_before_pilot
-  - task_id: general_hard_office_documents_task_011_linked_report_update
+  - task_id: 01_Office_Documents_task_011_linked_report_update
     origin:
       mode: production_adapted_with_open_benchmark_methods
       production_refs:
@@ -495,7 +495,7 @@ tasks:
       requires_visual_input: false
       coding_primary: false
       difficulty_status: estimated_before_pilot
-  - task_id: general_hard_office_documents_task_012_visual_redlines
+  - task_id: 01_Office_Documents_task_012_visual_redlines
     origin:
       mode: production_adapted_with_open_benchmark_methods
       production_refs:
@@ -521,7 +521,7 @@ tasks:
       requires_visual_input: true
       coding_primary: false
       difficulty_status: estimated_before_pilot
-  - task_id: general_hard_office_documents_task_013_proposal_delivery
+  - task_id: 01_Office_Documents_task_013_proposal_delivery
     origin:
       mode: production_adapted_with_open_benchmark_methods
       production_refs:
@@ -547,7 +547,7 @@ tasks:
       requires_visual_input: false
       coding_primary: false
       difficulty_status: estimated_before_pilot
-  - task_id: general_hard_office_documents_task_015_board_decision_pack
+  - task_id: 01_Office_Documents_task_015_board_decision_pack
     origin:
       mode: production_adapted_with_open_benchmark_methods
       production_refs:
@@ -573,7 +573,7 @@ tasks:
       requires_visual_input: false
       coding_primary: false
       difficulty_status: estimated_before_pilot
-  - task_id: general_hard_office_documents_task_016_docx_structure_repair
+  - task_id: 01_Office_Documents_task_016_docx_structure_repair
     origin:
       mode: open_benchmark_method_inspired_new_task
       production_refs: []
@@ -587,7 +587,7 @@ tasks:
     attributes:
       requires_visual_input: false
       coding_primary: false
-  - task_id: general_hard_data_analysis_task_001_heterogeneous_join
+  - task_id: 02_Data_Analysis_task_001_heterogeneous_join
     origin:
       mode: production_adapted_with_open_benchmark_methods
       production_refs:
@@ -612,7 +612,7 @@ tasks:
     attributes:
       requires_visual_input: false
       coding_primary: false
-  - task_id: general_hard_data_analysis_task_002_survey_denominator
+  - task_id: 02_Data_Analysis_task_002_survey_denominator
     origin:
       mode: open_benchmark_method_inspired_new_task
       production_refs: []
@@ -626,7 +626,7 @@ tasks:
     attributes:
       requires_visual_input: false
       coding_primary: false
-  - task_id: general_hard_data_analysis_task_003_formula_repair
+  - task_id: 02_Data_Analysis_task_003_formula_repair
     origin:
       mode: production_adapted_with_open_benchmark_methods
       production_refs:
@@ -651,7 +651,7 @@ tasks:
     attributes:
       requires_visual_input: false
       coding_primary: false
-  - task_id: general_hard_data_analysis_task_004_financial_reconcile
+  - task_id: 02_Data_Analysis_task_004_financial_reconcile
     origin:
       mode: production_adapted_with_open_benchmark_methods
       production_refs:
@@ -676,7 +676,7 @@ tasks:
     attributes:
       requires_visual_input: false
       coding_primary: false
-  - task_id: general_hard_data_analysis_task_005_retention_cohort
+  - task_id: 02_Data_Analysis_task_005_retention_cohort
     origin:
       mode: production_adapted_with_open_benchmark_methods
       production_refs:
@@ -701,7 +701,7 @@ tasks:
     attributes:
       requires_visual_input: false
       coding_primary: false
-  - task_id: general_hard_office_documents_task_014_support_localization
+  - task_id: 01_Office_Documents_task_014_support_localization
     origin:
       mode: open_benchmark_method_inspired_new_task
       production_refs: []
@@ -716,7 +716,7 @@ tasks:
       requires_visual_input: false
       coding_primary: false
       difficulty_status: design_estimate_unvalidated
-  - task_id: general_hard_data_analysis_task_006_visual_chart_audit
+  - task_id: 02_Data_Analysis_task_006_visual_chart_audit
     origin:
       mode: production_adapted_with_open_benchmark_methods
       production_refs:
@@ -742,7 +742,7 @@ tasks:
       requires_visual_input: true
       coding_primary: false
       difficulty_status: design_estimate_unvalidated
-  - task_id: general_hard_data_analysis_task_007_rolling_ledger
+  - task_id: 02_Data_Analysis_task_007_rolling_ledger
     origin:
       mode: production_adapted_with_open_benchmark_methods
       production_refs:
@@ -767,7 +767,7 @@ tasks:
     attributes:
       requires_visual_input: false
       coding_primary: false
-  - task_id: general_hard_data_analysis_task_008_parameterized_model
+  - task_id: 02_Data_Analysis_task_008_parameterized_model
     origin:
       mode: production_adapted_with_open_benchmark_methods
       production_refs:
@@ -792,7 +792,7 @@ tasks:
     attributes:
       requires_visual_input: false
       coding_primary: false
-  - task_id: general_hard_data_analysis_task_009_capacity_optimization
+  - task_id: 02_Data_Analysis_task_009_capacity_optimization
     origin:
       mode: open_benchmark_method_inspired_new_task
       production_refs: []
@@ -806,7 +806,7 @@ tasks:
     attributes:
       requires_visual_input: false
       coding_primary: false
-  - task_id: general_hard_data_analysis_task_010_visual_voucher_match
+  - task_id: 02_Data_Analysis_task_010_visual_voucher_match
     origin:
       mode: open_benchmark_method_inspired_new_task
       production_refs: []
@@ -821,7 +821,7 @@ tasks:
       requires_visual_input: true
       coding_primary: false
       difficulty_status: design_estimate_unvalidated
-  - task_id: general_hard_research_verification_task_001_open_mineral_fact_discovery
+  - task_id: 03_Research_Verification_task_001_open_mineral_fact_discovery
     origin:
       mode: internal_benchmark_inspired_with_open_benchmark_methods
       production_refs: []
@@ -853,7 +853,7 @@ tasks:
       coding_primary: false
       retrieval_group: open_search
       difficulty_status: design_estimate_unvalidated
-  - task_id: general_hard_research_verification_task_002_api_spec_crosscheck
+  - task_id: 03_Research_Verification_task_002_api_spec_crosscheck
     origin:
       mode: production_adapted_with_open_benchmark_methods
       production_refs:
@@ -905,7 +905,7 @@ tasks:
       coding_primary: false
       retrieval_group: directed_web_retrieval
       difficulty_status: design_estimate_unvalidated
-  - task_id: general_hard_research_verification_task_003_open_product_event_research
+  - task_id: 03_Research_Verification_task_003_open_product_event_research
     origin:
       mode: internal_benchmark_inspired_with_open_benchmark_methods
       production_refs: []
@@ -945,7 +945,7 @@ tasks:
       coding_primary: false
       retrieval_group: open_search
       difficulty_status: design_estimate_unvalidated
-  - task_id: general_hard_research_verification_task_004_site_search_literature_screening
+  - task_id: 03_Research_Verification_task_004_site_search_literature_screening
     origin:
       mode: internal_benchmark_inspired_with_open_benchmark_methods
       production_refs: []
@@ -994,7 +994,7 @@ tasks:
       coding_primary: false
       retrieval_group: directed_web_retrieval
       difficulty_status: design_estimate_unvalidated
-  - task_id: general_hard_file_operations_task_001_cleanup_plan
+  - task_id: 04_File_Operations_task_001_cleanup_plan
     origin:
       mode: production_adapted_with_open_benchmark_methods
       production_refs:
@@ -1020,7 +1020,7 @@ tasks:
       requires_visual_input: false
       coding_primary: false
       difficulty_status: design_estimate_unvalidated
-  - task_id: general_hard_research_verification_task_006_paper_comparison
+  - task_id: 03_Research_Verification_task_006_paper_comparison
     origin:
       mode: production_adapted_with_open_benchmark_methods
       production_refs:
@@ -1054,7 +1054,7 @@ tasks:
       requires_visual_input: false
       coding_primary: false
       retrieval_group: local_evidence
-  - task_id: general_hard_file_operations_task_002_versioned_archive
+  - task_id: 04_File_Operations_task_002_versioned_archive
     origin:
       mode: production_adapted_with_open_benchmark_methods
       production_refs:
@@ -1080,7 +1080,7 @@ tasks:
       requires_visual_input: false
       coding_primary: false
       difficulty_status: design_estimate_unvalidated
-  - task_id: general_hard_file_operations_task_003_nested_archives
+  - task_id: 04_File_Operations_task_003_nested_archives
     origin:
       mode: production_adapted_with_open_benchmark_methods
       production_refs:
@@ -1106,7 +1106,7 @@ tasks:
       requires_visual_input: false
       coding_primary: false
       difficulty_status: design_estimate_unvalidated
-  - task_id: general_hard_research_verification_task_008_visual_paper_figures
+  - task_id: 03_Research_Verification_task_008_visual_paper_figures
     origin:
       mode: internal_benchmark_inspired_with_open_benchmark_methods
       production_refs: []
@@ -1136,7 +1136,7 @@ tasks:
       requires_visual_input: true
       coding_primary: false
       retrieval_group: local_evidence
-  - task_id: general_hard_file_operations_task_004_resumable_inventory
+  - task_id: 04_File_Operations_task_004_resumable_inventory
     origin:
       mode: open_benchmark_method_inspired_new_task
       production_refs: []
@@ -1151,7 +1151,7 @@ tasks:
       requires_visual_input: false
       coding_primary: false
       difficulty_status: design_estimate_unvalidated
-  - task_id: general_hard_research_verification_task_007_directed_notice_timeline
+  - task_id: 03_Research_Verification_task_007_directed_notice_timeline
     origin:
       mode: internal_benchmark_inspired_with_open_benchmark_methods
       production_refs: []
@@ -1202,7 +1202,7 @@ tasks:
       requires_visual_input: false
       coding_primary: false
       retrieval_group: directed_web_retrieval
-  - task_id: general_hard_file_operations_task_006_visual_file_mapping
+  - task_id: 04_File_Operations_task_006_visual_file_mapping
     origin:
       mode: open_benchmark_method_inspired_new_task
       production_refs: []
@@ -1216,7 +1216,7 @@ tasks:
     attributes:
       requires_visual_input: true
       coding_primary: false
-  - task_id: general_hard_file_operations_task_005_split_bundle_restore
+  - task_id: 04_File_Operations_task_005_split_bundle_restore
     origin:
       mode: production_adapted_with_open_benchmark_methods
       production_refs:
@@ -1242,7 +1242,7 @@ tasks:
       requires_visual_input: false
       coding_primary: false
       difficulty_status: design_estimate_unvalidated
-  - task_id: general_hard_software_engineering_task_003_async_lifecycle
+  - task_id: 05_Software_Engineering_task_003_async_lifecycle
     origin:
       mode: production_adapted_with_open_benchmark_methods
       production_refs:
@@ -1267,7 +1267,7 @@ tasks:
     attributes:
       requires_visual_input: false
       coding_primary: true
-  - task_id: general_hard_software_engineering_task_004_rbac_export
+  - task_id: 05_Software_Engineering_task_004_rbac_export
     origin:
       mode: production_adapted_with_open_benchmark_methods
       production_refs:
@@ -1292,7 +1292,7 @@ tasks:
     attributes:
       requires_visual_input: false
       coding_primary: true
-  - task_id: general_hard_software_engineering_task_005_sql_compatibility
+  - task_id: 05_Software_Engineering_task_005_sql_compatibility
     origin:
       mode: production_adapted_with_open_benchmark_methods
       production_refs:
@@ -1317,7 +1317,7 @@ tasks:
     attributes:
       requires_visual_input: false
       coding_primary: true
-  - task_id: general_hard_planning_coordination_task_001_measurable_roadmap
+  - task_id: 06_Planning_Coordination_task_001_measurable_roadmap
     origin:
       mode: production_adapted_with_open_benchmark_methods
       production_refs:
@@ -1343,7 +1343,7 @@ tasks:
       requires_visual_input: false
       coding_primary: false
       difficulty_status: design_estimate_unvalidated
-  - task_id: general_hard_software_engineering_task_006_config_migration
+  - task_id: 05_Software_Engineering_task_006_config_migration
     origin:
       mode: production_adapted_with_open_benchmark_methods
       production_refs:
@@ -1368,7 +1368,7 @@ tasks:
     attributes:
       requires_visual_input: false
       coding_primary: true
-  - task_id: general_hard_planning_coordination_task_002_identity_cutover
+  - task_id: 06_Planning_Coordination_task_002_identity_cutover
     origin:
       mode: production_adapted_with_open_benchmark_methods
       production_refs:
@@ -1394,7 +1394,7 @@ tasks:
       requires_visual_input: false
       coding_primary: false
       difficulty_status: design_estimate_unvalidated
-  - task_id: general_hard_software_engineering_task_008_sse_state
+  - task_id: 05_Software_Engineering_task_008_sse_state
     origin:
       mode: production_adapted_with_open_benchmark_methods
       production_refs:
@@ -1419,7 +1419,7 @@ tasks:
     attributes:
       requires_visual_input: false
       coding_primary: true
-  - task_id: general_hard_software_engineering_task_007_bounded_performance
+  - task_id: 05_Software_Engineering_task_007_bounded_performance
     origin:
       mode: production_adapted_with_open_benchmark_methods
       production_refs:
@@ -1445,7 +1445,7 @@ tasks:
       requires_visual_input: false
       coding_primary: true
       difficulty_status: design_estimate_unvalidated
-  - task_id: general_hard_content_operations_task_001_article_rewrite
+  - task_id: 07_Content_Operations_task_001_article_rewrite
     origin:
       mode: production_adapted_with_open_benchmark_methods
       production_refs:
@@ -1471,7 +1471,7 @@ tasks:
       requires_visual_input: false
       coding_primary: false
       difficulty_status: design_estimate_unvalidated
-  - task_id: general_hard_software_engineering_task_010_multiview_state
+  - task_id: 05_Software_Engineering_task_010_multiview_state
     origin:
       mode: production_adapted_with_open_benchmark_methods
       production_refs:
@@ -1497,7 +1497,7 @@ tasks:
       requires_visual_input: false
       coding_primary: true
       difficulty_status: design_estimate_unvalidated
-  - task_id: general_hard_software_engineering_task_009_package_migration
+  - task_id: 05_Software_Engineering_task_009_package_migration
     origin:
       mode: open_benchmark_method_inspired_new_task
       production_refs: []
@@ -1511,7 +1511,7 @@ tasks:
     attributes:
       requires_visual_input: false
       coding_primary: true
-  - task_id: general_hard_planning_coordination_task_003_learning_path
+  - task_id: 06_Planning_Coordination_task_003_learning_path
     origin:
       mode: production_adapted_with_open_benchmark_methods
       production_refs:
@@ -1537,7 +1537,7 @@ tasks:
       requires_visual_input: false
       coding_primary: false
       difficulty_status: design_estimate_unvalidated
-  - task_id: general_hard_content_operations_task_002_source_bound_campaign
+  - task_id: 07_Content_Operations_task_002_source_bound_campaign
     origin:
       mode: production_adapted_with_open_benchmark_methods
       production_refs:
@@ -1562,7 +1562,7 @@ tasks:
     attributes:
       requires_visual_input: false
       coding_primary: false
-  - task_id: general_hard_software_engineering_task_012_prd_full_delivery
+  - task_id: 05_Software_Engineering_task_012_prd_full_delivery
     origin:
       mode: production_adapted_with_open_benchmark_methods
       production_refs:
@@ -1588,7 +1588,7 @@ tasks:
       requires_visual_input: false
       coding_primary: true
       difficulty_status: design_estimate_unvalidated
-  - task_id: general_hard_planning_coordination_task_004_release_go_no_go
+  - task_id: 06_Planning_Coordination_task_004_release_go_no_go
     origin:
       mode: production_adapted_with_open_benchmark_methods
       production_refs:
@@ -1614,7 +1614,7 @@ tasks:
       requires_visual_input: false
       coding_primary: false
       difficulty_status: design_estimate_unvalidated
-  - task_id: general_hard_software_engineering_task_011_security_regression
+  - task_id: 05_Software_Engineering_task_011_security_regression
     origin:
       mode: production_adapted_with_open_benchmark_methods
       production_refs:
@@ -1640,7 +1640,7 @@ tasks:
       requires_visual_input: false
       coding_primary: true
       difficulty_status: design_estimate_unvalidated
-  - task_id: general_hard_content_operations_task_003_marketing_evidence
+  - task_id: 07_Content_Operations_task_003_marketing_evidence
     origin:
       mode: internal_benchmark_inspired_with_open_benchmark_methods
       production_refs: []
@@ -1665,7 +1665,7 @@ tasks:
     attributes:
       requires_visual_input: false
       coding_primary: false
-  - task_id: general_hard_content_operations_task_004_multichannel_update
+  - task_id: 07_Content_Operations_task_004_multichannel_update
     origin:
       mode: production_adapted_with_open_benchmark_methods
       production_refs:
@@ -1691,7 +1691,7 @@ tasks:
       requires_visual_input: false
       coding_primary: false
       difficulty_status: design_estimate_unvalidated
-  - task_id: general_hard_research_verification_task_005_open_long_horizon_agent_research
+  - task_id: 03_Research_Verification_task_005_open_long_horizon_agent_research
     origin:
       mode: internal_benchmark_inspired_with_open_benchmark_methods
       production_refs: []

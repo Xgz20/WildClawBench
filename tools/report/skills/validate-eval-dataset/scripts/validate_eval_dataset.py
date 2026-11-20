@@ -39,7 +39,7 @@ from tools.report.lib.eval_dataset.website_contracts import (
     validate_website_contract,
 )
 from eval_general_e2e.datasets.catalog import load_mapping, load_registered_dataset, repository_path
-from eval_general_e2e.datasets.layout import load_layout, workspace_for_task
+from eval_general_e2e.datasets.layout import load_layout, relocated_task, workspace_for_task
 from eval_general_e2e.datasets.source_history import pre_migration_sources
 
 
@@ -121,7 +121,18 @@ def validate_document(doc: TaskDocument, repo_root: Path, *, smoke: bool = False
         and doc.path.parent.parent == repo_root / "tasks/general_e2e/03_Data_Analysis_task"
     )
     if doc.category != doc.path.parent.name and not nested_data_analysis:
-        issues.append(_issue("CATEGORY_MISMATCH", f"category 与父目录不一致: {doc.category} != {doc.path.parent.name}", doc))
+        report_contract = metadata.get("dataset_report")
+        category_matches = False
+        if isinstance(report_contract, dict) and isinstance(report_contract.get("series_id"), str):
+            try:
+                definition = load_registered_dataset(repo_root, report_contract["series_id"]).definition
+                category_matches = (doc.category in definition.category_labels
+                                    and doc.path.parent == repo_root / definition.task_root
+                                    / definition.category_directory(doc.category))
+            except (OSError, ValueError):
+                pass  # Registry validation emits the source diagnostic.
+        if not category_matches:
+            issues.append(_issue("CATEGORY_MISMATCH", f"category 与父目录不一致: {doc.category} != {doc.path.parent.name}", doc))
     if doc.task_id not in doc.path.stem:
         issues.append(_issue("TASK_ID_FILENAME_MISMATCH", "task ID 未出现在文件名中", doc))
     for section in ("Prompt", "Workspace Path"):
@@ -296,11 +307,12 @@ def validate_registered_registry(repo_root: Path, selected: list[Path]) -> list[
         doc = parse_task_document(path)
         task_id = doc.task_id
         category = doc.category
-        expected_task = repo_root / definition.task_root / category / f"{task_id}.md"
+        directory = definition.category_directory(category)
+        expected_task = repo_root / definition.task_root / directory / f"{task_id}.md"
         if (category not in definition.category_labels or path != expected_task
                 or path.resolve() != expected_task
-                or not any(re.fullmatch(re.escape(prefix + category) + r"_task_\d{3}_[a-z0-9_]+", task_id)
-                           for prefix in (definition.task_id_prefix, *definition.legacy_task_id_prefixes))):
+                or not any(re.fullmatch(re.escape(stem) + r"_task_\d{3}_[a-z0-9_]+", task_id)
+                           for stem in definition.task_id_stems(category))):
             issues.append(_issue("DATASET_TASK_LAYOUT_INVALID", "任务路径、分类或数据集命名空间不一致", doc))
             continue
         tags = doc.metadata.get("tags", [])
@@ -309,7 +321,7 @@ def validate_registered_registry(repo_root: Path, selected: list[Path]) -> list[
         if (not isinstance(tags, list) or any(not isinstance(tag, str) for tag in tags) or not set(definition.include_tags).issubset(tags)
                 or set(definition.exclude_tags).intersection(tags)):
             issues.append(_issue("DATASET_TAGS_INVALID", "任务缺少数据集必需标签或包含排除标签", doc))
-        workspace = repo_root / definition.workspace_root / category / task_id
+        workspace = repo_root / definition.workspace_root / directory / task_id
         declared = strip_codeblock(doc.section("Workspace Path"))
         if declared != workspace.relative_to(repo_root).as_posix() or workspace.resolve() != workspace:
             issues.append(_issue("DATASET_WORKSPACE_LAYOUT_INVALID", "Workspace必须为本数据集/分类/task_id目录", doc))
@@ -510,29 +522,51 @@ def main(argv: list[str] | None = None) -> int:
         except (OSError, ValueError):
             pass  # The normal selector produces the structured diagnostic.
         else:
-            if registered.definition.dataset_id in load_layout(repo_root)["historical_releases"]:
-                paths = ["skills", "datasets/catalog.yaml", registered.definition.manifest_path]
-                if registered.definition_path:
-                    paths.append(registered.definition_path.relative_to(repo_root).as_posix())
-                with pre_migration_sources(repo_root, registered.definition, additional_paths=paths) as historical:
-                    return validate(args, historical, report_root=repo_root, frozen_id=registered.definition.dataset_id)
+            paths = ["skills", "datasets/catalog.yaml", registered.definition.manifest_path]
+            if registered.definition_path:
+                paths.append(registered.definition_path.relative_to(repo_root).as_posix())
+            with pre_migration_sources(repo_root, registered.definition, additional_paths=paths) as historical:
+                if historical is not None:
+                    return validate(args, historical, report_root=repo_root, frozen=registered)
     return validate(args, repo_root)
 
 
-def validate(args, repo_root: Path, *, report_root: Path | None = None, frozen_id: str | None = None) -> int:
+def validate(args, repo_root: Path, *, report_root: Path | None = None, frozen=None) -> int:
     # Historical scope retains the original logical source paths after the temporary tree is removed.
     def report_path(path):
         return str(path).replace(str(repo_root), str(report_root), 1) if report_root else str(path)
 
-    if frozen_id:
-        args.dataset_id, args.release_id = frozen_id, None
+    frozen_id = frozen.definition.dataset_id if frozen else None
+    if frozen:
+        # The partial archive has only the selected family's definition.
+        args.dataset_id, args.release_id = (
+            (frozen.series_id, frozen_id) if frozen.kind == "family" else (frozen_id, None)
+        )
+        # Use only aliases whose source exists in this release's archived tree.
+        reverse: dict[str, str] = {}
+        task_paths = load_layout(report_root)["task_paths"]
+        for old, current in task_paths.items():
+            if (repo_root / old).is_file():
+                reverse[current] = old
+                reverse.setdefault(str(Path(current).parent), str(Path(old).parent))
         for field in ("task_dir", "task_path", "task_id"):
-            reverse = {new: old for old, new in load_layout(report_root)["task_paths"].items()}
             values = []
             for item in getattr(args, field):
                 path = Path(item)
                 value = path.relative_to(report_root).as_posix() if path.is_relative_to(report_root) else item
-                values.append(reverse.get(value, value))
+                if (repo_root / value).exists() or "/" not in value or value.startswith("@"):
+                    values.append(value)
+                    continue
+                if field == "task_dir":
+                    prefix = value.rstrip("/") + "/"
+                    current_dirs = {str(Path(new).parent) for old, new in task_paths.items()
+                                    if old.startswith(prefix)}
+                    translated = sorted({reverse[current] for current in current_dirs if current in reverse})
+                    values.extend(translated or [reverse.get(value, value)])
+                else:
+                    current = relocated_task(report_root, Path(value))
+                    values.append(reverse.get(current.relative_to(report_root).as_posix(), value)
+                                  if current.is_relative_to(report_root) else value)
             setattr(args, field, values)
     selection = select_task_files(repo_root, task_dirs=args.task_dir, task_paths=args.task_path, task_ids=args.task_id, default_root="tasks", include_doc_copies=args.include_doc_copies, dataset_id=args.dataset_id, release_id=args.release_id)
     issues = list(selection.issues)
@@ -569,7 +603,7 @@ def validate(args, repo_root: Path, *, report_root: Path | None = None, frozen_i
     if report_root:
         issues = [replace(issue, location=report_path(issue.location), message=report_path(issue.message))
                   for issue in issues]
-    report = Report(1, status, {"repo": str(report_root or repo_root), "tasks": [report_path(path) for path in selection.files], "selectors": [report_path(s) for s in selection.selectors], "include_doc_copies": args.include_doc_copies, "dataset_id": args.dataset_id, "release_id": args.release_id, "smoke": args.smoke}, {"task_count": len(selection.files), "website_task_count": len(website_task_ids), "issue_count": len(issues), "action_summary": build_action_summary(task_ids, issues)}, issues)
+    report = Report(1, status, {"repo": str(report_root or repo_root), "tasks": [report_path(path) for path in selection.files], "selectors": [report_path(s) for s in selection.selectors], "include_doc_copies": args.include_doc_copies, "dataset_id": frozen_id or args.dataset_id, "release_id": None if frozen else args.release_id, "smoke": args.smoke}, {"task_count": len(selection.files), "website_task_count": len(website_task_ids), "issue_count": len(issues), "action_summary": build_action_summary(task_ids, issues)}, issues)
     target = write_report(report, repo_root=report_root or repo_root, kind="static", output_dir=args.output_dir)
     print(target)
     return exit_code(status, fail_on_review=args.fail_on == "review")

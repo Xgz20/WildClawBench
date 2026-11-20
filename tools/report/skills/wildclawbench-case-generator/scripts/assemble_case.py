@@ -24,6 +24,8 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 from eval_general_e2e.datasets.catalog import load_mapping, load_registered_dataset, repository_path
+from eval_general_e2e.datasets.layout import task_id_conflicts
+from eval_general_e2e.datasets.source_history import archived_source_revision
 
 CATEGORIES = (
     "01_Productivity_Flow",
@@ -419,7 +421,8 @@ def normalize_spec(raw: Any, *, repo_root: Path, spec_dir: Path, dataset_id: str
         raise SpecError("CLI与spec的dataset_id不一致")
     dataset_id = dataset_id or spec.get("dataset_id")
     registered = load_registered_dataset(repo_root, dataset_id) if dataset_id else None
-    if registered and not registered.definition.task_id_prefix:
+    if registered and (not registered.definition.series_id
+                       or archived_source_revision(repo_root, registered.definition.dataset_id)):
         raise SpecError("旧冻结集请使用原生成入口；不能改写冻结清单")
     categories = registered.definition.category_labels if registered else CATEGORIES
     category = _require_text(spec.get("category"), "category")
@@ -663,8 +666,7 @@ def assign_next_number(repo_root: Path, category: str, registry: dict[str, Any])
     raise SpecError(f"{category} 已没有可用的三位编号")
 
 
-def _validate_registry(registry: Any, *, categories=CATEGORIES, prefix: str = "",
-                       legacy_prefixes: tuple[str, ...] = ()) -> dict[str, Any]:
+def _validate_registry(registry: Any, *, categories=CATEGORIES, definition=None) -> dict[str, Any]:
     value = _require_mapping(registry, "task_sources.yaml")
     tasks = value.get("tasks")
     contract = value.get("registry_contract")
@@ -673,11 +675,10 @@ def _validate_registry(registry: Any, *, categories=CATEGORIES, prefix: str = ""
     ids = [entry.get("task_id") for entry in tasks if isinstance(entry, dict)]
     if len(ids) != len(tasks) or len(ids) != len(set(ids)):
         raise SpecError("task_sources.yaml 的 task_id 缺失或重复")
-    prefixes = (prefix, *legacy_prefixes)
-    if any(not isinstance(task_id, str) or not task_id.startswith(prefixes) for task_id in ids):
-        raise SpecError("task_sources.yaml 存在数据集命名空间之外的ID")
-    counts = Counter(task_id.removeprefix(max((p for p in prefixes if task_id.startswith(p)), key=len))
-                     .split("_task_", 1)[0] for task_id in ids)
+    stems = {stem: category for category in categories
+             for stem in (definition.task_id_stems(category) if definition else (category,))}
+    counts = Counter(stems.get(task_id.split("_task_", 1)[0]) if isinstance(task_id, str) else None
+                     for task_id in ids)
     if contract.get("active_task_count") != len(tasks):
         raise SpecError("task_sources.yaml 的 active_task_count 与 tasks 数量不一致")
     declared_counts = contract.get("category_task_counts")
@@ -950,11 +951,9 @@ def _validate_output_yaml(
     task_id: str,
     category: str,
     categories=CATEGORIES,
-    prefix: str = "",
-    legacy_prefixes: tuple[str, ...] = (),
+    definition=None,
 ) -> None:
-    registry = _validate_registry(yaml.safe_load(registry_text), categories=categories,
-                                  prefix=prefix, legacy_prefixes=legacy_prefixes)
+    registry = _validate_registry(yaml.safe_load(registry_text), categories=categories, definition=definition)
     matches = [entry for entry in registry["tasks"] if entry.get("task_id") == task_id]
     if len(matches) != 1:
         raise SpecError("生成后的 task_sources.yaml 未唯一登记新任务")
@@ -968,10 +967,13 @@ def _validate_output_yaml(
 def _registered_number(repo_root: Path, registered, spec: dict[str, Any], registry: dict[str, Any]) -> int:
     definition = registered.definition
     category = spec["category"]
-    prefixes = "|".join(re.escape(p) for p in (definition.task_id_prefix, *definition.legacy_task_id_prefixes))
-    pattern = re.compile(rf"^(?:{prefixes}){re.escape(category)}_task_(\d{{3}})_([a-z0-9_]+)$")
+    current_stems = definition.task_id_stems(category)
+    current_stem = current_stems[0]
+    stems = {*current_stems, *(prefix + category for prefix in definition.legacy_task_id_prefixes)}
+    alternatives = "|".join(re.escape(stem) for stem in sorted(stems))
+    pattern = re.compile(rf"^(?:{alternatives})_task_(\d{{3}})_([a-z0-9_]+)$")
     occupied: set[int] = set()
-    paths = (repo_root / definition.task_root / category).glob("*.md")
+    paths = (repo_root / definition.task_root / definition.category_directory(category)).glob("*.md")
     for task_id in [path.stem for path in paths] + [str(item.get("task_id", ""))
                    for key in ("tasks", "excluded_tasks") for item in registry.get(key, []) if isinstance(item, dict)]:
         match = pattern.fullmatch(task_id)
@@ -986,14 +988,14 @@ def _registered_number(repo_root: Path, registered, spec: dict[str, Any], regist
     number = spec["number"]
     if number is None:
         matching = [n for n, entries in plans.items() if n not in occupied and all(
-            task_id == f"{definition.task_id_prefix}{category}_task_{n:03d}_{spec['slug']}" and status == "building"
+            task_id == f"{current_stem}_task_{n:03d}_{spec['slug']}" and status == "building"
             for task_id, status in entries)]
         if len(matching) > 1:
             raise SpecError("slug对应多个规划编号，请显式指定number")
         number = matching[0] if matching else next((n for n in range(1, 1000) if n not in occupied and n not in plans), None)
     if number is None or number in occupied:
         raise SpecError("编号已被任务文件、来源或保留项占用")
-    candidate = f"{definition.task_id_prefix}{category}_task_{number:03d}_{spec['slug']}"
+    candidate = f"{current_stem}_task_{number:03d}_{spec['slug']}"
     if any(task_id != candidate or status != "building" for task_id, status in plans.get(number, set())):
         raise SpecError("编号已被其它规划题或已冻结/就绪版本保留")
     return number
@@ -1016,8 +1018,9 @@ def assemble_case(
             (repo_root / "datasets/layout.json").is_file() and not definition.task_root.startswith("tasks/"))):
         raise SpecError("请选择可编辑的评测集系列，例如 general-challenge")
     categories = definition.category_labels if definition else CATEGORIES
-    prefix = definition.task_id_prefix if definition else ""
-    legacy_prefixes = definition.legacy_task_id_prefixes if definition else ()
+    category = spec["category"]
+    directory = definition.category_directory(category) if definition else category
+    task_stem = definition.task_id_stems(category)[0] if definition else category
     migrated = (repo_root / "datasets/layout.json").is_file()
     default_registry = "datasets/general/regression/task_sources.yaml" if migrated else "tasks/extension/task_sources.yaml"
     registry_path = repository_path(repo_root, definition.registry_path, label="source registry") if definition else repo_root / default_registry
@@ -1030,7 +1033,7 @@ def assemble_case(
         "category_task_counts": {category: 0 for category in categories}}, "tasks": []}
     registry = _validate_registry(load_mapping(registry_path) if registered and registry_original else
         yaml.safe_load(registry_original) if registry_original else initial_registry, categories=categories,
-        prefix=prefix, legacy_prefixes=legacy_prefixes)
+        definition=definition)
     capability_map = (load_mapping(capability_path) if registered and capability_original else
                       yaml.safe_load(capability_original) if capability_original else {})
     if not isinstance(capability_map, dict):
@@ -1043,16 +1046,20 @@ def assemble_case(
         number = spec["number"] or assign_next_number(repo_root, spec["category"], registry)
         if number in occupied:
             raise SpecError(f"编号已被文件、来源登记或 invalid 保留项占用: {number:03d}")
-    task_id = f"{prefix}{spec['category']}_task_{number:03d}_{spec['slug']}"
+    task_id = f"{task_stem}_task_{number:03d}_{spec['slug']}"
     if any(entry.get("task_id") == task_id for entry in registry["tasks"]):
         raise SpecError(f"task_id 已登记: {task_id}")
     if task_id in capability_map:
         raise SpecError(f"task_id 已存在于能力映射: {task_id}")
 
     default_task_root = "tasks/general/regression" if migrated else "tasks/extension"
-    task_path = (repo_root / (definition.task_root if definition else default_task_root)
-                 / spec["category"] / f"{task_id}.md")
-    workspace_path = (repo_root / definition.workspace_root / spec["category"] / task_id) if definition else (
+    task_root = repo_root / (definition.task_root if definition else default_task_root)
+    if definition and definition.category_directory_task_ids:
+        conflicts = task_id_conflicts(repo_root / "tasks", task_root, {task_id})
+        if conflicts:
+            raise SpecError(f"task_id 被其它数据集占用: {conflicts}")
+    task_path = task_root / directory / f"{task_id}.md"
+    workspace_path = (repo_root / definition.workspace_root / directory / task_id) if definition else (
         repo_root
         / "workspace"
         / ("general/regression" if migrated else "extension")
@@ -1086,8 +1093,7 @@ def assemble_case(
         task_id=task_id,
         category=spec["category"],
         categories=categories,
-        prefix=prefix,
-        legacy_prefixes=legacy_prefixes,
+        definition=definition,
     )
 
     with tempfile.TemporaryDirectory(prefix="wcb-case-stage-") as temporary:
