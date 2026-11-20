@@ -276,8 +276,13 @@ def _build_web_on_guest(driver, package, skill):
     archive_path = driver.staging / "web-verification-input.zip"
     with zipfile.ZipFile(archive_path, "w", zipfile.ZIP_DEFLATED) as archive:
         for name, root in (("unit", package), ("verifier", skill)):
-            for relative in _files(root):
-                archive.write(inside(root, relative), name + "/" + relative)
+            for relative in sorted(_files(root)):
+                path = inside(root, relative)
+                entry = zipfile.ZipInfo(name + "/" + relative)
+                entry.compress_type = zipfile.ZIP_DEFLATED
+                entry.file_size = path.stat().st_size
+                with path.open("rb") as source, archive.open(entry, "w") as target:
+                    shutil.copyfileobj(source, target)
     archive_sha256 = file_sha256(archive_path)
     guest = GUEST_WORKSPACE + r"\desktop-scoring-tooling\web-verification-" + archive_sha256[:16]
     # 传输压缩包分片，避免展开目录触发 WGUI 的总大小和文件数限制。

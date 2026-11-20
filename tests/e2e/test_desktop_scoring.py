@@ -26,6 +26,12 @@ ITEM = {"key": "execution-key", "task_id": "case", "unit_id": "unit", "run_index
         "phase": "COMPLETED", "scene": "web", "attempt_id": "candidate-attempt"}
 
 
+def browser_event(server, name, call, output, arguments=None):
+    return {"native_status": {"type": "mcp_tool_call_end", "call_id": call,
+                               "invocation": {"server": server, "tool": name, "arguments": arguments},
+                               "result": {"Ok": output}}}
+
+
 class DesktopScoringTests(unittest.TestCase):
     def test_model_and_template_are_pinned(self):
         self.assertEqual(scoring._config(CONFIG), CONFIG)
@@ -92,12 +98,7 @@ class DesktopScoringTests(unittest.TestCase):
                 "path": "private-scoring/" + relative, "format": "png", "content_type": "image/png",
                 "sha256": sha256, "bytes": screenshot.stat().st_size,
             })
-            def event(server, name, call, output, arguments=None):
-                return {"native_status": {"type": "mcp_tool_call_end", "call_id": call,
-                                           "invocation": {"server": server, "tool": name, "arguments": arguments},
-                                           "result": {"Ok": output}}}
-
-            omitted = event("acode", "astron_browser_screenshot", "direct", {"content": [{
+            omitted = browser_event("acode", "astron_browser_screenshot", "direct", {"content": [{
                 "type": "text", "text": "<image content omitted because you do not support image input>",
             }]})
             capture = {"structuredContent": {
@@ -106,15 +107,15 @@ class DesktopScoringTests(unittest.TestCase):
                 "bytes": screenshot.stat().st_size, "url": "http://127.0.0.1:4173/page",
                 "tabId": 1, "viewport": {"width": 1280, "height": 800},
             }}
-            read = event("acode_apps", "image_understanding", "read", {"structuredContent": {"text": "页面标题可见"}},
-                         {"image": ntpath.join(guest, "evidence", filename), "question": "标题是否清晰？"})
-            binding = {"events": [event("acode", "astron_browser_open", "open", {}), omitted, read]}
+            read = browser_event("acode_apps", "image_understanding", "read", {"structuredContent": {"text": "页面标题可见"}},
+                                 {"image": ntpath.join(guest, "evidence", filename), "question": "标题是否清晰？"})
+            binding = {"events": [browser_event("acode", "astron_browser_open", "open", {}), omitted, read]}
             score = {"site_url": "http://127.0.0.1:4173/", "criteria": [
                 {"evidence": [{"type": "screenshot", "path": relative}]},
             ]}
             with self.assertRaisesRegex(E2EError, "NATIVE_CAPTURE_MISSING"):
                 scoring.verify_native_browser(binding, private, score)
-            binding["events"].append(event("acode", "astron_browser_save_screenshot", "capture", capture))
+            binding["events"].append(browser_event("acode", "astron_browser_save_screenshot", "capture", capture))
             with self.assertRaisesRegex(E2EError, "IMAGE_UNDERSTANDING_MISSING"):
                 scoring.verify_native_browser(binding, private, score)
             binding["events"].append(read)
@@ -219,7 +220,6 @@ class DesktopScoringTests(unittest.TestCase):
                 self._check_web_return(profile, factory, expected)
 
     def _check_web_return(self, profile, factory, expected):
-        import shutil
         from tests.test_score_web_e2e import BuildSubmissionTest
 
         repo = Path(__file__).resolve().parents[2]
@@ -242,6 +242,30 @@ class DesktopScoringTests(unittest.TestCase):
             returned = work / "returned"
             shutil.copytree(source, returned)
             BuildSubmissionTest.materialize_evidence(returned)
+            binding = {"actual_model": scoring.MODEL,
+                       "events": [browser_event("acode", "astron_browser_open", "open", {})]}
+            guest = ntpath.join(scoring.GUEST_WORKSPACE, "private-scoring")
+            images = [item for criterion in score_input["criteria"] for item in criterion["evidence"]
+                      if item["type"] == "screenshot"]
+            images.extend(score_input.get("aesthetic", {}).get("screenshots", []))
+            for index, image in enumerate(images):
+                filename = f"native-12345678-1234-1234-1234-123456789abc-shot-{index}.png"
+                image["path"] = "evidence/" + filename
+                target = returned / "private-scoring" / image["path"]
+                viewport = image.get("viewport", {"width": 1280, "height": 800})
+                target.write_bytes(b"\x89PNG\r\n\x1a\n\x00\x00\x00\x0dIHDR"
+                                   + struct.pack(">II", viewport["width"], viewport["height"]) + b"a" * 9)
+                receipt = {"sha256": file_sha256(target), "bytes": target.stat().st_size}
+                atomic_json(target.with_suffix(".png.receipt.json"), {
+                    **receipt, "path": "private-scoring/" + image["path"], "format": "png", "content_type": "image/png",
+                })
+                capture = {**receipt, "schema": "astudio.browser-screenshot/v1", "filename": filename,
+                           "path": ntpath.join(guest, "browser-captures", filename), "viewport": viewport,
+                           "tabId": 1, "url": score_input["site_url"]}
+                binding["events"].append(browser_event("acode", "astron_browser_save_screenshot", f"capture-{index}",
+                    {"content": [{"type": "text", "text": json.dumps(capture)}]}))
+                binding["events"].append(browser_event("acode_apps", "image_understanding", f"read-{index}",
+                    {"structuredContent": {"text": "页面标题可见"}}, {"image": ntpath.join(guest, "evidence", filename)}))
             atomic_json(returned / "private-scoring/score_input.json", score_input)
             handoff = {"score_task_root": "unit/score/tasks/task-1", "unit_root": "unit",
                        "installed_skills": str(repo / "tools/report/skills/web-e2e")}
@@ -250,13 +274,14 @@ class DesktopScoringTests(unittest.TestCase):
                 scoring._run(["node", skill / "scripts/build_submission.mjs",
                               "--package-root", root, "--output", root / "submission.json"], root)
 
-            with patch.object(scoring, "verify_native_browser", return_value={"screenshots": []}) as verify, \
-                    patch.object(scoring, "_build_web_on_guest", side_effect=seal):
+            with patch.object(scoring, "_build_web_on_guest", side_effect=seal):
                 score, number, receipt, artifacts = scoring._read_web(
-                    work, returned, handoff, {"actual_model": scoring.MODEL}, Mock())
-            verify.assert_called_once()
+                    work, returned, handoff, binding, Mock())
             self.assertTrue(score.is_file())
             self.assertEqual(number, expected)
             self.assertEqual(receipt["status"], "PASS")
             self.assertTrue(artifacts["submission"].is_file())
             self.assertTrue(artifacts["evidence"].is_file())
+            with zipfile.ZipFile(artifacts["evidence"]) as evidence:
+                audit = json.loads(evidence.read("native-visual-verification.json"))
+            self.assertEqual(len(audit["screenshots"]), len(images))
