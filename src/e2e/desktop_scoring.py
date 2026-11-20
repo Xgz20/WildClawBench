@@ -8,6 +8,7 @@ import re
 import shlex
 from pathlib import Path
 import shutil
+import stat
 import subprocess
 import zipfile
 import sys
@@ -15,7 +16,7 @@ import time
 
 from . import windows_preprocess
 from .agentcube import AgentCubeConfig
-from .artifacts import extract_zip, inventory
+from .artifacts import extract_zip, inventory, remove_temporary_tree
 from .backend import AStudioSandboxDriver, GUEST_WORKSPACE, ObservationPaused, WGUI, powershell
 from .common import E2EError, atomic_json, digest, file_sha256, identifier, inside, read_json, utc_now
 from .desktop_web_evidence import verify_native_browser
@@ -352,8 +353,11 @@ def _read_web(work, returned, context, binding, driver):
         if child.name in {"evidence", "runtime-logs"} and child.is_dir():
             target = private / child.name
             if target.exists():
-                shutil.rmtree(target)
+                remove_temporary_tree(target)
             _copy(child, target)
+            if child.name == "evidence":
+                # 下载的证据保持只读，这里仅为回传副本追加视觉校验回执。
+                target.chmod(target.stat().st_mode | stat.S_IWUSR)
         elif keep_file and child.is_file() and not child.is_symlink():
             shutil.copyfile(child, private / child.name)
     score_input = read_json(private / "score_input.json")

@@ -344,6 +344,15 @@ class DesktopScoringTests(unittest.TestCase):
                 binding["events"].append(browser_event("acode_apps", "image_understanding", f"read-{index}",
                     {"structuredContent": {"text": "页面标题可见"}}, {"image": ntpath.join(guest, "evidence", filename)}))
             atomic_json(returned / "private-scoring/score_input.json", score_input)
+            returned_evidence = returned / "private-scoring/evidence"
+            returned_evidence.chmod(0o555)
+            stale_logs = private / "runtime-logs"
+            stale_logs.mkdir()
+            (stale_logs / "previous.log").write_text("previous import")
+            stale_logs.chmod(0o555)
+            returned_logs = returned / "private-scoring/runtime-logs"
+            returned_logs.mkdir()
+            (returned_logs / "current.log").write_text("current import")
             handoff = {"score_task_root": "unit/score/tasks/task-1", "unit_root": "unit",
                        "installed_skills": str(repo / "tools/report/skills/web-e2e")}
 
@@ -359,6 +368,8 @@ class DesktopScoringTests(unittest.TestCase):
             self.assertEqual(receipt["status"], "PASS")
             self.assertTrue(artifacts["submission"].is_file())
             self.assertTrue(artifacts["evidence"].is_file())
+            self.assertEqual(returned_evidence.stat().st_mode & 0o777, 0o555)
+            self.assertFalse((stale_logs / "previous.log").exists())
             with zipfile.ZipFile(artifacts["evidence"]) as evidence:
                 audit = json.loads(evidence.read("native-visual-verification.json"))
             self.assertEqual(len(audit["screenshots"]), len(images))
