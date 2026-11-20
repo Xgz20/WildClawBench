@@ -23,6 +23,13 @@ def relocated_task(repo: Path, path: Path) -> Path:
     return repo / destination if destination else (path if path.is_absolute() else repo / path)
 
 
+def relocated_category(repo: Path, layout: dict, directory: str) -> Path | None:
+    """Resolve a category alias only when its original files share a current directory."""
+    targets = {Path(new).parent for old, new in layout.get("task_paths", {}).items()
+               if Path(old).parent.as_posix() == directory}
+    return repo / targets.pop() if len(targets) == 1 else None
+
+
 def current_task_id(repo: Path, task_id: str) -> str:
     return load_layout(repo).get("task_id_aliases", {}).get(task_id, task_id)
 
@@ -66,11 +73,9 @@ def cli_category_paths(tasks_root: Path, category: str) -> list[Path]:
         roots = [tasks_root / category, tasks_root / "extension" / category]
     elif "/" in category:
         root = tasks_root / category
-        if not root.is_dir() and category.startswith("general/challenge/"):
-            prefix = f"tasks/{category}/"
-            return sorted({tasks_root.parent / new for old, new in layout.get("task_paths", {}).items()
-                           if old.startswith(prefix) and (tasks_root.parent / new).is_file()
-                           and not is_reading_or_archived_task(tasks_root, tasks_root.parent / new)})
+        if category.startswith("general/challenge/") and not root.is_dir():
+            relocated = relocated_category(tasks_root.parent, layout, f"tasks/{category}")
+            root = relocated or root
         return sorted(p for p in root.rglob("*task_*.md")
                       if not is_reading_or_archived_task(tasks_root, p))
     elif category == "07_Website_Generation":

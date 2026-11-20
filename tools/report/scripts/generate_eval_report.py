@@ -806,11 +806,18 @@ def load_all_task_meta(tasks_dir: Path | None) -> dict[str, dict]:
                 continue
             for md in sorted(suite_dir.glob("*.md")):
                 meta = parse_task_md(md)
-                meta["suite"] = suite_dir.name
+                meta["suite"] = (meta.get("category") or suite_dir.name
+                                 if folder == "general/challenge" else suite_dir.name)
                 if is_ext:
                     meta["meta_source"] = "extension"
                 merged = out.setdefault(md.stem, {})
                 merged.update({k: v for k, v in meta.items() if v})
+    layout = tasks_dir.parent / "datasets/layout.json"
+    if layout.is_file():
+        aliases = json.loads(layout.read_text(encoding="utf-8")).get("task_id_aliases", {})
+        for old_id, current_id in aliases.items():
+            if current_id in out:
+                out.setdefault(old_id, {**out[current_id], "id": old_id})
     return out
 
 

@@ -10,7 +10,7 @@ from typing import Iterable
 import yaml
 
 from eval_general_e2e.datasets.catalog import load_registered_dataset
-from eval_general_e2e.datasets.layout import is_reading_or_archived_task, relocated_task, load_layout
+from eval_general_e2e.datasets.layout import is_reading_or_archived_task, load_layout, relocated_category, relocated_task
 from eval_general_e2e.datasets.source_history import FrozenSources, archived_source_revision
 from .contracts import FAIL, Issue
 
@@ -128,7 +128,13 @@ def select_task_files(
         selectors.append(str(candidate.resolve()))
         if not candidate.exists() or not candidate.is_dir():
             if candidate.is_relative_to(repo_root):
-                prefix = candidate.relative_to(repo_root).as_posix() + "/"
+                relative = candidate.relative_to(repo_root).as_posix()
+                if relative.startswith("tasks/general/challenge/"):
+                    directory_alias = relocated_category(repo_root, layout, relative)
+                    if directory_alias and directory_alias.is_dir():
+                        selected.extend(_markdown_files(directory_alias, repo_root=repo_root, include_doc_copies=include_doc_copies))
+                        continue
+                prefix = relative + "/"
                 relocated = [repo_root / new for old, new in layout.get("task_paths", {}).items()
                              if old.startswith(prefix)]
                 if relocated:
