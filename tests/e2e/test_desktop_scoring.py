@@ -83,6 +83,32 @@ class DesktopScoringTests(unittest.TestCase):
             driver.execute.assert_called_once()
             self.assertEqual(driver.client.delete_session.call_count, 2)
 
+    def test_incomplete_desktop_run_archives_diagnostics_before_release(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            driver = Mock()
+            driver.client.delete_session.return_value = {"confirmed": True}
+            provenance = {"log": {"path": "diagnostic.json", "sha256": "a" * 64}}
+            driver.archive_incomplete_run.return_value = provenance
+
+            def setup(**kwargs):
+                def execute():
+                    kwargs["store"].update(None, "COLLECTING", session_id="session", resource_held=True)
+                    raise E2EError("CONTROLLER_EXECUTION_INCOMPLETE: incomplete")
+
+                driver.execute.side_effect = execute
+                return driver
+
+            with patch.object(scoring, "_prepare", return_value={}), \
+                    patch.object(scoring, "ScoringDriver", side_effect=setup):
+                row = scoring._job(root, ITEM, CONFIG, AgentCubeConfig(),
+                                   root / "job", "desk-test", root / "cancel.json")
+            self.assertEqual(row["status"], "evaluation_error")
+            self.assertEqual(row["artifacts"], provenance)
+            self.assertTrue(row["container_released"])
+            calls = [name for name, _, _ in driver.mock_calls]
+            self.assertLess(calls.index("archive_incomplete_run"), calls.index("client.delete_session"))
+
     def test_native_visual_evidence_binds_capture_receiver_and_image_tool(self):
         with tempfile.TemporaryDirectory() as tmp:
             private = Path(tmp)

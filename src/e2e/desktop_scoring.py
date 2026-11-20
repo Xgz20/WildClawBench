@@ -177,6 +177,24 @@ def _catalog_model(catalog):
 
 
 class ScoringDriver(AStudioSandboxDriver):
+    def archive_incomplete_run(self, work):
+        """Keep the terminal diagnostic and scorer trajectory before deleting its sandbox."""
+        sid = self.store.get(self.key)["session_id"]
+        diagnostic = self.staging / "metadata/wgui-failure.json"
+        try:
+            diagnostic.write_bytes(self.client.download(sid, "/logs/artifacts/wgui/diagnostics.json"))
+        except (E2EError, OSError):
+            pass
+        native = None
+        try:
+            evidence = self._download_tree(sid, "/logs/agent/native-trajectory", "failed-native")
+            rollouts = list(evidence.rglob("rollout-*.jsonl"))
+            if len(rollouts) == 1:
+                native = rollouts[0]
+        except (E2EError, OSError, ValueError, ObservationPaused):
+            pass
+        return _artifacts(work, audit=self.staging / "metadata/report.json", log=diagnostic, native_trace=native)
+
     def _native_model(self):
         mapping = self.store.get(self.key).get("native_scorer_model")
         if not mapping or mapping.get("name") != self.unit["model"]:
@@ -472,7 +490,10 @@ def _job(batch, item, config, agentcube, root, attempt, cancel):
                    status="unscored" if cancel.exists() else "evaluation_error")
         state.update(None, "release", result=row)
     except (E2EError, OSError, ValueError, KeyError, subprocess.SubprocessError) as error:
-        row.update(status="evaluation_error", error=diagnostic_code(error, "DESKTOP_SCORING_EXECUTION_FAILED"))
+        code = diagnostic_code(error, "DESKTOP_SCORING_EXECUTION_FAILED")
+        row.update(status="evaluation_error", error=code)
+        if driver and code == "CONTROLLER_EXECUTION_INCOMPLETE":
+            row["artifacts"].update(driver.archive_incomplete_run(work))
         state.update(None, "release", result=row)
     finally:
         if driver:
