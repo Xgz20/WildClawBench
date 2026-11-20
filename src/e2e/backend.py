@@ -267,14 +267,29 @@ class AStudioSandboxDriver:
         raise E2EError("VM_HEALTH_INCOMPLETE: " + str(last))
 
     def _inventory_native(self, sid):
+        file_hash = "(Get-FileHash -LiteralPath $_.FullName -Algorithm SHA256).Hash.ToLower()"
+        if self.product == "chatgpt-desktop":
+            # Codex Desktop can keep its rollout open for writing after task_complete.
+            file_hash = r"""
+$stream = [IO.File]::Open($_.FullName, [IO.FileMode]::Open, [IO.FileAccess]::Read,
+    ([IO.FileShare]::ReadWrite -bor [IO.FileShare]::Delete))
+try {
+    $size = $_.Length
+    if ($stream.Length -ne $size) { throw 'NATIVE_LENGTH_CHANGED_BEFORE_HASH' }
+    $hash = (Get-FileHash -InputStream $stream -Algorithm SHA256).Hash
+    if ($stream.Position -ne $size -or $stream.Length -ne $size) { throw 'NATIVE_LENGTH_CHANGED_DURING_HASH' }
+    $hash.ToLowerInvariant()
+} finally { $stream.Dispose() }
+"""
         script = ("$ErrorActionPreference='Stop';$ProgressPreference='SilentlyContinue';$rows=@();"
                   "if(Test-Path -LiteralPath '" + self.native_root + "'){$rows=@(Get-ChildItem -LiteralPath '"
                   + self.native_root + "' -Recurse -Filter '" + self.native_pattern + "' -File|Select-Object FullName,Length,"
-                  "@{Name='Sha256';Expression={(Get-FileHash -LiteralPath $_.FullName -Algorithm SHA256).Hash.ToLower()}})};"
+                  "@{Name='Sha256';Expression={" + file_hash + "}})};"
                   "$out=ConvertTo-Json -InputObject $rows -Compress;"
                   "[Console]::Out.Write([Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes($out)))")
         rows = _decode_output(self.client.windows_execute(sid, powershell(script), timeout=120))
-        if not isinstance(rows, list) or len(rows) > 10_000:
+        if (not isinstance(rows, list) or len(rows) > 10_000
+                or (self.product == "chatgpt-desktop" and any(not row.get("Sha256") for row in rows))):
             raise E2EError("NATIVE_INVENTORY_INVALID")
         return {row["FullName"]: row for row in rows}
 
