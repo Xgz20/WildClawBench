@@ -255,9 +255,9 @@ def _read_general(work, returned, context, attempt, model, *, needs_agent=True):
         score = json.load(stream)
     if score.get("identity", {}).get("attempt_id") != attempt or (needs_agent and (score.get("judge") or {}).get("model") != model):
         raise E2EError("DESKTOP_SCORING_GENERAL_IDENTITY_MISMATCH")
-    inputs = read_json(target / "attempt-manifest.json")["digests"]
+    inputs = read_json(target / "attempt-manifest.json").get("source", {})
     for name in ("execution_record", "scoring_package"):
-        if inputs[name + "_sha256"] != file_sha256(inside(work / "context", context[name])):
+        if inputs.get(name + "_sha256") != file_sha256(inside(work / "context", context[name])):
             raise E2EError("DESKTOP_SCORING_GENERAL_SOURCE_DRIFT")
     verified = json.loads(_run([sys.executable, skill, "verify-score", "--attempt-root", target, "--archived"], work))
     if verified.get("status") != "PASS":

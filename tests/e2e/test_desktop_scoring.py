@@ -112,9 +112,19 @@ class DesktopScoringTests(unittest.TestCase):
             context.mkdir()
             (context / "record.json").write_text("original", encoding="utf-8")
             (context / "rules.zip").write_bytes(b"fixture")
-            atomic_json(returned / "score.json", {"identity": {"attempt_id": "desk-scope"}, "judge": {"model": scoring.MODEL}})
-            atomic_json(returned / "attempt-manifest.json", {"digests": {"execution_record_sha256": "f" * 64}})
+            atomic_json(returned / "score.json", {"identity": {"attempt_id": "desk-scope"}, "judge": {"model": scoring.MODEL},
+                                                  "result": {"valid": True, "total_score": 0.7}})
+            atomic_json(returned / "attempt-manifest.json", {
+                "source": {"execution_record_sha256": file_sha256(context / "record.json"),
+                           "scoring_package_sha256": file_sha256(context / "rules.zip")},
+                "digests": {"execution_record_sha256": file_sha256(context / "record.json")},
+            })
             handoff = {"execution_record": "record.json", "scoring_package": "rules.zip", "installed_skills": tmp}
+            with patch.object(scoring, "_run", return_value=b'{"status":"PASS"}') as verify:
+                _, number, _, _ = scoring._read_general(work, work / "returned", handoff, "desk-scope", scoring.MODEL)
+                self.assertEqual(number, 0.7)
+                verify.assert_called_once()
+            (context / "record.json").write_text("another execution", encoding="utf-8")
             with patch.object(scoring, "_run") as verify, self.assertRaisesRegex(E2EError, "GENERAL_SOURCE_DRIFT"):
                 scoring._read_general(work, work / "returned", handoff, "desk-scope", scoring.MODEL)
             verify.assert_not_called()
