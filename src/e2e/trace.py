@@ -125,6 +125,9 @@ def _desktop_prompt(payload: dict, *, session_id: str, turn_id: str, expected: s
     rendered = wanted.replace("\n", "\\" + "\n")
     if normalized in (rendered, rendered + "\n"):
         return actual, "chatgpt-desktop-markdown-hardbreak"
+    escaped = rendered.replace("`", "\\`")
+    if normalized in (escaped, escaped + "\n"):
+        return actual, "chatgpt-desktop-markdown-escaped"
     raise E2EError("NATIVE_PROMPT_MISMATCH")
 
 
