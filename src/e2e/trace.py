@@ -1,4 +1,4 @@
-"""Bound AStudio rollout normalization with raw line provenance."""
+"""Bound Windows rollout normalization with raw line provenance."""
 from __future__ import annotations
 
 import base64
@@ -12,6 +12,12 @@ from .common import E2EError, atomic_json, file_sha256, utc_now
 
 
 ADAPTER = "agentcube-astudio-native"
+DESKTOP_ADAPTER = "agentcube-chatgpt-desktop-native"
+
+_DESKTOP_MIRRORED_ITEMS = {
+    "UserMessage", "AgentMessage", "Reasoning", "CommandExecution",
+}
+_DESKTOP_CONTEXT_ITEMS = {"additional_tools", "configuration_update"}
 
 
 def mcp_callable_matches(name, server, tool) -> bool:
@@ -93,8 +99,34 @@ def _prompt_binding(actual, expected: str) -> dict:
             "decoded_text_sha256": hashlib.sha256(decoded.encode("utf-8")).hexdigest()}
 
 
+def _is_desktop_user(item: dict) -> bool:
+    payload = item["payload"]
+    return (
+        item.get("type") == "event_msg" and payload.get("type") == "item_completed"
+        and isinstance(payload.get("item"), dict) and payload["item"].get("type") == "UserMessage"
+    )
+
+
+def _desktop_prompt(payload: dict, *, session_id: str, turn_id: str, expected: str) -> str:
+    if payload.get("thread_id") != session_id or payload.get("turn_id") != turn_id:
+        raise E2EError("NATIVE_DESKTOP_USER_IDENTITY_MISMATCH")
+    content = payload["item"].get("content")
+    if (
+        not isinstance(content, list) or len(content) != 1
+        or not isinstance(content[0], dict) or content[0].get("type") != "text"
+        or not isinstance(content[0].get("text"), str)
+    ):
+        raise E2EError("NATIVE_DESKTOP_USER_CONTENT_UNSUPPORTED")
+    actual = content[0]["text"]
+    wanted = expected.replace("\r\n", "\n")
+    if actual.replace("\r\n", "\n") not in (wanted, wanted + "\n"):
+        raise E2EError("NATIVE_PROMPT_MISMATCH")
+    return actual
+
+
 def normalize_rollout(path: Path, *, identity: dict, prompt: str, guest_cwd: str,
-                      requested_model: str, requested_effort: str | None, report: dict) -> dict:
+                      requested_model: str, requested_effort: str | None, report: dict,
+                      desktop: bool = False) -> dict:
     raw = path.read_bytes()
     rows = []
     for number, line in enumerate(raw.decode("utf-8-sig").splitlines(), 1):
@@ -105,7 +137,11 @@ def normalize_rollout(path: Path, *, identity: dict, prompt: str, guest_cwd: str
             rows.append((number, item))
     headers = [item["payload"] for _, item in rows if item.get("type") == "session_meta"]
     contexts = [item["payload"] for _, item in rows if item.get("type") == "turn_context"]
-    users = [(line, item) for line, item in rows if item.get("type") == "event_msg" and item["payload"].get("type") == "user_message"]
+    users = [
+        (line, item) for line, item in rows
+        if (_is_desktop_user(item) if desktop else
+            item.get("type") == "event_msg" and item["payload"].get("type") == "user_message")
+    ]
     terminals = [(line, item) for line, item in rows if item.get("type") == "event_msg" and item["payload"].get("type") == "task_complete"]
     if len(headers) != 1 or not contexts or len(users) != 1 or len(terminals) != 1:
         raise E2EError("NATIVE_SINGLE_TASK_BINDING_AMBIGUOUS")
@@ -114,12 +150,22 @@ def normalize_rollout(path: Path, *, identity: dict, prompt: str, guest_cwd: str
     if len(turn_ids) != 1 or None in turn_ids or not header.get("id"):
         raise E2EError("NATIVE_IDENTITY_MISSING")
     turn_id = next(iter(turn_ids))
+    if desktop:
+        starts = [
+            (number, item["payload"]) for number, item in rows
+            if item.get("type") == "event_msg" and item["payload"].get("type") == "task_started"
+        ]
+        if (header.get("originator") != "Codex Desktop" or len(starts) != 1
+                or starts[0][1].get("turn_id") != turn_id or starts[0][0] >= users[0][0]):
+            raise E2EError("NATIVE_DESKTOP_ORIGIN_OR_TURN_MISMATCH")
     if terminals[0][1]["payload"].get("turn_id") != turn_id or terminals[0][0] <= users[0][0]:
         raise E2EError("NATIVE_TERMINAL_MISMATCH")
     if any(not isinstance(context.get("cwd"), str) or not windows_equal(context["cwd"], guest_cwd)
            for context in [header, *contexts]):
         raise E2EError("NATIVE_WORKSPACE_MISMATCH")
-    actual_prompt = users[0][1]["payload"].get("message")
+    user_payload = users[0][1]["payload"]
+    actual_prompt = (_desktop_prompt(user_payload, session_id=header["id"], turn_id=turn_id, expected=prompt)
+                     if desktop else user_payload.get("message"))
     prompt_binding = _prompt_binding(actual_prompt, prompt)
     models = {model_identity(str(context.get("model") or "")) for context in contexts}
     expected_model = "astronclaw-auto" if requested_model.casefold() == "auto" else requested_model
@@ -133,19 +179,22 @@ def normalize_rollout(path: Path, *, identity: dict, prompt: str, guest_cwd: str
     previous_search = None
     filtered = 0
     raw_name = "raw/" + path.name
+    adapter = DESKTOP_ADAPTER if desktop else ADAPTER
 
     def emit(number, item, kind, **data):
         sequence = len(events)
         events.append({"schema_id": "urn:wildclawbench:schema:general-e2e:transcript-event:v1",
                        "schema_version": 1, "identity": identity, "event_id": f"native-L{number}",
                        "sequence": sequence, "occurred_at": item.get("timestamp"), "type": kind,
-                       "source": {"adapter": ADAPTER, "raw_ref": f"{raw_name}#L{number}", "redacted": False}, **data})
+                       "source": {"adapter": adapter, "raw_ref": f"{raw_name}#L{number}", "redacted": False}, **data})
         return sequence
 
     for number, item in rows:
         outer, payload = item.get("type"), item["payload"]
         kind = payload.get("type")
-        if outer == "event_msg" and kind == "user_message":
+        if desktop and number == users[0][0]:
+            emit(number, item, "user_message", role="user", content=actual_prompt)
+        elif outer == "event_msg" and kind == "user_message" and not desktop:
             emit(number, item, "user_message", role="user", content=payload["message"])
         elif outer == "response_item" and kind == "message" and payload.get("role") == "assistant":
             emit(number, item, "assistant_message", role="assistant", content=_text(payload.get("content")))
@@ -205,6 +254,18 @@ def normalize_rollout(path: Path, *, identity: dict, prompt: str, guest_cwd: str
         elif outer == "event_msg" and kind == "mcp_tool_call_end":
             mcp_ends.append(payload)
             emit(number, item, "status", content=kind, native_status=payload)
+        elif desktop and (
+            outer == "token_usage_record"
+            or (outer == "response_item" and kind in _DESKTOP_CONTEXT_ITEMS)
+            or (outer == "event_msg" and (
+                kind == "thread_settings_applied"
+                or (kind == "item_completed" and isinstance(payload.get("item"), dict)
+                    and payload["item"].get("type") in _DESKTOP_MIRRORED_ITEMS)
+            ))
+        ):
+            # These envelopes are retained in raw; matching response_item and
+            # token_count records are the canonical transcript/usage source.
+            filtered += 1
         elif outer in {"session_meta", "world_state", "turn_context", "compacted"}:
             if outer == "compacted":
                 missing.append("unsupported_native_type:compacted")
@@ -248,7 +309,8 @@ def normalize_rollout(path: Path, *, identity: dict, prompt: str, guest_cwd: str
             if type(value) is not int or value < 0 or not native_usage or value != (native_usage[-1] or {}).get(native_key):
                 usage_valid = False
     binding = {"schema": "wildclawbench.agentcube-native-binding/v1", "identity": identity,
-            "session": {"thread_id": None, "turn_id": turn_id, "session_id": header["id"],
+            **({"adapter": DESKTOP_ADAPTER} if desktop else {}),
+            "session": {"thread_id": header["id"] if desktop else None, "turn_id": turn_id, "session_id": header["id"],
                         "cwd": contexts[0]["cwd"], "lifecycle_generation": None},
             "actual_model": "auto" if next(iter(models)) == "astronclaw-auto" else next(iter(models)),
             "native_model": next(iter(models)),

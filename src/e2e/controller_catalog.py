@@ -120,5 +120,39 @@ def profiles_from_catalog(catalog, template=DEFAULT_AGENTCUBE_TEMPLATE):
     ]
 
 
+def chatgpt_desktop_profile(controller_root: Path, template: str, revision: str) -> dict:
+    """Publish the pinned Desktop pilot only for an explicitly supplied template."""
+    driver = controller_root / "src/win-arena-container/wgui/guest/products/chatgpt_desktop/ui_driver.py"
+    source = driver.read_bytes()
+    tree = ast.parse(source)
+    wanted = {"PILOT_MODEL", "PILOT_EFFORT", "PRODUCT_VERSION"}
+    values = {}
+    for node in tree.body:
+        if (isinstance(node, ast.Assign) and len(node.targets) == 1
+                and isinstance(node.targets[0], ast.Name) and node.targets[0].id in wanted):
+            values[node.targets[0].id] = ast.literal_eval(node.value)
+    if set(values) != wanted or not all(isinstance(value, str) and value for value in values.values()):
+        raise E2EError("CHATGPT_DESKTOP_CONTROLLER_PROFILE_INVALID")
+    model, effort = values["PILOT_MODEL"], values["PILOT_EFFORT"]
+    return {
+        "id": "chatgpt-desktop-" + template,
+        "harness": "chatgpt-desktop",
+        "display_name": "ChatGPT 桌面端 · Codex Local",
+        "backend": "agentcube",
+        "template": template,
+        "scenarios": ["general"],
+        "enabled": True,
+        "models": [{"id": model, "display_name": model, "reasoning_efforts": [effort], "kind": "builtin"}],
+        "reasoning_efforts": [effort],
+        "default_model": model,
+        "controller_revision": revision,
+        "client_version": values["PRODUCT_VERSION"],
+        "model_catalog_source": "windows-agent-arena-chatgpt-desktop-pilot",
+        "allow_unlisted_builtin_models": False,
+        "custom_models_supported": False,
+        "driver_sha256": hashlib.sha256(source).hexdigest(),
+    }
+
+
 def default_profiles(template=DEFAULT_AGENTCUBE_TEMPLATE):
     return profiles_from_catalog(builtin_catalog(), template)

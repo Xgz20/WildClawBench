@@ -8,13 +8,14 @@ from dataclasses import replace
 from datetime import datetime, timezone
 import io
 import json
+import os
 from pathlib import Path
 import shlex
 import time
 import uuid
 import zipfile
 
-from .agentcube import AgentCubeClient, AgentCubeConfig, PlatformError
+from .agentcube import AgentCubeClient, AgentCubeConfig, PlatformError, validate_chatgpt_gateway
 from .artifacts import _members, _protect, copy_stream_readonly, inventory, quarantine_local_metadata, remove_temporary_tree
 from .common import E2EError, atomic_json, digest, file_sha256, identifier, inside, read_json, utc_now
 from .trace import normalize_rollout, windows_equal
@@ -106,6 +107,14 @@ $proof.phase='completed';foreach($entry in @{after=$after;late_process_detected=
         "__WORKSPACE__", "'" + workspace.replace("'", "''") + "'")
     if product == "workbuddy":
         script=script.replace('AStudio.exe','WorkBuddy.exe').replace('Programs\\AStudio\\','Programs\\WorkBuddy\\').replace('Programs\\AStudio Data\\','Programs\\WorkBuddy Data\\')
+    elif product == "chatgpt-desktop":
+        script = script.replace("AStudio.exe", "ChatGPT.exe")
+        script = script.replace(
+            "$_.Name -ieq 'ChatGPT.exe'",
+            r"$_.Name -ieq 'ChatGPT.exe' -and $_.ExecutablePath -like '*\\WindowsApps\\OpenAI.Codex_*\\*'",
+        )
+        script = script.replace("*\\Programs\\AStudio\\*", "*\\WindowsApps\\OpenAI.Codex_*\\*")
+        script = script.replace(r" -or $_.ExecutablePath -like '*\\Programs\\AStudio Data\\*'", "")
     elif product != "astudio": raise E2EError("UNSUPPORTED_PROCESS_CLEANUP_PRODUCT")
     return script
 
@@ -282,9 +291,12 @@ class AStudioSandboxDriver:
             proposed={"mode":"代码开发","max_mode":self.unit.get("max_mode",False),"plan_mode":False,"ask_mode":False,
                       "permission":"full access"}
             ui={key:value for key,value in proposed.items() if key in getattr(self,"ui_fields",set(proposed))}
+        product_config = {"model": self.unit["model"], "ui": ui}
+        if self.product == "chatgpt-desktop":
+            product_config = self._desktop_product_config()
         request = {"schema_version": 2, "product": self.product, "instruction_file": "/run/wgui/instruction.txt",
                    "workspace": {"guest": GUEST_WORKSPACE}, "timeout_sec": self.unit["timeout_override"],
-                   "product_config": {"model": self.unit["model"], "ui": ui}}
+                   "product_config": product_config}
         collect = {"schema_version": 2, "workspace": {"guest": GUEST_WORKSPACE}}
         self.client.upload(sid, "/run/wgui/run-request.json", json.dumps(request).encode())
         self.client.upload(sid, "/run/wgui/collect-request.json", json.dumps(collect).encode())
@@ -379,7 +391,8 @@ class AStudioSandboxDriver:
             local.write_bytes(data)
             try:
                 binding = normalize_rollout(local, identity=identity, prompt=prompt, guest_cwd=GUEST_WORKSPACE,
-                                            requested_model=self.unit["model"], requested_effort=self.unit.get("reasoning_effort"), report=report)
+                                            requested_model=self.unit["model"], requested_effort=self.unit.get("reasoning_effort"), report=report,
+                                            desktop=self.product == "chatgpt-desktop")
                 bound.append((local, binding))
             except E2EError as error:
                 atomic_json(self.staging / "metadata" / (stage + "-" + name + ".binding-error.json"), {"error": str(error)})
@@ -392,6 +405,9 @@ class AStudioSandboxDriver:
     def _prepare_runtime(self, sid):
         from .windows_runtime import prepare_runtime
         prepare_runtime(self,sid,WGUI,powershell)
+
+    def _task_run_command(self) -> str:
+        return WGUI + " task run --request /run/wgui/run-request.json --output /logs/artifacts/run"
 
     def execute(self) -> dict:
         self.preflight()
@@ -416,7 +432,7 @@ class AStudioSandboxDriver:
             atomic_json(self.staging / "metadata/native-before.json", before)
             self._phase("PREPARING", native_before=before)
         self._phase("RUNNING")
-        result = self._job("task-run", WGUI + " task run --request /run/wgui/run-request.json --output /logs/artifacts/run",
+        result = self._job("task-run", self._task_run_command(),
                            timeout=self.unit["timeout_override"] + 1800)
         atomic_json(self.staging / "metadata/task-run-process.json", result)
         report_bytes = self.client.download(sid, "/logs/artifacts/run/report.json")
@@ -607,3 +623,54 @@ print(json.dumps({
 
 
 DRIVERS[('agentcube','workbuddy')]=WorkBuddySandboxDriver
+
+
+class ChatGPTDesktopSandboxDriver(AStudioSandboxDriver):
+    product = "chatgpt-desktop"
+    native_root = r"C:\Users\Docker\.codex\sessions"
+    _credential_path = "/run/wgui/.chatgpt-gateway-key"
+
+    def preflight(self):
+        super().preflight()
+        if self.unit["model"] != "gpt-6.2-sol" or self.unit["reasoning_effort"] != "low":
+            raise E2EError("CHATGPT_PILOT_REQUIRES_GPT_6_2_SOL_LOW")
+        validate_chatgpt_gateway(self.config.chatgpt_gateway_url or "")
+        if not self.store.get(self.key).get("dispatch_armed_at") and not self._gateway_key():
+            raise E2EError("WCB_CHATGPT_API_KEY_REQUIRED")
+
+    @staticmethod
+    def _gateway_key() -> str:
+        return os.environ.get("WCB_CHATGPT_API_KEY", "").strip()
+
+    def _prepare_runtime(self, sid):
+        key = self._gateway_key()
+        if not key:
+            raise E2EError("WCB_CHATGPT_API_KEY_REQUIRED")
+        self.client.checked(sid, "mkdir -p /run/wgui")
+        try:
+            self.client.upload_private(sid, self._credential_path, key.encode("utf-8"))
+        except PlatformError as error:
+            raise E2EError("CHATGPT_GATEWAY_CREDENTIAL_UPLOAD_FAILED") from error
+
+    def _desktop_product_config(self) -> dict:
+        return {
+            "model": self.unit["model"],
+            "model_connection": {
+                "provider": "openai",
+                "base_url": self.config.chatgpt_gateway_url,
+                "api_key_env": "WGUI_CHATGPT_API_KEY",
+            },
+            "ui": {"mode": "codex", "reasoning": "low", "permission": "ask for approval"},
+        }
+
+    def _task_run_command(self) -> str:
+        return (
+            "set +x; set -e; "
+            f'test "$(stat -c %a {self._credential_path})" = 600; '
+            f"WGUI_CHATGPT_API_KEY=$(cat {self._credential_path}); "
+            f"unlink {self._credential_path}; "
+            "export WGUI_CHATGPT_API_KEY; exec " + super()._task_run_command()
+        )
+
+
+DRIVERS[("agentcube", "chatgpt-desktop")] = ChatGPTDesktopSandboxDriver

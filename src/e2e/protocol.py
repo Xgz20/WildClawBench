@@ -314,6 +314,11 @@ def preflight(repo: Path, raw: dict, config_path: Path | None = None, *, check_r
             runtime_checks["credentials"] = "failed"
             issues.append({"code": "AGENTCUBE_RUNTIME_CONFIG_INVALID", "message": str(exc)})
     if config:
+        if any(unit["harness"] == "chatgpt-desktop" for unit in plan["units"]):
+            if not config.chatgpt_gateway_url:
+                issues.append({"code": "CHATGPT_GATEWAY_URL_REQUIRED"})
+            if not os.environ.get("WCB_CHATGPT_API_KEY", "").strip():
+                issues.append({"code": "WCB_CHATGPT_API_KEY_REQUIRED"})
         if any(
             config.required_expire_ttl(unit["timeout_override"], preprocessing.budget(unit)) > config.expire_ttl
             for unit in plan["units"]

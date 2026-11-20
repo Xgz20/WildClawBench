@@ -35,6 +35,7 @@ class AgentCubeConfig:
     expire_ttl: int = 14400
     trust_env: bool = False
     astudio_runtime: dict | None = None
+    chatgpt_gateway_url: str | None = None
     auth_token: str = field(default="", repr=False)
     create_timeout_seconds: int = 900
 
@@ -74,18 +75,31 @@ class AgentCubeConfig:
         if result.astudio_runtime is not None:
             from .windows_runtime import validate_runtime
             validate_runtime(result.astudio_runtime)
+        if result.chatgpt_gateway_url is not None:
+            validate_chatgpt_gateway(result.chatgpt_gateway_url)
         identifier(result.template, "template")
         identifier(result.namespace, "namespace")
         return result
 
     def public(self) -> dict:
         return {key: value for key, value in asdict(self).items()
-                if key != "auth_token" and not (key == "astudio_runtime" and value is None)
+                if key != "auth_token"
+                and not (key in {"astudio_runtime", "chatgpt_gateway_url"} and value is None)
                 # Keep legacy runtime fingerprints stable when using their original timeout.
                 and not (key == "create_timeout_seconds" and value == 900)}
 
     def required_expire_ttl(self, execution_timeout: int, preprocessing_timeout: int = 0) -> int:
         return execution_timeout + preprocessing_timeout + 2400 + max(0, self.create_timeout_seconds - 900)
+
+
+def validate_chatgpt_gateway(value: str) -> None:
+    try:
+        endpoint = urlsplit(value)
+    except (TypeError, ValueError) as error:
+        raise E2EError("CHATGPT_GATEWAY_URL_INVALID") from error
+    if (endpoint.scheme != "https" or not endpoint.hostname or endpoint.username
+            or endpoint.password or endpoint.query or endpoint.fragment):
+        raise E2EError("CHATGPT_GATEWAY_URL_INVALID")
 
 
 class AgentCubeClient:
@@ -190,6 +204,19 @@ class AgentCubeClient:
                                  data={"path": remote, "mode": "0644"},
                                  files={"file": (remote.rsplit("/", 1)[-1], content)})
         self._json(response, "UPLOAD")
+
+    def upload_private(self, sid: str, remote: str, content: bytes) -> None:
+        response = self._request("POST", self.picod + "/files", sid=sid, timeout=30,
+                                 data={"path": remote, "mode": "0600"},
+                                 files={"file": (remote.rsplit("/", 1)[-1], content)})
+        # Do not include a gateway error body in diagnostics for a credential upload.
+        try:
+            accepted = response.status_code == 200 and response.json().get("code", 0) == 0
+        except (AttributeError, ValueError):
+            accepted = False
+        if not accepted:
+            raise PlatformError("AGENTCUBE_PRIVATE_UPLOAD_FAILED",
+                                uncertain=response.status_code >= 500)
 
     def download(self, sid: str, remote: str) -> bytes:
         response = self._request("GET", self.picod + "/files/" + quote(remote.lstrip("/"), safe="/"), sid=sid)
