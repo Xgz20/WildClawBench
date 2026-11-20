@@ -207,7 +207,7 @@ def _family_release(root: Path, series_id: str, path: Path, release_id: str | No
     category_counts = _counts(statistics.get("category_counts"), "category_counts", count)
     if set(category_counts) - set(labels):
         raise CatalogError("release contains an unregistered category")
-    directories = release.get("category_directories", data.get("category_directories", {}))
+    directories = data.get("category_directories", {})
     if (not isinstance(directories, dict)
             or any(not isinstance(directory, str) or not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_]*", directory)
                    or not isinstance(category, str) or category not in labels
@@ -217,7 +217,7 @@ def _family_release(root: Path, series_id: str, path: Path, release_id: str | No
             or len({name.casefold() for name in (*directories, *(labels.keys() - directories.values()))})
                != len(labels)):
         raise CatalogError("category_directories must map distinct relative directories to distinct category keys")
-    task_id_style = release.get("task_id_style", data.get("task_id_style", "series_prefix"))
+    task_id_style = data.get("task_id_style", "series_prefix")
     if task_id_style not in ("series_prefix", "category_directory"):
         raise CatalogError("task_id_style must be series_prefix or category_directory")
     if task_id_style == "category_directory" and set(directories.values()) != set(labels):

@@ -456,14 +456,15 @@ class DatasetCatalogTests(unittest.TestCase):
 
 
 class RegisteredSourceContractTests(unittest.TestCase):
-    def test_general_hard_frozen_v1_matches_the_approved_60_blueprints(self) -> None:
+    def test_general_challenge_frozen_v3_matches_the_approved_60_blueprints(self) -> None:
         source = json.loads((REPO_ROOT / "docs/design/general-e2e/general-hard/60题蓝图.json").read_text())
-        registered = load_registered_dataset(REPO_ROOT, "general-hard-v1")
+        aliases = json.loads((REPO_ROOT / "datasets/layout.json").read_text())["task_id_aliases"]
+        registered = load_registered_dataset(REPO_ROOT, "general-challenge")
         definition = registered.definition
         self.assertEqual(registered.status, "frozen")
-        self.assertEqual(definition.dataset_id, "general-hard-v1")
-        self.assertEqual(definition.task_ids, tuple(task["task_id"] for task in source["tasks"]))
-        self.assertEqual(definition.include_tags, ("custom", "general-hard"))
+        self.assertEqual(definition.dataset_id, "general-challenge-v3")
+        self.assertEqual(definition.task_ids, tuple(aliases[task["task_id"]] for task in source["tasks"]))
+        self.assertEqual(definition.include_tags, ("custom", "general-challenge"))
         self.assertEqual(definition.expected_task_count, 60)
         self.assertEqual(definition.expected_category_counts, source["statistics"]["category_counts"])
         self.assertEqual(definition.constraints["multimodal_exact"], 6)

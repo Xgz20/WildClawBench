@@ -25,18 +25,16 @@ python -m eval_general_e2e.datasets.bundle build --dataset-id general-challenge 
 | `general-custom70-v4` | 冻结杨联芬原刊参考 | 70 | 同一70题范围及独立五维 |
 | `general-custom70-v5` | 补齐Info002作者消歧与Info004董炳月、王吉鹏／荆亚平原刊证据 | 70 | 同一70题范围及独立五维 |
 | `general-custom70-v6` | 保留v5并补齐Info001冻结题源及参考 | 70 | 同一70题范围及独立五维 |
-| `general-hard-v1` | `datasets/general-hard/`，按系列定义与冻结清单选择 | 60 | 独立七维，7类，含6道必须理解视觉信息的题目 |
+| `general-challenge-v3` | `tasks/general/challenge/`，按冻结清单选择 | 60 | 独立七维，7类，含6道必须理解视觉信息的题目 |
 
-挑战集 v3 的题号形如 `01_Office_Documents_task_001_policy_crosswalk`。历史挑战集使用
-`general-challenge-v2` 或 `general-hard-v1` 选取原题号。以下命令示范重建和校验历史 v1。
+挑战集题号形如 `01_Office_Documents_task_001_policy_crosswalk`。
+`general-challenge` 和 `general-challenge-v3` 均选择当前编号版。以下命令可独立校验构建产物。
 
 ```bash
-python -m eval_general_e2e.datasets.bundle build --dataset-id general-hard-v1
 python -m eval_general_e2e.datasets.bundle verify \
-  --bundle report-workspace/general-e2e/datasets/general-hard-v1/general-hard-v1.dataset.zip
+  --bundle report-workspace/general-e2e/datasets/general-challenge-v3/general-challenge-v3.dataset.zip
 ```
 
-`--dataset-id general-hard --release-id general-hard-v1` 可显式指定系列内版本。
 冻结版本按原源码锚点核对题面、输入、GT和评分契约；修改已发布内容时建立新版本，
 `update-lock` 对已有锁只接受内容一致的幂等调用。构建／验包不执行候选或启动Harness。
 
