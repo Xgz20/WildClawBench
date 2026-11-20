@@ -18,6 +18,7 @@ from .agentcube import AgentCubeConfig
 from .artifacts import extract_zip, inventory
 from .backend import AStudioSandboxDriver, GUEST_WORKSPACE, ObservationPaused, WGUI, powershell
 from .common import E2EError, atomic_json, digest, file_sha256, identifier, inside, read_json, utc_now
+from .desktop_web_evidence import verify_native_browser
 from .engine import load_batch
 from .handoff import export_scoring_context
 from .preparation import normalize_template_binding
@@ -94,7 +95,7 @@ def _prompt(scene, task_id, record, archive, attempt):
         return header + (
             "先读 desktop-scoring-tooling/desktop_web_browser.md。工作目录已包含 Web Skill 所需的 workspace 和 private-scoring。按实际项目说明在运行时副本中启动站点，"
             "只通过 127.0.0.1 服务。使用 AStudio 原生浏览器操作页面、观察实际状态并保存宽屏和窄屏证据。"
-            "通过 Skill 的回环截图接收器回传真实截图；保持 PNG/JPEG 格式与二进制一致。"
+            "用 astron_browser_save_screenshot 保存原生 PNG，经专用脚本回传到 evidence，再调用 image_understanding 读图。"
             "以 AStudio 工具清单中的原生接口执行，遇到工具和证据链故障填写 evaluation_error。"
             "完成后保存 private-scoring/score_input.json，运行 finalize_score，停止受管服务并清理运行时副本。\n"
         )
@@ -142,7 +143,8 @@ def _prepare(batch, item, work, attempt, timeout_seconds):
     for name in ("desktop_score_guest.py", "preprocess_windows_guest.py"):
         shutil.copyfile(Path(__file__).with_name(name), tooling / name)
     if scene == "web":
-        shutil.copyfile(Path(__file__).with_name("desktop_web_browser.md"), tooling / "desktop_web_browser.md")
+        for name in ("desktop_web_browser.md", "desktop_web_screenshot.mjs", "desktop_web_bundle_guest.py"):
+            shutil.copyfile(Path(__file__).with_name(name), tooling / name)
     record = handoff.get("execution_record")
     archive = handoff.get("scoring_package")
     if scene == "general":
@@ -265,39 +267,6 @@ def _read_general(work, returned, context, attempt, model, *, needs_agent=True):
     return target / "score.json", score["result"].get("total_score") if score["result"].get("valid") else None, verified, {}
 
 
-def _verify_native_browser(binding, private):
-    completed = {
-        event["tool"].get("call_id") for event in binding["events"]
-        if event.get("type") == "tool_result" and event.get("tool")
-    }
-    calls = [event["tool"] for event in binding["events"] if event.get("type") == "tool_call"
-             and event.get("tool") and event["tool"].get("call_id") in completed]
-    names = {call.get("name", "").split("__")[-1] for call in calls}
-    if "astron_browser_screenshot" not in names:
-        raise E2EError("DESKTOP_SCORING_NATIVE_SCREENSHOT_MISSING")
-    if not names.intersection({"astron_browser_open", "astron_browser_navigate"}):
-        raise E2EError("DESKTOP_SCORING_NATIVE_BROWSER_EVIDENCE_MISSING")
-    receipt = read_json(private / "screenshot-receiver-state.json")
-    if receipt.get("status") != "COMPLETED":
-        raise E2EError("DESKTOP_SCORING_SCREENSHOT_RECEIPT_MISSING")
-    output = receipt["output"]
-    screenshot = inside(private / "evidence", Path(output["path"]).name)
-    if screenshot.stat().st_size != output["bytes"] or file_sha256(screenshot) != output["sha256"]:
-        raise E2EError("DESKTOP_SCORING_SCREENSHOT_DRIFT")
-
-
-def _native_visual_input_unsupported(binding):
-    for event in binding["events"]:
-        status = event.get("native_status") or {}
-        if status.get("type") != "mcp_tool_call_end" or status.get("invocation", {}).get("tool") != "astron_browser_screenshot":
-            continue
-        content = (status.get("result") or {}).get("Ok", {}).get("content", [])
-        if any(item.get("type") == "text" and item.get("text") ==
-               "<image content omitted because you do not support image input>" for item in content):
-            return True
-    return False
-
-
 def _build_web_on_guest(driver, package, skill):
     """The frozen Web builder checks Windows process identities in the guest."""
     sid = driver.store.get(driver.key)["session_id"]
@@ -309,18 +278,35 @@ def _build_web_on_guest(driver, package, skill):
         for name, root in (("unit", package), ("verifier", skill)):
             for relative in _files(root):
                 archive.write(inside(root, relative), name + "/" + relative)
-    driver.client.upload(sid, "/tmp/wcb-web-verifier.zip", archive_path.read_bytes())
-    linux = "/tmp/wcb-web-verifier"
-    unpack = ("import pathlib,zipfile;root=pathlib.Path(" + repr(linux) + ");root.mkdir(exist_ok=True);"
-              "zipfile.ZipFile('/tmp/wcb-web-verifier.zip').extractall(root)")
-    driver.client.checked(sid, "python3 -c " + shlex.quote(unpack), 120)
-    guest = GUEST_WORKSPACE + r"\desktop-scoring-tooling\web-verification"
-    driver.client.checked(sid, WGUI + " workspace upload --source " + shlex.quote(linux)
-                          + " --guest " + shlex.quote(guest), 180)
-    unit = guest + r"\unit"
+    archive_sha256 = file_sha256(archive_path)
+    guest = GUEST_WORKSPACE + r"\desktop-scoring-tooling\web-verification-" + archive_sha256[:16]
+    # 传输压缩包分片，避免展开目录触发 WGUI 的总大小和文件数限制。
+    with archive_path.open("rb") as stream:
+        chunk = stream.read(windows_preprocess.CHUNK_BYTES)
+        index = 0
+        while chunk:
+            group = f"parts-{index // windows_preprocess.CHUNKS_PER_UPLOAD:05d}"
+            remote = f"/tmp/wcb-web-verifier-{archive_sha256[:16]}/{group}"
+            driver.client.checked(sid, "mkdir -p " + shlex.quote(remote), timeout=30)
+            for _ in range(windows_preprocess.CHUNKS_PER_UPLOAD):
+                driver.checkpoint()
+                driver.client.upload(sid, f"{remote}/part-{index:05d}", chunk, timeout=120)
+                index += 1
+                chunk = stream.read(windows_preprocess.CHUNK_BYTES)
+                if not chunk:
+                    break
+            driver._checked_job(f"web-verification-{group}-{archive_sha256[:12]}",
+                                WGUI + " workspace upload --source " + shlex.quote(remote)
+                                + " --guest " + shlex.quote(guest + "\\" + group), timeout=180)
+    unpack = ("$ErrorActionPreference='Stop';$python=" + windows_preprocess.PYTHON
+              + ";& $python '" + GUEST_WORKSPACE + r"\desktop-scoring-tooling\desktop_web_bundle_guest.py"
+              + "' '" + guest + "' '" + archive_sha256 + "';"
+              + "if($LASTEXITCODE -ne 0){exit $LASTEXITCODE}")
+    driver.client.windows_execute(sid, powershell(unpack), timeout=120)
+    unit = guest + r"\contents\unit"
     submission = unit + r"\submission.json"
     script = ("$ErrorActionPreference='Stop';& '" + node + "' '" + guest
-              + r"\verifier\scripts\build_submission.mjs" + "' --package-root '" + unit
+              + r"\contents\verifier\scripts\build_submission.mjs" + "' --package-root '" + unit
               + "' --output '" + submission + "';if($LASTEXITCODE -ne 0){exit $LASTEXITCODE}")
     driver.client.windows_execute(sid, powershell(script), timeout=90)
     (package / "submission.json").write_bytes(driver.client.windows_download(sid, submission))
@@ -349,7 +335,9 @@ def _read_web(work, returned, context, binding, driver):
             shutil.copyfile(child, private / child.name)
     score_input = read_json(private / "score_input.json")
     if score_input.get("evaluation_status", "completed") == "completed":
-        _verify_native_browser(binding, private)
+        visual = verify_native_browser(binding, private, score_input)
+        if visual["screenshots"]:
+            atomic_json(private / "evidence/native-visual-verification.json", visual)
     score_input["scorer"] = {"harness": "astronstudio", "model": MODEL, "native_model": binding["actual_model"],
                              "transport": "agentcube-desktop"}
     atomic_json(private / "score_input.json", score_input)
@@ -406,8 +394,6 @@ def _record_agent_response(work, response, driver, row, attempt):
     if context["scene"] == "general":
         score, number, verification, other = _read_general(work, returned, context, attempt, MODEL)
     else:
-        if _native_visual_input_unsupported(binding):
-            raise E2EError("DESKTOP_SCORING_VISUAL_INPUT_UNSUPPORTED")
         score, number, verification, other = _read_web(work, returned, context, binding, driver)
     row.update(status="valid" if number is not None else "evaluation_error", total_score=number,
                score_path=str(score), score_sha256=file_sha256(score), verification=verification, attempt_root=str(score.parent),

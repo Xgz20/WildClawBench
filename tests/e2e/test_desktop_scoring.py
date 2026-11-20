@@ -1,11 +1,19 @@
+import base64
+import json
+import ntpath
 from pathlib import Path
+import shutil
+import struct
+import subprocess
 import tempfile
 import unittest
 from unittest.mock import Mock, patch
+import zipfile
 
 from src.e2e import desktop_scoring as scoring
 from src.e2e.agentcube import AgentCubeConfig
 from src.e2e.common import E2EError, atomic_json, file_sha256
+from src.e2e.desktop_web_bundle_guest import unpack
 
 
 CONFIG = {
@@ -69,39 +77,110 @@ class DesktopScoringTests(unittest.TestCase):
             driver.execute.assert_called_once()
             self.assertEqual(driver.client.delete_session.call_count, 2)
 
-    def test_native_evidence_requires_completed_calls_and_receiver_bytes(self):
+    def test_native_visual_evidence_binds_capture_receiver_and_image_tool(self):
         with tempfile.TemporaryDirectory() as tmp:
             private = Path(tmp)
             evidence = private / "evidence"
             evidence.mkdir()
-            screenshot = evidence / "first.png"
-            screenshot.write_bytes(b"test receipt bytes")
-            atomic_json(private / "screenshot-receiver-state.json", {
-                "status": "COMPLETED",
-                "output": {"path": "private-scoring/evidence/first.png", "sha256": file_sha256(screenshot),
-                           "bytes": screenshot.stat().st_size},
+            filename = "native-12345678-1234-1234-1234-123456789abc-home.png"
+            screenshot = evidence / filename
+            screenshot.write_bytes(b"\x89PNG\r\n\x1a\n\x00\x00\x00\x0dIHDR" + struct.pack(">II", 1280, 800) + b"a" * 9)
+            relative = "evidence/" + filename
+            sha256 = file_sha256(screenshot)
+            guest = ntpath.join(scoring.GUEST_WORKSPACE, "private-scoring")
+            atomic_json(evidence / (filename + ".receipt.json"), {
+                "path": "private-scoring/" + relative, "format": "png", "content_type": "image/png",
+                "sha256": sha256, "bytes": screenshot.stat().st_size,
             })
-            binding = {"events": [
-                {"type": "tool_call", "tool": {"call_id": "open", "name": "astron_browser_open"}},
-                {"type": "tool_result", "tool": {"call_id": "open"}},
-                {"type": "tool_call", "tool": {"call_id": "shot", "name": "astron_browser_screenshot"}},
+            def event(server, name, call, output, arguments=None):
+                return {"native_status": {"type": "mcp_tool_call_end", "call_id": call,
+                                           "invocation": {"server": server, "tool": name, "arguments": arguments},
+                                           "result": {"Ok": output}}}
+
+            omitted = event("acode", "astron_browser_screenshot", "direct", {"content": [{
+                "type": "text", "text": "<image content omitted because you do not support image input>",
+            }]})
+            capture = {"structuredContent": {
+                "schema": "astudio.browser-screenshot/v1", "filename": filename,
+                "path": ntpath.join(guest, "browser-captures", filename), "sha256": sha256,
+                "bytes": screenshot.stat().st_size, "url": "http://127.0.0.1:4173/page",
+                "tabId": 1, "viewport": {"width": 1280, "height": 800},
+            }}
+            read = event("acode_apps", "image_understanding", "read", {"structuredContent": {"text": "页面标题可见"}},
+                         {"image": ntpath.join(guest, "evidence", filename), "question": "标题是否清晰？"})
+            binding = {"events": [event("acode", "astron_browser_open", "open", {}), omitted, read]}
+            score = {"site_url": "http://127.0.0.1:4173/", "criteria": [
+                {"evidence": [{"type": "screenshot", "path": relative}]},
             ]}
-            with self.assertRaisesRegex(E2EError, "NATIVE_SCREENSHOT_MISSING"):
-                scoring._verify_native_browser(binding, private)
-            binding["events"].append({"type": "tool_result", "tool": {"call_id": "shot"}})
-            scoring._verify_native_browser(binding, private)
+            with self.assertRaisesRegex(E2EError, "NATIVE_CAPTURE_MISSING"):
+                scoring.verify_native_browser(binding, private, score)
+            binding["events"].append(event("acode", "astron_browser_save_screenshot", "capture", capture))
+            with self.assertRaisesRegex(E2EError, "IMAGE_UNDERSTANDING_MISSING"):
+                scoring.verify_native_browser(binding, private, score)
+            binding["events"].append(read)
+            audit = scoring.verify_native_browser(binding, private, score)
+            self.assertEqual(audit["screenshots"][0]["capture_call_id"], "capture")
+            self.assertEqual(audit["screenshots"][0]["image_understanding"][0]["call_id"], "read")
+            with self.assertRaisesRegex(E2EError, "ORIGIN_INVALID"):
+                scoring.verify_native_browser(binding, private, {**score, "site_url": "http://127.0.0.1:4174/"})
+            with self.assertRaisesRegex(E2EError, "VIEWPORT_MISMATCH"):
+                scoring.verify_native_browser(binding, private, {**score, "aesthetic": {
+                    "screenshots": [{"path": relative, "viewport": {"width": 375, "height": 800}}],
+                }})
             screenshot.write_bytes(b"modified evidence")
             with self.assertRaisesRegex(E2EError, "SCREENSHOT_DRIFT"):
-                scoring._verify_native_browser(binding, private)
+                scoring.verify_native_browser(binding, private, score)
 
-    def test_native_screenshot_reports_when_the_judge_cannot_receive_images(self):
-        status = {"type": "mcp_tool_call_end", "invocation": {"tool": "astron_browser_screenshot"},
-                  "result": {"Ok": {"content": [
-                      {"type": "text", "text": "<image content omitted because you do not support image input>"}]}}}
-        binding = {"events": [{"type": "status", "native_status": status}]}
-        self.assertTrue(scoring._native_visual_input_unsupported(binding))
-        status["invocation"] = {"tool": "astron_browser_snapshot"}
-        self.assertFalse(scoring._native_visual_input_unsupported(binding))
+    def test_native_screenshot_uses_the_existing_skill_receiver(self):
+        from tests.test_score_web_e2e import BuildSubmissionTest
+
+        repo = Path(__file__).resolve().parents[2]
+        with tempfile.TemporaryDirectory() as tmp:
+            package = Path(tmp)
+            workspace = package / "score/tasks/task-1"
+            (workspace / "private-scoring/browser-captures").mkdir(parents=True)
+            BuildSubmissionTest.materialize_candidate_integrity(package)
+            (workspace / ".web-e2e-scoring-ready").write_text("batch-1\ntask-1\n", encoding="utf-8")
+            filename = "native-12345678-1234-1234-1234-123456789abc-home.png"
+            capture = workspace / "private-scoring/browser-captures" / filename
+            capture.write_bytes(base64.b64decode(
+                "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAACklEQVR42mNgAAAAAgABSK+kcQAAAABJRU5ErkJggg=="
+            ))
+            tooling = workspace / "desktop-scoring-tooling"
+            tooling.mkdir()
+            helper = tooling / "desktop_web_screenshot.mjs"
+            shutil.copyfile(repo / "src/e2e" / helper.name, helper)
+            (tooling / "score-web-e2e").symlink_to(repo / ".agents/skills/score-web-e2e", target_is_directory=True)
+            command = ["node", helper, filename, file_sha256(capture)]
+            first = subprocess.run(command, cwd=workspace, capture_output=True, check=True, timeout=30)
+            receipt = json.loads(first.stdout)
+            output = Path(receipt["path"])
+            self.assertEqual(output.read_bytes(), capture.read_bytes())
+            sidecar = output.with_name(filename + ".receipt.json")
+            sidecar.unlink()
+            retry = subprocess.run(command, cwd=workspace, capture_output=True, check=True, timeout=30)
+            self.assertEqual(json.loads(retry.stdout), receipt)
+            self.assertTrue(sidecar.is_file())
+
+    def test_web_verification_bundle_can_resume_with_bounded_parts(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            upload = root / "payload.zip"
+            with zipfile.ZipFile(upload, "w") as archive:
+                archive.writestr("unit/manifest.json", b"fixture" * 200)
+                archive.writestr("verifier/scripts/build_submission.mjs", b"// fixture")
+            data = upload.read_bytes()
+            guest = root / "guest"
+            for index, offset in enumerate(range(0, len(data), 128)):
+                group = guest / f"parts-{index // 4:05d}"
+                group.mkdir(parents=True, exist_ok=True)
+                (group / f"part-{index:05d}").write_bytes(data[offset:offset + 128])
+            unpack(guest, file_sha256(upload))
+            self.assertEqual((guest / "contents/unit/manifest.json").read_bytes(), b"fixture" * 200)
+            unpack(guest, file_sha256(upload))
+            (guest / "parts-00000/part-00000").write_bytes(b"tampered")
+            with self.assertRaisesRegex(ValueError, "WEB_BUNDLE_DRIFT"):
+                unpack(guest, file_sha256(upload))
 
     def test_general_rejects_a_score_for_a_different_frozen_execution(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -171,7 +250,7 @@ class DesktopScoringTests(unittest.TestCase):
                 scoring._run(["node", skill / "scripts/build_submission.mjs",
                               "--package-root", root, "--output", root / "submission.json"], root)
 
-            with patch.object(scoring, "_verify_native_browser") as verify, \
+            with patch.object(scoring, "verify_native_browser", return_value={"screenshots": []}) as verify, \
                     patch.object(scoring, "_build_web_on_guest", side_effect=seal):
                 score, number, receipt, artifacts = scoring._read_web(
                     work, returned, handoff, {"actual_model": scoring.MODEL}, Mock())
