@@ -108,13 +108,24 @@ $proof.phase='completed';foreach($entry in @{after=$after;late_process_detected=
     if product == "workbuddy":
         script=script.replace('AStudio.exe','WorkBuddy.exe').replace('Programs\\AStudio\\','Programs\\WorkBuddy\\').replace('Programs\\AStudio Data\\','Programs\\WorkBuddy Data\\')
     elif product == "chatgpt-desktop":
+        package = r"*\WindowsApps\OpenAI.Codex_*\*"
         script = script.replace("AStudio.exe", "ChatGPT.exe")
         script = script.replace(
-            "$_.Name -ieq 'ChatGPT.exe'",
-            r"$_.Name -ieq 'ChatGPT.exe' -and $_.ExecutablePath -like '*\\WindowsApps\\OpenAI.Codex_*\\*'",
+            "$apps=@($all|Where-Object {$_.Name -ieq 'ChatGPT.exe'});",
+            f"$apps=@($all|Where-Object {{$_.ExecutablePath -like '{package}'}});",
         )
-        script = script.replace("*\\Programs\\AStudio\\*", "*\\WindowsApps\\OpenAI.Codex_*\\*")
-        script = script.replace(r" -or $_.ExecutablePath -like '*\\Programs\\AStudio Data\\*'", "")
+        script = script.replace(
+            "$roots=@($apps|Where-Object {$appIds -notcontains [int]$_.ParentProcessId});",
+            "$roots=@($apps|Where-Object {$_.Name -ieq 'ChatGPT.exe' -and $appIds -notcontains [int]$_.ParentProcessId});",
+        )
+        script = script.replace(
+            'foreach($p in @($all|Where-Object {$_.CommandLine -and',
+            "foreach($app in $apps){if(-not $app.CreationDate){throw 'HARNESS_PROCESS_IDENTITY_UNAVAILABLE'};[void]$ids.Add([int]$app.ProcessId)};\n"
+            'foreach($p in @($all|Where-Object {$_.CommandLine -and',
+        )
+        script = script.replace("($_.Name -ieq 'ChatGPT.exe') -or", "")
+        script = script.replace(r"*\Programs\AStudio\*", package)
+        script = script.replace(r" -or $_.ExecutablePath -like '*\Programs\AStudio Data\*'", "")
     elif product != "astudio": raise E2EError("UNSUPPORTED_PROCESS_CLEANUP_PRODUCT")
     return script
 
