@@ -293,7 +293,7 @@ def build_report(definition: dict, staging: Path):
         if file_sha256(result_file) != source['result_sha256']:
             raise E2EError('REPORT_SCORING_SOURCE_DRIFT')
         result = read_json(result_file)
-        if result.get('schema') != 'wildclawbench.headless-score-set/v1' or result['summary']['containers_held']:
+        if result.get('schema') not in {'wildclawbench.headless-score-set/v1', 'wildclawbench.desktop-score-set/v1'} or result['summary']['containers_held']:
             raise E2EError('REPORT_SCORE_JOB_NOT_TERMINAL')
         batch = Path(result['source_batch_root'])
         manifest = load_batch(batch)
