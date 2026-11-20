@@ -196,6 +196,11 @@ class DesktopScoringTests(unittest.TestCase):
                             "path": ntpath.join(guest, "browser-captures", filename),
                             "mimeType": "image/png", "bytes": len(image),
                         }})),
+                *direct("unused", "astron_browser_inspect", {"action": "screenshot", "tabId": tab, "fullPage": True},
+                        json.dumps({"action": "screenshot", "result": {
+                            "path": ntpath.join(guest, "browser-captures", "native-unused.png"),
+                            "mimeType": "image/png", "bytes": len(image),
+                        }})),
                 browser_event("acode_apps", "image_understanding", "read", {"structuredContent": {"text": "页面可见"}},
                               {"image": ntpath.join(guest, "evidence", filename)}),
             ]}
@@ -205,6 +210,10 @@ class DesktopScoringTests(unittest.TestCase):
             verified = scoring.verify_native_browser(binding, private, score, raw_captures=captures)
             self.assertEqual(verified["screenshots"][0]["tab_id"], tab)
             self.assertEqual(verified["screenshots"][0]["capture_call_id"], "capture")
+            binding["events"][2]["tool"]["arguments"]["fullPage"] = True
+            with self.assertRaisesRegex(E2EError, "NATIVE_CAPTURE_INVALID"):
+                scoring.verify_native_browser(binding, private, score, raw_captures=captures)
+            binding["events"][2]["tool"]["arguments"]["fullPage"] = False
             original.write_bytes(image[:-1] + b"b")
             with self.assertRaisesRegex(E2EError, "SCREENSHOT_DRIFT"):
                 scoring.verify_native_browser(binding, private, score, raw_captures=captures)

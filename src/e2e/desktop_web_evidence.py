@@ -118,6 +118,7 @@ def _published_capture(arguments, payload, tabs, source):
 
 
 def verify_native_browser(binding, private, score_input, *, raw_captures=None):
+    references = _referenced_screenshots(score_input)
     opened = False
     tabs = {}
     captures = {}
@@ -134,12 +135,16 @@ def verify_native_browser(binding, private, score_input, *, raw_captures=None):
                     if isinstance(tab.get("tabId"), str) and isinstance(tab.get("url"), str)}
             opened |= payload.get("action") in {"open", "navigate"}
         if tool == ("acode", "astron_browser_inspect") and arguments.get("action") == "screenshot":
-            screenshot = _published_capture(arguments, payload, tabs, raw_captures)
+            receipt = payload.get("result")
+            path = receipt.get("path") if isinstance(receipt, dict) else None
+            if isinstance(path, str) and "evidence/" + ntpath.basename(path) in references:
+                screenshot = _published_capture(arguments, payload, tabs, raw_captures)
         if tool == ("acode", "astron_browser_save_screenshot") and payload.get("schema") == CAPTURE_SCHEMA:
-            filename = _capture_filename(payload.get("path"))
-            if payload.get("filename") != filename:
-                raise E2EError("DESKTOP_SCORING_NATIVE_CAPTURE_INVALID")
-            screenshot = filename, payload
+            if "evidence/" + str(payload.get("filename")) in references:
+                filename = _capture_filename(payload.get("path"))
+                if payload.get("filename") != filename:
+                    raise E2EError("DESKTOP_SCORING_NATIVE_CAPTURE_INVALID")
+                screenshot = filename, payload
         if screenshot:
             filename, capture = screenshot
             if filename in captures:
@@ -154,7 +159,7 @@ def verify_native_browser(binding, private, score_input, *, raw_captures=None):
     if not opened:
         raise E2EError("DESKTOP_SCORING_NATIVE_BROWSER_EVIDENCE_MISSING")
     evidence_chain = []
-    for relative, viewport in sorted(_referenced_screenshots(score_input).items()):
+    for relative, viewport in sorted(references.items()):
         filename = relative.removeprefix("evidence/")
         if relative != "evidence/" + filename or filename not in captures:
             raise E2EError("DESKTOP_SCORING_NATIVE_CAPTURE_MISSING")
