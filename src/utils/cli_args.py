@@ -19,6 +19,10 @@ def build_run_batch_parser(default_model: str, default_parallel: int) -> argpars
         help="Category name, e.g. 01_Productivity_Flow, 02_Code_Intelligence, 03_Social_Interaction, 04_Search_Retrieval, 05_Creative_Synthesis, 06_Safety_Alignment",
     )
     mode.add_argument("--dataset-id", help="Execute an explicitly registered frozen dataset series or release")
+    mode.add_argument("--case-library", help="Execute tasks selected from a current case-library dataset")
+    parser.add_argument("--library-task", action="append", default=[], help="Selected current task ID and source SHA-256 (ID=SHA)")
+    parser.add_argument("--dataset-task-id", action="append", default=[], help="Select specific task IDs within a frozen release")
+    parser.add_argument("--include-drafts", action="store_true", help="Include cases tagged draft in a case-library run")
     parser.add_argument("--release-id", help="Frozen release within --dataset-id; task membership is verified before execution")
 
     parser.add_argument(
@@ -213,4 +217,8 @@ def parse_run_batch_args(default_model: str, default_parallel: int) -> argparse.
     args = parser.parse_args()
     if args.release_id and not args.dataset_id:
         parser.error("--release-id requires --dataset-id")
+    if args.dataset_task_id and not args.dataset_id:
+        parser.error("--dataset-task-id requires --dataset-id")
+    if bool(args.library_task) != bool(args.case_library):
+        parser.error("--case-library and --library-task are required together")
     return args

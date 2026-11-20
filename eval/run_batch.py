@@ -236,8 +236,9 @@ def _build_run_configuration(
         )
 
     selected_dataset = getattr(args, "dataset_id", None) or getattr(args, "dataset", None)
-    mode = "dataset" if selected_dataset else "task" if getattr(args, "task", None) else "category"
-    selection_value = selected_dataset or getattr(args, "task", None) or getattr(args, "category", None)
+    library_dataset = getattr(args, "case_library", None)
+    mode = "dataset" if selected_dataset else "library" if library_dataset else "task" if getattr(args, "task", None) else "category"
+    selection_value = selected_dataset or library_dataset or getattr(args, "task", None) or getattr(args, "category", None)
     backend_name = getattr(args, "agent_backend", None)
     if backend_name == "zcode":
         requested_api = getattr(args, "zcode_api", None)
@@ -1413,8 +1414,26 @@ def main() -> None:
         default_parallel=DEFAULT_PARALLEL,
     )
     from eval_general_e2e.datasets.layout import cli_category_paths, cli_task_path
+    from src.case_catalog import runnable
     frozen_source_cache = OUTPUT_DIR / ".dataset-sources" / args.agent_backend / "layout-v1"
     registered_selection = None
+    library_tasks = []
+    if getattr(args, "case_library", None):
+        from src.case_catalog import current_cases, dataset_entry
+        entry = dataset_entry(ROOT_DIR, args.case_library)
+        if "cli" not in entry["modes"]:
+            raise SystemExit("CASE_LIBRARY_MODE_UNSUPPORTED")
+        eligible = {row["task_id"]: row for row in current_cases(ROOT_DIR, args.case_library, entry)
+                    if runnable(row["tags"], args.include_drafts)}
+        try:
+            requested = dict(value.split("=", 1) for value in args.library_task)
+        except ValueError as exc:
+            raise SystemExit("CASE_LIBRARY_TASK_BINDING_INVALID") from exc
+        if len(requested) != len(args.library_task) or any(
+                task_id not in eligible or eligible[task_id]["task_sha256"] != sha256
+                for task_id, sha256 in requested.items()):
+            raise SystemExit("CASE_LIBRARY_SELECTION_CHANGED")
+        library_tasks = [parse_task_md(ROOT_DIR / eligible[task_id]["task_path"]) for task_id in requested]
     if getattr(args, "dataset_id", None):
         try:
             registered_selection = discover_frozen_tasks(ROOT_DIR, args.dataset_id,
@@ -1423,6 +1442,14 @@ def main() -> None:
             raise SystemExit(f"Dataset selection failed: {exc}") from exc
         if args.modality or args.tags or args.exclude_tags:
             raise ValueError("显式冻结数据集不可通过modality/tag过滤缩小范围")
+        from dataclasses import replace
+        requested = set(getattr(args, "dataset_task_id", []))
+        eligible = tuple(task for task in registered_selection.tasks
+                         if runnable(task.get("tags") or [], getattr(args, "include_drafts", False)))
+        if requested and requested - {task["task_id"] for task in eligible}:
+            raise SystemExit("CASE_LIBRARY_TASK_OUTSIDE_RELEASE")
+        registered_selection = replace(registered_selection, tasks=tuple(
+            task for task in eligible if not requested or task["task_id"] in requested))
         args.dataset_selection = registered_selection.identity
 
     # 内置文件日志：程序自己写 <output_root>/run.log（纯文本 + emoji），
@@ -1545,6 +1572,8 @@ def main() -> None:
         if task_file.is_relative_to(TASKS_DIR / "web/artifactsbench"):
             raise SystemExit("ArtifactsBench uses the Web E2E preparation and scoring profile")
         task = parse_task_md(task_file)
+        if not runnable(task.get("tags") or [], getattr(args, "include_drafts", False)):
+            raise SystemExit("CASE_LIBRARY_TASK_NOT_RUNNABLE")
         logger.info("Single task mode: %s", task["task_id"])
         prior = None
         if args.resume or args.rerun_error or args.rerun_anomalous:
@@ -1588,7 +1617,9 @@ def main() -> None:
             if result.get("error") or (result.get("scores") or {}).get("error"):
                 sys.exit(1)
         return
-    if registered_selection:
+    if library_tasks:
+        categories = list(dict.fromkeys(task["category"] for task in library_tasks))
+    elif registered_selection:
         categories = list(dict.fromkeys(task["category"] for task in registered_selection.tasks))
     elif dataset_groups is not None:
         categories = list(dataset_groups)
@@ -1606,7 +1637,9 @@ def main() -> None:
     planned_tasks: list[dict] = []
 
     for category in categories:
-        if registered_selection:
+        if library_tasks:
+            tasks = [task for task in library_tasks if task["category"] == category]
+        elif registered_selection:
             tasks = [task for task in registered_selection.tasks if task["category"] == category]
             logger.info("Dataset: %s, category: %s, %d frozen tasks, parallelism: %d",
                         registered_selection.identity["release_id"], category, len(tasks), args.parallel)
@@ -1639,6 +1672,7 @@ def main() -> None:
                 except Exception as exc:
                     logger.error("Parse failed %s: %s", tf, exc)
 
+        tasks = [task for task in tasks if runnable(task.get("tags") or [], getattr(args, "include_drafts", False))]
         if args.modality:
             before = len(tasks)
             tasks = [t for t in tasks if t.get("modality") == args.modality]
@@ -1685,7 +1719,7 @@ def main() -> None:
     _write_evaluation_scope(
         output_root,
         planned_tasks,
-        mode="dataset" if registered_selection or dataset_groups is not None else "category",
+        mode="dataset" if registered_selection or dataset_groups is not None else "library" if library_tasks else "category",
         categories=categories,
         modality=args.modality,
         include_tags={t.strip().lower() for t in (args.tags or []) if t.strip()},

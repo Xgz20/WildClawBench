@@ -51,12 +51,65 @@ def _general_catalog(repo: Path, dataset: str):
     return tasks, {member.path.rstrip("/"): member for member in members}, manifest
 
 
-def _web_catalog(repo: Path, web):
+def _current_general(repo: Path, dataset: str, selection: dict, web):
+    from collections import Counter
+    from dataclasses import replace
+    from eval_general_e2e.datasets.bundle import compile_dataset
+    from eval_general_e2e.datasets.catalog import load_registered_dataset
+    from src.case_catalog import current_cases, dataset_entry, runnable
+
+    entry = dataset_entry(repo, dataset)
+    registered = load_registered_dataset(repo, entry["release_series"])
+    tasks = _select([case for case in current_cases(repo, dataset, entry)
+                     if runnable(case["tags"], selection.get("include_drafts", False))], selection, repo, web)
+    task_root = entry["task_root"]
+    workspace_root = task_root.replace("tasks/", "workspace/", 1)
+    definition = replace(
+        registered.definition,
+        dataset_id=dataset + "-working",
+        task_ids=tuple(case["task_id"] for case in tasks),
+        created_at="1970-01-01T00:00:00Z",
+        include_tags=(),
+        exclude_tags=("invalid",),
+        expected_task_count=len(tasks),
+        expected_category_counts=Counter(case["category_key"] for case in tasks),
+        expected_grading_type_counts=Counter(case["grading_type"] for case in tasks),
+        expected_difficulty_counts=Counter(case["difficulty"] for case in tasks),
+        expected_timeout_counts=Counter(str(case["timeout_seconds"]) for case in tasks),
+        task_root=task_root,
+        workspace_root=workspace_root,
+        source_revision=None,
+        registry_path=workspace_root.replace("workspace/", "datasets/", 1) + "/task_sources.yaml",
+        frozen_source_index=None,
+        current_source_paths=(),
+        revision_scope=(task_root, workspace_root),
+        constraints={},
+    )
+    # Legacy built-in families lack a registered per-task report contract.
+    manifest, members = compile_dataset(repo, definition=definition)
+    rows = [
+        {**task, "scene": "general", "metric_profile": "general-e2e-contract-v1",
+         "library_dataset": dataset,
+         "dataset": {"id": manifest["dataset_id"], "digest": manifest["dataset_digest"]}}
+        for task in manifest["tasks"]
+    ]
+    return rows, {member.path.rstrip("/"): member for member in members}, manifest
+
+
+def _web_catalog(repo: Path, web, library_dataset: str | None = None):
     from eval_general_e2e.datasets.layout import is_reading_or_archived_task
+    from src.case_catalog import current_cases, dataset_entry
+    if library_dataset:
+        entry = dataset_entry(repo, library_dataset)
+        if entry["scene"] != "web" or "e2e" not in entry["modes"]:
+            raise E2EError("CASE_LIBRARY_MODE_UNSUPPORTED")
+        paths = [repo / row["task_path"] for row in current_cases(repo, library_dataset, entry)]
+    else:
+        paths = sorted((repo / "tasks").rglob("*.md"))
     tasks = []
     seen = {}
     root = repo / "tasks"
-    for path in sorted(root.rglob("*.md")):
+    for path in paths:
         if is_reading_or_archived_task(root, path):
             continue
         text = path.read_text(encoding="utf-8")
@@ -65,7 +118,7 @@ def _web_catalog(repo: Path, web):
         metadata, _ = web.split_frontmatter(text, path)
         raw_tags = metadata.get("tags") or []
         tags = [str(value).strip().lower() for value in (raw_tags.split(",") if isinstance(raw_tags, str) else raw_tags)]
-        if "web-site-gen" not in tags:
+        if "web-site-gen" not in tags or "invalid" in tags:
             continue
         task_id = str(metadata.get("id") or path.stem)
         if task_id in seen:
@@ -73,7 +126,8 @@ def _web_catalog(repo: Path, web):
         seen[task_id] = path
         tasks.append({"task_id": task_id, "name": metadata.get("name") or task_id,
                       "category": metadata.get("category") or path.parent.name,
-                      "modality": metadata.get("modality"), "tags": tags,
+                      "modality": metadata.get("modality"), "difficulty": metadata.get("difficulty"), "tags": tags,
+                      "library_dataset": library_dataset,
                       "scene": "web", "metric_profile": web.resolve_metric_profile(metadata),
                       "source": {"task_path": path.relative_to(repo).as_posix(), "task_sha256": file_sha256(path)}})
     return tasks
@@ -85,7 +139,7 @@ def _select(tasks: list[dict], selection: dict, repo: Path, web) -> list[dict]:
     if path:
         from eval_general_e2e.datasets.layout import relocated_task
         target = relocated_task(repo, Path(path).expanduser()).resolve(strict=True)
-        candidates = [task for task in tasks if relocated_task(repo, Path(task["source"]["task_path"])).resolve() == target]
+        candidates = [task for task in tasks if relocated_task(repo, Path(task.get("task_path") or task["source"]["task_path"])).resolve() == target]
         if len(candidates) != 1:
             raise E2EError("TASK_OUTSIDE_SELECTED_DATASET")
         ids = [candidates[0]["task_id"]]
@@ -194,11 +248,15 @@ def normalize_plan(raw: dict) -> dict:
     selection = plan["selection"]
     if not isinstance(selection, dict) or not isinstance(plan["units"], list):
         raise E2EError("BATCH_PLAN_SELECTION_OR_UNITS_INVALID")
-    if set(selection) - {"scenario", "dataset", "task", "task_ids", "categories", "tags", "exclude_tags", "modality"}:
+    if set(selection) - {"scenario", "dataset", "task", "task_ids", "categories", "tags", "exclude_tags", "modality", "library_dataset", "include_drafts"}:
         raise E2EError("TASK_SELECTION_UNKNOWN_KEYS")
     if selection.get("scenario") not in {"general", "web", "all"}:
         raise E2EError("SCENARIO_REQUIRED")
-    if selection["scenario"] in {"general", "all"} and not selection.get("dataset"):
+    if "include_drafts" in selection and type(selection["include_drafts"]) is not bool:
+        raise E2EError("CASE_LIBRARY_DRAFT_FLAG_INVALID")
+    if selection.get("library_dataset") and selection["scenario"] == "all":
+        raise E2EError("CASE_LIBRARY_SCENARIO_MISMATCH")
+    if selection["scenario"] in {"general", "all"} and not (selection.get("dataset") or selection.get("library_dataset")):
         raise E2EError("GENERAL_DATASET_REQUIRED")
     if not plan["units"]:
         raise E2EError("HARNESS_UNITS_REQUIRED")

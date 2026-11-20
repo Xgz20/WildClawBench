@@ -36,6 +36,7 @@ def build_parser() -> argparse.ArgumentParser:
     catalog.add_argument("--repo-root", type=Path, default=Path(__file__).resolve().parents[2])
     catalog.add_argument("--scenario", choices=("general", "web", "all"), default="general")
     catalog.add_argument("--dataset")
+    catalog.add_argument("--library-dataset")
     preflight = commands.add_parser("preflight", help="检查执行计划，返回实际任务范围")
     preflight.add_argument("--repo-root", type=Path, default=Path(__file__).resolve().parents[2])
     preflight.add_argument("--plan", type=Path, required=True)
@@ -401,7 +402,7 @@ def _public_command(args):
     if args.command == "describe":
         return protocol.describe(args.repo_root)
     if args.command == "catalog":
-        return protocol.catalog(args.repo_root, args.scenario, args.dataset)
+        return protocol.catalog(args.repo_root, args.scenario, args.dataset, args.library_dataset)
     if args.command == "environment-status":
         from .environment import runtime_status
         return runtime_status(args.agentcube_config,probe=args.probe)

@@ -619,7 +619,7 @@ def _compile_source_tree(
         execution_contract, scoring_contract = _task_contracts(
             task_id, metadata, sections, execution_tree, scoring_tree
         )
-        if definition.dataset_id in {GENERAL116_DEFINITION.dataset_id, GENERAL70_V2_DEFINITION.dataset_id, GENERAL70_V3_DEFINITION.dataset_id, GENERAL70_V4_DEFINITION.dataset_id, GENERAL70_V5_DEFINITION.dataset_id, GENERAL70_V6_DEFINITION.dataset_id, INFO004_OPEN_DEFINITION.dataset_id, INFO004_OPEN_V2_DEFINITION.dataset_id, INFO004_OPEN_V3_DEFINITION.dataset_id}:
+        if definition.dataset_id in {"general-work-working", GENERAL116_DEFINITION.dataset_id, GENERAL70_V2_DEFINITION.dataset_id, GENERAL70_V3_DEFINITION.dataset_id, GENERAL70_V4_DEFINITION.dataset_id, GENERAL70_V5_DEFINITION.dataset_id, GENERAL70_V6_DEFINITION.dataset_id, INFO004_OPEN_DEFINITION.dataset_id, INFO004_OPEN_V2_DEFINITION.dataset_id, INFO004_OPEN_V3_DEFINITION.dataset_id}:
             _adapt_imported_contract(scoring_contract)
         execution_bytes = _json_bytes(execution_contract)
         scoring_bytes = _json_bytes(scoring_contract)

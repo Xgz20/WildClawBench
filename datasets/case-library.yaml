@@ -1,0 +1,47 @@
+scenarios:
+  general: 通用场景
+  web: Web 站点
+  ppt: PPT
+datasets:
+  general-regression:
+    name: 基础回归
+    scene: general
+    task_root: tasks/general/regression
+    release_series: general-regression
+    capability_map: tools/report/data/checkpoint_capability_map7.yaml
+    modes: [cli, e2e]
+  general-work:
+    name: 真实工作
+    scene: general
+    task_root: tasks/general/work
+    release_series: general-work
+    capability_map: tools/report/data/checkpoint_capability_map5.yaml
+    modes: [cli, e2e]
+  general-challenge:
+    name: 通用挑战
+    scene: general
+    task_root: tasks/general/challenge
+    release_series: general-challenge
+    modes: [cli, e2e]
+  general-wildclawbench:
+    name: 开源 WildClawBench
+    scene: general
+    task_root: tasks/general/wildclawbench/en
+    display_root: tasks/general/wildclawbench/cn
+    capability_map: tools/report/data/checkpoint_capability_map7.yaml
+    modes: [cli]
+  web-custom:
+    name: 自建 Web
+    scene: web
+    task_root: tasks/web/custom
+    modes: [cli, e2e]
+  web-artifactsbench:
+    name: ArtifactsBench
+    scene: web
+    task_root: tasks/web/artifactsbench
+    modes: [e2e]
+  ppt-custom:
+    name: 自建 PPT
+    scene: ppt
+    task_root: tasks/ppt/custom
+    modes: [cli]

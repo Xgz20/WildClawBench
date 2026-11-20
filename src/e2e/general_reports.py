@@ -280,6 +280,7 @@ def build_report(definition: dict, staging: Path):
     task_rows, units, sources, task_definitions = [], [], [], {}
     dataset = None
     seen_sources = set()
+    draft_tasks = set()
     for source in definition['sources']:
         identifier(str(source['id']), 'score_operation_id')
         if type(source['run_index']) is not int or source['run_index'] < 1:
@@ -314,6 +315,8 @@ def build_report(definition: dict, staging: Path):
             task = next(task for task in manifest['tasks'] if task['task_id'] == item['task_id'])
             if task['scene'] != 'general':
                 raise E2EError('REPORT_GENERAL_UNIT_REQUIRED')
+            if "draft" in (task.get("tags") or []):
+                draft_tasks.add(item["task_id"])
             frozen_dataset = task.get('dataset') or {}
             if dataset is None:
                 dataset = frozen_dataset
@@ -380,6 +383,11 @@ def build_report(definition: dict, staging: Path):
         from .round_reports import group_round_report
         data = group_round_report(core, data)
         units = data['units']
+    if draft_tasks:
+        data["draft_task_count"] = len(draft_tasks)
+        data["presentation"]["tables"]["总览"]["notes"].append(
+            f"本报告包含 {len(draft_tasks)} 道草稿用例，用于迭代验证。"
+        )
     configuration = []
     for unit in units:
         profile = unit['scorer']

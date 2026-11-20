@@ -17,6 +17,7 @@ from .preparation import (
     canonical_script,
     normalize_plan,
     _general_catalog,
+    _current_general,
     _web_catalog,
     _select,
     _revision,
@@ -71,6 +72,7 @@ def describe(repo: Path) -> dict:
         "engine_revision": _revision(repo),
         "capabilities": [
             "catalog",
+            "case-library-v1",
             "preflight",
             "runtime-preflight",
             "workbuddy-permission",
@@ -127,12 +129,23 @@ def describe(repo: Path) -> dict:
     }
 
 
-def catalog(repo: Path, scenario: str = "general", dataset: str | None = None) -> dict:
+def catalog(repo: Path, scenario: str = "general", dataset: str | None = None,
+            library_dataset: str | None = None) -> dict:
     from eval_general_e2e.datasets.bundle import (
         DATASETS,
         dataset_manifest_path,
         load_manifest_lock,
     )
+
+    if library_dataset:
+        from src.case_catalog import index
+        group = index(repo, library_dataset, dataset)["datasets"][0]
+        if group["scene"] != scenario or "e2e" not in group["modes"]:
+            raise E2EError("CASE_LIBRARY_MODE_UNSUPPORTED")
+        categories = Counter(row["category"] for row in group["cases"])
+        return {"datasets": group["releases"], "cases": group["cases"],
+                "categories": [{"id": key, "count": value} for key, value in categories.items()],
+                "profiles": profiles()}
 
     datasets = []
     for dataset_id in DATASETS:
@@ -186,20 +199,31 @@ def catalog(repo: Path, scenario: str = "general", dataset: str | None = None) -
 def resolve(
     repo: Path, raw: dict
 ) -> tuple[dict, list[dict], dict, dict | None, object]:
+    from src.case_catalog import dataset_entry, releases, runnable
     plan = normalize_plan(raw)
+    selection = plan["selection"]
+    library_dataset = selection.get("library_dataset")
+    if library_dataset:
+        entry = dataset_entry(repo, library_dataset)
+        if entry["scene"] != selection["scenario"] or "e2e" not in entry["modes"]:
+            raise E2EError("CASE_LIBRARY_MODE_UNSUPPORTED")
+        if selection.get("dataset") and selection["dataset"] not in {item["id"] for item in releases(repo, entry)}:
+            raise E2EError("CASE_LIBRARY_RELEASE_UNKNOWN")
     web = canonical_script(
         repo, "web-e2e", "prepare-web-e2e-workspaces", "prepare_web_e2e_workspaces.py"
     )
     tasks, members, manifest = [], {}, None
     scene = plan["selection"]["scenario"]
     if scene in {"general", "all"}:
-        general, members, manifest = _general_catalog(
-            repo, plan["selection"]["dataset"]
-        )
+        if library_dataset and not selection.get("dataset"):
+            general, members, manifest = _current_general(repo, library_dataset, selection, web)
+        else:
+            general, members, manifest = _general_catalog(repo, selection["dataset"])
         tasks.extend(general)
     if scene in {"web", "all"}:
-        tasks.extend(_web_catalog(repo, web))
-    selected = _select(tasks, plan["selection"], repo, web)
+        tasks.extend(_web_catalog(repo, web, library_dataset))
+    eligible = [task for task in tasks if runnable(task.get("tags") or [], selection.get("include_drafts", False))]
+    selected = eligible if library_dataset and scene == "general" and not selection.get("dataset") else _select(eligible, selection, repo, web)
     for task in selected:
         if task["scene"] == "web":
             parsed = web.parse_task(repo, task["task_id"])
@@ -320,6 +344,7 @@ def preflight(repo: Path, raw: dict, config_path: Path | None = None, *, check_r
         "plan_sha256": digest(preprocessing.public_plan(plan)),
         "selection_sha256": digest(tasks),
         "selected_task_count": len(tasks),
+        "draft_task_count": sum("draft" in (task.get("tags") or []) for task in tasks),
         "unit_count": len(plan["units"]) * len(groups),
         "planned_execution_count": len(tasks) * len(plan["units"]) * plan["runs"],
         **preprocess_selection,
