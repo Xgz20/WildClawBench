@@ -4,11 +4,37 @@ from __future__ import annotations
 import hashlib
 import json
 from pathlib import Path
+import re
 import shutil
 import subprocess
 import sys
 
-from preprocess_windows_guest import astudio_paths, quiescent, runtime, _reparse
+from preprocess_windows_guest import StepError, astudio_paths, quiescent, runtime, _reparse
+
+
+ERROR_CODE = re.compile(r"[A-Z][A-Z0-9_]{1,99}\Z")
+
+
+def general_failure(action, stderr):
+    fallback = "DESKTOP_SCORING_GENERAL_" + action.upper().replace("-", "_") + "_FAILED"
+    try:
+        code = json.loads(stderr)["error"]["code"]
+    except (UnicodeError, ValueError, KeyError, TypeError):
+        lines = stderr.decode("utf-8", errors="replace").splitlines()
+        failure = re.fullmatch(r"([A-Za-z][A-Za-z0-9_.]{0,63}):\s*(.*)", lines[-1]) if lines else None
+        if not failure:
+            return StepError(fallback)
+        exception, message = failure.groups()
+        frames = re.findall(r'File "[^"\n]*[\\/]([A-Za-z0-9_]+\.py)", line (\d+)', "\n".join(lines))
+        details = {"exception": exception}
+        if frames:
+            details["category"], line = frames[-1]
+            details["line"] = int(line)
+        winerror = re.match(r"\[WinError (\d+)\]", message)
+        if winerror:
+            details["winerror"] = int(winerror[1])
+        return StepError(message if ERROR_CODE.fullmatch(message) else fallback, **details)
+    return StepError(code if isinstance(code, str) and ERROR_CODE.fullmatch(code) else fallback)
 
 
 def contents(root):
@@ -28,19 +54,27 @@ def prepare_general(work, target, tooling, request):
         response = subprocess.run([sys.executable, "-X", "utf8", str(entry), action, *map(str, args)],
                                   cwd=work, capture_output=True, timeout=request["timeout_seconds"])
         if response.returncode:
-            raise ValueError("DESKTOP_SCORING_GENERAL_" + action.upper().replace("-", "_") + "_FAILED")
+            raise general_failure(action, response.stderr)
 
-    attempts = list((work / "attempts").rglob("attempt-manifest.json"))
-    if not attempts:
-        run("prepare", "--unit-root", "unit", "--execution-record", request["execution_record"],
-            "--scoring-package", request["scoring_package"], "--task-id", request["task_id"],
-            "--scoring-attempt-id", request["attempt"], "--output-root", "attempts",
-            "--judge-protocol", "codex-agent-judge-v1", "--judge-model", request["model"],
-            "--judge-reasoning-effort", "none", "--judge-attempt-id", request["attempt"])
-        attempts = list((work / "attempts").rglob("attempt-manifest.json"))
-    if len(attempts) != 1:
-        raise ValueError("DESKTOP_SCORING_GENERAL_ATTEMPT_AMBIGUOUS")
-    attempt = attempts[0].parent
+    attempt = work / "attempts" / request["attempt"]
+    if not (attempt / "attempt-manifest.json").is_file():
+        # The frozen Skill nests its output under the batch, unit and case
+        # identifiers. Use extended paths for preparation and expose a short
+        # directory for the judge and the workspace collector.
+        extended = "\\\\?\\"
+        preparation = Path(extended + str(work / "attempts" / ".prepare"))
+        prepared = list(preparation.rglob("attempt-manifest.json")) if preparation.exists() else []
+        if not prepared:
+            run("prepare", "--unit-root", "unit", "--execution-record", request["execution_record"],
+                "--scoring-package", request["scoring_package"], "--task-id", request["task_id"],
+                "--scoring-attempt-id", request["attempt"], "--output-root", preparation,
+                "--judge-protocol", "codex-agent-judge-v1", "--judge-model", request["model"],
+                "--judge-reasoning-effort", "none", "--judge-attempt-id", request["attempt"])
+            prepared = list(preparation.rglob("attempt-manifest.json"))
+        if len(prepared) != 1:
+            raise ValueError("DESKTOP_SCORING_GENERAL_ATTEMPT_AMBIGUOUS")
+        prepared[0].parent.rename(extended + str(attempt))
+        shutil.rmtree(preparation)
     run("verify", "--attempt-root", attempt)
     contract = json.loads((attempt / "private/contract.json").read_text(encoding="utf-8"))
     if contract["grading_type"] != "automated":
@@ -101,4 +135,11 @@ def install(work):
 
 
 if __name__ == "__main__":
-    install(Path(sys.argv[1]).resolve(strict=True))
+    try:
+        install(Path(sys.argv[1]).resolve(strict=True))
+    except (OSError, ValueError, StepError, subprocess.SubprocessError) as error:
+        code = str(error)
+        print(json.dumps({"status": "failed",
+                          "error": code if ERROR_CODE.fullmatch(code) else "DESKTOP_SCORING_SKILL_INSTALLATION_FAILED",
+                          "exception": type(error).__name__, "winerror": getattr(error, "winerror", None),
+                          **(error.diagnostics if isinstance(error, StepError) else {})}))

@@ -360,6 +360,9 @@ class AStudioSandboxDriver:
             raise E2EError("REMOTE_PROCESS_CLEANUP_UNVERIFIED")
         return proof
 
+    def _native_model(self):
+        return self.unit["model"]
+
     def _bound_native(self, sid, before, report, identity, prompt, stage):
         after = self._inventory_native(sid)
         atomic_json(self.staging / "metadata" / ("native-" + stage + ".json"), after)
@@ -379,7 +382,7 @@ class AStudioSandboxDriver:
             local.write_bytes(data)
             try:
                 binding = normalize_rollout(local, identity=identity, prompt=prompt, guest_cwd=GUEST_WORKSPACE,
-                                            requested_model=self.unit["model"], requested_effort=self.unit.get("reasoning_effort"), report=report)
+                                            requested_model=self._native_model(), requested_effort=self.unit.get("reasoning_effort"), report=report)
                 bound.append((local, binding))
             except E2EError as error:
                 atomic_json(self.staging / "metadata" / (stage + "-" + name + ".binding-error.json"), {"error": str(error)})

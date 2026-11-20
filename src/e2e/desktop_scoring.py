@@ -1,8 +1,10 @@
 """Durable single-question AStudio judging in independent AgentCube sessions."""
 from __future__ import annotations
 
+import base64
 from concurrent.futures import FIRST_COMPLETED, ThreadPoolExecutor, wait
 import json
+import re
 import shlex
 from pathlib import Path
 import shutil
@@ -20,7 +22,7 @@ from .engine import load_batch
 from .handoff import export_scoring_context
 from .preparation import normalize_template_binding
 from .store import BatchStore, controller_lock, refresh_controller_heartbeat
-from .windows_preprocess import diagnostic_code
+from .windows_preprocess import diagnostic_code, public_diagnostics
 
 CAPABILITY = "agentcube-desktop-scoring-v1"
 RESULT_SCHEMA = "wildclawbench.desktop-score-set/v1"
@@ -159,7 +161,49 @@ class RulesReady(Exception):
     """The trusted guest worker completed a deterministic-only task."""
 
 
+def _catalog_model(catalog):
+    rows = catalog.get("models", []) if isinstance(catalog, dict) else []
+    if not isinstance(rows, list) or any(not isinstance(row, dict) for row in rows):
+        raise E2EError("DESKTOP_SCORING_MODEL_CATALOG_MISMATCH")
+    matching = [row.get("slug") for row in rows if str(row.get("name", "")).casefold() == MODEL.casefold()]
+    if len(matching) != 1 or not isinstance(matching[0], str) or not re.fullmatch(r"[A-Za-z0-9_.-]{1,128}", matching[0]):
+        raise E2EError("DESKTOP_SCORING_MODEL_CATALOG_MISMATCH")
+    slug = matching[0]
+    if sum(str(row.get("slug", "")).casefold() == slug.casefold() for row in rows) != 1:
+        raise E2EError("DESKTOP_SCORING_MODEL_CATALOG_MISMATCH")
+    return {"name": MODEL, "slug": slug, "fetched_at": catalog.get("fetched_at"), "client_version": catalog.get("client_version")}
+
+
 class ScoringDriver(AStudioSandboxDriver):
+    def _native_model(self):
+        mapping = self.store.get(self.key).get("native_scorer_model")
+        if not mapping or mapping.get("name") != self.unit["model"]:
+            raise E2EError("DESKTOP_SCORING_MODEL_CATALOG_UNAVAILABLE")
+        return mapping["slug"]
+
+    def _bind_scorer_model(self, sid):
+        script = r"""
+$ErrorActionPreference='Stop'
+$data=(Get-ItemProperty 'HKCU:\Software\AStudioStorage' -ErrorAction SilentlyContinue).ProductionDataRoot
+if(!$data){$data=Join-Path $env:LOCALAPPDATA 'Programs\AStudio Data'}
+$catalog=Get-Content -Raw -Encoding UTF8 -LiteralPath (Join-Path $data 'userdata\provider-model-catalog-v1.json')|ConvertFrom-Json
+$exe=Join-Path $env:LOCALAPPDATA 'Programs\AStudio\AStudio.exe'
+$safe=@{models=@($catalog.models|Select-Object name,slug);fetched_at=$catalog.fetchedAt;client_version=(Get-Item -LiteralPath $exe).VersionInfo.ProductVersion}|ConvertTo-Json -Depth 4 -Compress
+[Console]::Out.Write([Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes($safe)))
+"""
+        result = self.client.windows_execute(sid, powershell(script), timeout=30)
+        try:
+            catalog = json.loads(base64.b64decode(result["output"].strip(), validate=True))
+        except (KeyError, ValueError) as error:
+            raise E2EError("DESKTOP_SCORING_MODEL_CATALOG_UNAVAILABLE") from error
+        mapping = _catalog_model(catalog)
+        previous = self.store.get(self.key).get("native_scorer_model")
+        if previous and previous["slug"] != mapping["slug"]:
+            raise E2EError("DESKTOP_SCORING_MODEL_CATALOG_DRIFT")
+        self._phase("PREPARING", native_scorer_model=mapping)
+        atomic_json(self.staging / "metadata/scorer-model.json", mapping)
+        return mapping
+
     def _upload(self, sid):
         super()._upload(sid)
         root = GUEST_WORKSPACE + r"\desktop-scoring-tooling"
@@ -174,9 +218,16 @@ class ScoringDriver(AStudioSandboxDriver):
             installation = json.loads(result["output"].strip().splitlines()[-1])
         except (KeyError, ValueError, IndexError) as error:
             raise E2EError("DESKTOP_SCORING_SKILL_INSTALLATION_FAILED") from error
+        if installation.get("status") == "failed":
+            code = diagnostic_code(installation.get("error"), "DESKTOP_SCORING_SKILL_INSTALLATION_FAILED")
+            atomic_json(self.staging / "metadata/scoring-install-failure.json",
+                        {"error": code, **public_diagnostics(installation)})
+            raise E2EError(code)
         lock = self.task["skill_lock"]
         if any(installation.get(key) != lock[key] for key in ("name", "version", "inventory_sha256")):
             raise E2EError("DESKTOP_SCORING_SKILL_INSTALLATION_DRIFT")
+        if not installation.get("rules_only"):
+            installation["native_scorer_model"] = self._bind_scorer_model(sid)
         atomic_json(self.staging / "installation.json", installation)
         if installation.get("rules_only"):
             self._phase("COLLECTING", rules_ready=True)
@@ -235,6 +286,18 @@ def _verify_native_browser(binding, private):
         raise E2EError("DESKTOP_SCORING_SCREENSHOT_DRIFT")
 
 
+def _native_visual_input_unsupported(binding):
+    for event in binding["events"]:
+        status = event.get("native_status") or {}
+        if status.get("type") != "mcp_tool_call_end" or status.get("invocation", {}).get("tool") != "astron_browser_screenshot":
+            continue
+        content = (status.get("result") or {}).get("Ok", {}).get("content", [])
+        if any(item.get("type") == "text" and item.get("text") ==
+               "<image content omitted because you do not support image input>" for item in content):
+            return True
+    return False
+
+
 def _build_web_on_guest(driver, package, skill):
     """The frozen Web builder checks Windows process identities in the guest."""
     sid = driver.store.get(driver.key)["session_id"]
@@ -287,7 +350,8 @@ def _read_web(work, returned, context, binding, driver):
     score_input = read_json(private / "score_input.json")
     if score_input.get("evaluation_status", "completed") == "completed":
         _verify_native_browser(binding, private)
-    score_input["scorer"] = {"harness": "astronstudio", "model": binding["actual_model"], "transport": "agentcube-desktop"}
+    score_input["scorer"] = {"harness": "astronstudio", "model": MODEL, "native_model": binding["actual_model"],
+                             "transport": "agentcube-desktop"}
     atomic_json(private / "score_input.json", score_input)
     skill = Path(context["installed_skills"]) / SKILLS["web"] / "scripts"
     score_path = private / "task_score.json"
@@ -324,8 +388,9 @@ def _artifacts(work, **paths):
 
 def _record_agent_response(work, response, driver, row, attempt):
     binding = response["binding"]
-    if binding["actual_model"].casefold() != MODEL.casefold():
+    if binding["actual_model"].casefold() != driver._native_model().casefold():
         raise E2EError("DESKTOP_SCORING_NATIVE_MODEL_MISMATCH")
+    model = {"harness": "astronstudio", "model": MODEL, "native_model": binding["actual_model"]}
     raw = driver.staging / response["native_path"]
     trace = work / "scorer-trace.jsonl"
     trace.write_text("".join(json.dumps(event, ensure_ascii=False) + "\n" for event in binding["events"]), encoding="utf-8")
@@ -334,14 +399,15 @@ def _record_agent_response(work, response, driver, row, attempt):
                     if type(usage.get(key)) is int and usage[key] >= 0}
     if len(scorer_usage) == 2:
         scorer_usage["total_tokens"] = scorer_usage["input_tokens"] + scorer_usage["output_tokens"]
-    row.update(agent_used=True, scorer_usage=scorer_usage, agent_identity={"harness": "astronstudio", "model": binding["actual_model"]},
-               judge={"harness": "astronstudio", "model": binding["actual_model"]},
+    row.update(agent_used=True, scorer_usage=scorer_usage, agent_identity=model, judge=model,
                artifacts=_artifacts(work, trace=trace, native_trace=raw, audit=driver.staging / "installation.json"))
     context = read_json(work / "context/handoff.json")
     returned = driver.staging / response["workspace"]
     if context["scene"] == "general":
         score, number, verification, other = _read_general(work, returned, context, attempt, MODEL)
     else:
+        if _native_visual_input_unsupported(binding):
+            raise E2EError("DESKTOP_SCORING_VISUAL_INPUT_UNSUPPORTED")
         score, number, verification, other = _read_web(work, returned, context, binding, driver)
     row.update(status="valid" if number is not None else "evaluation_error", total_score=number,
                score_path=str(score), score_sha256=file_sha256(score), verification=verification, attempt_root=str(score.parent),
@@ -352,6 +418,10 @@ def _job(batch, item, config, agentcube, root, attempt, cancel):
     work = root / "work"
     work.mkdir(parents=True, exist_ok=True)
     state = JobState(root / "control/state.json")
+    identity = {key: item[key] for key in ("task_id", "unit_id", "run_index")}
+    identity["attempt_id"] = attempt
+    if any(state.data.get(key, value) != value for key, value in identity.items()):
+        raise E2EError("DESKTOP_SCORING_ATTEMPT_IDENTITY_DRIFT")
     row = {"execution_key": item["key"], "task_id": item["task_id"], "unit_id": item["unit_id"],
            "run_index": item["run_index"], "execution_attempt_id": item["attempt_id"],
            "scoring_attempt_id": attempt, "scene": item["scene"], "work_root": str(work), "total_score": None,
@@ -365,6 +435,8 @@ def _job(batch, item, config, agentcube, root, attempt, cancel):
     driver = None
     row.update(state.data.get("result", {}))
     try:
+        if "attempt_id" not in state.data:
+            state.update(None, state.data["phase"], **identity)
         task = _prepare(batch, item, work, attempt, config["timeout_seconds"])
         if not state.data.get("deadline"):
             state.update(None, state.data["phase"], deadline=time.time() + config["timeout_seconds"])

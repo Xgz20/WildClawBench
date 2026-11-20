@@ -24,6 +24,14 @@ class DesktopScoringTests(unittest.TestCase):
         with self.assertRaisesRegex(E2EError, "DESKTOP_SCORER_MODEL_MUST_MATCH"):
             scoring._config({**CONFIG, "model": "DeepSeek-V4-Flash"})
 
+    def test_native_model_is_bound_to_the_exact_catalog_entry(self):
+        other = {"name": "DeepSeek-V4-Flash", "slug": "xopdsv4flash0731in"}
+        expected = {"name": "DeepSeek-V4.1-Flash", "slug": "xdeepseek-flash-in"}
+        self.assertEqual(scoring._catalog_model({"models": [other, expected]})["slug"], expected["slug"])
+        for models in ([other], [expected, expected], [expected, {**other, "slug": expected["slug"]}]):
+            with self.assertRaisesRegex(E2EError, "DESKTOP_SCORING_MODEL_CATALOG_MISMATCH"):
+                scoring._catalog_model({"models": models})
+
     def test_retry_after_release_failure_does_not_dispatch_twice(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
@@ -34,6 +42,10 @@ class DesktopScoringTests(unittest.TestCase):
                 state = _kwargs["store"]
 
                 def execute():
+                    self.assertEqual(
+                        {key: state.get(ITEM["key"])[key] for key in ("attempt_id", "task_id", "unit_id", "run_index")},
+                        {"attempt_id": "desk-scope", "task_id": "case", "unit_id": "unit", "run_index": 1},
+                    )
                     state.update(None, "RUNNING", session_id="session", resource_held=True)
                     return {}
 
@@ -81,6 +93,15 @@ class DesktopScoringTests(unittest.TestCase):
             screenshot.write_bytes(b"modified evidence")
             with self.assertRaisesRegex(E2EError, "SCREENSHOT_DRIFT"):
                 scoring._verify_native_browser(binding, private)
+
+    def test_native_screenshot_reports_when_the_judge_cannot_receive_images(self):
+        status = {"type": "mcp_tool_call_end", "invocation": {"tool": "astron_browser_screenshot"},
+                  "result": {"Ok": {"content": [
+                      {"type": "text", "text": "<image content omitted because you do not support image input>"}]}}}
+        binding = {"events": [{"type": "status", "native_status": status}]}
+        self.assertTrue(scoring._native_visual_input_unsupported(binding))
+        status["invocation"] = {"tool": "astron_browser_snapshot"}
+        self.assertFalse(scoring._native_visual_input_unsupported(binding))
 
     def test_general_rejects_a_score_for_a_different_frozen_execution(self):
         with tempfile.TemporaryDirectory() as tmp:
