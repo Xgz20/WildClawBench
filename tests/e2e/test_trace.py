@@ -134,12 +134,15 @@ class NativeMcpTests(unittest.TestCase):
                  (alias[:-1] + "b", "acode_apps", "image_understanding"),
                  (alias, "other", "image_understanding"),
                  (alias, "acode_apps", "other"),
+                 ("list_mcp_resources", "acode", "list_mcp_resources"),
+                 ("list_mcp_resources", "acode_apps", "list_mcp_resources"),
+                 ("astron_browser_screenshot", "acode", "astron_browser_screenshot"),
                  ("mcp__acode_apps__connector_sites__manage_site", "acode_apps", "manage_site")]
         module = Path(__file__).resolve().parents[2] / "tools/report/skills/general-e2e/collect-general-e2e/scripts/lib/agentcube-native-verification.mjs"
         code = "const {mcpCallableMatches:f}=await import(process.argv[1]);process.stdout.write(JSON.stringify(JSON.parse(process.argv[2]).map(x=>f(...x))));"
         result = subprocess.run(["node", "--input-type=module", "-e", code, module.as_uri(), json.dumps(cases)],
                                 capture_output=True, text=True, check=True)
-        self.assertEqual(json.loads(result.stdout), [True, False, False, False, True])
+        self.assertEqual(json.loads(result.stdout), [True, False, False, False, True, False, True, True])
         self.assertEqual(json.loads(result.stdout), [mcp_callable_matches(*case) for case in cases])
 
     def test_mcp_end_without_canonical_pair_marks_trace_incomplete(self):
