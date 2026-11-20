@@ -137,7 +137,12 @@ class AStudioSandboxDriver:
                  config: AgentCubeConfig, stop_event, client_factory=AgentCubeClient):
         self.batch = batch_root
         self.store, self.key, self.task, self.unit = store, item["key"], task, unit
-        self.config = replace(config, template=unit["template"], astudio_runtime=config.astudio_runtime if self.product=="astudio" else None)
+        self.config = replace(
+            config,
+            template=unit["template"],
+            namespace=unit.get("template_binding", {}).get("namespace", config.namespace),
+            astudio_runtime=config.astudio_runtime if self.product == "astudio" else None,
+        )
         self.client = client_factory(self.config)
         self.stop = stop_event
         self.root = inside(batch_root, item["execution_root"])

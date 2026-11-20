@@ -264,7 +264,7 @@ def normalize_plan(raw: dict) -> dict:
     for raw_unit in plan["units"]:
         if not isinstance(raw_unit, dict):
             raise E2EError("HARNESS_UNIT_OBJECT_REQUIRED")
-        if set(raw_unit) - {"unit_id", "harness", "backend", "model", "reasoning_effort", "template", "max_concurrency", "timeout_override", "max_mode", "workbuddy_full_access", "preprocessing"}:
+        if set(raw_unit) - {"unit_id", "harness", "backend", "model", "reasoning_effort", "template", "max_concurrency", "timeout_override", "max_mode", "workbuddy_full_access", "preprocessing", "template_binding"}:
             raise E2EError("HARNESS_UNIT_UNKNOWN_KEYS")
         unit = {"harness": raw_unit.get("harness"), "backend": raw_unit.get("backend", "agentcube"),
                 "model": raw_unit.get("model"), "reasoning_effort": raw_unit.get("reasoning_effort"),
@@ -294,6 +294,19 @@ def normalize_plan(raw: dict) -> dict:
             unit["workbuddy_full_access"] = raw_unit["workbuddy_full_access"]
         elif unit["harness"] == "workbuddy" and unit["template"] == DEFAULT_AGENTCUBE_TEMPLATE:
             unit["workbuddy_full_access"] = True
+        if "template_binding" in raw_unit:
+            binding = raw_unit["template_binding"]
+            if (not isinstance(binding, dict)
+                    or set(binding) != {"id", "namespace", "image_digest", "profile_id", "waa_revision"}
+                    or type(binding["id"]) is not int or binding["id"] < 1
+                    or not isinstance(binding["image_digest"], str)
+                    or not re.fullmatch(r"sha256:[a-f0-9]{64}", binding["image_digest"])
+                    or not isinstance(binding["waa_revision"], str)
+                    or not re.fullmatch(r"[a-f0-9]{7,40}", binding["waa_revision"])):
+                raise E2EError("AGENTCUBE_TEMPLATE_BINDING_INVALID")
+            identifier(binding["namespace"], "namespace")
+            identifier(binding["profile_id"], "profile_id")
+            unit["template_binding"] = dict(binding)
         if "preprocessing" in raw_unit:
             unit["preprocessing"] = preprocessing.normalize_binding(raw_unit["preprocessing"], unit["harness"])
         unit["unit_id"] = raw_unit.get("unit_id") or unit["harness"] + "-" + digest(unit)[:12]

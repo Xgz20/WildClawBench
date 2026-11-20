@@ -73,6 +73,7 @@ def describe(repo: Path) -> dict:
         "capabilities": [
             "catalog",
             "case-library-v1",
+            "managed-agentcube-templates-v1",
             "preflight",
             "runtime-preflight",
             "workbuddy-permission",
@@ -240,11 +241,12 @@ def preflight(repo: Path, raw: dict, config_path: Path | None = None, *, check_r
     warnings = []
     published = profiles()
     for unit in plan["units"]:
+        binding = unit.get("template_binding")
         matches = [
             profile
             for profile in published
             if profile["harness"] == unit["harness"]
-            and profile["template"] == unit["template"]
+            and (profile["id"] == binding["profile_id"] if binding else profile["template"] == unit["template"])
             and profile["enabled"]
         ]
         if len(matches) != 1:
