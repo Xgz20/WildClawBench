@@ -15,7 +15,7 @@ ADAPTER = "agentcube-astudio-native"
 DESKTOP_ADAPTER = "agentcube-chatgpt-desktop-native"
 
 _DESKTOP_MIRRORED_ITEMS = {
-    "UserMessage", "AgentMessage", "Reasoning", "CommandExecution",
+    "UserMessage", "AgentMessage", "Reasoning", "CommandExecution", "FileChange",
 }
 _DESKTOP_CONTEXT_ITEMS = {"additional_tools", "configuration_update"}
 
@@ -107,7 +107,7 @@ def _is_desktop_user(item: dict) -> bool:
     )
 
 
-def _desktop_prompt(payload: dict, *, session_id: str, turn_id: str, expected: str) -> str:
+def _desktop_prompt(payload: dict, *, session_id: str, turn_id: str, expected: str) -> tuple[str, str]:
     if payload.get("thread_id") != session_id or payload.get("turn_id") != turn_id:
         raise E2EError("NATIVE_DESKTOP_USER_IDENTITY_MISMATCH")
     content = payload["item"].get("content")
@@ -119,9 +119,13 @@ def _desktop_prompt(payload: dict, *, session_id: str, turn_id: str, expected: s
         raise E2EError("NATIVE_DESKTOP_USER_CONTENT_UNSUPPORTED")
     actual = content[0]["text"]
     wanted = expected.replace("\r\n", "\n")
-    if actual.replace("\r\n", "\n") not in (wanted, wanted + "\n"):
-        raise E2EError("NATIVE_PROMPT_MISMATCH")
-    return actual
+    normalized = actual.replace("\r\n", "\n")
+    if normalized in (wanted, wanted + "\n"):
+        return actual, "plain-text"
+    rendered = wanted.replace("\n", "\\" + "\n")
+    if normalized in (rendered, rendered + "\n"):
+        return actual, "chatgpt-desktop-markdown-hardbreak"
+    raise E2EError("NATIVE_PROMPT_MISMATCH")
 
 
 def normalize_rollout(path: Path, *, identity: dict, prompt: str, guest_cwd: str,
@@ -164,9 +168,19 @@ def normalize_rollout(path: Path, *, identity: dict, prompt: str, guest_cwd: str
            for context in [header, *contexts]):
         raise E2EError("NATIVE_WORKSPACE_MISMATCH")
     user_payload = users[0][1]["payload"]
-    actual_prompt = (_desktop_prompt(user_payload, session_id=header["id"], turn_id=turn_id, expected=prompt)
-                     if desktop else user_payload.get("message"))
-    prompt_binding = _prompt_binding(actual_prompt, prompt)
+    if desktop:
+        native_prompt, transport = _desktop_prompt(
+            user_payload, session_id=header["id"], turn_id=turn_id, expected=prompt
+        )
+        actual_prompt = prompt
+        prompt_binding = {
+            "kind": transport,
+            "native_message_sha256": hashlib.sha256(native_prompt.encode("utf-8")).hexdigest(),
+            "decoded_text_sha256": hashlib.sha256(actual_prompt.encode("utf-8")).hexdigest(),
+        }
+    else:
+        actual_prompt = user_payload.get("message")
+        prompt_binding = _prompt_binding(actual_prompt, prompt)
     models = {model_identity(str(context.get("model") or "")) for context in contexts}
     expected_model = "astronclaw-auto" if requested_model.casefold() == "auto" else requested_model
     if len(models) != 1 or next(iter(models)).casefold() != expected_model.casefold():
