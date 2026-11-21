@@ -38,6 +38,15 @@ class NativeMcpTests(unittest.TestCase):
         meta = next(event for event in value["events"] if event.get("content") == "mcp_tool_call_end")
         self.assertEqual(meta["native_status"], self.end)
 
+    def test_recurring_stream_diagnostic_is_retained_in_a_completed_trace(self):
+        diagnostic = {"type": "stream_error", "message": "reconnecting"}
+        self.rows.insert(-1, {"type": "event_msg", "payload": diagnostic})
+        value = self.normalize()
+        self.assertEqual(value["missing"], [])
+        event = next(event for event in value["events"] if event.get("content") == "stream_error")
+        self.assertEqual(event["type"], "status")
+        self.assertEqual(event["native_status"], diagnostic)
+
     def test_single_pasted_text_binds_without_rewriting_raw_user_event(self):
         message = '<pasted_text>\n' + json.dumps([{"text": "prompt"}]) + '\n</pasted_text>'
         user = next(row for row in self.rows if row.get("type") == "event_msg"

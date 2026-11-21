@@ -265,7 +265,7 @@ def normalize_rollout(path: Path, *, identity: dict, prompt: str, guest_cwd: str
                 "result": result, "status": "unknown"}, content=result if isinstance(result, str) else None)
         elif outer == "event_msg" and kind == "token_count":
             emit(number, item, "usage", usage=payload.get("info"))
-        elif outer == "event_msg" and kind in {"task_started", "task_complete", "error", "warning"}:
+        elif outer == "event_msg" and kind in {"task_started", "task_complete", "error", "warning", "stream_error"}:
             emit(number, item, "error" if kind == "error" else "status", content=kind,
                  native_status=payload)
         elif outer == "event_msg" and kind == "mcp_tool_call_end":
