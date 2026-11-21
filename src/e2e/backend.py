@@ -31,12 +31,17 @@ class ObservationPaused(E2EError):
     pass
 
 
-def powershell(script: str) -> str:
+def _powershell_arguments(script: str) -> list[str]:
     compressed = base64.b64encode(gzip.compress(script.encode("utf-8"), mtime=0)).decode()
     bootstrap = ("$m=[IO.MemoryStream]::new([Convert]::FromBase64String('" + compressed + "'));"
                  "$g=[IO.Compression.GZipStream]::new($m,[IO.Compression.CompressionMode]::Decompress);"
                  "$r=[IO.StreamReader]::new($g);&([ScriptBlock]::Create($r.ReadToEnd()))")
-    return "powershell -NoProfile -NonInteractive -EncodedCommand " + base64.b64encode(bootstrap.encode("utf-16-le")).decode()
+    encoded = base64.b64encode(bootstrap.encode("utf-16-le")).decode()
+    return ["-NoProfile", "-NonInteractive", "-EncodedCommand", encoded]
+
+
+def powershell(script: str) -> str:
+    return " ".join(["powershell", *_powershell_arguments(script)])
 
 
 def _decode_output(result: dict):
@@ -402,7 +407,13 @@ try {
                 self._phase("COLLECTING", process_cleanup_intent={"path": proof_path, "at": utc_now()})
             # The guest resumes the original target identities from its durable
             # proof and returns base64, preserving JSON bytes across the gateway.
-            proof = _decode_output(self.client.windows_execute(sid, powershell(process_cleanup_script(proof_path, GUEST_WORKSPACE, product=self.product)), timeout=120))
+            script = process_cleanup_script(proof_path, GUEST_WORKSPACE, product=self.product)
+            if self.product == "chatgpt-desktop":
+                # Run PowerShell directly to avoid cmd.exe's shorter command length limit.
+                command = ["powershell.exe", *_powershell_arguments(script)]
+            else:
+                command = powershell(script)
+            proof = _decode_output(self.client.windows_execute(sid, command, timeout=120))
             if proof.get("phase") == "completed":
                 atomic_json(path, proof)
         if (proof.get("schema") != "wildclawbench.agentcube-process-cleanup/v1" or proof.get("phase") != "completed"

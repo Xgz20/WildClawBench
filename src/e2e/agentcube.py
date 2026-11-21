@@ -243,9 +243,9 @@ class AgentCubeClient:
             response.close()
             temporary.unlink(missing_ok=True)
 
-    def windows_execute(self, sid: str, command: str, timeout=60) -> dict:
+    def windows_execute(self, sid: str, command: str | list[str], timeout=60) -> dict:
         response = self._request("POST", self.windows + "/execute", sid=sid, timeout=timeout,
-                                 json={"command": command, "shell": True})
+                                 json={"command": command, "shell": isinstance(command, str)})
         result = self._json(response, "WINDOWS_EXECUTE")
         if result.get("returncode") != 0:
             raise PlatformError("WINDOWS_COMMAND_FAILED: " + str(redact(result.get("error", "")[:1500], self.config.auth_token)))
