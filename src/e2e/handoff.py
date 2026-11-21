@@ -233,6 +233,8 @@ def _web_context(batch: Path, temporary: Path, manifest: dict, item: dict, task:
     prepare = load_script(installed / "prepare-web-e2e-workspaces/scripts/prepare_web_e2e_workspaces.py", "sandbox_frozen_web_prepare")
     scoring_prepare = load_script(installed / "prepare-web-e2e-workspaces/scripts/prepare_scoring_workspace.py", "sandbox_frozen_web_scoring_prepare")
     source = read_json(inside(batch, task["input_root"]) / "private-scoring/web-task-source.json")
+    harness_name = {"astronstudio": "AstronStudio", "workbuddy": "WorkBuddy",
+                    "chatgpt-desktop": "ChatGPT 桌面端"}.get(unit["harness"], unit["harness"])
     identity = ready["identity"]
     package = temporary / "unit"
     execution_task = package / "execution/tasks" / task["task_id"]
@@ -245,7 +247,7 @@ def _web_context(batch: Path, temporary: Path, manifest: dict, item: dict, task:
     (execution_task / "metadata").mkdir()
     shutil.copyfile(restored / "metadata/report.json", execution_task / "metadata/report.json")
     resources = read_json(restored / "resource-metrics.json")
-    record = prepare.execution_record(identity["batch_id"], unit["harness"], "AstronStudio", ready["actual_model"], task["task_id"])
+    record = prepare.execution_record(identity["batch_id"], unit["harness"], harness_name, ready["actual_model"], task["task_id"])
     record["execution"].update(status="completed", agent_duration_seconds=resources["metrics"]["timing"]["agent_duration_seconds"]["value"])
     record["usage"].update({key: metric["value"] for group in ("usage", "requests")
                             for key, metric in resources["metrics"][group].items()})
@@ -267,7 +269,7 @@ def _web_context(batch: Path, temporary: Path, manifest: dict, item: dict, task:
                     "metric_profile": task["metric_profile"], "created_at": utc_now(),
                     "scoring_skill": prepare.load_score_skill_metadata(installed / "score-web-e2e"),
                     "execution_record_included": True,
-                    "harness": {"id": unit["harness"], "display_name": "AstronStudio"},
+                    "harness": {"id": unit["harness"], "display_name": harness_name},
                     "scoring_archive": "scoring.zip", "tasks": [{"task_id": task["task_id"], "task_name": task["name"],
                         "difficulty": source["difficulty"], "metric_profile": task["metric_profile"],
                         "execution_dir": "execution/tasks/" + task["task_id"],
@@ -288,7 +290,7 @@ def _web_context(batch: Path, temporary: Path, manifest: dict, item: dict, task:
     overlay = temporary / "overlay"
     private = overlay / "score/tasks" / task["task_id"] / "private-scoring"
     private.mkdir(parents=True)
-    contract = prepare.task_contract(identity["batch_id"], manifest["source_revision"], unit["harness"], "WorkBuddy" if unit["harness"]=="workbuddy" else "AstronStudio", source)
+    contract = prepare.task_contract(identity["batch_id"], manifest["source_revision"], unit["harness"], harness_name, source)
     atomic_json(private / "task_contract.json", contract)
     fixtures = inside(batch, task["input_root"]) / "private-scoring/fixtures"
     if fixtures.is_dir():
