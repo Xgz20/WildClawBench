@@ -10,7 +10,9 @@ def test_builtin_catalog_covers_controller_defaults_and_never_publishes_connecti
     profiles = default_profiles()
     assert {p["harness"] for p in profiles} == {"astronstudio", "workbuddy"}
     assert {p["template"] for p in profiles} == {"winarena-pc-20261118-a"}
-    assert len(catalog["products"]["astronstudio"]["models"]) == 7
+    assert {"auto", "spark-x2.6", "spark-x2.6-preview", "spark-x2.6-lite", "glm-5.3",
+            "glm-5.3-flash", "glm-5.2", "deepseek-v4.1-flash", "deepseek-v4-pro",
+            "deepseek-v4-flash"} <= {row["id"] for row in catalog["products"]["astronstudio"]["models"]}
     assert len(catalog["products"]["workbuddy"]["models"]) == 20
     assert all(
         model["kind"] == "builtin"
@@ -45,6 +47,10 @@ def test_chatgpt_template_capabilities_follow_the_controller_sources(tmp_path):
     assert profile["scenarios"] == ["general", "web"]
     assert profile["models"][0]["reasoning_efforts"] == ["low", "high"]
     assert profile["default_permission"] == "full access"
+    with source.open("a") as stream:
+        stream.write('MODEL_NAMES = {"gpt-6.2-sol": "GPT-6.2 Sol", "gpt-6.2-astra": "GPT-6.2 Astra"}\n')
+    extended = chatgpt_desktop_profile(tmp_path, "multi-model", "new")
+    assert [row["id"] for row in extended["models"]] == ["gpt-6.2-sol", "gpt-6.2-astra"]
 
     plan = normalize_plan({
         "selection": {"scenario": "web"},

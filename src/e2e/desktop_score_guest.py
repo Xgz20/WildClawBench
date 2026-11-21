@@ -69,7 +69,7 @@ def prepare_general(work, target, tooling, request):
                 "--scoring-package", request["scoring_package"], "--task-id", request["task_id"],
                 "--scoring-attempt-id", request["attempt"], "--output-root", preparation,
                 "--judge-protocol", "codex-agent-judge-v1", "--judge-model", request["model"],
-                "--judge-reasoning-effort", "none", "--judge-attempt-id", request["attempt"])
+                "--judge-reasoning-effort", request.get("reasoning_effort", "none"), "--judge-attempt-id", request["attempt"])
             prepared = list(preparation.rglob("attempt-manifest.json"))
         if len(prepared) != 1:
             raise ValueError("DESKTOP_SCORING_GENERAL_ATTEMPT_AMBIGUOUS")
@@ -97,6 +97,13 @@ def install(work):
     source = tooling / name
     if contents(source) != request["files"]:
         raise ValueError("DESKTOP_SCORING_SKILL_DRIFT")
+    node = shutil.which("node")
+    if request["scene"] == "web" and not node:
+        raise ValueError("DESKTOP_SCORING_NODE_UNAVAILABLE")
+    if request.get("harness") == "chatgpt-desktop":
+        # The frozen workspace copy is directly readable in the scoring turn.
+        # This does not depend on global Skill registration or another account.
+        return describe_installation(work, tooling, request, source, node, "workspace-verified")
     binary, data, user, home = astudio_paths()
     registered = home / "skills"
     if _reparse(registered):
@@ -124,10 +131,12 @@ def install(work):
                if skill.get("name") == name and skill.get("enabled") is True]
     if not matches or any(Path(skill["path"]).resolve() != target / "SKILL.md" for skill in matches):
         raise ValueError("DESKTOP_SCORING_SKILL_NOT_ACTIVE")
-    node = shutil.which("node")
-    if request["scene"] == "web" and not node:
-        raise ValueError("DESKTOP_SCORING_NODE_UNAVAILABLE")
+    return describe_installation(work, tooling, request, target, node, disposition)
+
+
+def describe_installation(work, tooling, request, target, node, disposition):
     rules_only = request["scene"] == "general" and prepare_general(work, target, tooling, request)
+    name = request["name"]
     receipt = {"name": name, "version": request["version"], "inventory_sha256": request["inventory_sha256"],
                "skill_root": str(target), "python": sys.executable, "node": node, "status": disposition, "rules_only": rules_only}
     (tooling / "installation.json").write_text(json.dumps(receipt, ensure_ascii=False), encoding="utf-8")

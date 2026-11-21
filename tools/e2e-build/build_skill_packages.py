@@ -235,6 +235,9 @@ def _load_configuration(repo_root: Path) -> tuple[dict[str, dict], dict[str, dic
                      if (repo_root / "tools/report/skills" / scene).is_dir() else [])
         if path.is_dir()
     }
+    # Harness integration is a source-repository workflow, not an
+    # execution or scoring dependency carried into evaluation sandboxes.
+    discovered.discard("integrate-windows-harness")
     if set(skills) != discovered:
         raise BuildError(
             f"BUILD_PLAN_SKILL_SET_MISMATCH: missing={sorted(discovered - set(skills))}, "

@@ -192,3 +192,46 @@ def verify_native_browser(binding, private, score_input, *, raw_captures=None):
                                "url": capture["url"], "tab_id": capture["tabId"], "viewport": dimensions,
                                "capture_call_id": capture_call["call_id"], "image_understanding": observations})
     return {"schema": "wildclawbench.astudio-web-visual-evidence/v1", "screenshots": evidence_chain}
+
+
+def verify_chatgpt_browser(binding, private, score_input):
+    """Bind each receiver acknowledgement to bytes in a Codex Desktop turn."""
+    _origin(score_input["site_url"])
+    calls = {}
+    observed = False
+    uploads = []
+    for event in binding["events"]:
+        tool = event.get("tool") or {}
+        if event["type"] == "tool_call" and tool.get("name") == "mcp__node_repl__js":
+            arguments = tool.get("arguments")
+            if isinstance(arguments, dict) and isinstance(arguments.get("code"), str):
+                calls[tool["call_id"]] = arguments["code"]
+        if event["type"] != "tool_result" or tool.get("call_id") not in calls:
+            continue
+        code = calls.pop(tool["call_id"])
+        output = json.dumps(tool.get("result"), ensure_ascii=False)
+        if any(token in code for token in ("browser.tabs", ".playwright.", ".getScreenshot(")):
+            observed = True
+        if ".getScreenshot(" in code and "fetch(" in code:
+            uploads.append((tool["call_id"], output))
+    if not observed:
+        raise E2EError("DESKTOP_SCORING_NATIVE_BROWSER_EVIDENCE_MISSING")
+    screenshots = []
+    for relative in sorted(_referenced_screenshots(score_input)):
+        target = inside(private, relative)
+        if not relative.startswith("evidence/") or not target.is_file():
+            raise E2EError("DESKTOP_SCORING_SCREENSHOT_DRIFT")
+        sha = file_sha256(target)
+        size = target.stat().st_size
+        with target.open("rb") as stream:
+            header = stream.read(8)
+        formats = {".png": b"\x89PNG\r\n\x1a\n", ".jpg": b"\xff\xd8\xff", ".jpeg": b"\xff\xd8\xff"}
+        signature = formats.get(target.suffix.lower())
+        if not signature or not header.startswith(signature):
+            raise E2EError("DESKTOP_SCORING_SCREENSHOT_DRIFT")
+        matched = [call_id for call_id, output in uploads
+                   if sha in output and "private-scoring/" + relative in output]
+        if len(matched) != 1:
+            raise E2EError("DESKTOP_SCORING_NATIVE_CAPTURE_MISSING")
+        screenshots.append({"path": relative, "bytes": size, "sha256": sha, "capture_call_id": matched[0]})
+    return {"schema": "wildclawbench.chatgpt-web-visual-evidence/v1", "screenshots": screenshots}

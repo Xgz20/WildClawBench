@@ -10,6 +10,7 @@ import io
 import json
 import os
 from pathlib import Path
+import re
 import shlex
 import time
 import uuid
@@ -25,6 +26,38 @@ from . import preprocessing, windows_preprocess
 WGUI = "/opt/wgui-venv/bin/python -m controller.cli.main"
 GUEST_WORKSPACE = r"C:\ProgramData\WGUI\workspace\project"
 NATIVE_ROOT = r"C:\Users\Docker\AppData\Local\Programs\AStudio Data\acode-home-overlay\sessions"
+ASTUDIO_CATALOG_MODELS = {"spark-x2.6-preview", "glm-5.3", "glm-5.3-flash", "deepseek-v4.1-flash"}
+
+
+def astudio_model_from_catalog(catalog, model):
+    rows = catalog.get("models", []) if isinstance(catalog, dict) else []
+    if not isinstance(rows, list) or any(not isinstance(row, dict) for row in rows):
+        raise E2EError("DESKTOP_SCORING_MODEL_CATALOG_MISMATCH")
+    matching = [row.get("slug") for row in rows if str(row.get("name", "")).casefold() == model.casefold()]
+    if len(matching) != 1 or not isinstance(matching[0], str) or not re.fullmatch(r"[A-Za-z0-9_.-]{1,128}", matching[0]):
+        raise E2EError("DESKTOP_SCORING_MODEL_CATALOG_MISMATCH")
+    slug = matching[0]
+    if sum(str(row.get("slug", "")).casefold() == slug.casefold() for row in rows) != 1:
+        raise E2EError("DESKTOP_SCORING_MODEL_CATALOG_MISMATCH")
+    return {"name": model, "slug": slug, "fetched_at": catalog.get("fetched_at"), "client_version": catalog.get("client_version")}
+
+
+def read_astudio_native_model(client, sid, model):
+    script = r"""
+$ErrorActionPreference='Stop'
+$data=(Get-ItemProperty 'HKCU:\Software\AStudioStorage' -ErrorAction SilentlyContinue).ProductionDataRoot
+if(!$data){$data=Join-Path $env:LOCALAPPDATA 'Programs\AStudio Data'}
+$catalog=Get-Content -Raw -Encoding UTF8 -LiteralPath (Join-Path $data 'userdata\provider-model-catalog-v1.json')|ConvertFrom-Json
+$exe=Join-Path $env:LOCALAPPDATA 'Programs\AStudio\AStudio.exe'
+$safe=@{models=@($catalog.models|Select-Object name,slug);fetched_at=$catalog.fetchedAt;client_version=(Get-Item -LiteralPath $exe).VersionInfo.ProductVersion}|ConvertTo-Json -Depth 4 -Compress
+[Console]::Out.Write([Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes($safe)))
+"""
+    result = client.windows_execute(sid, powershell(script), timeout=30)
+    try:
+        catalog = json.loads(base64.b64decode(result["output"].strip(), validate=True))
+    except (KeyError, ValueError) as error:
+        raise E2EError("DESKTOP_SCORING_MODEL_CATALOG_UNAVAILABLE") from error
+    return astudio_model_from_catalog(catalog, model)
 
 
 class ObservationPaused(E2EError):
@@ -348,6 +381,12 @@ try {
         atomic_json(self.staging / "metadata/run-request.json", request)
         atomic_json(self.staging / "metadata/collect-request.json", collect)
         self._checked_job("workspace-upload", WGUI + " workspace upload --source /workspace/input --guest " + shlex.quote(GUEST_WORKSPACE))
+        if self.product == "astudio" and self.unit["model"].casefold() in ASTUDIO_CATALOG_MODELS:
+            mapping = read_astudio_native_model(self.client, sid, self.unit["model"])
+            previous = self.store.get(self.key).get("native_builtin_model")
+            if previous and previous["slug"] != mapping["slug"]:
+                raise E2EError("ASTUDIO_NATIVE_MODEL_CATALOG_DRIFT")
+            self._phase("PREPARING", native_builtin_model=mapping)
 
     def _download_tree(self, sid, remote: str, name: str):
         target = self.staging / name
@@ -424,7 +463,12 @@ try {
         return proof
 
     def _native_model(self):
-        return self.unit["model"]
+        model = self.unit["model"]
+        if self.product == "astudio" and model.casefold() in ASTUDIO_CATALOG_MODELS:
+            mapping = self.store.get(self.key).get("native_builtin_model")
+            if mapping:
+                return mapping["slug"]
+        return model
 
     def _bound_native(self, sid, before, report, identity, prompt, stage):
         after = self._inventory_native(sid)
@@ -686,7 +730,7 @@ class ChatGPTDesktopSandboxDriver(AStudioSandboxDriver):
 
     def preflight(self):
         super().preflight()
-        if self.unit["model"] != "gpt-6.2-sol" or self.unit["reasoning_effort"] not in {"low", "high"}:
+        if not re.fullmatch(r"gpt-[0-9]+(?:\.[0-9]+)?-(?:astra|sol|terra|luna)", self.unit["model"]) or self.unit["reasoning_effort"] not in {"low", "high"}:
             raise E2EError("CHATGPT_DESKTOP_MODEL_OR_REASONING_UNSUPPORTED")
         validate_chatgpt_gateway(self.config.chatgpt_gateway_url or "")
         if not self.store.get(self.key).get("dispatch_armed_at") and not self._gateway_key():

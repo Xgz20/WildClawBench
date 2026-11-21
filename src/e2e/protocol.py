@@ -94,6 +94,8 @@ def describe(repo: Path) -> dict:
             "headless-general-scoring",
             "agentcube-desktop-scoring-v1",
             "agentcube-desktop-scoring-effort-v1",
+            "agentcube-desktop-scoring-models-v1",
+            "agentcube-chatgpt-desktop-scoring-v1",
             "canonical-general-reports",
             "canonical-general-round-reports",
         ],

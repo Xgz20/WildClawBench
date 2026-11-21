@@ -15,12 +15,13 @@ WorkBuddy 原件保留未裁剪项目 JSONL、控制层报告、诊断、终态 
 ## ChatGPT 桌面端试点
 
 ChatGPT Desktop profile 绑定独立 AgentCube 模板。通过控制器能力发布工具的
-`--chatgpt-desktop-template` 参数发布该 profile。当前范围为 General、Codex Local、
-`gpt-6.2-sol / low` 和客户端的「请求批准」权限。批次详情中的 Harness 名称会标明客户端模式。
+`--chatgpt-desktop-template` 参数从该模板对应的控制器修订发布 Codex Local 的模型、推理档、场景和权限。旧控制器继续发布原来的单模型目录。批次预检使用当前模板的能力目录，原生轨迹必须回读到所选模型和推理档。
 
 执行器的 AgentCube 配置通过 `chatgpt_gateway_url` 指定网关 HTTPS 基地址。评测服务进程
 通过环境变量 `WCB_CHATGPT_API_KEY` 接收相应凭据。控制层只在一次性 Windows 运行副本中
 准备客户端登录与网关设置。能力目录、模板、镜像和批次的请求只记录非敏感配置。
 
 原生 rollout 用客户端来源、Windows 项目路径、Prompt、会话和轮次标识做绑定。原件随
-标准执行备份封存，评分与报告继续使用 General 现有入口。
+标准执行备份封存。
+
+AStudio 和 ChatGPT 桌面评分在「镜像与模板」中分别设置评分默认模板。自动评分和新建评分任务根据该模板列出内置模型及推理档，发起后冻结评分模型和模板。ChatGPT 在独立沙箱读取冻结评分 Skill，通用场景复用规则校验，Web 场景使用 Codex Desktop Browser 和 Skill 的截图接收器。ChatGPT 模板默认开放通用评分。验证该模板的 Browser 控制和截图回传后，可在 profile 的 `desktop_scoring_scenarios` 加入 `web`。浏览器或证据链失败时保留原生轨迹和错误，评分状态为评测异常。

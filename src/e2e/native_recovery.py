@@ -123,7 +123,7 @@ def recover_native_terminal(root: Path, *, execution_key: str, capsule: Path,
             copy_stream_readonly(stream, native_path)
         binding = normalize_rollout(native_path, identity=identity,
             prompt=(inside(root, task["input_root"]) / "execution/PROMPT.md").read_text(encoding="utf-8"),
-            guest_cwd=GUEST_WORKSPACE, requested_model=unit["model"],
+            guest_cwd=GUEST_WORKSPACE, requested_model=(row.get("native_builtin_model") or {}).get("slug", unit["model"]),
             requested_effort=unit.get("reasoning_effort"), report=report)
         _require(not binding["missing"], "RECOVERY_NATIVE_TRACE_INCOMPLETE")
         collect = staging / "collect/workspace"

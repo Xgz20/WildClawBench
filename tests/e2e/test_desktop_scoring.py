@@ -12,12 +12,13 @@ import zipfile
 
 from src.e2e import desktop_scoring as scoring
 from src.e2e.agentcube import AgentCubeConfig
+from src.e2e.backend import astudio_model_from_catalog
 from src.e2e.common import E2EError, atomic_json, file_sha256
 from src.e2e.desktop_web_bundle_guest import unpack
 
 
 CONFIG = {
-    "harness": "astronstudio", "template": "score-template", "model": scoring.MODEL,
+    "harness": "astronstudio", "template": "score-template", "model": "DeepSeek-V4.1-Flash",
     "concurrency": 1, "timeout_seconds": 120,
     "template_binding": {"id": 5, "namespace": "trial-windows", "image_digest": "sha256:" + "a" * 64,
                          "waa_revision": "7db162a", "profile_id": "astudio-default"},
@@ -37,18 +38,48 @@ class DesktopScoringTests(unittest.TestCase):
         self.assertEqual(scoring._config(CONFIG), CONFIG)
         self.assertEqual(scoring._config({**CONFIG, "reasoning_effort": "high"})["reasoning_effort"], "high")
         self.assertEqual(scoring._config({**CONFIG, "reasoning_effort": "none"}), CONFIG)
+        astudio = scoring._config({**CONFIG, "reasoning_effort": "max", "model": "glm-5.3"})
+        self.assertEqual(astudio["reasoning_effort"], "max")
+        self.assertEqual(astudio["model"], "glm-5.3")
+        desktop = {**CONFIG, "harness": "chatgpt-desktop", "model": "gpt-6.2-astra", "reasoning_effort": "high"}
+        self.assertEqual(scoring._config(desktop)["chatgpt_permission"], "full access")
         with self.assertRaisesRegex(E2EError, "DESKTOP_SCORER_REASONING_UNSUPPORTED"):
-            scoring._config({**CONFIG, "reasoning_effort": "max"})
-        with self.assertRaisesRegex(E2EError, "DESKTOP_SCORER_MODEL_MUST_MATCH"):
-            scoring._config({**CONFIG, "model": "DeepSeek-V4-Flash"})
+            scoring._config({**desktop, "reasoning_effort": "max"})
+        with self.assertRaisesRegex(E2EError, "DESKTOP_SCORER_MODEL_INVALID"):
+            scoring._config({**desktop, "model": "custom/unknown"})
 
     def test_native_model_is_bound_to_the_exact_catalog_entry(self):
         other = {"name": "DeepSeek-V4-Flash", "slug": "xopdsv4flash0731in"}
         expected = {"name": "DeepSeek-V4.1-Flash", "slug": "xdeepseek-flash-in"}
-        self.assertEqual(scoring._catalog_model({"models": [other, expected]})["slug"], expected["slug"])
+        self.assertEqual(astudio_model_from_catalog({"models": [other, expected]}, expected["name"])["slug"], expected["slug"])
         for models in ([other], [expected, expected], [expected, {**other, "slug": expected["slug"]}]):
             with self.assertRaisesRegex(E2EError, "DESKTOP_SCORING_MODEL_CATALOG_MISMATCH"):
-                scoring._catalog_model({"models": models})
+                astudio_model_from_catalog({"models": models}, expected["name"])
+
+    def test_chatgpt_browser_evidence_requires_bound_receiver_acknowledgement(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            private = Path(tmp)
+            image = private / "evidence/desktop.png"
+            image.parent.mkdir()
+            image.write_bytes(b"\x89PNG\r\n\x1a\n" + b"image")
+            score = {"site_url": "http://127.0.0.1:8080", "criteria": [
+                {"evidence": [{"type": "screenshot", "path": "evidence/desktop.png"}]},
+            ]}
+            digest = file_sha256(image)
+            binding = {"events": [
+                {"type": "tool_call", "tool": {
+                    "name": "mcp__node_repl__js", "call_id": "capture",
+                    "arguments": {"code": "const image = await tab.getScreenshot(); await fetch(url, {body: image});"},
+                }},
+                {"type": "tool_result", "tool": {
+                    "call_id": "capture", "result": {"path": "private-scoring/evidence/desktop.png", "sha256": digest},
+                }},
+            ]}
+            result = scoring.verify_chatgpt_browser(binding, private, score)
+            self.assertEqual(result["screenshots"][0]["sha256"], digest)
+            image.write_bytes(image.read_bytes() + b"changed")
+            with self.assertRaisesRegex(E2EError, "DESKTOP_SCORING_NATIVE_CAPTURE_MISSING"):
+                scoring.verify_chatgpt_browser(binding, private, score)
 
     def test_retry_after_release_failure_does_not_dispatch_twice(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -303,7 +334,7 @@ class DesktopScoringTests(unittest.TestCase):
             context.mkdir()
             (context / "record.json").write_text("original", encoding="utf-8")
             (context / "rules.zip").write_bytes(b"fixture")
-            atomic_json(returned / "score.json", {"identity": {"attempt_id": "desk-scope"}, "judge": {"model": scoring.MODEL},
+            atomic_json(returned / "score.json", {"identity": {"attempt_id": "desk-scope"}, "judge": {"model": CONFIG["model"]},
                                                   "result": {"valid": True, "total_score": 0.7}})
             atomic_json(returned / "attempt-manifest.json", {
                 "source": {"execution_record_sha256": file_sha256(context / "record.json"),
@@ -312,12 +343,12 @@ class DesktopScoringTests(unittest.TestCase):
             })
             handoff = {"execution_record": "record.json", "scoring_package": "rules.zip", "installed_skills": tmp}
             with patch.object(scoring, "_run", return_value=b'{"status":"PASS"}') as verify:
-                _, number, _, _ = scoring._read_general(work, work / "returned", handoff, "desk-scope", scoring.MODEL)
+                _, number, _, _ = scoring._read_general(work, work / "returned", handoff, "desk-scope", CONFIG["model"])
                 self.assertEqual(number, 0.7)
                 verify.assert_called_once()
             (context / "record.json").write_text("another execution", encoding="utf-8")
             with patch.object(scoring, "_run") as verify, self.assertRaisesRegex(E2EError, "GENERAL_SOURCE_DRIFT"):
-                scoring._read_general(work, work / "returned", handoff, "desk-scope", scoring.MODEL)
+                scoring._read_general(work, work / "returned", handoff, "desk-scope", CONFIG["model"])
             verify.assert_not_called()
 
     def test_web_round_recomputes_score_and_exports_a_standard_return(self):
@@ -353,7 +384,7 @@ class DesktopScoringTests(unittest.TestCase):
             returned = work / "returned"
             shutil.copytree(source, returned)
             BuildSubmissionTest.materialize_evidence(returned)
-            binding = {"actual_model": scoring.MODEL,
+            binding = {"actual_model": CONFIG["model"],
                        "events": [browser_event("acode", "astron_browser_open", "open", {})]}
             guest = ntpath.join(scoring.GUEST_WORKSPACE, "private-scoring")
             images = [item for criterion in score_input["criteria"] for item in criterion["evidence"]
@@ -396,7 +427,8 @@ class DesktopScoringTests(unittest.TestCase):
 
             with patch.object(scoring, "_build_web_on_guest", side_effect=seal):
                 score, number, receipt, artifacts = scoring._read_web(
-                    work, returned, handoff, binding, Mock())
+                    work, returned, handoff, binding, Mock(),
+                    harness=CONFIG["harness"], model=CONFIG["model"])
             self.assertTrue(score.is_file())
             self.assertEqual(number, expected)
             self.assertEqual(receipt["status"], "PASS")

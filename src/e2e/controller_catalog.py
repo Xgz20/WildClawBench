@@ -126,7 +126,7 @@ def chatgpt_desktop_profile(controller_root: Path, template: str, revision: str)
     source = driver.read_bytes()
     tree = ast.parse(source)
     required = {"PILOT_MODEL", "PILOT_EFFORT", "PRODUCT_VERSION"}
-    wanted = required | {"PILOT_EFFORTS", "PILOT_SCENARIOS", "PILOT_PERMISSION"}
+    wanted = required | {"PILOT_EFFORTS", "PILOT_SCENARIOS", "PILOT_PERMISSION", "MODEL_NAMES"}
     values = {}
     for node in tree.body:
         if (isinstance(node, ast.Assign) and len(node.targets) == 1
@@ -144,6 +144,11 @@ def chatgpt_desktop_profile(controller_root: Path, template: str, revision: str)
             or not all(value in ("general", "web") for value in scenarios)
             or permission not in ("ask for approval", "full access")):
         raise E2EError("CHATGPT_DESKTOP_CONTROLLER_PROFILE_INVALID")
+    models = values.get("MODEL_NAMES", {model: model})
+    if (not isinstance(models, dict) or model not in models
+            or not all(isinstance(key, str) and key.startswith("gpt-")
+                       and isinstance(label, str) and label for key, label in models.items())):
+        raise E2EError("CHATGPT_DESKTOP_CONTROLLER_MODEL_CATALOG_INVALID")
     return {
         "id": "chatgpt-desktop-" + template,
         "harness": "chatgpt-desktop",
@@ -152,7 +157,8 @@ def chatgpt_desktop_profile(controller_root: Path, template: str, revision: str)
         "template": template,
         "scenarios": list(scenarios),
         "enabled": True,
-        "models": [{"id": model, "display_name": model, "reasoning_efforts": list(efforts), "kind": "builtin"}],
+        "models": [{"id": key, "display_name": label, "reasoning_efforts": list(efforts), "kind": "builtin"}
+                   for key, label in models.items()],
         "reasoning_efforts": list(efforts),
         "default_model": model,
         "default_permission": permission,
