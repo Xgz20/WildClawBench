@@ -35,6 +35,10 @@ def browser_event(server, name, call, output, arguments=None):
 class DesktopScoringTests(unittest.TestCase):
     def test_model_and_template_are_pinned(self):
         self.assertEqual(scoring._config(CONFIG), CONFIG)
+        self.assertEqual(scoring._config({**CONFIG, "reasoning_effort": "high"})["reasoning_effort"], "high")
+        self.assertEqual(scoring._config({**CONFIG, "reasoning_effort": "none"}), CONFIG)
+        with self.assertRaisesRegex(E2EError, "DESKTOP_SCORER_REASONING_UNSUPPORTED"):
+            scoring._config({**CONFIG, "reasoning_effort": "max"})
         with self.assertRaisesRegex(E2EError, "DESKTOP_SCORER_MODEL_MUST_MATCH"):
             scoring._config({**CONFIG, "model": "DeepSeek-V4-Flash"})
 

@@ -1,6 +1,6 @@
 from pathlib import Path
 from unittest.mock import patch
-from src.e2e.controller_catalog import builtin_catalog, default_profiles
+from src.e2e.controller_catalog import builtin_catalog, chatgpt_desktop_profile, default_profiles
 from src.e2e.environment import runtime_status
 from src.e2e.preparation import normalize_plan
 
@@ -29,6 +29,26 @@ def test_runtime_status_never_allocates_or_claims_authentication():
     assert status["cloud_capacity"]["value"] is None
     assert status["credentials"]["authenticated"] is None
     create.assert_not_called()
+
+
+def test_chatgpt_template_capabilities_follow_the_controller_sources(tmp_path):
+    source = tmp_path / "src/win-arena-container/wgui/guest/products/chatgpt_desktop/ui_driver.py"
+    source.parent.mkdir(parents=True)
+    legacy = 'PILOT_MODEL = "gpt-6.2-sol"\nPILOT_EFFORT = "low"\nPRODUCT_VERSION = "26.1117.3838.0"\n'
+    source.write_text(legacy)
+    profile = chatgpt_desktop_profile(tmp_path, "legacy", "old")
+    assert profile["scenarios"] == ["general"]
+    assert profile["models"][0]["reasoning_efforts"] == ["low"]
+    source.write_text(legacy + 'PILOT_EFFORTS = ("low", "high")\nPILOT_SCENARIOS = ("general", "web")\n')
+    profile = chatgpt_desktop_profile(tmp_path, "web-high", "new")
+    assert profile["scenarios"] == ["general", "web"]
+    assert profile["models"][0]["reasoning_efforts"] == ["low", "high"]
+
+    plan = normalize_plan({
+        "selection": {"scenario": "web"},
+        "units": [{"harness": "chatgpt-desktop", "model": "gpt-6.2-sol", "reasoning_effort": "high"}],
+    })
+    assert plan["units"][0]["reasoning_effort"] == "high"
 
 
 def test_quota_rejection_is_a_platform_failure_before_model_dispatch():

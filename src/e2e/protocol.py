@@ -93,6 +93,7 @@ def describe(repo: Path) -> dict:
             "offline-parent-report-inputs",
             "headless-general-scoring",
             "agentcube-desktop-scoring-v1",
+            "agentcube-desktop-scoring-effort-v1",
             "canonical-general-reports",
             "canonical-general-round-reports",
         ],

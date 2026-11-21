@@ -294,9 +294,9 @@ def normalize_plan(raw: dict) -> dict:
         if type(unit["timeout_override"]) is not int or unit["timeout_override"] < 1:
             raise E2EError("UNIT_TIMEOUT_INVALID")
         if unit["harness"] == "chatgpt-desktop":
-            if unit["reasoning_effort"] not in {None, "low"}:
+            if unit["reasoning_effort"] not in {None, "low", "high"}:
                 raise E2EError("CHATGPT_DESKTOP_REASONING_UNSUPPORTED")
-            unit["reasoning_effort"] = "low"
+            unit["reasoning_effort"] = unit["reasoning_effort"] or "low"
         elif unit["reasoning_effort"] is not None and str(unit["reasoning_effort"]).casefold() not in {"none", "high", "max"}:
             raise E2EError("ASTUDIO_REASONING_UNSUPPORTED")
         if unit["harness"] == "workbuddy":

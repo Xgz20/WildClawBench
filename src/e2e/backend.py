@@ -686,8 +686,8 @@ class ChatGPTDesktopSandboxDriver(AStudioSandboxDriver):
 
     def preflight(self):
         super().preflight()
-        if self.unit["model"] != "gpt-6.2-sol" or self.unit["reasoning_effort"] != "low":
-            raise E2EError("CHATGPT_PILOT_REQUIRES_GPT_6_2_SOL_LOW")
+        if self.unit["model"] != "gpt-6.2-sol" or self.unit["reasoning_effort"] not in {"low", "high"}:
+            raise E2EError("CHATGPT_DESKTOP_MODEL_OR_REASONING_UNSUPPORTED")
         validate_chatgpt_gateway(self.config.chatgpt_gateway_url or "")
         if not self.store.get(self.key).get("dispatch_armed_at") and not self._gateway_key():
             raise E2EError("WCB_CHATGPT_API_KEY_REQUIRED")
@@ -714,7 +714,7 @@ class ChatGPTDesktopSandboxDriver(AStudioSandboxDriver):
                 "base_url": self.config.chatgpt_gateway_url,
                 "api_key_env": "WGUI_CHATGPT_API_KEY",
             },
-            "ui": {"mode": "codex", "reasoning": "low", "permission": "ask for approval"},
+            "ui": {"mode": "codex", "reasoning": self.unit["reasoning_effort"], "permission": "ask for approval"},
         }
 
     def _task_run_command(self) -> str:

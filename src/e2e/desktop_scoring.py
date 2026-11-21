@@ -68,6 +68,11 @@ def _config(value):
     if value.get("harness") != "astronstudio" or value.get("model") != MODEL:
         raise E2EError("DESKTOP_SCORER_MODEL_MUST_MATCH")
     config = {key: value.get(key) for key in ("harness", "model", "template", "concurrency", "timeout_seconds")}
+    effort = value.get("reasoning_effort")
+    if effort not in {None, "none", "high"}:
+        raise E2EError("DESKTOP_SCORER_REASONING_UNSUPPORTED")
+    if effort == "high":
+        config["reasoning_effort"] = effort
     identifier(config["template"], "template")
     config["template_binding"] = normalize_template_binding(value.get("template_binding"))
     for key, lo, hi in (("concurrency", 1, 8), ("timeout_seconds", 60, 14400)):
@@ -408,7 +413,8 @@ def _record_agent_response(work, response, driver, row, attempt):
     binding = response["binding"]
     if binding["actual_model"].casefold() != driver._native_model().casefold():
         raise E2EError("DESKTOP_SCORING_NATIVE_MODEL_MISMATCH")
-    model = {"harness": "astronstudio", "model": MODEL, "native_model": binding["actual_model"]}
+    model = {"harness": "astronstudio", "model": MODEL, "native_model": binding["actual_model"],
+             "reasoning_effort": binding.get("reasoning_effort")}
     raw = driver.staging / response["native_path"]
     trace = work / "scorer-trace.jsonl"
     trace.write_text("".join(json.dumps(event, ensure_ascii=False) + "\n" for event in binding["events"]), encoding="utf-8")

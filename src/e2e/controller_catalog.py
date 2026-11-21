@@ -125,25 +125,33 @@ def chatgpt_desktop_profile(controller_root: Path, template: str, revision: str)
     driver = controller_root / "src/win-arena-container/wgui/guest/products/chatgpt_desktop/ui_driver.py"
     source = driver.read_bytes()
     tree = ast.parse(source)
-    wanted = {"PILOT_MODEL", "PILOT_EFFORT", "PRODUCT_VERSION"}
+    required = {"PILOT_MODEL", "PILOT_EFFORT", "PRODUCT_VERSION"}
+    wanted = required | {"PILOT_EFFORTS", "PILOT_SCENARIOS"}
     values = {}
     for node in tree.body:
         if (isinstance(node, ast.Assign) and len(node.targets) == 1
                 and isinstance(node.targets[0], ast.Name) and node.targets[0].id in wanted):
             values[node.targets[0].id] = ast.literal_eval(node.value)
-    if set(values) != wanted or not all(isinstance(value, str) and value for value in values.values()):
+    if not all(isinstance(values.get(key), str) and values[key] for key in required):
         raise E2EError("CHATGPT_DESKTOP_CONTROLLER_PROFILE_INVALID")
     model, effort = values["PILOT_MODEL"], values["PILOT_EFFORT"]
+    efforts = values.get("PILOT_EFFORTS", (effort,))
+    scenarios = values.get("PILOT_SCENARIOS", ("general",))
+    if (not isinstance(efforts, (tuple, list)) or effort not in efforts
+            or not all(value in ("low", "high") for value in efforts)
+            or not isinstance(scenarios, (tuple, list)) or not scenarios
+            or not all(value in ("general", "web") for value in scenarios)):
+        raise E2EError("CHATGPT_DESKTOP_CONTROLLER_PROFILE_INVALID")
     return {
         "id": "chatgpt-desktop-" + template,
         "harness": "chatgpt-desktop",
         "display_name": "ChatGPT 桌面端 · Codex Local",
         "backend": "agentcube",
         "template": template,
-        "scenarios": ["general"],
+        "scenarios": list(scenarios),
         "enabled": True,
-        "models": [{"id": model, "display_name": model, "reasoning_efforts": [effort], "kind": "builtin"}],
-        "reasoning_efforts": [effort],
+        "models": [{"id": model, "display_name": model, "reasoning_efforts": list(efforts), "kind": "builtin"}],
+        "reasoning_efforts": list(efforts),
         "default_model": model,
         "controller_revision": revision,
         "client_version": values["PRODUCT_VERSION"],
