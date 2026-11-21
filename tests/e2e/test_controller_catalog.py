@@ -39,16 +39,20 @@ def test_chatgpt_template_capabilities_follow_the_controller_sources(tmp_path):
     profile = chatgpt_desktop_profile(tmp_path, "legacy", "old")
     assert profile["scenarios"] == ["general"]
     assert profile["models"][0]["reasoning_efforts"] == ["low"]
-    source.write_text(legacy + 'PILOT_EFFORTS = ("low", "high")\nPILOT_SCENARIOS = ("general", "web")\n')
+    assert profile["default_permission"] == "ask for approval"
+    source.write_text(legacy + 'PILOT_EFFORTS = ("low", "high")\nPILOT_SCENARIOS = ("general", "web")\nPILOT_PERMISSION = "full access"\n')
     profile = chatgpt_desktop_profile(tmp_path, "web-high", "new")
     assert profile["scenarios"] == ["general", "web"]
     assert profile["models"][0]["reasoning_efforts"] == ["low", "high"]
+    assert profile["default_permission"] == "full access"
 
     plan = normalize_plan({
         "selection": {"scenario": "web"},
-        "units": [{"harness": "chatgpt-desktop", "model": "gpt-6.2-sol", "reasoning_effort": "high"}],
+        "units": [{"harness": "chatgpt-desktop", "model": "gpt-6.2-sol", "reasoning_effort": "high",
+                   "chatgpt_permission": "full access"}],
     })
     assert plan["units"][0]["reasoning_effort"] == "high"
+    assert plan["units"][0]["chatgpt_permission"] == "full access"
 
 
 def test_quota_rejection_is_a_platform_failure_before_model_dispatch():

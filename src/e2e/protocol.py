@@ -258,6 +258,8 @@ def preflight(repo: Path, raw: dict, config_path: Path | None = None, *, check_r
             )
             continue
         profile = matches[0]
+        if unit["harness"] == "chatgpt-desktop" and unit.get("chatgpt_permission", "ask for approval") != profile.get("default_permission", "ask for approval"):
+            issues.append({"code": "CHATGPT_DESKTOP_PERMISSION_NOT_PUBLISHED", "unit_id": unit["unit_id"]})
         if unit["model"].casefold().startswith(("custom/","third-party/")) or "://" in unit["model"]:
             issues.append({"code":"CUSTOM_TESTED_MODELS_NOT_SUPPORTED","unit_id":unit["unit_id"]})
         elif unit["model"] not in {model["id"] for model in profile["models"]}:

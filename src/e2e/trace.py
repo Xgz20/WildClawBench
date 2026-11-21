@@ -325,8 +325,14 @@ def normalize_rollout(path: Path, *, identity: dict, prompt: str, guest_cwd: str
             value = usage.get(report_key)
             if type(value) is not int or value < 0 or not native_usage or value != (native_usage[-1] or {}).get(native_key):
                 usage_valid = False
+    full_access = desktop and all(
+        context.get("approval_policy") == "never"
+        and isinstance(context.get("sandbox_policy"), dict)
+        and context["sandbox_policy"].get("type") == "danger-full-access"
+        for context in contexts
+    )
     binding = {"schema": "wildclawbench.agentcube-native-binding/v1", "identity": identity,
-            **({"adapter": DESKTOP_ADAPTER} if desktop else {}),
+            **({"adapter": DESKTOP_ADAPTER, "desktop_full_access": full_access} if desktop else {}),
             "session": {"thread_id": header["id"] if desktop else None, "turn_id": turn_id, "session_id": header["id"],
                         "cwd": contexts[0]["cwd"], "lifecycle_generation": None},
             "actual_model": "auto" if next(iter(models)) == "astronclaw-auto" else next(iter(models)),

@@ -714,7 +714,8 @@ class ChatGPTDesktopSandboxDriver(AStudioSandboxDriver):
                 "base_url": self.config.chatgpt_gateway_url,
                 "api_key_env": "WGUI_CHATGPT_API_KEY",
             },
-            "ui": {"mode": "codex", "reasoning": self.unit["reasoning_effort"], "permission": "ask for approval"},
+            "ui": {"mode": "codex", "reasoning": self.unit["reasoning_effort"],
+                   "permission": self.unit.get("chatgpt_permission", "ask for approval")},
         }
 
     def _task_run_command(self) -> str:

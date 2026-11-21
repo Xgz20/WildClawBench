@@ -278,7 +278,7 @@ def normalize_plan(raw: dict) -> dict:
     for raw_unit in plan["units"]:
         if not isinstance(raw_unit, dict):
             raise E2EError("HARNESS_UNIT_OBJECT_REQUIRED")
-        if set(raw_unit) - {"unit_id", "harness", "backend", "model", "reasoning_effort", "template", "max_concurrency", "timeout_override", "max_mode", "workbuddy_full_access", "preprocessing", "template_binding"}:
+        if set(raw_unit) - {"unit_id", "harness", "backend", "model", "reasoning_effort", "template", "max_concurrency", "timeout_override", "max_mode", "workbuddy_full_access", "chatgpt_permission", "preprocessing", "template_binding"}:
             raise E2EError("HARNESS_UNIT_UNKNOWN_KEYS")
         unit = {"harness": raw_unit.get("harness"), "backend": raw_unit.get("backend", "agentcube"),
                 "model": raw_unit.get("model"), "reasoning_effort": raw_unit.get("reasoning_effort"),
@@ -297,8 +297,15 @@ def normalize_plan(raw: dict) -> dict:
             if unit["reasoning_effort"] not in {None, "low", "high"}:
                 raise E2EError("CHATGPT_DESKTOP_REASONING_UNSUPPORTED")
             unit["reasoning_effort"] = unit["reasoning_effort"] or "low"
+            if "chatgpt_permission" in raw_unit:
+                permission = raw_unit["chatgpt_permission"]
+                if permission not in ("ask for approval", "full access"):
+                    raise E2EError("CHATGPT_DESKTOP_PERMISSION_UNSUPPORTED")
+                unit["chatgpt_permission"] = permission
         elif unit["reasoning_effort"] is not None and str(unit["reasoning_effort"]).casefold() not in {"none", "high", "max"}:
             raise E2EError("ASTUDIO_REASONING_UNSUPPORTED")
+        if "chatgpt_permission" in raw_unit and unit["harness"] != "chatgpt-desktop":
+            raise E2EError("CHATGPT_DESKTOP_PERMISSION_REQUIRES_CHATGPT")
         if unit["harness"] == "workbuddy":
             if unit["reasoning_effort"] not in {None,"none"}: raise E2EError("WORKBUDDY_USES_MAX_MODE_NOT_REASONING")
             if type(raw_unit.get("max_mode",False)) is not bool: raise E2EError("WORKBUDDY_MAX_MODE_INVALID")
