@@ -83,6 +83,7 @@ output_qwen.rar
 !.agents/skills/run-general-e2e
 !.agents/skills/wildclawbench-case-generator
 !.agents/skills/execute-sandbox-e2e
+!.agents/skills/integrate-windows-harness
 !.agents/skills/orchestrate-e2e-pipeline
 
 # 评测集校验 Skill 及报告工具的运行产物

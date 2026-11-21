@@ -1,0 +1,4 @@
+interface:
+  display_name: "Windows Harness 母盘与 wgui 接入"
+  short_description: "将新桌面客户端集成到 Windows 母盘并完成 wgui 自动化和沙箱验收"
+  default_prompt: "用 $integrate-windows-harness 将指定 Harness 接入现有 Windows 母盘，实现 wgui 自动化并完成可追溯验收。"
