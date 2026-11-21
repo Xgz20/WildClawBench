@@ -89,8 +89,10 @@ foreach($p in ($targets|Sort-Object @{Expression={if($_.pid -eq $proof.root_pid)
  for($retry=0;$live -and -not $live.ExecutablePath -and $retry -lt 20;$retry++){Start-Sleep -Milliseconds 100;$live=Get-CimInstance Win32_Process -Filter ('ProcessId='+$p.pid)};
  if($live){$current=Snap $live;if($current.created -ne $p.created -or $current.path -ne $p.path){throw 'PROCESS_IDENTITY_CHANGED'};Stop-Process -Id $p.pid -Force -ErrorAction Stop}
 };
-$watch=[Diagnostics.Stopwatch]::StartNew();$late=$false;$after=@();
-while($watch.ElapsedMilliseconds -lt 5000){
+$ownedExitGraceMs=__OWNED_EXIT_GRACE_MS__;
+$settle=[Diagnostics.Stopwatch]::StartNew();
+$quiet=[Diagnostics.Stopwatch]::StartNew();$late=$false;$after=@();
+while($quiet.ElapsedMilliseconds -lt 5000){
  Start-Sleep -Milliseconds 250;
  $after=@(Get-CimInstance Win32_Process|Where-Object {
    $same=$false;foreach($old in $targets){if([int]$_.ProcessId -eq $old.pid -and $_.CreationDate.ToUniversalTime().ToString('o') -eq $old.created){$same=$true}};
@@ -99,9 +101,21 @@ while($watch.ElapsedMilliseconds -lt 5000){
    ($_.ExecutablePath -and ($_.ExecutablePath -like '*\Programs\AStudio\*' -or $_.ExecutablePath -like '*\Programs\AStudio Data\*')) -or
    ($_.CommandLine -and $_.CommandLine.IndexOf($workspace,[StringComparison]::OrdinalIgnoreCase) -ge 0)
  }|ForEach-Object {Snap $_});
- if($after.Count -ne 0){$late=$true;break}
+ if($after.Count -ne 0){
+   if($settle.ElapsedMilliseconds -lt $ownedExitGraceMs){
+     # Stop-Process can return before CIM drops a terminated process.
+     # Wait for the same PID and creation time, including pathless CIM entries.
+     $unexpected=@($after|Where-Object {
+       $sample=$_;
+       -not ($targets|Where-Object {$_.pid -eq $sample.pid -and $_.created -eq $sample.created}|Select-Object -First 1)
+     });
+     if($unexpected.Count -eq 0){$quiet.Reset();continue}
+   };
+   $late=$true;break
+ };
+ if(-not $quiet.IsRunning){$quiet.Start()}
 };
-$proof.phase='completed';foreach($entry in @{after=$after;late_process_detected=$late;quiet_observed_milliseconds=$watch.ElapsedMilliseconds}.GetEnumerator()){$proof|Add-Member -NotePropertyName $entry.Key -NotePropertyValue $entry.Value -Force};$proof.success=(-not $late -and $after.Count -eq 0 -and $watch.ElapsedMilliseconds -ge 5000);Save $proof;
+$proof.phase='completed';foreach($entry in @{after=$after;late_process_detected=$late;quiet_observed_milliseconds=$quiet.ElapsedMilliseconds}.GetEnumerator()){$proof|Add-Member -NotePropertyName $entry.Key -NotePropertyValue $entry.Value -Force};$proof.success=(-not $late -and $after.Count -eq 0 -and $quiet.ElapsedMilliseconds -ge 5000);Save $proof;
 [Console]::Out.Write([Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes((ConvertTo-Json -InputObject $proof -Depth 15 -Compress))));
 """.replace("__PROOF__", "'" + proof_path.replace("'", "''") + "'").replace(
         "__WORKSPACE__", "'" + workspace.replace("'", "''") + "'")
@@ -127,7 +141,7 @@ $proof.phase='completed';foreach($entry in @{after=$after;late_process_detected=
         script = script.replace(r"*\Programs\AStudio\*", package)
         script = script.replace(r" -or $_.ExecutablePath -like '*\Programs\AStudio Data\*'", "")
     elif product != "astudio": raise E2EError("UNSUPPORTED_PROCESS_CLEANUP_PRODUCT")
-    return script
+    return script.replace("__OWNED_EXIT_GRACE_MS__", "15000" if product == "chatgpt-desktop" else "0")
 
 
 

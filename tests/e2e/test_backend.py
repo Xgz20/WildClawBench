@@ -85,6 +85,21 @@ class BackendTests(unittest.TestCase):
         self.assertIn("CLEANUP_PROOF_IDENTITY_MISMATCH", script)
         self.assertIn("WORKSPACE_PROCESS_IDENTITY_UNAVAILABLE", script)
 
+    def test_chatgpt_cleanup_waits_for_the_original_process_to_disappear(self):
+        script = process_cleanup_script(
+            r"C:\Windows\Temp\wcb-cleanup-attempt.json",
+            GUEST_WORKSPACE,
+            product="chatgpt-desktop",
+        )
+        self.assertLess(len(powershell(script)), 8191)
+        self.assertIn("$ownedExitGraceMs=15000", script)
+        self.assertIn("$_.pid -eq $sample.pid -and $_.created -eq $sample.created", script)
+        self.assertIn("if($unexpected.Count -eq 0){$quiet.Reset();continue}", script)
+        self.assertIn("if(-not $quiet.IsRunning){$quiet.Start()}", script)
+        self.assertIn("quiet_observed_milliseconds=$quiet.ElapsedMilliseconds", script)
+        for product in ("astudio", "workbuddy"):
+            self.assertIn("$ownedExitGraceMs=0", process_cleanup_script("proof.json", GUEST_WORKSPACE, product=product))
+
     def test_windows_missing_file_envelope_is_not_an_artifact(self):
         client = AgentCubeClient(AgentCubeConfig(user_id="test", auth_token="test"))
         response = Mock(status_code=200, headers={"Content-Type": "application/json; charset=utf-8"})
