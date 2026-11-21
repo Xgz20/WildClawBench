@@ -8,13 +8,14 @@ from dataclasses import replace
 from datetime import datetime, timezone
 import io
 import json
+import os
 from pathlib import Path
 import shlex
 import time
 import uuid
 import zipfile
 
-from .agentcube import AgentCubeClient, AgentCubeConfig, PlatformError
+from .agentcube import AgentCubeClient, AgentCubeConfig, PlatformError, validate_chatgpt_gateway
 from .artifacts import _members, _protect, copy_stream_readonly, inventory, quarantine_local_metadata, remove_temporary_tree
 from .common import E2EError, atomic_json, digest, file_sha256, identifier, inside, read_json, utc_now
 from .trace import normalize_rollout, windows_equal
@@ -30,12 +31,17 @@ class ObservationPaused(E2EError):
     pass
 
 
-def powershell(script: str) -> str:
+def _powershell_arguments(script: str) -> list[str]:
     compressed = base64.b64encode(gzip.compress(script.encode("utf-8"), mtime=0)).decode()
     bootstrap = ("$m=[IO.MemoryStream]::new([Convert]::FromBase64String('" + compressed + "'));"
                  "$g=[IO.Compression.GZipStream]::new($m,[IO.Compression.CompressionMode]::Decompress);"
                  "$r=[IO.StreamReader]::new($g);&([ScriptBlock]::Create($r.ReadToEnd()))")
-    return "powershell -NoProfile -NonInteractive -EncodedCommand " + base64.b64encode(bootstrap.encode("utf-16-le")).decode()
+    encoded = base64.b64encode(bootstrap.encode("utf-16-le")).decode()
+    return ["-NoProfile", "-NonInteractive", "-EncodedCommand", encoded]
+
+
+def powershell(script: str) -> str:
+    return " ".join(["powershell", *_powershell_arguments(script)])
 
 
 def _decode_output(result: dict):
@@ -88,8 +94,10 @@ foreach($p in ($targets|Sort-Object @{Expression={if($_.pid -eq $proof.root_pid)
  for($retry=0;$live -and -not $live.ExecutablePath -and $retry -lt 20;$retry++){Start-Sleep -Milliseconds 100;$live=Get-CimInstance Win32_Process -Filter ('ProcessId='+$p.pid)};
  if($live){$current=Snap $live;if($current.created -ne $p.created -or $current.path -ne $p.path){throw 'PROCESS_IDENTITY_CHANGED'};Stop-Process -Id $p.pid -Force -ErrorAction Stop}
 };
-$watch=[Diagnostics.Stopwatch]::StartNew();$late=$false;$after=@();
-while($watch.ElapsedMilliseconds -lt 5000){
+$ownedExitGraceMs=__OWNED_EXIT_GRACE_MS__;
+$settle=[Diagnostics.Stopwatch]::StartNew();
+$quiet=[Diagnostics.Stopwatch]::StartNew();$late=$false;$after=@();
+while($quiet.ElapsedMilliseconds -lt 5000){
  Start-Sleep -Milliseconds 250;
  $after=@(Get-CimInstance Win32_Process|Where-Object {
    $same=$false;foreach($old in $targets){if([int]$_.ProcessId -eq $old.pid -and $_.CreationDate.ToUniversalTime().ToString('o') -eq $old.created){$same=$true}};
@@ -98,16 +106,47 @@ while($watch.ElapsedMilliseconds -lt 5000){
    ($_.ExecutablePath -and ($_.ExecutablePath -like '*\Programs\AStudio\*' -or $_.ExecutablePath -like '*\Programs\AStudio Data\*')) -or
    ($_.CommandLine -and $_.CommandLine.IndexOf($workspace,[StringComparison]::OrdinalIgnoreCase) -ge 0)
  }|ForEach-Object {Snap $_});
- if($after.Count -ne 0){$late=$true;break}
+ if($after.Count -ne 0){
+   if($settle.ElapsedMilliseconds -lt $ownedExitGraceMs){
+     # Stop-Process can return before CIM drops a terminated process.
+     # Wait for the same PID and creation time, including pathless CIM entries.
+     $unexpected=@($after|Where-Object {
+       $sample=$_;
+       -not ($targets|Where-Object {$_.pid -eq $sample.pid -and $_.created -eq $sample.created}|Select-Object -First 1)
+     });
+     if($unexpected.Count -eq 0){$quiet.Reset();continue}
+   };
+   $late=$true;break
+ };
+ if(-not $quiet.IsRunning){$quiet.Start()}
 };
-$proof.phase='completed';foreach($entry in @{after=$after;late_process_detected=$late;quiet_observed_milliseconds=$watch.ElapsedMilliseconds}.GetEnumerator()){$proof|Add-Member -NotePropertyName $entry.Key -NotePropertyValue $entry.Value -Force};$proof.success=(-not $late -and $after.Count -eq 0 -and $watch.ElapsedMilliseconds -ge 5000);Save $proof;
+$proof.phase='completed';foreach($entry in @{after=$after;late_process_detected=$late;quiet_observed_milliseconds=$quiet.ElapsedMilliseconds}.GetEnumerator()){$proof|Add-Member -NotePropertyName $entry.Key -NotePropertyValue $entry.Value -Force};$proof.success=(-not $late -and $after.Count -eq 0 -and $quiet.ElapsedMilliseconds -ge 5000);Save $proof;
 [Console]::Out.Write([Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes((ConvertTo-Json -InputObject $proof -Depth 15 -Compress))));
 """.replace("__PROOF__", "'" + proof_path.replace("'", "''") + "'").replace(
         "__WORKSPACE__", "'" + workspace.replace("'", "''") + "'")
     if product == "workbuddy":
         script=script.replace('AStudio.exe','WorkBuddy.exe').replace('Programs\\AStudio\\','Programs\\WorkBuddy\\').replace('Programs\\AStudio Data\\','Programs\\WorkBuddy Data\\')
+    elif product == "chatgpt-desktop":
+        package = r"*\WindowsApps\OpenAI.Codex_*\*"
+        script = script.replace("AStudio.exe", "ChatGPT.exe")
+        script = script.replace(
+            "$apps=@($all|Where-Object {$_.Name -ieq 'ChatGPT.exe'});",
+            f"$apps=@($all|Where-Object {{$_.ExecutablePath -like '{package}'}});",
+        )
+        script = script.replace(
+            "$roots=@($apps|Where-Object {$appIds -notcontains [int]$_.ParentProcessId});",
+            "$roots=@($apps|Where-Object {$_.Name -ieq 'ChatGPT.exe' -and $appIds -notcontains [int]$_.ParentProcessId});",
+        )
+        script = script.replace(
+            'foreach($p in @($all|Where-Object {$_.CommandLine -and',
+            "foreach($app in $apps){if(-not $app.CreationDate){throw 'HARNESS_PROCESS_IDENTITY_UNAVAILABLE'};[void]$ids.Add([int]$app.ProcessId)};\n"
+            'foreach($p in @($all|Where-Object {$_.CommandLine -and',
+        )
+        script = script.replace("($_.Name -ieq 'ChatGPT.exe') -or", "")
+        script = script.replace(r"*\Programs\AStudio\*", package)
+        script = script.replace(r" -or $_.ExecutablePath -like '*\Programs\AStudio Data\*'", "")
     elif product != "astudio": raise E2EError("UNSUPPORTED_PROCESS_CLEANUP_PRODUCT")
-    return script
+    return script.replace("__OWNED_EXIT_GRACE_MS__", "15000" if product == "chatgpt-desktop" else "0")
 
 
 
@@ -247,14 +286,29 @@ class AStudioSandboxDriver:
         raise E2EError("VM_HEALTH_INCOMPLETE: " + str(last))
 
     def _inventory_native(self, sid):
+        file_hash = "(Get-FileHash -LiteralPath $_.FullName -Algorithm SHA256).Hash.ToLower()"
+        if self.product == "chatgpt-desktop":
+            # Codex Desktop can keep its rollout open for writing after task_complete.
+            file_hash = r"""
+$stream = [IO.File]::Open($_.FullName, [IO.FileMode]::Open, [IO.FileAccess]::Read,
+    ([IO.FileShare]::ReadWrite -bor [IO.FileShare]::Delete))
+try {
+    $size = $_.Length
+    if ($stream.Length -ne $size) { throw 'NATIVE_LENGTH_CHANGED_BEFORE_HASH' }
+    $hash = (Get-FileHash -InputStream $stream -Algorithm SHA256).Hash
+    if ($stream.Position -ne $size -or $stream.Length -ne $size) { throw 'NATIVE_LENGTH_CHANGED_DURING_HASH' }
+    $hash.ToLowerInvariant()
+} finally { $stream.Dispose() }
+"""
         script = ("$ErrorActionPreference='Stop';$ProgressPreference='SilentlyContinue';$rows=@();"
                   "if(Test-Path -LiteralPath '" + self.native_root + "'){$rows=@(Get-ChildItem -LiteralPath '"
                   + self.native_root + "' -Recurse -Filter '" + self.native_pattern + "' -File|Select-Object FullName,Length,"
-                  "@{Name='Sha256';Expression={(Get-FileHash -LiteralPath $_.FullName -Algorithm SHA256).Hash.ToLower()}})};"
+                  "@{Name='Sha256';Expression={" + file_hash + "}})};"
                   "$out=ConvertTo-Json -InputObject $rows -Compress;"
                   "[Console]::Out.Write([Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes($out)))")
         rows = _decode_output(self.client.windows_execute(sid, powershell(script), timeout=120))
-        if not isinstance(rows, list) or len(rows) > 10_000:
+        if (not isinstance(rows, list) or len(rows) > 10_000
+                or (self.product == "chatgpt-desktop" and any(not row.get("Sha256") for row in rows))):
             raise E2EError("NATIVE_INVENTORY_INVALID")
         return {row["FullName"]: row for row in rows}
 
@@ -282,9 +336,12 @@ class AStudioSandboxDriver:
             proposed={"mode":"代码开发","max_mode":self.unit.get("max_mode",False),"plan_mode":False,"ask_mode":False,
                       "permission":"full access"}
             ui={key:value for key,value in proposed.items() if key in getattr(self,"ui_fields",set(proposed))}
+        product_config = {"model": self.unit["model"], "ui": ui}
+        if self.product == "chatgpt-desktop":
+            product_config = self._desktop_product_config()
         request = {"schema_version": 2, "product": self.product, "instruction_file": "/run/wgui/instruction.txt",
                    "workspace": {"guest": GUEST_WORKSPACE}, "timeout_sec": self.unit["timeout_override"],
-                   "product_config": {"model": self.unit["model"], "ui": ui}}
+                   "product_config": product_config}
         collect = {"schema_version": 2, "workspace": {"guest": GUEST_WORKSPACE}}
         self.client.upload(sid, "/run/wgui/run-request.json", json.dumps(request).encode())
         self.client.upload(sid, "/run/wgui/collect-request.json", json.dumps(collect).encode())
@@ -350,7 +407,13 @@ class AStudioSandboxDriver:
                 self._phase("COLLECTING", process_cleanup_intent={"path": proof_path, "at": utc_now()})
             # The guest resumes the original target identities from its durable
             # proof and returns base64, preserving JSON bytes across the gateway.
-            proof = _decode_output(self.client.windows_execute(sid, powershell(process_cleanup_script(proof_path, GUEST_WORKSPACE, product=self.product)), timeout=120))
+            script = process_cleanup_script(proof_path, GUEST_WORKSPACE, product=self.product)
+            if self.product == "chatgpt-desktop":
+                # Run PowerShell directly to avoid cmd.exe's shorter command length limit.
+                command = ["powershell.exe", *_powershell_arguments(script)]
+            else:
+                command = powershell(script)
+            proof = _decode_output(self.client.windows_execute(sid, command, timeout=120))
             if proof.get("phase") == "completed":
                 atomic_json(path, proof)
         if (proof.get("schema") != "wildclawbench.agentcube-process-cleanup/v1" or proof.get("phase") != "completed"
@@ -382,7 +445,8 @@ class AStudioSandboxDriver:
             local.write_bytes(data)
             try:
                 binding = normalize_rollout(local, identity=identity, prompt=prompt, guest_cwd=GUEST_WORKSPACE,
-                                            requested_model=self._native_model(), requested_effort=self.unit.get("reasoning_effort"), report=report)
+                                            requested_model=self._native_model(), requested_effort=self.unit.get("reasoning_effort"), report=report,
+                                            desktop=self.product == "chatgpt-desktop")
                 bound.append((local, binding))
             except E2EError as error:
                 atomic_json(self.staging / "metadata" / (stage + "-" + name + ".binding-error.json"), {"error": str(error)})
@@ -395,6 +459,9 @@ class AStudioSandboxDriver:
     def _prepare_runtime(self, sid):
         from .windows_runtime import prepare_runtime
         prepare_runtime(self,sid,WGUI,powershell)
+
+    def _task_run_command(self) -> str:
+        return WGUI + " task run --request /run/wgui/run-request.json --output /logs/artifacts/run"
 
     def execute(self) -> dict:
         self.preflight()
@@ -419,7 +486,7 @@ class AStudioSandboxDriver:
             atomic_json(self.staging / "metadata/native-before.json", before)
             self._phase("PREPARING", native_before=before)
         self._phase("RUNNING")
-        result = self._job("task-run", WGUI + " task run --request /run/wgui/run-request.json --output /logs/artifacts/run",
+        result = self._job("task-run", self._task_run_command(),
                            timeout=self.unit["timeout_override"] + 1800)
         atomic_json(self.staging / "metadata/task-run-process.json", result)
         report_bytes = self.client.download(sid, "/logs/artifacts/run/report.json")
@@ -610,3 +677,54 @@ print(json.dumps({
 
 
 DRIVERS[('agentcube','workbuddy')]=WorkBuddySandboxDriver
+
+
+class ChatGPTDesktopSandboxDriver(AStudioSandboxDriver):
+    product = "chatgpt-desktop"
+    native_root = r"C:\Users\Docker\.codex\sessions"
+    _credential_path = "/run/wgui/.chatgpt-gateway-key"
+
+    def preflight(self):
+        super().preflight()
+        if self.unit["model"] != "gpt-6.2-sol" or self.unit["reasoning_effort"] != "low":
+            raise E2EError("CHATGPT_PILOT_REQUIRES_GPT_6_2_SOL_LOW")
+        validate_chatgpt_gateway(self.config.chatgpt_gateway_url or "")
+        if not self.store.get(self.key).get("dispatch_armed_at") and not self._gateway_key():
+            raise E2EError("WCB_CHATGPT_API_KEY_REQUIRED")
+
+    @staticmethod
+    def _gateway_key() -> str:
+        return os.environ.get("WCB_CHATGPT_API_KEY", "").strip()
+
+    def _prepare_runtime(self, sid):
+        key = self._gateway_key()
+        if not key:
+            raise E2EError("WCB_CHATGPT_API_KEY_REQUIRED")
+        self.client.checked(sid, "mkdir -p /run/wgui")
+        try:
+            self.client.upload_private(sid, self._credential_path, key.encode("utf-8"))
+        except PlatformError as error:
+            raise E2EError("CHATGPT_GATEWAY_CREDENTIAL_UPLOAD_FAILED") from error
+
+    def _desktop_product_config(self) -> dict:
+        return {
+            "model": self.unit["model"],
+            "model_connection": {
+                "provider": "openai",
+                "base_url": self.config.chatgpt_gateway_url,
+                "api_key_env": "WGUI_CHATGPT_API_KEY",
+            },
+            "ui": {"mode": "codex", "reasoning": "low", "permission": "ask for approval"},
+        }
+
+    def _task_run_command(self) -> str:
+        return (
+            "set +x; set -e; "
+            f'test "$(stat -c %a {self._credential_path})" = 600; '
+            f"WGUI_CHATGPT_API_KEY=$(cat {self._credential_path}); "
+            f"unlink {self._credential_path}; "
+            "export WGUI_CHATGPT_API_KEY; exec " + super()._task_run_command()
+        )
+
+
+DRIVERS[("agentcube", "chatgpt-desktop")] = ChatGPTDesktopSandboxDriver

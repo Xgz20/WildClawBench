@@ -287,13 +287,17 @@ def normalize_plan(raw: dict) -> dict:
                 "timeout_override": raw_unit.get("timeout_override", plan["timeout_override"])}
         if not isinstance(unit["model"], str) or not unit["model"].strip():
             raise E2EError("TESTED_MODEL_REQUIRED")
-        if unit["harness"] not in {"astronstudio", "workbuddy"} or unit["backend"] != "agentcube":
+        if unit["harness"] not in {"astronstudio", "workbuddy", "chatgpt-desktop"} or unit["backend"] != "agentcube":
             raise E2EError("SANDBOX_DRIVER_UNAVAILABLE: " + str(unit["harness"]))
         if type(unit["max_concurrency"]) is not int or unit["max_concurrency"] < 1:
             raise E2EError("UNIT_CONCURRENCY_INVALID")
         if type(unit["timeout_override"]) is not int or unit["timeout_override"] < 1:
             raise E2EError("UNIT_TIMEOUT_INVALID")
-        if unit["reasoning_effort"] is not None and str(unit["reasoning_effort"]).casefold() not in {"none", "high", "max"}:
+        if unit["harness"] == "chatgpt-desktop":
+            if unit["reasoning_effort"] not in {None, "low"}:
+                raise E2EError("CHATGPT_DESKTOP_REASONING_UNSUPPORTED")
+            unit["reasoning_effort"] = "low"
+        elif unit["reasoning_effort"] is not None and str(unit["reasoning_effort"]).casefold() not in {"none", "high", "max"}:
             raise E2EError("ASTUDIO_REASONING_UNSUPPORTED")
         if unit["harness"] == "workbuddy":
             if unit["reasoning_effort"] not in {None,"none"}: raise E2EError("WORKBUDDY_USES_MAX_MODE_NOT_REASONING")

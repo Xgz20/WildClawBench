@@ -13,7 +13,10 @@ import unittest
 from unittest.mock import Mock, patch
 
 from src.e2e.agentcube import AgentCubeClient, AgentCubeConfig
-from src.e2e.backend import AStudioSandboxDriver, WorkBuddySandboxDriver, GUEST_WORKSPACE, NATIVE_ROOT, powershell, process_cleanup_script
+from src.e2e.backend import (
+    AStudioSandboxDriver, ChatGPTDesktopSandboxDriver, WorkBuddySandboxDriver,
+    GUEST_WORKSPACE, NATIVE_ROOT, powershell, process_cleanup_script,
+)
 from src.e2e.cli import build_parser, _run
 from src.e2e.common import E2EError, digest
 
@@ -85,6 +88,31 @@ class BackendTests(unittest.TestCase):
         self.assertIn("CLEANUP_PROOF_IDENTITY_MISMATCH", script)
         self.assertIn("WORKSPACE_PROCESS_IDENTITY_UNAVAILABLE", script)
 
+    def test_chatgpt_cleanup_waits_for_the_original_process_to_disappear(self):
+        script = process_cleanup_script(
+            r"C:\Windows\Temp\wcb-cleanup-attempt.json",
+            GUEST_WORKSPACE,
+            product="chatgpt-desktop",
+        )
+        self.assertIn("$ownedExitGraceMs=15000", script)
+        self.assertIn("$_.pid -eq $sample.pid -and $_.created -eq $sample.created", script)
+        self.assertIn("if($unexpected.Count -eq 0){$quiet.Reset();continue}", script)
+        self.assertIn("if(-not $quiet.IsRunning){$quiet.Start()}", script)
+        self.assertIn("quiet_observed_milliseconds=$quiet.ElapsedMilliseconds", script)
+        for product in ("astudio", "workbuddy"):
+            self.assertIn("$ownedExitGraceMs=0", process_cleanup_script("proof.json", GUEST_WORKSPACE, product=product))
+
+    def test_windows_execute_preserves_explicit_argument_arrays(self):
+        client = AgentCubeClient(AgentCubeConfig(user_id="test", auth_token="test"))
+        self.addCleanup(client.close)
+        response = Mock(status_code=200)
+        response.json.return_value = {"code": 0, "data": {"returncode": 0}}
+        client._request = Mock(return_value=response)
+        args = ["powershell.exe", "-EncodedCommand", "A" * 8200]
+        for command, shell in ((args, False), ("echo legacy", True)):
+            self.assertEqual(client.windows_execute("session", command), {"returncode": 0})
+            self.assertEqual(client._request.call_args.kwargs["json"], {"command": command, "shell": shell})
+
     def test_windows_missing_file_envelope_is_not_an_artifact(self):
         client = AgentCubeClient(AgentCubeConfig(user_id="test", auth_token="test"))
         response = Mock(status_code=200, headers={"Content-Type": "application/json; charset=utf-8"})
@@ -110,21 +138,28 @@ class BackendTests(unittest.TestCase):
             self.assertTrue(binding["verified"])
 
     def test_cleanup_discovery_can_resume_when_no_mutation_proof_exists(self):
-        with tempfile.TemporaryDirectory() as directory:
-            driver = object.__new__(AStudioSandboxDriver)
-            driver.staging = Path(directory)
-            driver.key = "key"
-            driver.store = Mock()
-            driver.store.get.return_value = {"attempt_id": "exec-test", "process_cleanup_intent": {"at": "earlier"}}
-            driver.client = Mock()
-            driver.client.windows_download.side_effect = FileNotFoundError
-            proof = {"schema": "wildclawbench.agentcube-process-cleanup/v1", "phase": "completed",
-                     "supported": True, "success": True, "after": [], "before": [], "root_pid": None,
-                     "disposition": "already_exited", "quiet_observed_milliseconds": 5000, "workspace": GUEST_WORKSPACE}
-            driver.client.windows_execute.return_value = {"output": base64.b64encode(json.dumps(proof).encode()).decode()}
-            self.assertEqual(driver._cleanup_processes("sid"), proof)
-            self.assertTrue(driver.client.windows_execute.called)
-            driver.client.windows_download.assert_not_called()
+        for driver_type in (AStudioSandboxDriver, ChatGPTDesktopSandboxDriver):
+            with self.subTest(driver=driver_type), tempfile.TemporaryDirectory() as directory:
+                driver = object.__new__(driver_type)
+                driver.staging = Path(directory)
+                driver.key = "key"
+                driver.store = Mock()
+                attempt = "exec-0123456789abcdef0123456789abcdef"
+                driver.store.get.return_value = {"attempt_id": attempt, "process_cleanup_intent": {"at": "earlier"}}
+                driver.client = Mock()
+                driver.client.windows_download.side_effect = FileNotFoundError
+                proof = {"schema": "wildclawbench.agentcube-process-cleanup/v1", "phase": "completed",
+                         "supported": True, "success": True, "after": [], "before": [], "root_pid": None,
+                         "disposition": "already_exited", "quiet_observed_milliseconds": 5000, "workspace": GUEST_WORKSPACE}
+                driver.client.windows_execute.return_value = {"output": base64.b64encode(json.dumps(proof).encode()).decode()}
+                self.assertEqual(driver._cleanup_processes("sid"), proof)
+                command = driver.client.windows_execute.call_args.args[1]
+                if driver_type is ChatGPTDesktopSandboxDriver:
+                    self.assertIsInstance(command, list)
+                    self.assertEqual(command[:-1], ["powershell.exe", "-NoProfile", "-NonInteractive", "-EncodedCommand"])
+                else:
+                    self.assertIsInstance(command, str)
+                driver.client.windows_download.assert_not_called()
 
     def test_timeout_salvage_quiesces_agent_and_preserves_prior_live_snapshot(self):
         with tempfile.TemporaryDirectory() as directory:

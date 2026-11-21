@@ -24,11 +24,12 @@ class NativeMcpTests(unittest.TestCase):
     def tearDown(self):
         self.temp.cleanup()
 
-    def normalize(self):
+    def normalize(self, *, prompt="prompt", desktop=False):
         self.path.write_text("\n".join(json.dumps(row) for row in self.rows), encoding="utf-8")
         return normalize_rollout(self.path, identity={"batch_id": "b", "unit_id": "u", "task_id": "t", "attempt_id": "a"},
-                                 prompt="prompt", guest_cwd=GUEST, requested_model="spark-x2.6", requested_effort="high",
-                                 report={"usage": {"input_tokens": 100, "output_tokens": 10, "cache_tokens": 50}})
+                                 prompt=prompt, guest_cwd=GUEST, requested_model="spark-x2.6", requested_effort="high",
+                                 report={"usage": {"input_tokens": 100, "output_tokens": 10, "cache_tokens": 50}},
+                                 desktop=desktop)
 
     def test_mcp_end_keeps_native_metadata_without_duplicating_tools(self):
         value = self.normalize()
@@ -46,6 +47,24 @@ class NativeMcpTests(unittest.TestCase):
         self.assertEqual(binding["prompt_transport"]["kind"], "astudio-single-pasted-text-json")
         self.assertEqual(next(event for event in binding["events"] if event["type"] == "user_message")["content"], message)
         self.assertEqual(binding["missing"], [])
+
+    def test_chatgpt_markdown_escapes_bind_only_the_exact_prompt(self):
+        prompt = "读取 `input.txt`。\n\n写入 `result.txt`。"
+        text = "读取 \\`input.txt\\`。\\\n\\\n写入 \\`result.txt\\`。\n"
+        self.rows[0]["payload"]["originator"] = "Codex Desktop"
+        part = {"type": "text", "text": text}
+        self.rows[2]["payload"] = {
+            "type": "item_completed", "thread_id": "session", "turn_id": "turn",
+            "item": {"type": "UserMessage", "content": [part]},
+        }
+        self.rows.insert(2, {"type": "event_msg", "payload": {"type": "task_started", "turn_id": "turn"}})
+        binding = self.normalize(prompt=prompt, desktop=True)
+        self.assertEqual(binding["prompt_transport"]["kind"], "chatgpt-desktop-markdown-escaped")
+        self.assertEqual(next(event["content"] for event in binding["events"]
+                              if event["type"] == "user_message"), prompt)
+        part["text"] = text.replace("result.txt", "different.txt")
+        with self.assertRaisesRegex(E2EError, "NATIVE_PROMPT_MISMATCH"):
+            self.normalize(prompt=prompt, desktop=True)
 
     def test_client_tool_search_preserves_the_call_and_catalog_result(self):
         tools = [{"type": "function", "name": "preview", "parameters": {"type": "object"}}]

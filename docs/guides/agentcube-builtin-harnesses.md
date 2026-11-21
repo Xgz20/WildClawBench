@@ -11,3 +11,16 @@ WorkBuddy 原件保留未裁剪项目 JSONL、控制层报告、诊断、终态 
 `environment-status` 是公开 v1 只读命令。`--probe` 仅探测 DNS 与已发布健康端点，不创建沙箱、不调用模型；凭据配置通过不等于鉴权有效。AgentCube 当前的公开工作负载 API 没有模板内模型列表或实时配额接口，因此能力来源与实际部署、配置上限与云配额分别标记。
 
 历史发行和既有批次不原地升级。先测试新发行，再将新建批次默认执行器指向新的不可变 checkout；旧批次与旧评分记录沿用原读取器。
+
+## ChatGPT 桌面端试点
+
+ChatGPT Desktop profile 绑定独立 AgentCube 模板。通过控制器能力发布工具的
+`--chatgpt-desktop-template` 参数发布该 profile。当前范围为 General、Codex Local、
+`gpt-6.2-sol / low` 和客户端的「请求批准」权限。批次详情中的 Harness 名称会标明客户端模式。
+
+执行器的 AgentCube 配置通过 `chatgpt_gateway_url` 指定网关 HTTPS 基地址。评测服务进程
+通过环境变量 `WCB_CHATGPT_API_KEY` 接收相应凭据。控制层只在一次性 Windows 运行副本中
+准备客户端登录与网关设置。能力目录、模板、镜像和批次的请求只记录非敏感配置。
+
+原生 rollout 用客户端来源、Windows 项目路径、Prompt、会话和轮次标识做绑定。原件随
+标准执行备份封存，评分与报告继续使用 General 现有入口。
