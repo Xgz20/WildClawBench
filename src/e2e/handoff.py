@@ -14,7 +14,7 @@ from .common import E2EError, atomic_json, digest, file_sha256, inside, load_scr
 from .compatibility import verify_installed
 from .engine import load_batch, verify_ready
 from .store import BatchStore
-from .trace import ADAPTER, ensure_resource_coverage
+from .trace import ADAPTER, _is_desktop_user, ensure_resource_coverage
 
 
 def _artifact(path: Path, root: Path, *, typed=False):
@@ -136,9 +136,15 @@ def _general_context(batch: Path, temporary: Path, manifest: dict, item: dict, t
     else:
         native_path = next((evidence / "trace/raw").glob("rollout-*.jsonl"))
         native_rows = [json.loads(line) for line in native_path.read_text(encoding="utf-8-sig").splitlines() if line.strip()]
-        users = [row for row in native_rows if row.get("payload", {}).get("type") == "user_message"]
+        if unit["harness"] == "chatgpt-desktop":
+            users = [row for row in native_rows if _is_desktop_user(row)]
+        else:
+            users = [row for row in native_rows if row.get("payload", {}).get("type") == "user_message"]
         terminals = [row for row in native_rows if row.get("payload", {}).get("type") == "task_complete"]
-        started_at=users[0].get("timestamp");finished_at=terminals[0].get("timestamp")
+        if len(users) != 1 or len(terminals) != 1:
+            raise E2EError("HANDOFF_NATIVE_TIMESTAMPS_AMBIGUOUS")
+        started_at = users[0].get("timestamp")
+        finished_at = terminals[0].get("timestamp")
     record = {"schema_id": "urn:wildclawbench:schema:general-e2e:execution-record:v1", "schema_version": 1,
               "identity": identity, "dataset": task["dataset"], "phase": "COMPLETED", "harness": public_unit["harness"],
               "model": {"requested_id": unit["model"], "actual_id": ready["actual_model"],
