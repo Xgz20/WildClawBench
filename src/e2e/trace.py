@@ -16,7 +16,7 @@ DESKTOP_ADAPTER = "agentcube-chatgpt-desktop-native"
 
 _DESKTOP_MIRRORED_ITEMS = {
     "UserMessage", "AgentMessage", "Reasoning", "CommandExecution", "FileChange",
-    "McpToolCall",
+    "McpToolCall", "ImageView",
 }
 _DESKTOP_CONTEXT_ITEMS = {"additional_tools", "configuration_update"}
 

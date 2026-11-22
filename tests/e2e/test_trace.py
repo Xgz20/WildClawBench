@@ -112,6 +112,13 @@ class NativeMcpTests(unittest.TestCase):
         self.assertEqual(len(binding["calls"]), 1)
         event = next(e for e in binding["events"] if e["type"] == "tool_call")
         self.assertEqual(event["tool"]["name"], "mcp__cua_repl__js")
+        self.rows.insert(-1, {"type": "event_msg", "payload": {
+            "type": "item_completed", "thread_id": "session", "turn_id": "turn",
+            "item": {"type": "ImageView", "id": "image-1", "path": "private-scoring/evidence/page.jpg"},
+        }})
+        image_binding = self.normalize(desktop=True)
+        self.assertEqual(image_binding["missing"], [])
+        self.assertEqual(len(image_binding["calls"]), 1)
         self.rows[-2]["payload"]["item"]["type"] = "UnknownDesktopOperation"
         self.assertIn("unsupported_native_type:event_msg/item_completed", self.normalize(desktop=True)["missing"])
 
