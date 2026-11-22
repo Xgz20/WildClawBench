@@ -120,8 +120,10 @@ class DesktopScoringTests(unittest.TestCase):
                     "call_id": "capture", "result": {"path": "private-scoring/evidence/desktop.png", "sha256": digest},
                 }},
             ]}
-            result = scoring.verify_chatgpt_browser(binding, private, score)
-            self.assertEqual(result["screenshots"][0]["sha256"], digest)
+            for name in ("mcp__node_repl__js", "mcp__cua_repl__js", "mcp__cua_repl.js"):
+                binding["events"][0]["tool"]["name"] = name
+                result = scoring.verify_chatgpt_browser(binding, private, score)
+                self.assertEqual(result["screenshots"][0]["sha256"], digest)
             image.write_bytes(image.read_bytes() + b"changed")
             with self.assertRaisesRegex(E2EError, "DESKTOP_SCORING_NATIVE_CAPTURE_MISSING"):
                 scoring.verify_chatgpt_browser(binding, private, score)

@@ -75,6 +75,28 @@ class NativeMcpTests(unittest.TestCase):
         with self.assertRaisesRegex(E2EError, "NATIVE_PROMPT_MISMATCH"):
             self.normalize(prompt=prompt, desktop=True)
 
+    def test_desktop_mcp_namespace_and_mirror_keep_one_canonical_call(self):
+        self.rows[0]["payload"]["originator"] = "Codex Desktop"
+        self.rows[2]["payload"] = {
+            "type": "item_completed", "thread_id": "session", "turn_id": "turn",
+            "item": {"type": "UserMessage", "content": [{"type": "text", "text": "prompt"}]},
+        }
+        self.rows.insert(2, {"type": "event_msg", "payload": {"type": "task_started", "turn_id": "turn"}})
+        call = next(r["payload"] for r in self.rows if r["payload"].get("type") == "function_call")
+        call.update(name="js", namespace="mcp__cua_repl", arguments='{"code":"await tab.getScreenshot()"}')
+        self.end["invocation"] = {"server": "cua_repl", "tool": "js", "arguments": {"code": "await tab.getScreenshot()"}}
+        self.rows.insert(-1, {"type": "event_msg", "payload": {
+            "type": "item_completed", "thread_id": "session", "turn_id": "turn",
+            "item": {"type": "McpToolCall", "id": "call-1", "server": "cua_repl", "tool": "js", "status": "completed"},
+        }})
+        binding = self.normalize(desktop=True)
+        self.assertEqual(binding["missing"], [])
+        self.assertEqual(len(binding["calls"]), 1)
+        event = next(e for e in binding["events"] if e["type"] == "tool_call")
+        self.assertEqual(event["tool"]["name"], "mcp__cua_repl__js")
+        self.rows[-2]["payload"]["item"]["type"] = "UnknownDesktopOperation"
+        self.assertIn("unsupported_native_type:event_msg/item_completed", self.normalize(desktop=True)["missing"])
+
     def test_client_tool_search_preserves_the_call_and_catalog_result(self):
         tools = [{"type": "function", "name": "preview", "parameters": {"type": "object"}}]
         native = [

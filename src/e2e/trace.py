@@ -16,6 +16,7 @@ DESKTOP_ADAPTER = "agentcube-chatgpt-desktop-native"
 
 _DESKTOP_MIRRORED_ITEMS = {
     "UserMessage", "AgentMessage", "Reasoning", "CommandExecution", "FileChange",
+    "McpToolCall",
 }
 _DESKTOP_CONTEXT_ITEMS = {"additional_tools", "configuration_update"}
 
@@ -220,6 +221,12 @@ def normalize_rollout(path: Path, *, identity: dict, prompt: str, guest_cwd: str
             name = "tool_search" if kind == "tool_search_call" else payload.get("name")
             if not call_id or call_id in calls or not isinstance(name, str) or not name:
                 raise E2EError("NATIVE_CALL_ID_INVALID")
+            namespace = payload.get("namespace")
+            if desktop and isinstance(namespace, str) and namespace.startswith("mcp__"):
+                if not re.fullmatch(r"mcp__[A-Za-z0-9_]+", namespace):
+                    raise E2EError("NATIVE_CALL_NAMESPACE_INVALID")
+                if not name.startswith("mcp__"):
+                    name = namespace + "__" + name
             arguments = payload.get("arguments", payload.get("input"))
             if kind == "tool_search_call" and (
                     payload.get("execution") != "client" or not isinstance(arguments, dict)):

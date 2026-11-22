@@ -202,7 +202,9 @@ def verify_chatgpt_browser(binding, private, score_input):
     uploads = []
     for event in binding["events"]:
         tool = event.get("tool") or {}
-        if event["type"] == "tool_call" and tool.get("name") == "mcp__node_repl__js":
+        if event["type"] == "tool_call" and tool.get("name") in {
+            "mcp__node_repl__js", "mcp__cua_repl__js", "mcp__cua_repl.js",
+        }:
             arguments = tool.get("arguments")
             if isinstance(arguments, dict) and isinstance(arguments.get("code"), str):
                 calls[tool["call_id"]] = arguments["code"]
