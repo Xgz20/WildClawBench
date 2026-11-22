@@ -128,6 +128,39 @@ class DesktopScoringTests(unittest.TestCase):
             with self.assertRaisesRegex(E2EError, "DESKTOP_SCORING_NATIVE_CAPTURE_MISSING"):
                 scoring.verify_chatgpt_browser(binding, private, score)
 
+    def test_chatgpt_capture_helper_is_bound_to_its_native_definition_and_context(self):
+        def call(identifier, code, result, name="mcp__cua_repl__js"):
+            return [
+                {"type": "tool_call", "tool": {"call_id": identifier, "name": name, "arguments": {"code": code}}},
+                {"type": "tool_result", "tool": {"call_id": identifier, "result": result}},
+            ]
+
+        definition = ("let capture = async(url) => { const image = await tab.getScreenshot({emit:false}); "
+                      "const response = await fetch(url, {body:image}); nodeRepl.write(await response.text()); };")
+        with tempfile.TemporaryDirectory() as tmp:
+            private = Path(tmp)
+            image = private / "evidence/desktop.png"
+            image.parent.mkdir()
+            image.write_bytes(b"\x89PNG\r\n\x1a\n" + b"image")
+            score = {"site_url": "http://127.0.0.1:8080", "criteria": [
+                {"evidence": [{"type": "screenshot", "path": "evidence/desktop.png"}]},
+            ]}
+            receipt = {"path": "private-scoring/evidence/desktop.png", "sha256": file_sha256(image)}
+            declared = call("define", definition, {"text": "ready"})
+            captured = call("capture", "await capture(uploadUrl);", receipt)
+            result = scoring.verify_chatgpt_browser({"events": declared + captured}, private, score)
+            self.assertEqual(result["screenshots"][0]["capture_helper"],
+                             {"name": "capture", "definition_call_id": "define"})
+            invalid = [
+                declared + call("replace", "capture = async(url) => {};", {}) + captured,
+                call("fake", "nodeRepl.write(" + json.dumps(definition) + ");", {}) + captured,
+                call("other-context", definition, {}, name="mcp__node_repl__js") + captured,
+                declared + captured + call("duplicate", "await capture(uploadUrl);", receipt),
+            ]
+            for events in invalid:
+                with self.subTest(events=events), self.assertRaisesRegex(E2EError, "DESKTOP_SCORING_NATIVE_CAPTURE_MISSING"):
+                    scoring.verify_chatgpt_browser({"events": events}, private, score)
+
     def test_retry_after_release_failure_does_not_dispatch_twice(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)

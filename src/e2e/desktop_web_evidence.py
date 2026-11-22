@@ -194,12 +194,61 @@ def verify_native_browser(binding, private, score_input, *, raw_captures=None):
     return {"schema": "wildclawbench.astudio-web-visual-evidence/v1", "screenshots": evidence_chain}
 
 
+def _javascript_code_mask(code):
+    """Keep source positions while excluding strings/comments from helper checks."""
+    masked = list(code)
+    index = 0
+    while index < len(code):
+        end = index + 1
+        if code.startswith("//", index):
+            end = code.find("\n", index)
+            if end < 0:
+                end = len(code)
+        elif code.startswith("/*", index):
+            closing = code.find("*/", index + 2)
+            end = len(code) if closing < 0 else closing + 2
+        elif code[index] in "\"'`":
+            quote = code[index]
+            while end < len(code):
+                if code[end] == "\\":
+                    end += 2
+                elif code[end] == quote:
+                    end += 1
+                    break
+                else:
+                    end += 1
+        else:
+            index += 1
+            continue
+        masked[index:end] = ["\n" if char == "\n" else " " for char in code[index:end]]
+        index = end
+    return "".join(masked)
+
+
+def _capture_helper_definitions(masked):
+    definitions = {}
+    pattern = r"\b(?:let|const|var)\s+([A-Za-z_$][\w$]*)\s*=\s*async\s*\([^)]*\)\s*=>\s*\{"
+    for match in re.finditer(pattern, masked):
+        depth = 1
+        end = match.end()
+        while depth and end < len(masked):
+            depth += (masked[end] == "{") - (masked[end] == "}")
+            end += 1
+        body = masked[match.end():end - 1]
+        capture = re.search(r"\bawait\s+[\w$.]+\.getScreenshot\s*\(", body)
+        upload = re.search(r"\bawait\s+fetch\s*\(", body)
+        if not depth and capture and upload and capture.start() < upload.start():
+            definitions[match.group(1)] = (match.start(), match.end())
+    return definitions
+
+
 def verify_chatgpt_browser(binding, private, score_input):
     """Bind each receiver acknowledgement to bytes in a Codex Desktop turn."""
     _origin(score_input["site_url"])
     calls = {}
     observed = False
     uploads = []
+    helpers = {}
     for event in binding["events"]:
         tool = event.get("tool") or {}
         if event["type"] == "tool_call" and tool.get("name") in {
@@ -207,15 +256,32 @@ def verify_chatgpt_browser(binding, private, score_input):
         }:
             arguments = tool.get("arguments")
             if isinstance(arguments, dict) and isinstance(arguments.get("code"), str):
-                calls[tool["call_id"]] = arguments["code"]
+                calls[tool["call_id"]] = (tool["name"], arguments["code"])
         if event["type"] != "tool_result" or tool.get("call_id") not in calls:
             continue
-        code = calls.pop(tool["call_id"])
+        namespace, code = calls.pop(tool["call_id"])
         output = json.dumps(tool.get("result"), ensure_ascii=False)
+        masked = _javascript_code_mask(code)
+        definitions = _capture_helper_definitions(masked)
+        known = helpers.setdefault(namespace, {})
+        # A rebinding invalidates the earlier definition; native contexts do not
+        # share helper state. Unrecognised replacements never inherit its proof.
+        for name in list(known):
+            if re.search(r"\b" + re.escape(name) + r"\s*(?:=(?!=|>)|\+\+|--|[+*/%-]=)", masked):
+                known.pop(name)
+        for name, (start, end) in definitions.items():
+            assignments = list(re.finditer(r"\b" + re.escape(name) + r"\s*=(?!=|>)", masked))
+            if all(start <= match.start() < end for match in assignments):
+                known[name] = tool["call_id"]
         if any(token in code for token in ("browser.tabs", ".playwright.", ".getScreenshot(")):
             observed = True
-        if ".getScreenshot(" in code and "fetch(" in code:
-            uploads.append((tool["call_id"], output))
+        helper = next((name for name in known
+                       if re.search(r"\bawait\s+" + re.escape(name) + r"\s*\(", masked)), None)
+        if ".getScreenshot(" in masked and "fetch(" in masked:
+            uploads.append((tool["call_id"], output, None))
+        elif helper:
+            observed = True
+            uploads.append((tool["call_id"], output, {"name": helper, "definition_call_id": known[helper]}))
     if not observed:
         raise E2EError("DESKTOP_SCORING_NATIVE_BROWSER_EVIDENCE_MISSING")
     screenshots = []
@@ -231,9 +297,11 @@ def verify_chatgpt_browser(binding, private, score_input):
         signature = formats.get(target.suffix.lower())
         if not signature or not header.startswith(signature):
             raise E2EError("DESKTOP_SCORING_SCREENSHOT_DRIFT")
-        matched = [call_id for call_id, output in uploads
+        matched = [(call_id, helper) for call_id, output, helper in uploads
                    if sha in output and "private-scoring/" + relative in output]
         if len(matched) != 1:
             raise E2EError("DESKTOP_SCORING_NATIVE_CAPTURE_MISSING")
-        screenshots.append({"path": relative, "bytes": size, "sha256": sha, "capture_call_id": matched[0]})
+        call_id, helper = matched[0]
+        screenshots.append({"path": relative, "bytes": size, "sha256": sha, "capture_call_id": call_id,
+                            **({"capture_helper": helper} if helper else {})})
     return {"schema": "wildclawbench.chatgpt-web-visual-evidence/v1", "screenshots": screenshots}
