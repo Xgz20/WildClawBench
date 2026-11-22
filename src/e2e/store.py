@@ -133,6 +133,86 @@ class BatchStore:
                 raise E2EError("EXECUTION_KEY_UNKNOWN")
             return self._row(row)
 
+    def versions(self, key: str | None = None) -> list[dict]:
+        """Return immutable attempts without changing the active execution set."""
+        with self.transaction() as db:
+            current = [self._row(row) for row in db.execute("SELECT * FROM executions ORDER BY ordinal")]
+            if key is not None and key not in {row["key"] for row in current}:
+                raise E2EError("EXECUTION_KEY_UNKNOWN")
+            history = []
+            if db.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='execution_history'").fetchone():
+                history = [json.loads(row[0]) for row in db.execute("SELECT data FROM execution_history ORDER BY version")]
+        active = {row["key"]: row["attempt_id"] for row in current}
+        return [{**row, "execution_version": row.get("execution_version", 1),
+                 "is_final": active.get(row["key"]) == row["attempt_id"]}
+                for row in [*history, *current] if key is None or row["key"] == key]
+
+    def get_version(self, key: str, attempt_id: str) -> dict:
+        matches = [row for row in self.versions(key) if row["attempt_id"] == attempt_id]
+        if len(matches) != 1:
+            raise E2EError("EXECUTION_VERSION_UNKNOWN")
+        return matches[0]
+
+    def rerun_case(self, unit_id: str, task_id: str, request_id: str, *, run_indices=None,
+                   expected_attempts=None, executor_revision=None) -> dict:
+        """Atomically replace only this case's selected rounds, retaining old attempts."""
+        if not isinstance(request_id, str) or not request_id or len(request_id) > 96:
+            raise E2EError("RERUN_REQUEST_ID_INVALID")
+        rounds = sorted(set(run_indices or []))
+        if any(type(value) is not int or value < 1 for value in rounds):
+            raise E2EError("RERUN_ROUND_INVALID")
+        expected = expected_attempts or {}
+        request = {"unit_id": unit_id, "task_id": task_id, "run_indices": rounds,
+                   "expected_attempts": expected, "executor_revision": executor_revision}
+        metadata_key = "case-rerun:" + request_id
+        with self.transaction() as db:
+            existing = db.execute("SELECT value FROM metadata WHERE key=?", (metadata_key,)).fetchone()
+            rows = [self._row(row) for row in db.execute("SELECT * FROM executions ORDER BY ordinal")]
+            if existing:
+                receipt = json.loads(existing[0])
+                if receipt["request_sha256"] != digest(request):
+                    raise E2EError("RERUN_REQUEST_CONFLICT")
+                active = {row["key"]: row["attempt_id"] for row in rows}
+                if any(active.get(key) != value for key, value in receipt["attempts"].items()):
+                    raise E2EError("RERUN_REQUEST_SUPERSEDED")
+                return {**receipt, "reused": True}
+            if any(row["resource_held"] or row["phase"] not in {"COMPLETED", "FAILED", "CANCELLED"} for row in rows):
+                raise E2EError("RERUN_REQUIRES_RELEASED_EXECUTIONS")
+            case = [row for row in rows if row["unit_id"] == unit_id and row["task_id"] == task_id]
+            if not case or set(rounds) - {row["run_index"] for row in case}:
+                raise E2EError("RERUN_CASE_OR_ROUND_UNKNOWN")
+            selected = [row for row in case if not rounds or row["run_index"] in rounds]
+            keys = {row["key"] for row in selected}
+            if not isinstance(expected, dict) or set(expected) - keys:
+                raise E2EError("RERUN_EXPECTED_ATTEMPTS_INVALID")
+            if any(expected.get(row["key"], row["attempt_id"]) != row["attempt_id"] for row in selected):
+                raise E2EError("RERUN_EXECUTION_VERSION_CONFLICT")
+            active_scores = db.execute("SELECT key,phase FROM scoring WHERE phase IN ('CLAIMED','RUNNING','NEEDS_ATTENTION')").fetchall()
+            if any(row["key"] in keys for row in active_scores):
+                raise E2EError("RERUN_SCORING_STILL_ACTIVE")
+            db.execute("CREATE TABLE IF NOT EXISTS execution_history (key TEXT NOT NULL,attempt_id TEXT NOT NULL,version INTEGER NOT NULL,data TEXT NOT NULL,scoring_data TEXT,PRIMARY KEY(key,attempt_id))")
+            attempts = {}
+            for row in selected:
+                version = row.get("execution_version", 1)
+                previous_score = db.execute("SELECT data FROM scoring WHERE key=?", (row["key"],)).fetchone()
+                historical = {**row, "execution_version": version, "superseded_at": utc_now()}
+                db.execute("INSERT INTO execution_history VALUES (?,?,?,?,?)", (
+                    row["key"], row["attempt_id"], version, json.dumps(historical), previous_score[0] if previous_score else None))
+                attempt = "exec-" + uuid.uuid4().hex
+                fresh = {key: row[key] for key in ("key", "unit_id", "task_id", "run_index")}
+                fresh.update(attempt_id=attempt, execution_root=(Path(row["execution_root"]).parent / attempt).as_posix(),
+                             execution_version=version + 1, previous_attempt_id=row["attempt_id"],
+                             rerun_request_id=request_id, executor_revision=executor_revision, created_at=utc_now())
+                db.execute("DELETE FROM scoring WHERE key=?", (row["key"],))
+                db.execute("UPDATE executions SET phase='PENDING',resource_held=0,data=? WHERE key=?", (json.dumps(fresh), row["key"]))
+                db.execute("INSERT INTO events(at,kind,item_key,data) VALUES (?,?,?,?)", (
+                    utc_now(), "EXECUTION_RERUN_REQUESTED", row["key"], json.dumps({"attempt_id": attempt,
+                    "previous_attempt_id": row["attempt_id"], "execution_version": version + 1, "request_id": request_id})))
+                attempts[row["key"]] = attempt
+            receipt = {"request_id": request_id, "request_sha256": digest(request), "attempts": attempts, "created_at": utc_now()}
+            db.execute("INSERT INTO metadata VALUES (?,?)", (metadata_key, json.dumps(receipt)))
+            return receipt
+
     def update(self, key: str, phase: str, *, resource_held: bool | None = None, **fields) -> dict:
         with self.transaction() as db:
             row = db.execute("SELECT * FROM executions WHERE key=?", (key,)).fetchone()

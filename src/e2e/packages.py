@@ -121,7 +121,7 @@ def _parent_general_report_inputs(batch: Path, stage: Path, manifest: dict, rows
 
 
 def export_package(batch: Path, output: Path, *, keys: list[str] | None = None, purpose="results", include_unsealed=False,
-                   verification_skill: Path | None = None) -> dict:
+                   verification_skill: Path | None = None, include_history=False) -> dict:
     manifest = load_batch(batch)
     if purpose not in {"results", "scoring"}:
         raise E2EError("EXPORT_PURPOSE_INVALID")
@@ -131,7 +131,12 @@ def export_package(batch: Path, output: Path, *, keys: list[str] | None = None, 
     rows = store.rows()
     if keys and set(keys) - {row["key"] for row in rows}:
         raise E2EError("EXPORT_EXECUTION_SELECTION_UNKNOWN")
-    selected = [row for row in rows if not keys or row["key"] in keys]
+    selected = [{**row, "is_final": True, "execution_version": row.get("execution_version", 1)}
+                for row in rows if not keys or row["key"] in keys]
+    selected_scope = [row["key"] for row in selected]
+    current_attempts = {row["key"]: row["attempt_id"] for row in selected}
+    if include_history:
+        selected = [row for row in store.versions() if row["key"] in current_attempts]
     if output.exists() or output.with_suffix(output.suffix + ".json").exists():
         raise E2EError("EXPORT_DESTINATION_EXISTS")
     output.parent.mkdir(parents=True, exist_ok=True)
@@ -176,7 +181,8 @@ def export_package(batch: Path, output: Path, *, keys: list[str] | None = None, 
             entry["supplements"] = supplements
             if purpose == "scoring" and (execution / "execution-ready.json").exists():
                 context_root = stage / "contexts" / capsule_id
-                context = export_scoring_context(batch, row["key"], context_root, verification_skill=verification_skill)
+                context = export_scoring_context(batch, row["key"], context_root, verification_skill=verification_skill,
+                                                 attempt_id=row["attempt_id"])
                 skill_source = Path(context["installed_skills"])
                 scene = context["scene"]
                 if scene not in skill_roots:
@@ -196,13 +202,15 @@ def export_package(batch: Path, output: Path, *, keys: list[str] | None = None, 
         atomic_json(stage / "parent-batch.json", manifest)
         index = {"schema": PACKAGE_SCHEMA, "parent_batch_id": batch.name, "parent_batch_sha256": digest(manifest),
                  "purpose": purpose, "created_at": utc_now(), "parent_scope": [row["key"] for row in rows],
-                 "selected_scope": [row["key"] for row in selected], "task_inputs": task_inputs,
+                 "selected_scope": selected_scope, "task_inputs": task_inputs,
+                 "version_policy": "all" if include_history else "final-only", "current_attempts": current_attempts,
                  "exported": rows_exported,
                  "unavailable_executions": [{"execution": row, "reason": "EXECUTION_NOT_SEALED" if row in selected else "NOT_SELECTED"} for row in rows
-                                            if row["key"] not in {entry["execution"]["key"] for entry in rows_exported}],
-                 "not_exported": [row["key"] for row in rows if row["key"] not in {entry["execution"]["key"] for entry in rows_exported}]}
-        index["local_reports"] = _local_report_inputs(batch, stage, manifest, rows_exported) if purpose == "scoring" else []
-        index["parent_reports"] = _parent_general_report_inputs(batch, stage, manifest, rows, rows_exported) if purpose == "scoring" else []
+                                            if (row["key"], row["attempt_id"]) not in {(entry["execution"]["key"], entry["execution"]["attempt_id"]) for entry in rows_exported}],
+                 "not_exported": [row["key"] for row in rows if (row["key"], row["attempt_id"]) not in {(entry["execution"]["key"], entry["execution"]["attempt_id"]) for entry in rows_exported}]}
+        final_exported = [entry for entry in rows_exported if entry["execution"].get("is_final", True)]
+        index["local_reports"] = _local_report_inputs(batch, stage, manifest, final_exported) if purpose == "scoring" else []
+        index["parent_reports"] = _parent_general_report_inputs(batch, stage, manifest, rows, final_exported) if purpose == "scoring" else []
         index["exporter_revision"] = _revision(Path(__file__).resolve().parents[2])
         atomic_json(stage / "package-index.json", index)
         (stage / "LOCAL_START.md").write_text(

@@ -335,9 +335,10 @@ def prepare_scoring_context(batch: Path, key: str, claim_id: str, *, verificatio
     return result
 
 
-def export_scoring_context(batch: Path, key: str, destination: Path, *, verification_skill: Path | None = None) -> dict:
+def export_scoring_context(batch: Path, key: str, destination: Path, *, verification_skill: Path | None = None,
+                           attempt_id: str | None = None) -> dict:
     manifest = load_batch(batch)
-    item = BatchStore(batch).get(key)
+    item = BatchStore(batch).get_version(key, attempt_id) if attempt_id else BatchStore(batch).get(key)
     ready = verify_ready(batch, item, manifest)
     unit = next(unit for unit in manifest["units"] if unit["unit_id"] == item["unit_id"])
     task = next(task for task in manifest["tasks"] if task["task_id"] == item["task_id"])

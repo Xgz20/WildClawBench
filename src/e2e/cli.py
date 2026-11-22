@@ -105,6 +105,18 @@ def build_parser() -> argparse.ArgumentParser:
     resume.add_argument("--unit-id", action="append", default=[])
     resume.add_argument('--task-id', action='append', default=[], help='显式仅恢复所选题；未选资源继续计入全局占用')
     resume.add_argument("--jsonl", action="store_true")
+    rerun = commands.add_parser("rerun-case", help="仅为一个用例的所选轮次创建新执行版本")
+    _batch(rerun)
+    _agentcube(rerun)
+    rerun.add_argument("--unit-id", required=True)
+    rerun.add_argument("--task-id", required=True)
+    rerun.add_argument("--run-index", type=int, action="append", default=[])
+    rerun.add_argument("--request-id", required=True)
+    rerun.add_argument("--expected-attempts", type=Path)
+    rerun.add_argument("--jsonl", action="store_true")
+    history = commands.add_parser("execution-history", help="只读查询一个用例轮次的历史版本")
+    _batch(history)
+    history.add_argument("--execution-key", required=True)
     recovery = commands.add_parser("recover-native-terminal", help="从同次原生完成证据恢复采集；不重发题目或生成 WGUI 回执")
     _batch(recovery)
     recovery.add_argument("--execution-key", required=True)
@@ -131,6 +143,7 @@ def build_parser() -> argparse.ArgumentParser:
     export.add_argument("--unit-id", action="append", default=[])
     export.add_argument("--run-index", type=int)
     export.add_argument("--purpose", choices=("results", "scoring"), default="results")
+    export.add_argument("--include-history", action="store_true", help="附带历史执行版本；报告入口仍只选择最终版本")
     export.add_argument("--verification-skill-dir", type=Path,
                         help="显式补充 General 采集校验器，保留原批次与评分材料绑定")
     export.add_argument("--output", type=Path, required=True)
@@ -248,6 +261,23 @@ def _resume(args):
                      task_ids=args.task_id, progress=progress)
 
 
+def _rerun_case(args):
+    from .agentcube import AgentCubeConfig
+    from .engine import run_batch
+    from .preparation import _revision
+    request = {"unit_id": args.unit_id, "task_id": args.task_id, "run_indices": args.run_index,
+               "request_id": args.request_id, "executor_revision": _revision(args.repo_root),
+               "expected_attempts": read_json(args.expected_attempts) if args.expected_attempts else {}}
+    progress = (lambda event: _print_event(args, args.batch_id, event)) if args.jsonl else None
+    return run_batch(_batch_root(args), AgentCubeConfig.load(args.agentcube_config),
+                     unit_ids=[args.unit_id], task_ids=[args.task_id], progress=progress, rerun_case=request)
+
+
+def _execution_history(args):
+    from .protocol import execution_history
+    return execution_history(_batch_root(args), args.execution_key)
+
+
 def _cleanup(args):
     from .agentcube import AgentCubeConfig
     from .engine import cleanup_batch
@@ -283,6 +313,8 @@ def _restore(args):
                for row in store.scoring_rows()):
             raise E2EError("SCORING_ACTIVE_RESTORE_REQUIRES_QUIESCENT_ATTEMPT")
         parent = inside(root, item["execution_root"]).parent.parent / "restores"
+        if item.get("execution_version", 1) > 1:
+            parent = parent / item["attempt_id"]
         destination = args.destination.resolve() if args.destination else parent / ("generation-" + uuid.uuid4().hex)
         if not destination.is_relative_to(parent.resolve()):
             raise E2EError("RESTORE_DESTINATION_OUTSIDE_RESTORES")
@@ -312,7 +344,7 @@ def _export(args):
         from .protocol import snapshot
         include_unsealed = snapshot(root)["terminal"]
     return export_package(root, args.output.resolve(), keys=keys, purpose=args.purpose, include_unsealed=include_unsealed,
-                          verification_skill=args.verification_skill_dir)
+                          verification_skill=args.verification_skill_dir, include_history=args.include_history)
 
 
 def _headless_score(args):
@@ -437,7 +469,8 @@ def main(argv=None) -> int:
         except (ValueError, FileExistsError, FileNotFoundError, ModuleNotFoundError) as error:
             print(json.dumps({"type": "POC_INPUT_ERROR", "error": str(error)}, ensure_ascii=False))
             return 2
-    handlers = {"run": _run, "resume": _resume, "recover-native-terminal": _recover_native_terminal, "status": _status, "cleanup": _cleanup,
+    handlers = {"run": _run, "resume": _resume, "rerun-case": _rerun_case, "execution-history": _execution_history,
+                "recover-native-terminal": _recover_native_terminal, "status": _status, "cleanup": _cleanup,
                 "reconcile-absent-creation": _reconcile_absent_creation, "validate-preprocess": _validate_preprocess,
                 "restore": _restore, "export": _export, "import": _import, "pipeline": _pipeline, "headless-score": _headless_score, "desktop-score": _desktop_score, "general-report": _general_report,
                 **{name: _public_command for name in ("describe", "catalog", "preflight", "events", "artifacts", "environment-status", "inspect-preprocess-asset")}}
@@ -445,7 +478,7 @@ def main(argv=None) -> int:
         result = handlers[args.command](args)
         if args.api_version:
             from .protocol import envelope, snapshot
-            if args.command in {"status", "resume", "cleanup", "reconcile-absent-creation"} or (args.command == "run" and not args.dry_run):
+            if args.command in {"status", "resume", "rerun-case", "cleanup", "reconcile-absent-creation"} or (args.command == "run" and not args.dry_run):
                 result = snapshot(_batch_root(args) if args.command != "run" else args.workspace_root.expanduser().resolve() / "batches" / result["batch_id"])
             print(json.dumps(envelope("result", result), ensure_ascii=False), flush=True)
         elif getattr(args, "jsonl", False):

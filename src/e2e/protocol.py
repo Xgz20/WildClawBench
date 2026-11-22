@@ -88,6 +88,9 @@ def describe(repo: Path) -> dict:
             "windows-preprocess-validation",
             "managed-preprocess-validation-template-v1",
             "execution",
+            "case-round-rerun-v1",
+            "execution-version-history-v1",
+            "versioned-result-export-v1",
             "events",
             "artifacts",
             "resume",
@@ -410,7 +413,7 @@ def events(batch: Path, after: int) -> dict:
     }
 
 
-def snapshot(batch: Path) -> dict:
+def snapshot(batch: Path, *, execution_rows=None) -> dict:
     from .engine import load_batch
     from .store import BatchStore
 
@@ -419,10 +422,16 @@ def snapshot(batch: Path) -> dict:
     units = {unit["unit_id"]: unit for unit in manifest["units"]}
     tasks = {task["task_id"]: task for task in manifest["tasks"]}
     executions = []
-    for row in raw["executions"]:
+    history_counts = Counter(row["key"] for row in BatchStore(batch).versions() if not row["is_final"])
+    for row in raw["executions"] if execution_rows is None else execution_rows:
         execution = inside(batch, row["execution_root"])
         source = execution / "original"
-        pointer = execution.parent.parent / "restores/current.json"
+        pointer = execution.parent.parent / "restores" / row["attempt_id"] / "current.json"
+        legacy_pointer = execution.parent.parent / "restores/current.json"
+        if not pointer.exists() and legacy_pointer.exists():
+            legacy = read_json(legacy_pointer)
+            if legacy.get("identity", {}).get("attempt_id") == row["attempt_id"]:
+                pointer = legacy_pointer
         if pointer.exists():
             restoration = read_json(pointer)
             receipt = read_json(execution / "backups/backup-receipt.json")
@@ -492,6 +501,11 @@ def snapshot(batch: Path) -> dict:
                 "unit_id": row["unit_id"],
                 "run_index": row["run_index"],
                 "attempt_id": row["attempt_id"],
+                "execution_version": row.get("execution_version", 1),
+                "history_count": history_counts[row["key"]],
+                "is_final": row.get("is_final", True),
+                "executor_revision": row.get("executor_revision") or manifest.get("source_revision"),
+                "previous_attempt_id": row.get("previous_attempt_id"),
                 "started_at": start, "finished_at": finish, "duration_seconds": duration,
                 "stage": row["phase"],
                 "terminal": row["phase"] in TERMINAL_PHASES
@@ -573,6 +587,14 @@ def snapshot(batch: Path) -> dict:
         "allowed_actions": actions,
         "controllers": raw.get("controllers", {}),
     }
+
+
+def execution_history(batch: Path, execution_key: str) -> dict:
+    from .store import BatchStore
+    versions = BatchStore(batch).versions(execution_key)
+    return {"execution_key": execution_key,
+            "versions": sorted(snapshot(batch, execution_rows=versions)["executions"],
+                               key=lambda row: row["execution_version"], reverse=True)}
 
 
 def artifacts(batch: Path, path: str = "", content: bool = False) -> dict:

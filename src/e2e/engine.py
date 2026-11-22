@@ -224,7 +224,7 @@ def _failure(root, store, item, driver, error, *, final_phase="FAILED"):
 
 
 def run_batch(root: Path, config: AgentCubeConfig, *, unit_ids: list[str] | None = None,
-              task_ids: list[str] | None = None, driver_factory=None, progress=None) -> dict:
+              task_ids: list[str] | None = None, driver_factory=None, progress=None, rerun_case: dict | None = None) -> dict:
     manifest = load_batch(root)
     store = BatchStore(root)
     units = {unit["unit_id"]: unit for unit in manifest["units"]}
@@ -233,13 +233,19 @@ def run_batch(root: Path, config: AgentCubeConfig, *, unit_ids: list[str] | None
         raise E2EError("UNIT_SELECTION_UNKNOWN")
     selected = set(unit_ids or units)
     selected_tasks = set(task_ids or ())
+    selected_keys = set()
     if selected_tasks and not selected_tasks <= {task for unit_id in selected for task in units[unit_id]['task_ids']}:
         raise E2EError('TASK_RESUME_SELECTION_UNKNOWN')
 
     def selected_row(row):
-        return row['unit_id'] in selected and (not selected_tasks or row['task_id'] in selected_tasks)
+        return (row['unit_id'] in selected and (not selected_tasks or row['task_id'] in selected_tasks)
+                and (not selected_keys or row['key'] in selected_keys))
     stop = threading.Event()
     with controller_lock(root) as owner:
+        if rerun_case is not None:
+            with controller_lock(root, "scoring-queue"):
+                receipt = store.rerun_case(**rerun_case)
+            selected_keys.update(receipt["attempts"])
         heartbeat_at = 0
 
         def heartbeat():
