@@ -114,16 +114,22 @@ def _prompt(scene, task_id, record, archive, attempt, config):
         "中文填写评分依据，按冻结契约保留证据。评分结束后只报告产物位置。\n"
     )
     if scene == "web":
+        header += (
+            "站点启动严格遵循同一评分 Skill 的分类：先只读确认实际入口；已有 HTML 或 dist/build 等静态构建时，"
+            "使用 managed_runtime.mjs start-static --task-root .，按已核实的 workspace 内相对目录设置 --root 和 --port，"
+            "由它只读服务冻结静态产物，无需 prepare，也不要用通用 start 再包装 serve_static.mjs。"
+            "只有确需安装依赖、构建或运行项目命令时，才按 Skill prepare 运行时副本并使用通用 start。\n"
+        )
         if config["harness"] == "chatgpt-desktop":
             return header + (
-                "遵循 Skill 的 Codex Desktop 内置 Browser 指引。在独立运行时副本中通过 127.0.0.1 启动站点，"
+                "遵循 Skill 的 Codex Desktop 内置 Browser 指引，通过 127.0.0.1 访问受管站点，"
                 "实际操作页面并回读状态。用 tab.getScreenshot 获取视口图像，使用 Skill 的 screenshot_receiver 回传。"
                 "在同一次 Browser 工具调用中，截图并上传，输出 HTTP 201 响应正文（应含截图 SHA-256）。"
                 "如内置 Browser、截图或必要交互不可用，写入 evaluation_error 并留存错误依据。"
                 "保存 private-scoring/score_input.json，运行 finalize_score，停止受管服务并清理运行时副本。"
             )
         return header + (
-            "先读 desktop-scoring-tooling/desktop_web_browser.md。工作目录已包含 Web Skill 所需的 workspace 和 private-scoring。按实际项目说明在运行时副本中启动站点，"
+            "先读 desktop-scoring-tooling/desktop_web_browser.md。工作目录已包含 Web Skill 所需的 workspace 和 private-scoring。按上述分类和实际项目说明启动站点，"
             "只通过 127.0.0.1 服务。使用 AStudio 原生浏览器操作页面、观察实际状态并保存宽屏和窄屏证据。"
             "使用 AStudio 原生浏览器保存视口 PNG（fullPage=false），每张截图都先回传到 evidence 并调用 image_understanding 读图，再写入评分引用。"
             "以 AStudio 工具清单中的原生接口执行，遇到工具和证据链故障填写 evaluation_error。"
