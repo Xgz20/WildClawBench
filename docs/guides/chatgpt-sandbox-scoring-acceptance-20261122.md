@@ -40,3 +40,5 @@
 验收入口：`http://xgz.eval.local:8080/wildclawbench/e2e/batches/18`，选择评分 #115。浏览器现有登录已过期，因此本轮文件预览核验通过已授权的主环境 API 完成，没有把登录页当作 UI 按钮验收通过。
 
 主要回执：`platform-score-operation-v5.json`、`platform-score-details.json`、`platform-preview-verification.json`、`final-release-verification.json`。原失败 #114 和冻结发行保持不变，#115 是新评分尝试。本次闭环验收范围为这一道自建 Web 用例，不扩展为全部场景或并发验收的结论。
+
+本机回执位于源码地图所列调试工作根下的 `receipts/chatgpt-pro-platform-release-Q4lkVc/runtime-compat/`。其中 `platform-preview-*.jpg` 是通过主环境接口读取并核验摘要的图片副本；完整原生资料仍按各次评分尝试独立保留。
