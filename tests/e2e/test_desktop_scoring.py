@@ -34,6 +34,51 @@ def browser_event(server, name, call, output, arguments=None):
 
 
 class DesktopScoringTests(unittest.TestCase):
+    def test_chatgpt_subscription_uses_the_guest_account_without_gateway_credentials(self):
+        base = {**CONFIG, "harness": "chatgpt-desktop", "model": "gpt-6.2-sol",
+                "reasoning_effort": "high"}
+        self.assertNotIn("chatgpt_scoring_auth", scoring._config(base))
+        with self.assertRaisesRegex(E2EError, "CHATGPT_SCORING_AUTH_INVALID"):
+            scoring._config({**base, "chatgpt_scoring_auth": "invalid"})
+        config = scoring._config({**base, "chatgpt_scoring_auth": "subscription"})
+        driver = object.__new__(scoring.ChatGPTScoringDriver)
+        driver.unit = config
+        driver.client = Mock()
+        driver.stop = Mock()
+        driver.stop.remaining.return_value = 60
+        driver.client.windows_execute.return_value = {
+            "output": '{"auth_type":"chatgpt","plan_type":"pro","client_version":"fixture"}',
+        }
+        with tempfile.TemporaryDirectory() as temp:
+            driver.staging = Path(temp)
+            driver._prepare_runtime("sid")
+            self.assertEqual(json.loads((driver.staging / "metadata/scoring-auth.json").read_text()),
+                             {"method": "subscription", "plan_type": "pro", "client_version": "fixture"})
+            self.assertNotIn("model_connection", driver._desktop_product_config())
+            self.assertNotIn("WGUI_CHATGPT_API_KEY", driver._task_run_command())
+            driver.client.upload_private.assert_not_called()
+            driver.client.windows_execute.return_value = {"output": '{"auth_type":"apiKey"}'}
+            with self.assertRaisesRegex(E2EError, "CHATGPT_SUBSCRIPTION_PRO_LOGIN_REQUIRED"):
+                driver._prepare_runtime("sid")
+            driver.client.windows_execute.return_value = {"output": '{"auth_type":"chatgpt","plan_type":"plus"}'}
+            with self.assertRaisesRegex(E2EError, "CHATGPT_SUBSCRIPTION_PRO_LOGIN_REQUIRED"):
+                driver._prepare_runtime("sid")
+
+    def test_subscription_scoring_requires_the_published_template_binding(self):
+        config = scoring._config({**CONFIG, "harness": "chatgpt-desktop", "model": "gpt-6.2-sol",
+                                  "reasoning_effort": "high", "chatgpt_scoring_auth": "subscription"})
+        profile = {
+            "enabled": True, "id": config["template_binding"]["profile_id"],
+            "harness": "chatgpt-desktop", "template": config["template"],
+            "template_namespace": config["template_binding"]["namespace"],
+            "chatgpt_scoring_auth": "subscription",
+        }
+        with patch("src.e2e.protocol.profiles", return_value=[profile]):
+            scoring._verify_subscription_profile(config)
+        with patch("src.e2e.protocol.profiles", return_value=[dict(profile, template_namespace="different")]):
+            with self.assertRaisesRegex(E2EError, "CHATGPT_SUBSCRIPTION_SCORING_PROFILE_NOT_PUBLISHED"):
+                scoring._verify_subscription_profile(config)
+
     def test_model_and_template_are_pinned(self):
         self.assertEqual(scoring._config(CONFIG), CONFIG)
         self.assertEqual(scoring._config({**CONFIG, "reasoning_effort": "high"})["reasoning_effort"], "high")

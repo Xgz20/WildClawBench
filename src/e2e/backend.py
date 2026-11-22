@@ -732,9 +732,13 @@ class ChatGPTDesktopSandboxDriver(AStudioSandboxDriver):
         super().preflight()
         if not re.fullmatch(r"gpt-[0-9]+(?:\.[0-9]+)?-(?:astra|sol|terra|luna)", self.unit["model"]) or self.unit["reasoning_effort"] not in {"low", "high"}:
             raise E2EError("CHATGPT_DESKTOP_MODEL_OR_REASONING_UNSUPPORTED")
-        validate_chatgpt_gateway(self.config.chatgpt_gateway_url or "")
-        if not self.store.get(self.key).get("dispatch_armed_at") and not self._gateway_key():
-            raise E2EError("WCB_CHATGPT_API_KEY_REQUIRED")
+        if self._uses_gateway():
+            validate_chatgpt_gateway(self.config.chatgpt_gateway_url or "")
+            if not self.store.get(self.key).get("dispatch_armed_at") and not self._gateway_key():
+                raise E2EError("WCB_CHATGPT_API_KEY_REQUIRED")
+
+    def _uses_gateway(self) -> bool:
+        return True
 
     @staticmethod
     def _gateway_key() -> str:
@@ -751,24 +755,29 @@ class ChatGPTDesktopSandboxDriver(AStudioSandboxDriver):
             raise E2EError("CHATGPT_GATEWAY_CREDENTIAL_UPLOAD_FAILED") from error
 
     def _desktop_product_config(self) -> dict:
-        return {
+        config = {
             "model": self.unit["model"],
-            "model_connection": {
-                "provider": "openai",
-                "base_url": self.config.chatgpt_gateway_url,
-                "api_key_env": "WGUI_CHATGPT_API_KEY",
-            },
             "ui": {"mode": "codex", "reasoning": self.unit["reasoning_effort"],
                    "permission": self.unit.get("chatgpt_permission", "ask for approval")},
         }
+        if self._uses_gateway():
+            config["model_connection"] = {
+                "provider": "openai",
+                "base_url": self.config.chatgpt_gateway_url,
+                "api_key_env": "WGUI_CHATGPT_API_KEY",
+            }
+        return config
 
     def _task_run_command(self) -> str:
+        command = super()._task_run_command()
+        if not self._uses_gateway():
+            return command
         return (
             "set +x; set -e; "
             f'test "$(stat -c %a {self._credential_path})" = 600; '
             f"WGUI_CHATGPT_API_KEY=$(cat {self._credential_path}); "
             f"unlink {self._credential_path}; "
-            "export WGUI_CHATGPT_API_KEY; exec " + super()._task_run_command()
+            "export WGUI_CHATGPT_API_KEY; exec " + command
         )
 
 

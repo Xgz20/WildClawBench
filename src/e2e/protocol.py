@@ -58,6 +58,11 @@ def profiles() -> list[dict]:
             )
         ):
             raise E2EError("EXECUTOR_PROFILE_INVALID")
+        if "chatgpt_scoring_auth" in row and (
+            row["harness"] != "chatgpt-desktop"
+            or row["chatgpt_scoring_auth"] not in ("gateway", "subscription")
+        ):
+            raise E2EError("CHATGPT_SCORING_AUTH_PROFILE_INVALID")
         row["enabled"] = bool(
             row.get("enabled", True)
             and (row.get("backend", "agentcube"), row["harness"]) in DRIVERS
@@ -96,6 +101,7 @@ def describe(repo: Path) -> dict:
             "agentcube-desktop-scoring-effort-v1",
             "agentcube-desktop-scoring-models-v1",
             "agentcube-chatgpt-desktop-scoring-v1",
+            "agentcube-chatgpt-subscription-scoring-v1",
             "canonical-general-reports",
             "canonical-general-round-reports",
         ],

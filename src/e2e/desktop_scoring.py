@@ -77,7 +77,14 @@ def _config(value):
         if effort not in {"low", "high"}:
             raise E2EError("DESKTOP_SCORER_REASONING_UNSUPPORTED")
         config.update(reasoning_effort=effort, chatgpt_permission="full access")
+        auth = value.get("chatgpt_scoring_auth", "gateway")
+        if auth not in ("gateway", "subscription"):
+            raise E2EError("CHATGPT_SCORING_AUTH_INVALID")
+        if auth == "subscription":
+            config["chatgpt_scoring_auth"] = auth
     else:
+        if "chatgpt_scoring_auth" in value:
+            raise E2EError("CHATGPT_SCORING_AUTH_INVALID")
         if effort not in {None, "none", "high", "max"}:
             raise E2EError("DESKTOP_SCORER_REASONING_UNSUPPORTED")
         if effort not in {None, "none"}:
@@ -256,7 +263,94 @@ class ScoringDriver(ScoringWorkspace, AStudioSandboxDriver):
 
 
 class ChatGPTScoringDriver(ScoringWorkspace, ChatGPTDesktopSandboxDriver):
-    pass
+    def _uses_gateway(self) -> bool:
+        return self.unit.get("chatgpt_scoring_auth", "gateway") == "gateway"
+
+    def _prepare_runtime(self, sid):
+        if self._uses_gateway():
+            return super()._prepare_runtime(sid)
+        # Read the existing desktop account through the bundled Codex app
+        # server. Only authentication type, plan and binary version leave
+        # the guest. This path never reads, copies or refreshes credentials.
+        result = self.client.windows_execute(sid, powershell(CHATGPT_SUBSCRIPTION_PROBE),
+                                             timeout=min(55, self.stop.remaining()))
+        try:
+            account = json.loads(result["output"].strip().splitlines()[-1])
+        except (KeyError, ValueError, IndexError) as error:
+            raise E2EError("CHATGPT_SUBSCRIPTION_ACCOUNT_READ_FAILED") from error
+        if not isinstance(account, dict):
+            raise E2EError("CHATGPT_SUBSCRIPTION_ACCOUNT_READ_FAILED")
+        if account.get("error") == "account_read_failed":
+            raise E2EError("CHATGPT_SUBSCRIPTION_ACCOUNT_READ_FAILED")
+        if account.get("auth_type") != "chatgpt" or account.get("plan_type") != "pro":
+            raise E2EError("CHATGPT_SUBSCRIPTION_PRO_LOGIN_REQUIRED")
+        atomic_json(self.staging / "metadata/scoring-auth.json", {
+            "method": "subscription", "plan_type": "pro",
+            "client_version": account.get("client_version"),
+        })
+
+
+CHATGPT_SUBSCRIPTION_PROBE = r"""
+$ErrorActionPreference='Stop'
+$ProgressPreference='SilentlyContinue'
+$proc=$null
+function Receive-Reply([int] $id) {
+    while($true) {
+        $remaining=[int][Math]::Max(0,($deadline-[DateTime]::UtcNow).TotalMilliseconds)
+        if(!$remaining){throw 'app-server read deadline'}
+        $pending=$proc.StandardOutput.ReadLineAsync()
+        if(!$pending.Wait($remaining) -or $null -eq $pending.Result){throw 'app-server read failed'}
+        $message=$pending.Result|ConvertFrom-Json
+        if($null -ne $message.id -and $message.id -eq $id){
+            if($message.error){throw 'app-server rejected request'}
+            return $message.result
+        }
+    }
+}
+try {
+    $package=Get-AppxPackage -Name OpenAI.Codex|Select-Object -First 1
+    if(!$package){throw 'ChatGPT package unavailable'}
+    $si=New-Object Diagnostics.ProcessStartInfo
+    $si.FileName=Join-Path $package.InstallLocation 'app\resources\codex.exe'
+    $si.Arguments='app-server --listen stdio://'
+    $si.UseShellExecute=$false
+    $si.CreateNoWindow=$true
+    $si.RedirectStandardInput=$true
+    $si.RedirectStandardOutput=$true
+    $si.RedirectStandardError=$true
+    $proc=[Diagnostics.Process]::Start($si)
+    $stderr=$proc.StandardError.ReadToEndAsync()
+    $deadline=[DateTime]::UtcNow.AddSeconds(35)
+    $proc.StandardInput.WriteLine('{"id":0,"method":"initialize","params":{"clientInfo":{"name":"wcb_desktop_scoring","version":"1.0"}}}')
+    $null=Receive-Reply 0
+    $proc.StandardInput.WriteLine('{"method":"initialized","params":{}}')
+    $proc.StandardInput.WriteLine('{"id":1,"method":"account/read","params":{"refreshToken":false}}')
+    $reply=Receive-Reply 1
+    @{auth_type=$reply.account.type;plan_type=$reply.account.planType;client_version=$package.Version.ToString()}|ConvertTo-Json -Compress
+} catch {
+    @{error='account_read_failed'}|ConvertTo-Json -Compress
+} finally {
+    if($proc){
+        $proc.StandardInput.Close()
+        if(!$proc.WaitForExit(2500)){$proc.Kill();$null=$proc.WaitForExit(2000)}
+        $proc.Dispose()
+    }
+}
+"""
+
+
+def _verify_subscription_profile(config):
+    from .protocol import profiles
+    binding = config["template_binding"]
+    if not any(
+        row["enabled"] and row["harness"] == "chatgpt-desktop"
+        and row.get("backend", "agentcube") == "agentcube"
+        and row["id"] == binding["profile_id"] and row["template"] == config["template"]
+        and row.get("template_namespace") == binding["namespace"]
+        and row.get("chatgpt_scoring_auth") == "subscription"
+        for row in profiles()
+    ):
+        raise E2EError("CHATGPT_SUBSCRIPTION_SCORING_PROFILE_NOT_PUBLISHED")
 
 
 def _run(argv, cwd):
@@ -550,6 +644,8 @@ def run_desktop_score(batch: Path, output: Path, value: dict, agentcube: AgentCu
         if path.is_file() and read_json(path) != request:
             raise E2EError("SCORING_JOB_REQUEST_DRIFT")
         if not path.is_file():
+            if config.get("chatgpt_scoring_auth") == "subscription":
+                _verify_subscription_profile(config)
             atomic_json(path, request, create=True)
         def run(item):
             attempt = "desk-" + digest([str(output), item["key"]])[:24]

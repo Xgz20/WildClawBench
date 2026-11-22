@@ -25,3 +25,6 @@ ChatGPT Desktop profile 绑定独立 AgentCube 模板。通过控制器能力发
 标准执行备份封存。
 
 AStudio 和 ChatGPT 桌面评分在「镜像与模板」中分别设置评分默认模板。自动评分和新建评分任务根据该模板列出内置模型及推理档，发起后冻结评分模型和模板。ChatGPT 在独立沙箱读取冻结评分 Skill，通用场景复用规则校验，Web 场景使用 Codex Desktop Browser 和 Skill 的截图接收器。ChatGPT 模板默认开放通用评分。验证该模板的 Browser 控制和截图回传后，可在 profile 的 `desktop_scoring_scenarios` 加入 `web`。浏览器或证据链失败时保留原生轨迹和错误，评分状态为评测异常。
+
+
+发布 ChatGPT Pro 订阅评分能力时，在控制器能力发布工具中指定 `--chatgpt-desktop-template`、`--chatgpt-desktop-template-namespace` 以及 `--chatgpt-desktop-scoring-auth subscription`。生成的 profile 会用模板名、命名空间和 `chatgpt_scoring_auth` 绑定该评分方式。平台冻结该鉴权方式后，执行器在 Windows 实例就绪后读取客户端当前账号的订阅类型，确认 Pro 才发题。订阅评分沿用实例已经授权的登录态，评分任务、镜像和模板描述均通过非敏感字段绑定身份。未指定该字段的 profile 沿用网关方式。该设置只用于桌面评分。

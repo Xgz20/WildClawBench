@@ -15,13 +15,24 @@ def main():
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--template", default=DEFAULT_AGENTCUBE_TEMPLATE)
     parser.add_argument("--chatgpt-desktop-template", help="publish an independently registered Desktop template")
+    parser.add_argument("--chatgpt-desktop-template-namespace", help="namespace of the registered Desktop template")
+    parser.add_argument("--chatgpt-desktop-scoring-auth", choices=("gateway", "subscription"), default="gateway")
     args = parser.parse_args()
+    if args.chatgpt_desktop_scoring_auth == "subscription" and not (
+        args.chatgpt_desktop_template and args.chatgpt_desktop_template_namespace
+    ):
+        parser.error("subscription scoring requires a ChatGPT Desktop template and its namespace")
     value = controller_catalog(args.controller_root)
     profiles = profiles_from_catalog(value, args.template)
     if args.chatgpt_desktop_template:
-        profiles.append(chatgpt_desktop_profile(
+        desktop = chatgpt_desktop_profile(
             args.controller_root, args.chatgpt_desktop_template, value["source_revision"]
-        ))
+        )
+        if args.chatgpt_desktop_template_namespace:
+            desktop["template_namespace"] = args.chatgpt_desktop_template_namespace
+        if args.chatgpt_desktop_scoring_auth == "subscription":
+            desktop["chatgpt_scoring_auth"] = "subscription"
+        profiles.append(desktop)
     args.output.parent.mkdir(parents=True, exist_ok=True)
     with args.output.open("x", encoding="utf-8") as stream:
         json.dump(
