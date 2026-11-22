@@ -75,6 +75,24 @@ class NativeMcpTests(unittest.TestCase):
         with self.assertRaisesRegex(E2EError, "NATIVE_PROMPT_MISMATCH"):
             self.normalize(prompt=prompt, desktop=True)
 
+    def test_desktop_url_escape_does_not_accept_a_changed_url_or_instruction(self):
+        prompt = "Open http://127.0.0.1:43713/ and HTTPS://example.com/a?q=1\nRead `input.txt`.\n"
+        native = "Open http\\://127.0.0.1:43713/ and HTTPS\\://example.com/a?q=1\\\nRead \\`input.txt\\`.\\\n"
+        self.rows[0]["payload"]["originator"] = "Codex Desktop"
+        part = {"type": "text", "text": native}
+        self.rows[2]["payload"] = {
+            "type": "item_completed", "thread_id": "session", "turn_id": "turn",
+            "item": {"type": "UserMessage", "content": [part]},
+        }
+        self.rows.insert(2, {"type": "event_msg", "payload": {"type": "task_started", "turn_id": "turn"}})
+        binding = self.normalize(prompt=prompt, desktop=True)
+        self.assertEqual(binding["prompt_transport"]["kind"], "chatgpt-desktop-markdown-url-escaped")
+        for altered in (native.replace("43713", "43714"), native + "extra instruction",
+                        native.replace("input.txt", "different.txt")):
+            part["text"] = altered
+            with self.subTest(altered=altered), self.assertRaisesRegex(E2EError, "NATIVE_PROMPT_MISMATCH"):
+                self.normalize(prompt=prompt, desktop=True)
+
     def test_desktop_mcp_namespace_and_mirror_keep_one_canonical_call(self):
         self.rows[0]["payload"]["originator"] = "Codex Desktop"
         self.rows[2]["payload"] = {

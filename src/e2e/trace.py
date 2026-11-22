@@ -129,6 +129,10 @@ def _desktop_prompt(payload: dict, *, session_id: str, turn_id: str, expected: s
     escaped = rendered.replace("`", "\\`")
     if normalized in (escaped, escaped + "\n"):
         return actual, "chatgpt-desktop-markdown-escaped"
+    for variant in (wanted, rendered, escaped):
+        url_escaped = re.sub(r"(?i)\b(https?)://", r"\1\\://", variant)
+        if normalized in (url_escaped, url_escaped + "\n"):
+            return actual, "chatgpt-desktop-markdown-url-escaped"
     raise E2EError("NATIVE_PROMPT_MISMATCH")
 
 
