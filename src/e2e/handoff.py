@@ -343,7 +343,8 @@ def export_scoring_context(batch: Path, key: str, destination: Path, *, verifica
     unit = next(unit for unit in manifest["units"] if unit["unit_id"] == item["unit_id"])
     task = next(task for task in manifest["tasks"] if task["task_id"] == item["task_id"])
     supplemental = verification_skill
-    claims = [row for row in BatchStore(batch).scoring_rows() if row["key"] == key and row.get("context")]
+    original_claim = BatchStore(batch).scoring_for_version(key, item["attempt_id"])
+    claims = [original_claim] if original_claim and original_claim.get("context") else []
     if claims:
         context = claims[0]["context"]
         verifier = context.get("supplemental_verifier")

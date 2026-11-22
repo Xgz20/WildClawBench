@@ -141,11 +141,29 @@ class BatchStore:
                 raise E2EError("EXECUTION_KEY_UNKNOWN")
             history = []
             if db.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='execution_history'").fetchone():
-                history = [json.loads(row[0]) for row in db.execute("SELECT data FROM execution_history ORDER BY version")]
+                query = "SELECT data FROM execution_history" + (" WHERE key=?" if key is not None else "") + " ORDER BY version"
+                history = [json.loads(row[0]) for row in db.execute(query, (key,) if key is not None else ())]
         active = {row["key"]: row["attempt_id"] for row in current}
         return [{**row, "execution_version": row.get("execution_version", 1),
                  "is_final": active.get(row["key"]) == row["attempt_id"]}
                 for row in [*history, *current] if key is None or row["key"] == key]
+
+    def history_counts(self):
+        with self.transaction() as db:
+            if not db.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='execution_history'").fetchone():
+                return {}
+            return {row[0]: row[1] for row in db.execute("SELECT key,COUNT(*) FROM execution_history GROUP BY key")}
+
+    def scoring_for_version(self, key, attempt_id):
+        with self.transaction() as db:
+            active = db.execute("SELECT data FROM executions WHERE key=?", (key,)).fetchone()
+            if active and json.loads(active[0])["attempt_id"] == attempt_id:
+                score = db.execute("SELECT data FROM scoring WHERE key=?", (key,)).fetchone()
+            elif db.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='execution_history'").fetchone():
+                score = db.execute("SELECT scoring_data FROM execution_history WHERE key=? AND attempt_id=?", (key, attempt_id)).fetchone()
+            else:
+                score = None
+            return json.loads(score[0]) if score and score[0] else None
 
     def get_version(self, key: str, attempt_id: str) -> dict:
         matches = [row for row in self.versions(key) if row["attempt_id"] == attempt_id]

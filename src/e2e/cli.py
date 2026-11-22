@@ -113,6 +113,7 @@ def build_parser() -> argparse.ArgumentParser:
     rerun.add_argument("--run-index", type=int, action="append", default=[])
     rerun.add_argument("--request-id", required=True)
     rerun.add_argument("--expected-attempts", type=Path)
+    rerun.add_argument("--cancel-before-dispatch", action="store_true", help="保留本次新版本但取消派发")
     rerun.add_argument("--jsonl", action="store_true")
     history = commands.add_parser("execution-history", help="只读查询一个用例轮次的历史版本")
     _batch(history)
@@ -270,7 +271,8 @@ def _rerun_case(args):
                "expected_attempts": read_json(args.expected_attempts) if args.expected_attempts else {}}
     progress = (lambda event: _print_event(args, args.batch_id, event)) if args.jsonl else None
     return run_batch(_batch_root(args), AgentCubeConfig.load(args.agentcube_config),
-                     unit_ids=[args.unit_id], task_ids=[args.task_id], progress=progress, rerun_case=request)
+                     unit_ids=[args.unit_id], task_ids=[args.task_id], progress=progress, rerun_case=request,
+                     cancel_before_dispatch=args.cancel_before_dispatch)
 
 
 def _execution_history(args):

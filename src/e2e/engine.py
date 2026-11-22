@@ -224,7 +224,8 @@ def _failure(root, store, item, driver, error, *, final_phase="FAILED"):
 
 
 def run_batch(root: Path, config: AgentCubeConfig, *, unit_ids: list[str] | None = None,
-              task_ids: list[str] | None = None, driver_factory=None, progress=None, rerun_case: dict | None = None) -> dict:
+              task_ids: list[str] | None = None, driver_factory=None, progress=None, rerun_case: dict | None = None,
+              cancel_before_dispatch: bool = False) -> dict:
     manifest = load_batch(root)
     store = BatchStore(root)
     units = {unit["unit_id"]: unit for unit in manifest["units"]}
@@ -246,6 +247,11 @@ def run_batch(root: Path, config: AgentCubeConfig, *, unit_ids: list[str] | None
             with controller_lock(root, "scoring-queue"):
                 receipt = store.rerun_case(**rerun_case)
             selected_keys.update(receipt["attempts"])
+            if cancel_before_dispatch:
+                for item in store.rows():
+                    if item["key"] in selected_keys and item["phase"] == "PENDING":
+                        store.update(item["key"], "CANCELLED", resource_held=False,
+                                     cancellation_requested_at=utc_now(), finished_at=utc_now())
         heartbeat_at = 0
 
         def heartbeat():

@@ -9,12 +9,12 @@ from src.e2e.engine import run_batch
 from src.e2e.packages import export_package
 from src.e2e.protocol import execution_history, snapshot
 from src.e2e.store import BatchStore
-from tests.e2e.test_scheduler import SchedulerTests
+from tests.e2e import test_scheduler
 
 
 class CaseRerunTests(unittest.TestCase):
     def setUp(self):
-        self.fixture = SchedulerTests()
+        self.fixture = test_scheduler.SchedulerTests()
         self.fixture.setUp()
         self.root = Path(self.fixture.temp.name) / "versioned"
         self.root.mkdir()
@@ -97,6 +97,7 @@ class CaseRerunTests(unittest.TestCase):
             self.assertEqual(index["version_policy"], "final-only")
             self.assertEqual(index["exported"], [])
             self.assertEqual(index["unavailable_executions"][0]["execution"]["attempt_id"], current["attempt_id"])
+            self.assertEqual(index["unavailable_executions"][0]["reason"], 'EXECUTION_NOT_SEALED')
         with zipfile.ZipFile(all_versions) as archive:
             index = json.loads(archive.read("package-index.json"))
             self.assertEqual(index["version_policy"], "all")
@@ -112,3 +113,15 @@ class CaseRerunTests(unittest.TestCase):
         with self.assertRaisesRegex(E2EError, "REQUIRES_RELEASED"):
             self.store.rerun_case("unit", "t0", "held")
         self.assertEqual(len(self.store.versions(key)), 1)
+
+    def test_queued_cancellation_retains_cancelled_new_version_without_dispatch(self):
+        calls = len(self.fixture.provider.calls)
+        key = "unit/run-0001/t0"
+        old = self.store.get(key)
+        run_batch(self.root, self.fixture.config, driver_factory=self.fixture.factory,
+                  rerun_case={"unit_id": "unit", "task_id": "t0", "run_indices": [1], "request_id": "cancelled"},
+                  cancel_before_dispatch=True)
+        self.assertEqual(len(self.fixture.provider.calls), calls)
+        current = self.store.get(key)
+        self.assertEqual((current["phase"], current["execution_version"]), ("CANCELLED", 2))
+        self.assertNotEqual(current["attempt_id"], old["attempt_id"])

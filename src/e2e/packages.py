@@ -205,7 +205,7 @@ def export_package(batch: Path, output: Path, *, keys: list[str] | None = None, 
                  "selected_scope": selected_scope, "task_inputs": task_inputs,
                  "version_policy": "all" if include_history else "final-only", "current_attempts": current_attempts,
                  "exported": rows_exported,
-                 "unavailable_executions": [{"execution": row, "reason": "EXECUTION_NOT_SEALED" if row in selected else "NOT_SELECTED"} for row in rows
+                 "unavailable_executions": [{"execution": row, "reason": "EXECUTION_NOT_SEALED" if row["key"] in selected_scope else "NOT_SELECTED"} for row in rows
                                             if (row["key"], row["attempt_id"]) not in {(entry["execution"]["key"], entry["execution"]["attempt_id"]) for entry in rows_exported}],
                  "not_exported": [row["key"] for row in rows if (row["key"], row["attempt_id"]) not in {(entry["execution"]["key"], entry["execution"]["attempt_id"]) for entry in rows_exported}]}
         final_exported = [entry for entry in rows_exported if entry["execution"].get("is_final", True)]

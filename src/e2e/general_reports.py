@@ -37,7 +37,10 @@ def _copy(source, destination):
 
 def _source_row(core, source, item, task, original_unit, result, target):
     row_result = next((row for row in result['executions'] if row['execution_key'] == item['key']), None)
-    source_work = Path(row_result['work_root']) if row_result else None
+    if row_result and (row_result.get('execution_attempt_id') or item.get('execution_version', 1) > 1):
+        if row_result.get('execution_attempt_id') != item['attempt_id']:
+            row_result = None
+    source_work = Path(row_result['work_root']) if row_result and row_result.get('work_root') else None
     if source_work and (source_work / 'context/handoff.json').is_file():
         state = read_json(source_work.parent / 'control/state.json')
         if state.get('immutable'):
@@ -97,7 +100,7 @@ def _source_row(core, source, item, task, original_unit, result, target):
     task_meta = next(row for row in unit_manifest['tasks'] if row['task_id'] == item['task_id'])
     row = core.build_task_row(selected, task_meta, submission)
     _native_resource_projection(core, row, record, target)
-    if row_result and not score:
+    if row_result and not score and row_result.get('status') != 'unscored':
         row.update(score_status='evaluation_error', invalid_reason=row_result.get('error'),
                    evaluation={'status': 'evaluation_error', 'error': row_result.get('error')})
     row['source_execution'] = {'batch_id': result['batch_id'], 'unit_id': item['unit_id'],
@@ -304,6 +307,9 @@ def build_report(definition: dict, staging: Path):
             raise E2EError('REPORT_GENERAL_UNIT_REQUIRED')
         items = [item for item in BatchStore(batch).rows()
                  if item['unit_id'] == source['unit_id'] and item['run_index'] == source['run_index']]
+        expected_attempts = source.get('execution_attempts')
+        if expected_attempts is not None and {item['key']: item['attempt_id'] for item in items} != expected_attempts:
+            raise E2EError('REPORT_EXECUTION_VERSION_CHANGED')
         if not items:
             raise E2EError('REPORT_UNIT_SCOPE_EMPTY')
         report_unit_id = 's' + str(source['id']) + '-r' + str(source['run_index']) + '-' + digest(source['unit_id'])[:16]

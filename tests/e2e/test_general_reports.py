@@ -2,7 +2,7 @@ from pathlib import Path
 import tempfile
 import unittest
 from types import SimpleNamespace
-from src.e2e.general_reports import markdown, standalone_html, xlsx, score_column, cell_text, _unavailable_row
+from src.e2e.general_reports import markdown, standalone_html, xlsx, score_column, cell_text, _unavailable_row, _source_row
 
 
 def report():
@@ -13,6 +13,22 @@ def report():
 
 
 class GeneralReportExportTests(unittest.TestCase):
+    def test_final_attempt_excludes_old_score_and_accepts_failed_score_without_work_root(self):
+        core=SimpleNamespace(RESOURCE_FIELDS=[],resolve_file=None,sha256_file=None,
+             report_views=SimpleNamespace(checkpoints=lambda *args:{}))
+        item={'attempt_id':'exec-new','execution_version':2,'phase':'FAILED','key':'key'}
+        unit={'unit_id':'unit','harness':'astronstudio','model':'spark'}
+        old={'execution_key':'key','execution_attempt_id':'exec-old','status':'valid','total_score':1,
+             'work_root':'/unavailable/historical-scoring'}
+        row=_source_row(core,{},item,{'task_id':'task'},unit,{'executions':[old]},Path('unused'))
+        self.assertIsNone(row['total_score'])
+        self.assertEqual(row['score_status'],'unscored')
+        failed={**old,'execution_attempt_id':'exec-new','status':'evaluation_error','error':'judge unavailable'}
+        failed.pop('work_root')
+        row=_source_row(core,{},item,{'task_id':'task'},unit,{'executions':[failed]},Path('unused'))
+        self.assertIsNone(row['total_score'])
+        self.assertEqual(row['score_status'],'evaluation_error')
+
     def unavailable(self, outcome=None, **changes):
         core=SimpleNamespace(RESOURCE_FIELDS=[],resolve_file=None,sha256_file=None,
              report_views=SimpleNamespace(checkpoints=lambda *args:{}))

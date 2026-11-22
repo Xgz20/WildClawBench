@@ -422,7 +422,7 @@ def snapshot(batch: Path, *, execution_rows=None) -> dict:
     units = {unit["unit_id"]: unit for unit in manifest["units"]}
     tasks = {task["task_id"]: task for task in manifest["tasks"]}
     executions = []
-    history_counts = Counter(row["key"] for row in BatchStore(batch).versions() if not row["is_final"])
+    history_counts = BatchStore(batch).history_counts()
     for row in raw["executions"] if execution_rows is None else execution_rows:
         execution = inside(batch, row["execution_root"])
         source = execution / "original"
@@ -430,7 +430,7 @@ def snapshot(batch: Path, *, execution_rows=None) -> dict:
         legacy_pointer = execution.parent.parent / "restores/current.json"
         if not pointer.exists() and legacy_pointer.exists():
             legacy = read_json(legacy_pointer)
-            if legacy.get("identity", {}).get("attempt_id") == row["attempt_id"]:
+            if row.get("execution_version", 1) == 1 or legacy.get("identity", {}).get("attempt_id") == row["attempt_id"]:
                 pointer = legacy_pointer
         if pointer.exists():
             restoration = read_json(pointer)
@@ -502,7 +502,7 @@ def snapshot(batch: Path, *, execution_rows=None) -> dict:
                 "run_index": row["run_index"],
                 "attempt_id": row["attempt_id"],
                 "execution_version": row.get("execution_version", 1),
-                "history_count": history_counts[row["key"]],
+                "history_count": history_counts.get(row["key"], 0),
                 "is_final": row.get("is_final", True),
                 "executor_revision": row.get("executor_revision") or manifest.get("source_revision"),
                 "previous_attempt_id": row.get("previous_attempt_id"),
