@@ -29,6 +29,8 @@ CAPABILITIES5 = {
     "reasoning_and_decision_making": "推理与决策", "tool_invocation": "工具调用",
     "result_evaluation": "结果评估",
 }
+CATEGORY_PREFIXES = {"data-analysis": "03"}
+
 CATEGORIES = {
     "01_Information_Search_Organization": "信息检索与整理", "02_Office": "办公",
     "data-analysis": "数据分析",
@@ -678,7 +680,7 @@ def build_views(data, references):
                 cells.append(sum(values)/len(values)*100 if values else None)
                 dimension_coverage.append([label, name, names.get(group, group), len(values), len(matching)])
             table_rows.append([label, unit["score"]["mean_score"]*100 if unit["score"]["mean_score"] is not None else None, *cells])
-        headings = [f"{names.get(g, g) if g in category_order else g.split('_')[0] + '_' + names.get(g, g)}平均分({frozen_counts[g]}例)" if key == "category"
+        headings = [f"{names.get(g, g) if g in category_order else CATEGORY_PREFIXES.get(g, g.split('_')[0]) + '_' + names.get(g, g)}平均分({frozen_counts[g]}例)" if key == "category"
                     else f"{g}平均分({frozen_counts[g]}例)" if key == "difficulty"
                     else names.get(g, g) for g in groups]
         views[name] = table(["模型@Harness", "总平均分", *headings], table_rows,

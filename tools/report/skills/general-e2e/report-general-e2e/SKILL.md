@@ -3,6 +3,8 @@ name: report-general-e2e
 description: 校验并汇总 General E2E submission 和回传包，生成同源 JSON、Markdown 与 Excel 报告；不执行用例、补评分或把评测异常计为能力零分。
 ---
 
+`0.10.4` 分类对比将历史分类别名data-analysis显示为03_数据分析，保留原始分类ID、样本数、分数和分母；Markdown与Excel同源表头一致。
+
 `0.10.3` Loomy 内置与外部资源补充层在独立复算后再校验标准资源合同；完整值不得重复声明为部分小计。
 
 `0.10.2` 接纳经独立来源与逐消息总量重验的 Loomy 资源补充层。Token、缓存、请求数进入同源 JSON/Markdown/Excel，部分用量显示已知小计和覆盖；请求数沿用 OpenCode CLI 的 step-finish 口径，HTTP 尝试数继续未知。原执行、资源、分数与封存保持。
