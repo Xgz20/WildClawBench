@@ -6,6 +6,7 @@ import io
 import json
 import re
 from pathlib import Path
+import os
 import shutil
 import sys
 import uuid
@@ -435,5 +436,25 @@ def prepare_batch(repo: Path, workspace: Path, raw_plan: dict, *, expected_selec
 
 
 def _revision(repo: Path) -> str:
+    # CI/CD framework artifacts intentionally omit .git. The deployment pipeline
+    # records the checked-out commit in WCB_E2E_REVISION so describe/resume still
+    # exposes a stable provenance value inside the read-only release directory.
+    configured = os.environ.get("WCB_E2E_REVISION", "").strip()
+    if not configured:
+        marker = repo / ".wildclawbench-revision"
+        if marker.is_file():
+            configured = marker.read_text(encoding="utf-8").strip()
+    if configured:
+        if not re.fullmatch(r"[0-9a-fA-F]{40}", configured):
+            raise ValueError("WCB_E2E_REVISION_INVALID")
+        return configured.lower()
+
     import subprocess
-    return subprocess.run(["git", "rev-parse", "HEAD"], cwd=repo, capture_output=True, text=True, check=True).stdout.strip()
+
+    return subprocess.run(
+        ["git", "rev-parse", "HEAD"],
+        cwd=repo,
+        capture_output=True,
+        text=True,
+        check=True,
+    ).stdout.strip()
