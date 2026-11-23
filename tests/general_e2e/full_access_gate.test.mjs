@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { requireFullAccess, invokeWithFullAccess } from '../../tools/report/e2e-shared/desktop-gui/formal-permission.mjs';
-import { assertConfiguration, sendOnce } from '../../tools/report/e2e-shared/loomy/ui.mjs';
+import { assertConfiguration, guardSend } from '../../tools/report/e2e-shared/loomy/ui.mjs';
 import { clickSend } from '../../tools/report/skills/general-e2e/execute-general-e2e/scripts/lib/astronstudio-cdp.mjs';
 import { dispatchWorkBuddyPrompt } from '../../tools/report/skills/general-e2e/execute-general-e2e/drivers/workbuddy/ui.mjs';
 import { dispatchQwenPrompt, QWEN_PERMISSION_SELECTOR, QWEN_SEND_SELECTOR, classifyQwenPermissionLabel } from '../../tools/report/skills/general-e2e/execute-general-e2e/drivers/qwenwork/ui.mjs';
@@ -30,7 +30,7 @@ test('new Loomy policy blocks default, while legacy replay retains observed defa
   assert.equal(assertConfiguration(loomSnapshot('默认权限'),{...legacy,permission_policy:'require-full-access'},
     {preparingWorkspace:true}).permission_label,'默认权限');
   // Rejection precedes any attempt to use the absent AX helper.
-  await assert.rejects(sendOnce(legacy,'prompt'),/FULL_ACCESS_REQUIRED/);
+  await assert.rejects(guardSend(legacy,'/workspace','prompt',true),/FULL_ACCESS_REQUIRED/);
 });
 test('AStudio rechecks permission after target readiness before any mouse event',async()=>{
   let reads=0;const events=[];const client={evaluate:async()=>++reads===1?{ready:true,count:1,x:1,y:2}:{permission_count:1,permission:'默认权限'},send:async(...a)=>events.push(a)};

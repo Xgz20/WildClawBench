@@ -2,6 +2,7 @@ import { mkdir, mkdtemp, readFile, realpath, rename, rm, writeFile, lstat } from
 import { dirname, join, relative, resolve } from 'node:path';
 import { artifact, captureNative, currentOwnedRuntime, iso, jsonBytes, PROFILE, requireValue, runtimeStatus, sha, verifyBinding, verifyNativeHttpFailure, verifyNativeLengthFailure, verifyNativeTerminalFailure, COMPONENT_VERSION } from './index.mjs';
 import { applyJournalRuntime, buildState, checkNativeModel, lease, loadTask, verifyRuntime } from './execution.mjs';
+import { nativeUsage } from './metrics.mjs';
 
 const lines = rows => Buffer.from(rows.map(row => JSON.stringify(row)).join('\n') + '\n');
 const metric = (value, basis, status = 'observed') => ({ value, status, basis });
@@ -120,7 +121,7 @@ export function normalizeTrace(native, { state, prompt, baseline, nativeFailure 
 }
 const digestError = value => JSON.stringify(value);
 
-export function resourceMetrics({ state, normalized, sources }) {
+export function resourceMetrics({ state, normalized, sources, legacy = false }) {
   const nativeStart = normalized.binding.user.parsed.time?.created ?? normalized.binding.user.time_created;
   const nativeEnd = normalized.binding.final?.parsed.time?.completed;
   const nativeElapsed = Number.isSafeInteger(nativeStart) && Number.isSafeInteger(nativeEnd) && nativeEnd >= nativeStart
@@ -131,7 +132,7 @@ export function resourceMetrics({ state, normalized, sources }) {
   coverage.call_count = { known: normalized.calls.length, total: normalized.calls.length, unit: 'tool_call' };
   coverage.duration_seconds = { known: 1, total: 1, unit: 'attempt' };
   coverage.agent_duration_seconds = { known: nativeElapsed === null ? 0 : 1, total: 1, unit: 'attempt' };
-  return { schema_id: 'urn:wildclawbench:schema:general-e2e:resource-metrics:v1', schema_version: 1, identity: state.identity,
+  const result = { schema_id: 'urn:wildclawbench:schema:general-e2e:resource-metrics:v1', schema_version: 1, identity: state.identity,
     collection: { collector: PROFILE, version: COMPONENT_VERSION, status: 'partial', collected_at: new Date().toISOString(), sources,
       warnings: ['LOOMY_TOKEN_SEMANTICS_NOT_ADMITTED', 'LOOMY_MODEL_REQUEST_SEMANTICS_NOT_ADMITTED',
         ...(state.human_assistance?.operation_count === null ? ['LOOMY_ABORT_HUMAN_ASSISTANCE_COUNTS_UNAVAILABLE'] : [])],
@@ -144,6 +145,17 @@ export function resourceMetrics({ state, normalized, sources }) {
       timing: { duration_seconds: metric(state.execution.duration_seconds, 'Controller prompt dispatch to observed native terminal; same controller clock'),
         agent_duration_seconds: nativeElapsed === null ? unavailable('Missing or reversed native message timestamps')
           : metric(nativeElapsed, 'Bound first user created to final root assistant completed; same OpenCode runtime clock', 'inferred') } } };
+  if (!legacy) {
+    const usage = nativeUsage(normalized.binding);
+    Object.assign(result.metrics, usage.metrics);
+    Object.assign(result.collection.coverage, usage.collection.coverage);
+    result.collection.known_subtotals = usage.collection.known_subtotals;
+    result.collection.native_usage_profile = usage.profile;
+    result.collection.native_usage_reconciliation = usage.reconciliation;
+    result.collection.warnings = [...usage.collection.warnings,
+      ...(state.human_assistance?.operation_count === null ? ['LOOMY_ABORT_HUMAN_ASSISTANCE_COUNTS_UNAVAILABLE'] : [])];
+  }
+  return result;
 }
 
 export async function collectTask(options) {

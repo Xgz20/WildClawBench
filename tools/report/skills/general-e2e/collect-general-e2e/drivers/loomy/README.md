@@ -25,8 +25,25 @@ Collector 重新读取只读 SQLite 在线备份中精确绑定的根 session �
 
 工具数来自绑定原生 call ID。流程耗时采用控制器发送到确认原生终态的同机时间；
 原生耗时按同一 OpenCode 时钟的首条用户消息创建到主最终助手完成区间推导，并标记
-`inferred`。Token、缓存、推理 Token 和模型请求计数的提供方语义尚未准入，原始字段
-保留，正式数值为 `null/unavailable`。
+`inferred`。新资源 Profile 为 `loomy-opencode-recorded-usage/v1`：
+
+- 每条绑定 assistant 的 `tokens` 与 `step-finish.tokens` 为同一用量的重复投影，只计一次；包含递归子会话，排除控制器、裁判及无关 session。
+- 输入总量=`input + cache.read + cache.write`，输出=`output + reasoning`，逐条与原生 `total` 对账。缓存分别单列，不能再次加到已含缓存的输入中。
+- 原生 `total` 或必要分项缺失时，该条用量未知，不把初始化零计为真实零；记录已知小计、原生消息覆盖和缺失 ID。
+- `finish=length` 的负输出分项，仅在合并推理后非负且与原生总量完全相等时接受合并输出；原值与异常 ID 留证，不钳制负值。此类推理分项保持未知。
+- 请求数与既有 OpenCode CLI 一致，统计唯一 `step-finish` 记录；不是 assistant 消息数，也不包含没有 step-finish 的失败请求和未观测 HTTP 重试。`request_attempt_count` 保持未知。
+
+历史资源不覆盖。使用新的工作副本及本 Skill 的离线补充入口后，报告再独立重验：
+
+```bash
+node scripts/supplement_resources.mjs create --unit-root /absolute/derived/unit \
+  --execution-record /absolute/derived/unit/evidence/tasks/TASK/ATTEMPT/execution-record.json
+node scripts/supplement_resources.mjs verify --unit-root /absolute/derived/unit \
+  --execution-record /absolute/derived/unit/evidence/tasks/TASK/ATTEMPT/execution-record.json --task-id TASK
+```
+
+工作副本必须保留原执行、资源、trace-index、全部绑定原件及 SHA；补充只写新目录。
+旧 `<=0.1.21` 资源 Profile 继续按原 null 口径独立回放，不追改历史原件。
 
 正式 finalizer 使用真实 macOS Workspace 进程清理、安静窗口和通用候选树冻结。
 发布与 `verify-only` 都会独立重放 Loomy 归一化、Prompt／模型绑定、完整路径准备

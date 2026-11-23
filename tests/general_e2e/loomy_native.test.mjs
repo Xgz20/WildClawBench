@@ -276,12 +276,13 @@ test('Loomy retains unknown part coverage and refuses unaudited human question a
   assert.throws(() => normalizeTrace(question, { state: state(), prompt, baseline: [] }), /INTERVENTION_RECEIPT/);
 });
 
-test('Loomy resources expose proved tool zero and leave unadmitted token/request fields null', () => {
+test('Loomy resources retain missing usage while counting the observed step-finish records', () => {
   const current = state(), normalized = normalizeTrace(fixture({ tool: false }), { state: current, prompt, baseline: [] });
   const value = resourceMetrics({ state: current, normalized, sources: [] });
   assert.equal(value.metrics.tools.call_count.value, 0); assert.equal(value.metrics.tools.call_count.status, 'observed');
   for (const row of Object.values(value.metrics.usage)) { assert.equal(row.value, null); assert.equal(row.status, 'unavailable'); }
-  assert.equal(value.metrics.requests.request_count.value, null);
+  assert.equal(value.metrics.requests.request_count.value, 0);
+  assert.equal(resourceMetrics({ state: current, normalized, sources: [], legacy: true }).metrics.requests.request_count.value, null);
   assert.equal(value.metrics.timing.duration_seconds.value, 1.2);
   assert.equal(value.metrics.timing.agent_duration_seconds.value, 1);
 });

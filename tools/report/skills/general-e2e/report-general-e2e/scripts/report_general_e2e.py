@@ -670,7 +670,7 @@ def validate_return_supplement_scope(unit_root: Path, unit: Mapping[str, Any]) -
         if not folder.exists():
             continue
         harness = unit.get('harness', {}).get('id')
-        if folder.is_symlink() or not folder.is_dir() or harness not in {'workbuddy', 'astronstudio'}:
+        if folder.is_symlink() or not folder.is_dir() or harness not in {'workbuddy', 'astronstudio', 'loomy'}:
             raise ReportError('RESOURCE_SUPPLEMENT_SCOPE_INVALID')
         for path in folder.iterdir():
             if path.name not in unit['task_ids'] or path.is_symlink() or not path.is_dir():
@@ -678,6 +678,16 @@ def validate_return_supplement_scope(unit_root: Path, unit: Mapping[str, Any]) -
             if harness == 'astronstudio':
                 manifest = path / 'supplement.json'
                 if kind != 'resource-supplements' or not manifest.is_file() or manifest.is_symlink() or json.loads(manifest.read_text()).get('schema_version') != 'wildclawbench.agentcube-resource-supplement/v1':
+                    raise ReportError('RESOURCE_SUPPLEMENT_SCOPE_INVALID')
+            if harness == 'loomy':
+                manifest = path / 'supplement.json'
+                if kind != 'resource-supplements' or not manifest.is_file() or manifest.is_symlink():
+                    raise ReportError('RESOURCE_SUPPLEMENT_SCOPE_INVALID')
+                value = json.loads(manifest.read_text())
+                if (value.get('schema_version') != 'wildclawbench.general-e2e-resource-supplement/v1'
+                        or value.get('profile') != 'loomy-opencode-recorded-usage/v1'
+                        or value.get('harness') != 'loomy' or value.get('score_changed') is not False
+                        or value.get('zero_imputation_used') is not False):
                     raise ReportError('RESOURCE_SUPPLEMENT_SCOPE_INVALID')
 
 

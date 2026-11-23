@@ -32,10 +32,10 @@ EXPECTED_COMPONENTS: Tuple[SharedComponentSpec, ...] = (
         entrypoints=("state.mjs", "guard.mjs", "diagnostics.mjs", "structured-ledger.mjs"),
     ),
     SharedComponentSpec(
-        name="loomy", version="0.1.21",
+        name="loomy", version="0.1.22",
         source_root="tools/report/e2e-shared/loomy",
         vendor_root="vendor/e2e-shared/loomy",
-        entrypoints=("index.mjs", "ui.mjs", "execution.mjs", "batch.mjs", "collection.mjs", "verification.mjs", "native-state.py", "macos-ax.swift"),
+        entrypoints=("index.mjs", "ui.mjs", "execution.mjs", "batch.mjs", "collection.mjs", "metrics.mjs", "verification.mjs", "native-state.py", "macos-ax.swift"),
     ),
     SharedComponentSpec(
         name="astronstudio-start-rejection", version="1.0.9",
@@ -54,7 +54,7 @@ EXPECTED_COMPONENTS: Tuple[SharedComponentSpec, ...] = (
         vendor_root="vendor/e2e-shared/sqlite-snapshot", entrypoints=("index.mjs",),
     ),
     SharedComponentSpec(
-        name="general-resource-supplements", version="1.3.19",
+        name="general-resource-supplements", version="1.3.20",
         source_root="tools/report/e2e-shared/general-resource-supplements",
         vendor_root="vendor/e2e-shared/general-resource-supplements",
         entrypoints=("astronstudio-final-prefix-divergence.mjs", "astronstudio-runtime-interruption.mjs", "index.mjs", "archive_astronstudio_trace.mjs", "collect_astronstudio_resource_metrics.mjs", "astronstudio-rollout.mjs", "astronstudio-native-provider-log.mjs", "astronstudio-terminal-final-recapture.mjs", "astronstudio-terminal-projection.mjs", "agentcube-native-binding.mjs", "agentcube-native-resource.mjs", "agentcube-workbuddy-binding.mjs"),

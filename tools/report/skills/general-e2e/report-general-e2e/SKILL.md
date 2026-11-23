@@ -3,6 +3,8 @@ name: report-general-e2e
 description: 校验并汇总 General E2E submission 和回传包，生成同源 JSON、Markdown 与 Excel 报告；不执行用例、补评分或把评测异常计为能力零分。
 ---
 
+`0.10.2` 接纳经独立来源与逐消息总量重验的 Loomy 资源补充层。Token、缓存、请求数进入同源 JSON/Markdown/Excel，部分用量显示已知小计和覆盖；请求数沿用 OpenCode CLI 的 step-finish 口径，HTTP 尝试数继续未知。原执行、资源、分数与封存保持。
+
 `0.10.1` 整合公司端最新报告修复和挑战集能力映射，支持按各数据集冻结的分类及五维、七维配置生成报告。
 
 `0.8.68` Loomy 对精确已完成的 MessageAbortedError 与 finish=other 保留失败、原候选及原生轨迹，跨同一安装的后端更换仍须先证明原会话全部结束。未答问题只接纳原生 aborted/error 完整回执，已答或待答问题不准入；无法确认的人工介入计数保留 null。沿原 Rubric 独立评分，不补答案、不重发、不统一零分；旧冻结发行和数值规则保持。
@@ -216,6 +218,8 @@ python scripts/report_general_e2e.py validate-inputs \
 校验会重算已选 package 的成员 SHA、package ID、unit manifest、collect/package/import receipt、submission、execution record、score 和 resource metrics；导入后的漂移仍会失败。
 
 若回传包含 `unit/evidence/resource-supplements/<task-id>/`，报告端用随包 `workbuddy-jsonl-metrics` 组件重验原 execution/resource/collect receipt 的 SHA、session/cwd/Prompt/请求归属，并复算每个补采数值。验证命令需要 Node（默认 PATH，可用 `GENERAL_E2E_NODE` 指定）。失败不能回退为旧值。补采仅替换报告的资源观测；score、submission 与原 execution record 保持原哈希，JSON lineage 同时保留新旧指标及补充清单哈希。旧 WorkBuddy 顶层 request=1 不能继续冒充模型调用次数，未补采时该值展示为 unavailable。
+
+Loomy 使用 `loomy-opencode-recorded-usage/v1` 补充层时，必须从新工作副本的 `unit/evidence/resource-supplements/<task-id>/supplement.json` 验证原执行、资源、trace-index、发送与原生终态的 SHA 绑定，并逐消息复算用量。只读重放沿用原权限条件，不能补拍完全访问证明。报告保留旧资源观测及新补充清单 SHA；Token 未覆盖的消息不补零，推理拆分异常不作完整推理值。总请求数是 OpenCode CLI 的 step-finish 记录数，HTTP 尝试数继续未知。
 
 ## 生成报告
 

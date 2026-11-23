@@ -30,7 +30,7 @@ class GeneralE2ESkillLayoutTests(unittest.TestCase):
         for component,scopes in [
             ('desktop-gui',[('general-e2e','execute-general-e2e'),('general-e2e','collect-general-e2e'),('web-e2e','execute-web-e2e')]),
             ('doubaowork',[('general-e2e','execute-general-e2e'),('general-e2e','collect-general-e2e'),('web-e2e','execute-web-e2e')]),
-            ('loomy',[('general-e2e','execute-general-e2e'),('general-e2e','collect-general-e2e')]),
+            ('loomy',[('general-e2e','execute-general-e2e'),('general-e2e','collect-general-e2e'),('general-e2e','score-general-e2e'),('general-e2e','report-general-e2e')]),
         ]:
             source=root/'e2e-shared'/component
             for p in source.rglob('*'):
@@ -75,14 +75,14 @@ class GeneralE2ESkillLayoutTests(unittest.TestCase):
                 get_skill_spec("execute-general-e2e").version,
                 get_skill_spec("execute-general-e2e").implementation_status,
             ),
-            ("0.15.29", "operational"),
+            ("0.15.30", "operational"),
         )
         self.assertEqual(
             (
                 get_skill_spec("collect-general-e2e").version,
                 get_skill_spec("collect-general-e2e").implementation_status,
             ),
-            ("0.12.36", "operational"),
+            ("0.12.37", "operational"),
         )
         self.assertEqual(
             (
@@ -96,7 +96,7 @@ class GeneralE2ESkillLayoutTests(unittest.TestCase):
                 get_skill_spec("score-general-e2e").version,
                 get_skill_spec("score-general-e2e").implementation_status,
             ),
-            ("0.29.2", "operational"),
+            ("0.29.3", "operational"),
         )
         self.assertEqual(
             (
@@ -110,7 +110,7 @@ class GeneralE2ESkillLayoutTests(unittest.TestCase):
                 get_skill_spec("report-general-e2e").version,
                 get_skill_spec("report-general-e2e").implementation_status,
             ),
-            ("0.10.1", "operational"),
+            ("0.10.2", "operational"),
         )
         self.assertTrue(
             all(

@@ -170,7 +170,7 @@
     },
     {
       "name": "general-resource-supplements",
-      "version": "1.3.19",
+      "version": "1.3.20",
       "source_root": "tools/report/e2e-shared/general-resource-supplements",
       "vendor_root": "vendor/e2e-shared/general-resource-supplements",
       "entrypoints": [
@@ -220,7 +220,7 @@
     },
     {
       "name": "loomy",
-      "version": "0.1.21",
+      "version": "0.1.22",
       "source_root": "tools/report/e2e-shared/loomy",
       "vendor_root": "vendor/e2e-shared/loomy",
       "entrypoints": [
@@ -229,6 +229,7 @@
         "execution.mjs",
         "batch.mjs",
         "collection.mjs",
+        "metrics.mjs",
         "verification.mjs",
         "native-state.py",
         "macos-ax.swift"

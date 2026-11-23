@@ -13,6 +13,8 @@ import { collectAstronStudioResourceMetrics } from "./collect_astronstudio_resou
 import { recountArchivedTools } from "../doubaowork/tool-counts.mjs";
 import { SUPPLEMENT_SCHEMA as ROLLOUT_SCHEMA, verifyRolloutSupplement } from "./astronstudio-rollout.mjs";
 import {AGENTCUBE_RESOURCE_SCHEMA, createAgentCubeResourceSupplement, verifyAgentCubeResourceSupplement} from './agentcube-native-resource.mjs';
+import { nativeUsage, USAGE_PROFILE } from '../loomy/metrics.mjs';
+import { verifyArchivedLoomy, verifyLoomyResources } from '../loomy/verification.mjs';
 
 export const SCHEMA = "wildclawbench.general-e2e-resource-supplement/v1";
 const ensure = (ok, code) => { if (!ok) throw Error(code); };
@@ -73,6 +75,38 @@ async function normalizeAstron(root,state,originalIndex) {
 }
 async function compute(root,execution,{output}={}) {
   const stateFile=join(root,"execution/automation-state.json"),traceIndex=join(root,"trace/trace-index.json");
+  if (execution.harness.id === 'loomy') {
+    const state = await load(stateFile), index = await load(traceIndex), traceRoot = dirname(traceIndex);
+    const {agent_duration_seconds: nativeDuration, ...recordExecution} = execution.execution;
+    const {cancellation_confirmed: cancellation, ...stateExecution} = state.execution;
+    const {binding_evidence: _binding, ...stateSession} = state.session;
+    const {path: _promptPath, ...statePrompt} = state.prompt;
+    ensure(cancellation === null && same(state.identity, execution.identity) && same(stateExecution, recordExecution)
+      && state.phase === execution.phase && same(stateSession, execution.session)
+      && same(statePrompt, execution.prompt), 'SUPPLEMENT_LOOMY_EXECUTION_BINDING');
+    const original = await load(join(root, 'original-resource-metrics.json'));
+    ensure(same(original.identity, execution.identity)
+      && nativeDuration === original.metrics.timing.agent_duration_seconds.value, 'SUPPLEMENT_LOOMY_RESOURCE_IDENTITY');
+    await verifyLoomyResources(original, state, index, traceRoot);
+    const normalized = await verifyArchivedLoomy(index, state, traceRoot);
+    ensure(normalized !== null, 'SUPPLEMENT_LOOMY_ADAPTER');
+    const usage = nativeUsage(normalized.binding), result = structuredClone(original);
+    Object.assign(result.metrics, usage.metrics);
+    Object.assign(result.collection.coverage, usage.collection.coverage);
+    result.collection.known_subtotals ??= {};
+    for (const field of Object.keys(usage.collection.coverage)) delete result.collection.known_subtotals[field];
+    Object.assign(result.collection.known_subtotals, usage.collection.known_subtotals);
+    result.collection.collector = 'loomy-native-resource-supplement';
+    result.collection.version = '1.0.0';
+    result.collection.native_usage_profile = usage.profile;
+    result.collection.native_usage_reconciliation = usage.reconciliation;
+    result.collection.warnings = [...new Set([...(original.collection.warnings || [])
+      .filter(value => !['LOOMY_TOKEN_SEMANTICS_NOT_ADMITTED', 'LOOMY_MODEL_REQUEST_SEMANTICS_NOT_ADMITTED'].includes(value)),
+      ...usage.collection.warnings])];
+    result.collection.native_parser = {profile: USAGE_PROFILE,
+      sha256: digest(await readFile(new URL('../loomy/metrics.mjs', import.meta.url)))};
+    return result;
+  }
   if(execution.harness.id==="astronstudio"){
     const temporary=await mkdtemp(join(tmpdir(),"general-resource-verify-"));
     try{
@@ -109,6 +143,8 @@ export async function createResourceSupplement({unitRoot,executionRecord,stateFi
     await copyBound(stateFile,join(stage,"execution/automation-state.json"));
     await copyBound(traceIndex,join(stage,"original-trace-index.json"));
     await copyBound(traceIndex,join(stage,"trace/trace-index.json"));
+    if (execution.harness.id === 'loomy')
+      await copyBound(child(unitRoot, execution.resource_metrics_path), join(stage, 'original-resource-metrics.json'));
     const seen=new Set();
     for(const entry of [index.transcript,...index.raw_trace,...(index.binding_evidence||[])]){
       ensure(!seen.has(entry.path),"SUPPLEMENT_DUPLICATE_ARTIFACT");seen.add(entry.path);
@@ -119,15 +155,17 @@ export async function createResourceSupplement({unitRoot,executionRecord,stateFi
     const manifest={schema_version:SCHEMA,identity:execution.identity,harness:execution.harness.id,
       execution_record_sha256:original.sha256,original_resource_sha256:execution.resource_metrics_path?(await hashFile(child(unitRoot,execution.resource_metrics_path))).sha256:null,
       metrics_path:"resource-metrics.json",trace_index_path:"trace/trace-index.json",score_changed:false,
+      ...(execution.harness.id === 'loomy' ? {profile: USAGE_PROFILE, zero_imputation_used: false,
+        original_trace_index_sha256: (await hashFile(traceIndex)).sha256} : {}),
       artifacts:await inventory(stage)};
     await writeFile(join(stage,"supplement.json"),bytes(manifest),{flag:"wx"});
     ensure(same(await hashFile(executionRecord),original),"SUPPLEMENT_EXECUTION_CHANGED");
     await rename(stage,out);return await verifyResourceSupplement({unitRoot,taskId:task,executionRecord});
   }catch(e){await rm(stage,{recursive:true,force:true});throw e;}
 }
-export async function verifyResourceSupplement({unitRoot,taskId,executionRecord}) {
+export async function verifyResourceSupplement({unitRoot,taskId,executionRecord,directory=null}) {
   ensure(/^[A-Za-z0-9][A-Za-z0-9_.-]*$/.test(taskId),"SUPPLEMENT_TASK_ID");
-  const root=join(resolve(unitRoot),"evidence/resource-supplements",taskId),manifest=await load(join(root,"supplement.json")),ex=await load(executionRecord);
+  const root=directory ? resolve(directory) : join(resolve(unitRoot),"evidence/resource-supplements",taskId),manifest=await load(join(root,"supplement.json")),ex=await load(executionRecord);
   if(manifest.schema_version===AGENTCUBE_RESOURCE_SCHEMA)
     return verifyAgentCubeResourceSupplement({unitRoot,taskId,executionRecord});
   ensure(await realpath(root)===root&&manifest.metrics_path==="resource-metrics.json"&&manifest.trace_index_path==="trace/trace-index.json","SUPPLEMENT_LAYOUT_INVALID");
@@ -136,6 +174,12 @@ export async function verifyResourceSupplement({unitRoot,taskId,executionRecord}
   ensure(same(await inventory(root),manifest.artifacts),"SUPPLEMENT_ARTIFACT_DRIFT");
   ensure((await hashFile(join(root,"original-execution-record.json"))).sha256===manifest.execution_record_sha256,"SUPPLEMENT_EXECUTION_COPY_DRIFT");
   if(manifest.original_resource_sha256)ensure((await hashFile(child(unitRoot,ex.resource_metrics_path))).sha256===manifest.original_resource_sha256,"SUPPLEMENT_ORIGINAL_RESOURCE_DRIFT");
+  if (ex.harness.id === 'loomy') ensure(manifest.profile === USAGE_PROFILE && manifest.zero_imputation_used === false
+    && (await hashFile(join(root, 'original-resource-metrics.json'))).sha256 === manifest.original_resource_sha256
+    && (await hashFile(child(unitRoot, ex.evidence.trace_index_path))).sha256 === manifest.original_trace_index_sha256
+    && (await hashFile(join(root, 'trace/trace-index.json'))).sha256 === manifest.original_trace_index_sha256
+    && (await hashFile(join(root, 'original-trace-index.json'))).sha256 === manifest.original_trace_index_sha256,
+  'SUPPLEMENT_LOOMY_SOURCE_DRIFT');
   const recorded=await load(join(root,manifest.metrics_path)),computed=await compute(root,ex);
   ensure(same(recorded,computed),"SUPPLEMENT_RECOMPUTATION_MISMATCH");
   return {status:"PASS",identity:ex.identity,metrics:computed,manifest_sha256:(await hashFile(join(root,"supplement.json"))).sha256,
@@ -148,7 +192,23 @@ export async function verifyExternalResourceSupplement({unitRoot, executionRecor
   // their original source hashes and recompute; never trust supplied totals.
   workspaceRoot=resolve(workspaceRoot);directory=resolve(directory);
   ensure(inside(workspaceRoot,directory),"EXTERNAL_SUPPLEMENT_SCOPE");
-  const doc=await load(join(directory,"resource-supplement.json")),ex=await load(executionRecord);
+  let manifestName = 'resource-supplement.json';
+  try { await lstat(join(directory, manifestName)); } catch (error) {
+    if (error.code !== 'ENOENT') throw error;
+    manifestName = 'supplement.json';
+  }
+  const doc=await load(join(directory,manifestName)),ex=await load(executionRecord);
+  if (doc.schema_version === SCHEMA && doc.profile === USAGE_PROFILE) {
+    ensure(ex.harness.id === 'loomy', 'EXTERNAL_SUPPLEMENT_LOOMY_HARNESS');
+    const result = await verifyResourceSupplement({unitRoot, taskId:ex.identity.task_id, executionRecord, directory});
+    const events = (await readFile(join(directory, 'trace/transcript.jsonl'), 'utf8')).split('\n').filter(Boolean).map(JSON.parse);
+    const calls = events.filter(row => row.type === 'tool_call'), byTool = {};
+    ensure(new Set(calls.map(row => row.tool.call_id)).size === calls.length
+      && calls.length === result.metrics.metrics.tools.call_count.value, 'EXTERNAL_SUPPLEMENT_LOOMY_TOOLS');
+    for (const row of calls) byTool[row.tool.name] = (byTool[row.tool.name] || 0) + 1;
+    return {...result, score_changed:false, tool_counts:{status:'complete', total:calls.length,
+      by_tool:byTool, basis:'Existing bound Loomy native tool calls; usage-only supplement'}};
+  }
   if(doc.schema_version===ROLLOUT_SCHEMA){
     const rollout=await verifyRolloutSupplement({directory,executionRecord});
     for(const a of doc.artifacts)ensure(same(await hashFile(child(directory,a.path)),{sha256:a.sha256,size:a.size}),"ROLLOUT_SUPPLEMENT_ARTIFACT_DRIFT");

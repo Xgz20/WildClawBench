@@ -34,6 +34,31 @@ RELEASE_DIGEST = "2" * 64
 TASKS = ["task-zero", "task-valid", "task-error", "task-unscored"]
 
 
+class LoomyResourceSupplementScopeTests(unittest.TestCase):
+    def test_only_bound_resource_profile_enters_the_report_scope(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            folder = root / 'evidence/resource-supplements/task-one'
+            folder.mkdir(parents=True)
+            manifest = folder / 'supplement.json'
+            value = {'schema_version': 'wildclawbench.general-e2e-resource-supplement/v1',
+                     'profile': 'loomy-opencode-recorded-usage/v1', 'harness': 'loomy',
+                     'score_changed': False, 'zero_imputation_used': False}
+            manifest.write_text(json.dumps(value))
+            unit = {'harness': {'id': 'loomy'}, 'task_ids': ['task-one']}
+            REPORT.validate_return_supplement_scope(root, unit)
+            for change in ({'profile': 'unknown'}, {'score_changed': True}, {'zero_imputation_used': True}):
+                manifest.write_text(json.dumps({**value, **change}))
+                with self.assertRaisesRegex(REPORT.ReportError, 'RESOURCE_SUPPLEMENT_SCOPE_INVALID'):
+                    REPORT.validate_return_supplement_scope(root, unit)
+            manifest.write_text(json.dumps(value))
+            with self.assertRaisesRegex(REPORT.ReportError, 'RESOURCE_SUPPLEMENT_SCOPE_INVALID'):
+                REPORT.validate_return_supplement_scope(root, {**unit, 'task_ids': ['other']})
+            folder.rename(root / 'evidence/timing-supplements')
+            with self.assertRaisesRegex(REPORT.ReportError, 'RESOURCE_SUPPLEMENT_SCOPE_INVALID'):
+                REPORT.validate_return_supplement_scope(root, unit)
+
+
 class DatasetReportMetadataTests(unittest.TestCase):
     def row(self, *, task_id="general_hard_research_verification_task_001_example", label="研究检索与证据核验"):
         contract = {"schema_version": "wildclawbench.dataset-report-contract/v1", "series_id": "general-hard",

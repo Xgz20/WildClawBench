@@ -11,7 +11,7 @@ import { LOOMY_APP_PROFILE } from '../desktop-app-discovery/profiles.mjs';
 import { inspectMacGuiSession, assertMacGuiReady } from '../desktop-gui/macos.mjs';
 import { requireFullAccess } from '../desktop-gui/formal-permission.mjs';
 
-export const COMPONENT_VERSION = '0.1.21';
+export const COMPONENT_VERSION = '0.1.22';
 export const SEND_GUARD_PROFILE = 'loomy-exact-workspace-ax-send/v1';
 export const MEMORY_CONTEXT_PREFIX = '## 可用记忆条目\n\n';
 export const EMPTY_MEMORY_CONTEXT = MEMORY_CONTEXT_PREFIX + '当前没有可用记忆条目。不要调用 Read 读取记忆文件，也不要猜测任何文件路径；直接基于本轮对话自然回复。';

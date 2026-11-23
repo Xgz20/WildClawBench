@@ -282,8 +282,16 @@ export async function verifyArchivedLoomy(index, state, traceRoot) {
 export async function verifyLoomyResources(value, state, index, traceRoot) {
   if (index.adapter?.id !== PROFILE) return;
   const normalized = await verifyArchivedLoomy(index, state, traceRoot);
-  const expected = resourceMetrics({ state, normalized, sources: value.collection.sources });
+  const version = value.collection.version?.split('.').map(Number);
+  requireValue(version?.length === 3 && version.every(Number.isSafeInteger)
+    && value.collection.version === index.adapter.version, 'ARCHIVE_RESOURCE_VERSION_INVALID');
+  const legacy = version[0] === 0 && (version[1] < 1 || version[1] === 1 && version[2] <= 21);
+  requireValue(legacy || value.collection.native_usage_profile === 'loomy-opencode-recorded-usage/v1', 'ARCHIVE_RESOURCE_PROFILE_INVALID');
+  const expected = resourceMetrics({ state, normalized, sources: value.collection.sources, legacy });
   requireValue(digest(value.metrics) === digest(expected.metrics) && digest(value.collection.coverage) === digest(expected.collection.coverage)
     && value.collection.status === expected.collection.status
     && digest(value.collection.warnings) === digest(expected.collection.warnings), 'ARCHIVE_RESOURCE_REPLAY_MISMATCH');
+  if (!legacy) requireValue(digest(value.collection.known_subtotals) === digest(expected.collection.known_subtotals)
+    && digest(value.collection.native_usage_reconciliation) === digest(expected.collection.native_usage_reconciliation),
+  'ARCHIVE_NATIVE_USAGE_REPLAY_MISMATCH');
 }

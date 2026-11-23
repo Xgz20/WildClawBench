@@ -143,7 +143,9 @@
         "general-resource-supplements",
         "sqlite-snapshot",
         "desktop-gui",
-        "astronstudio-start-rejection"
+        "astronstudio-start-rejection",
+        "loomy",
+        "desktop-app-discovery"
       ]
     },
     {
@@ -160,7 +162,9 @@
         "desktop-gui",
         "sqlite-snapshot",
         "independent-validity",
-        "astronstudio-start-rejection"
+        "astronstudio-start-rejection",
+        "loomy",
+        "desktop-app-discovery"
       ]
     },
     {
