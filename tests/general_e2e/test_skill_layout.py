@@ -25,6 +25,13 @@ EXPECTED_NAMES = (
 
 
 class GeneralE2ESkillLayoutTests(unittest.TestCase):
+    def test_live_score_and_report_resource_verifiers_have_their_import_dependencies(self) -> None:
+        for name in ('score-general-e2e', 'report-general-e2e'):
+            entry = REPO_ROOT / 'tools/report/skills/general-e2e' / name / 'vendor/e2e-shared/general-resource-supplements/index.mjs'
+            run = subprocess.run(['node', '--input-type=module', '-e', 'await import(' + json.dumps(entry.as_uri()) + ')'],
+                                 capture_output=True, text=True, timeout=30)
+            self.assertEqual(run.returncode, 0, run.stderr)
+
     def test_live_checkout_vendor_mirrors_match_changed_canonical_components(self) -> None:
         root=REPO_ROOT/'tools/report'
         for component,scopes in [
