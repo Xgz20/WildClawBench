@@ -1,0 +1,77 @@
+{
+  "schema_version": "wildclawbench.general-e2e-reference-supplement-input/v1",
+  "task_id": "01_Information_Search_Organization_task_002_nonlinear_substructuring_author_bibliography",
+  "source_score_sha256": "531efb50e29a84aae9fd70cbdc0260b28bbeda130db0043586d57dbbf3904944",
+  "documents": [
+    {
+      "name": "appendix-1.txt",
+      "path": "appendix-1.txt",
+      "sha256": "25bd872c88a2a8f51ca245083e41764f640079ce6219336c988f9c4586076287",
+      "size": 3829,
+      "url": "https://link.springer.com/article/10.1007/s00466-025-02655-9",
+      "retrieved_at": "2026-11-23T11:13:38.438012+00:00",
+      "kind": "publisher_public_appendices",
+      "description": "Appendix 1: Periodic solutions to exponential factor modified equations; publisher anchor #App1; equations Equ27, Equ28, Equ29. UTF-8 text projection from public HTML; raw HTML retained separately. Not full article; not candidate output."
+    },
+    {
+      "name": "appendix-2.txt",
+      "path": "appendix-2.txt",
+      "sha256": "39f44b4ccd7571b3857903cb4c61ab18e576be46fb4a15747edffbcbc343d078",
+      "size": 3444,
+      "url": "https://link.springer.com/article/10.1007/s00466-025-02655-9",
+      "retrieved_at": "2026-11-23T11:13:38.438012+00:00",
+      "kind": "publisher_public_appendices",
+      "description": "Appendix 2: Fundamental solutions subjected to mixed boundary conditions; publisher anchor #App2; equations Equ30, Equ31, Equ32, Equ33, Equ34. UTF-8 text projection from public HTML; raw HTML retained separately. Not full article; not candidate output."
+    },
+    {
+      "name": "appendix-3.txt",
+      "path": "appendix-3.txt",
+      "sha256": "0666e1099de3de740f4d58f27f5b0edf6f08f0124d916e162928baeb1ee84c6c",
+      "size": 3545,
+      "url": "https://link.springer.com/article/10.1007/s00466-025-02655-9",
+      "retrieved_at": "2026-11-23T11:13:38.438012+00:00",
+      "kind": "publisher_public_appendices",
+      "description": "Appendix 3: Phase field model; publisher anchor #App3; equations Equ35, Equ36, Equ37, Equ38, Equ39, Equ40, Equ41, Equ42. UTF-8 text projection from public HTML; raw HTML retained separately. Not full article; not candidate output."
+    },
+    {
+      "name": "appendix-4.txt",
+      "path": "appendix-4.txt",
+      "sha256": "6fa2085be2259bf3a7f9e67cfd6c5ff5f2838287ae56a6acf9f2978777cb95b0",
+      "size": 1497,
+      "url": "https://link.springer.com/article/10.1007/s00466-025-02655-9",
+      "retrieved_at": "2026-11-23T11:13:38.438012+00:00",
+      "kind": "publisher_public_appendices",
+      "description": "Appendix 4: CAB for phase field model; publisher anchor #App4; equations Equ43, Equ44. UTF-8 text projection from public HTML; raw HTML retained separately. Not full article; not candidate output."
+    },
+    {
+      "name": "appendix-5.txt",
+      "path": "appendix-5.txt",
+      "sha256": "98d5613636c02fc6571daeed951ecaa2eca1b5e2a44e3b96f740279b6f3e3120",
+      "size": 3044,
+      "url": "https://link.springer.com/article/10.1007/s00466-025-02655-9",
+      "retrieved_at": "2026-11-23T11:13:38.438012+00:00",
+      "kind": "publisher_public_appendices",
+      "description": "Appendix 5: Adaptive selection of reference stiffness; publisher anchor #App5; equations Equ45, Equ46, Equ47, Equ48, Equ49, Equ50, Equ51, Equ52, Equ53. UTF-8 text projection from public HTML; raw HTML retained separately. Not full article; not candidate output."
+    },
+    {
+      "name": "publisher-page.html.bin",
+      "path": "publisher-page.html.bin",
+      "sha256": "41aba97b1611f1de5086c9bb9cb1903bddadd75cb0dc85d1796f1c94124eb91d",
+      "size": 367183,
+      "url": "https://link.springer.com/article/10.1007/s00466-025-02655-9",
+      "retrieved_at": "2026-11-23T11:13:38.438012+00:00",
+      "kind": "original_source_binary",
+      "description": "Original anonymous publisher HTML GET response. Includes abstract and public Appendices 1-5; subscription main text was not obtained. Do not treat it as the complete article."
+    },
+    {
+      "name": "publisher-provenance.json",
+      "path": "publisher-provenance.json",
+      "sha256": "81a68c1da2a69fdc2269390a6f8b186c56e80b3e7c885cdae5154f56d5b67dbe",
+      "size": 3352,
+      "url": "https://link.springer.com/article/10.1007/s00466-025-02655-9",
+      "retrieved_at": "2026-11-23T11:13:38.438012+00:00",
+      "kind": "publisher_metadata",
+      "description": "Bibliographic metadata, extraction provenance, public appendix anchors and scope limitations. No qualification conclusion."
+    }
+  ]
+}

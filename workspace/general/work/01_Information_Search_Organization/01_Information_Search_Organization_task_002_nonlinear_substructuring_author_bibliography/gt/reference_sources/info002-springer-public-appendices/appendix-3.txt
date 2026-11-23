@@ -1,0 +1,37 @@
+Appendix 3: Phase field model
+
+In a phase field model [ 29 ], one decomposes strain \({\varvec{\varepsilon }}\) according to its eigenvectors \({\varvec{n}}^1,{\varvec{n}}^2,{\varvec{n}}^3\) , namely,
+
+$$\begin{aligned} {\varvec{\varepsilon }}= {\varvec{\varepsilon }}_++{\varvec{\varepsilon }}_-,\quad {\varvec{\varepsilon }}_\pm =\sum _{a=1}^3\langle \varepsilon ^a\rangle _\pm {\varvec{M}}_a, \quad {\varvec{M}}_a {:=}{\varvec{n}}^a\otimes {\varvec{n}}^a, \end{aligned}$$ (35)
+
+where \(\varepsilon ^a\) is the corresponding eigenvalue, and \(\langle \varepsilon ^a\rangle _\pm {:=}\frac{1}{2}(\varepsilon ^a\pm|\varepsilon ^a|)\) .
+
+Next, we form a fully isotropic constitutive assumption for the degradation of strain energy
+
+$$\begin{aligned} \psi ({\varvec{\varepsilon }},d) &= (1-d)^2 \psi _0^+ + \psi _0^-, \\ \psi _0^{\pm }({\varvec{\varepsilon }})&{:=} \frac{\lambda }{2}\langle \text{tr}({\varvec{\varepsilon }})\rangle _{\pm }^2+\mu \text{tr}({\varvec{\varepsilon }}_{\pm }^2). \end{aligned}$$ (36)
+
+Here \(\lambda \) and \(\mu \) are Lamé coefficients of the linear homogeneous elastic material.
+
+Now invoking time as an additional parameter, we define the maximal positive strain energy in history, namely, the history field
+
+$$\begin{aligned} \mathcal {H} ({\varvec{\varepsilon }},t){:=}\max _{s\in [0,t]}\psi _0^+({\varvec{\varepsilon }}({\varvec{x}};s)). \end{aligned}$$ (37)
+
+For an elastic material, the constitutive relation gives stress from strain by
+
+$$\begin{aligned} {\varvec{\sigma }}({\varvec{x}},d,{\varvec{\varepsilon }}){:=}\frac{\partial \psi }{\partial {\varvec{\varepsilon }}}. \end{aligned}$$ (38)
+
+This may be put into a standard form of \({\varvec{\sigma }}({\varvec{x}},d,{\varvec{\varepsilon }})={\varvec{C}}({\varvec{x}},d,{\varvec{\varepsilon }}):{\varvec{\varepsilon }}({\varvec{x}})\) . Here the damaged tangent stiffness \({\varvec{C}}({\varvec{x}},d,{\varvec{\varepsilon }})\) is also the damaged secant stiffness, which explicitly reads
+
+$$\begin{aligned} {\varvec{C}}&{:=}\frac{\partial {\varvec{\sigma }}}{\partial {\varvec{\varepsilon }}}=(1-d)^2 \left[ 3\lambda \tilde{H}(\text{tr}({\varvec{\varepsilon }}))\mathbb {I}^{\text{vol}} + 2\mu \mathbb {P}^+\right] \\ & \quad + \left[ 3\lambda \tilde{H}(-\text{tr}({\varvec{\varepsilon }}))\mathbb {I}^{\text{vol}} +2\mu \mathbb {P}^-\right] \end{aligned}$$ (39)
+
+$$\begin{aligned} \mathbb {P}^{\pm }&:= \frac{\partial {\varvec{\varepsilon }}^{\pm }}{\partial {\varvec{\varepsilon }}} \\& = \sum _a^3 \tilde{H}(\pm \varepsilon _a) ({\varvec{M}}_a)_{ij} ({\varvec{M}}_{a})_{kl} \\ & \quad + \frac{1}{2} \sum _a^3 \sum _{b\ne a}^3 \theta _{ab} [({\varvec{M}}_a)_{ik} ({\varvec{M}}_b)_{jl} \\ & \quad + ({\varvec{M}}_b)_{il} ({\varvec{M}}_b)_{jk}] \end{aligned}$$ (40)
+
+Here \(\tilde{H}(\cdot )\) is the Heaviside function and \(\theta _{ab}\) is defined as
+
+$$\begin{aligned} \theta _{ab}=\left\{ \begin{aligned}&\frac{\langle \varepsilon _a \rangle _{\pm } -\langle \varepsilon _b \rangle _{\pm } }{\varepsilon _a -\varepsilon _b},&\text{if} \; \varepsilon _a \ne \varepsilon _b, \\&\tilde{H}(\pm \varepsilon _a),&\text{if} \; \varepsilon _a =\varepsilon _b. \end{aligned} \right. \end{aligned}$$ (41)
+
+The governing equation and boundary condition are
+
+$$\begin{aligned} \left\{ \begin{aligned}&\frac{g_c}{l} \left( d - l^2 \Delta d\right) = 2(1-d)\mathcal {H}, \quad {\varvec{x}}\in \Omega, \\&(\nabla d) \cdot {\varvec{n}} = 0, \quad {\varvec{x}}\in \partial \Omega, \end{aligned} \right. \end{aligned}$$ (42)
+
+where \(g_c,l\) are given in Table 2

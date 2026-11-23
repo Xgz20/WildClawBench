@@ -1,0 +1,49 @@
+{
+  "schema_version": "wildclawbench.evaluator-reference-evidence/v1",
+  "role": "evaluator_reference_not_agent_output",
+  "task_id": "01_Information_Search_Organization_task_002_nonlinear_substructuring_author_bibliography",
+  "source_url": "https://link.springer.com/article/10.1007/s00466-025-02655-9",
+  "documents": [
+    {
+      "path": "appendix-1.txt",
+      "size": 3829,
+      "sha256": "25bd872c88a2a8f51ca245083e41764f640079ce6219336c988f9c4586076287"
+    },
+    {
+      "path": "appendix-2.txt",
+      "size": 3444,
+      "sha256": "39f44b4ccd7571b3857903cb4c61ab18e576be46fb4a15747edffbcbc343d078"
+    },
+    {
+      "path": "appendix-3.txt",
+      "size": 3545,
+      "sha256": "0666e1099de3de740f4d58f27f5b0edf6f08f0124d916e162928baeb1ee84c6c"
+    },
+    {
+      "path": "appendix-4.txt",
+      "size": 1497,
+      "sha256": "6fa2085be2259bf3a7f9e67cfd6c5ff5f2838287ae56a6acf9f2978777cb95b0"
+    },
+    {
+      "path": "appendix-5.txt",
+      "size": 3044,
+      "sha256": "98d5613636c02fc6571daeed951ecaa2eca1b5e2a44e3b96f740279b6f3e3120"
+    },
+    {
+      "path": "publisher-page.html.bin",
+      "size": 367183,
+      "sha256": "41aba97b1611f1de5086c9bb9cb1903bddadd75cb0dc85d1796f1c94124eb91d"
+    },
+    {
+      "path": "publisher-provenance.json",
+      "size": 3352,
+      "sha256": "81a68c1da2a69fdc2269390a6f8b186c56e80b3e7c885cdae5154f56d5b67dbe"
+    },
+    {
+      "path": "source-manifest.json",
+      "size": 4496,
+      "sha256": "7f770d0a989911b340d7203171f5f1acf23a9014151e7544c185165b047725be"
+    }
+  ],
+  "scope": "Publisher public page and Appendices 1-5; not a full article; use only for evaluator review; not candidate behavior evidence."
+}

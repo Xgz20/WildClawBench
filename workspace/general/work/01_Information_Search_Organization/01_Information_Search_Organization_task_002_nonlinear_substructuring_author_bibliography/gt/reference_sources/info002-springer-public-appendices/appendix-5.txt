@@ -1,0 +1,39 @@
+Appendix 5: Adaptive selection of reference stiffness
+
+Choose an alternative reference stiffness
+
+$$\begin{aligned} \widehat{{\varvec{C}}}^0 = \alpha {\varvec{C}}^0, \end{aligned}$$ (45)
+
+where \(\alpha > 0\) is a scalar parameter. Correspondingly, the linear system ( 8 ) is rewritten as
+
+$$\begin{aligned} \widehat{{\varvec{L}}} {\varvec{U}}^{\text{B}} + \widehat{{\varvec{K}}} {\varvec{U}}^{\text{I}} = {\varvec{F}}^{\text{I}}, \end{aligned}$$ (46)
+
+where stiffness matrices read
+
+$$\begin{aligned} \widehat{{\varvec{L}}} = \alpha {\varvec{L}}, \quad \widehat{{\varvec{K}}} = \alpha {\varvec{K}}. \end{aligned}$$ (47)
+
+Similar to ( 18 ), the discrete governing equation for alternative reference stiffness is derived as
+
+$$\begin{aligned} \left[ {\varvec{\varepsilon }}\right]&= -{\varvec{B}}_2 \widehat{{\varvec{K}}}^{-1} \widetilde{{\varvec{B}}} \left[ {\varvec{\sigma }}- \widehat{{\varvec{C}}}^0:{\varvec{\varepsilon }}\right] + \left( {\varvec{B}}_1 - {\varvec{B}}_2 \widehat{{\varvec{K}}}^{-1}\widehat{{\varvec{L}}}\right) {\varvec{U}}^{\text{B}}, \end{aligned}$$ (48)
+
+$$\begin{aligned} & =-{\varvec{B}}_2 {\varvec{K}}^{-1} \widetilde{{\varvec{B}}} \left[ \frac{1}{\alpha }{\varvec{\sigma }}- {\varvec{C}}^0:{\varvec{\varepsilon }}\right] + \left( {\varvec{B}}_1 - {\varvec{B}}_2 {\varvec{K}}^{-1}{\varvec{L}}\right) {\varvec{U}}^{\text{B}}. \end{aligned}$$ (49)
+
+Accordingly, the incremental cluster-condensed equation for alternative reference stiffness reads
+
+$$\begin{aligned} \Delta \left[ {\varvec{\varepsilon }}\right] ^c = -{\varvec{D}} \left[ \frac{1}{\alpha }\Delta {\varvec{\sigma }}- {\varvec{C}}^0:\Delta {\varvec{\varepsilon }}\right] ^c + \widetilde{{\varvec{D}}}\Delta {\varvec{U}}^{\text{B}}. \end{aligned}$$ (50)
+
+We remark that multiplicative scaling of the reference stiffness exclusively affects the stress term in the discrete governing equation, hence no additional evaluation of the interaction tensor is required.
+
+We propose an adaptive strategy for selection of reference stiffness as following. Take reference stiffness
+
+$$\begin{aligned} {\varvec{C}}^0 = \alpha {\varvec{C}}_{\text{m}}, \end{aligned}$$ (51)
+
+where \({\varvec{C}}_{\text{m}}\) represents the stiffness of the matrix. In the first loading step, the initial guess reads
+
+$$\begin{aligned} \alpha _1 = 1. \end{aligned}$$ (52)
+
+Considering the m -th loading step, we solve ( 50 ), and get average incremental stress \(\Delta \overline{{\varvec{\sigma }}}_m\) and strain \(\Delta \overline{{\varvec{\varepsilon }}}_m\) . Subsequently, the parameter \(\alpha \) is determined by
+
+$$\begin{aligned} \alpha _{m+1} = \underset{\alpha }{\operatorname {arg\,min}} \, \Vert \frac{1}{\alpha } \Delta \overline{{\varvec{\sigma }}}_m - {\varvec{C}}^0:\Delta \overline{{\varvec{\varepsilon }}}_m\Vert, \end{aligned}$$ (53)
+
+which gives the minimal average polarization stress applied to the reference material. We remark that the choice of \(\alpha \) may not be optimal in terms of computational accuracy, and this issue remains to be further developed.

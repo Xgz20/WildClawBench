@@ -1,0 +1,15 @@
+Appendix 4: CAB for phase field model
+
+Based on FEM, we assemble a constant stiffness matrix \({\varvec{K}}^{\text{p}}\) for the linear operator \(\frac{g_c}{l} \left( 1 - l^2 \Delta \right) \) in ( 42 ). This gives
+
+$$\begin{aligned} {\varvec{K}}^{\text{p}} [{\varvec{d}}] = {\varvec{F}}^{\text{p}}, \end{aligned}$$ (43)
+
+where \([{\varvec{d}}]\) is the phase field nodal vector, and \({\varvec{F}}^{\text{p}}\) represents \(2(1-d)\mathcal {H}\) term.
+
+Due to irreversibility of \({\varvec{K}}^{\text{p}}\) , we can not evaluate \(\left( {\varvec{K}}^{\text{p}}\right) ^{-1}\) under Neumann boundary condition \((\nabla d) \cdot {\varvec{n}} = 0\) . Approximatively, a mixed boundary condition is adopted. Specifically, one boundary node is given Dirichlet boundary value \(d=0\) , namely the node where the precrack meets the boundary, while rest boundary nodes are subjected to \((\nabla d) \cdot {\varvec{n}} = 0\) .
+
+Based on the mixed boundary condition and following cluster-based condensation, we solve phase field linear system ( 43 ) as
+
+$$\begin{aligned} {\varvec{d}}= {\varvec{\Phi }}^{\text{p}} \left( 2 {\varvec{\mathcal {H}}} - 2{\varvec{d}}\odot {\varvec{\mathcal {H}}}\right), \end{aligned}$$ (44)
+
+where \({\varvec{d}},{\varvec{\mathcal {H}}},{\varvec{\Phi }}^{\text{p}},\odot \) are the vector comprising cluster-wise phase field d , the vector comprising cluster-wise history field \(\mathcal {H}\) , interaction tensor for phase field model and Hadamard product respectively.

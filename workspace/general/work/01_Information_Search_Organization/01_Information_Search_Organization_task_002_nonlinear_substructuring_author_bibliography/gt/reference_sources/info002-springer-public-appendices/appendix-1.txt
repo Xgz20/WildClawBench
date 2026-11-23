@@ -1,0 +1,23 @@
+Appendix 1: Periodic solutions to exponential factor modified equations
+
+We formulate a periodic problem in a single periodic domain with \(M\times N\) nodes as displayed in Fig. 1 . The nodal index is equivalently numbered by a double index ( m , n ). The correspondence between every two original DoF indices and ( m , n ) node is straight-forward, namely one node corresponds two displacement components. Here we use \(\breve{u}_{(m,n)}\) and \(\breve{v}_{(m,n)}\) to distinguish the periodic problem. Assuming mesh size h , the node ( m , n ) is located at \(x_{(m,n)}=mh,y_{(m,n)}=nh\) . Periodicity holds for \(x_{(m,n)}\) and \(y_{(m,n)}\) , namely \(x_{(M+1,n)} = x_{(1,n)}, x_{(m,N+1)} = x_{(m,N+1)},\) \(y_{(M+1,n)} = y_{(1,n)}, y_{(m,N+1)} = y_{(m,N+1)}.\)
+
+We take \(\alpha = \frac{1}{2 \sqrt{MN} h}\) , and consider \(\breve{u}_{(m,n)}\) and \(\breve{v}_{(m,n)}\) in exponential factor modified equilibrium equations
+
+$$\begin{aligned} & \sum _{a=-1,0,1}\sum _{b=-1,0,1} e^{-\alpha \left[ x_{(m+a,n+b)} + y_{(m+a,n+b)}\right] } \\ & \quad \left( k^{1,u}_{(a,b)} \breve{u}_{(m+a,n+b)} + k^{1,v}_{(a,b)} \breve{v}_{(m+a,n+b)}\right) = \delta _{m\tilde{m}}\delta _{n\tilde{n}}, \\ & \sum _{a=-1,0,1}\sum _{b=-1,0,1} e^{-\alpha \left[ x_{(m+a,n+b)} + y_{(m+a,n+b)}\right] } \\ & \quad \left( k^{2,u}_{(a,b)} \breve{u}_{(m+a,n+b)} + k^{2,v}_{(a,b)} \breve{v}_{(m+a,n+b)}\right) = 0, \end{aligned}$$ (27)
+
+where \(k^{1,u}_{(a,b)}, k^{2,u}_{(a,b)}, k^{1,v}_{(a,b)}, k^{1,v}_{(a,b)}\) are corresponding components of the stiffness matrix, and the source term \(\delta _{m\tilde{m}}\delta _{n\tilde{n}}\) represents x-directional body force, where source term location \((\tilde{m},\tilde{n}) \in [2,M-1]\times [2,N-1]\) . The fast Fourier transform is adopted for solving equation ( 27 ) under periodic boundary conditions, and the solutions are noted as \(\breve{u}^{(\tilde{m},\tilde{n})}_{(m,n)}\) and \(\breve{v}^{(\tilde{m},\tilde{n})}_{(m,n)}\) .
+
+The periodicity of solutions ensures translational invariance, allowing generation of periodic solutions for arbitrary source term locations through limited computations. Following the same procedure as the x-directional source term case, we compute periodic solutions for any y-directional body force. This approach maintains computational efficiency, requiring only a few FFT operations.
+
+Define solutions for x-directional body force as
+
+$$ \begin{aligned} \tilde{u}^{(\tilde{m},\tilde{n})}_{(m,n)} &= e^{\alpha \left( x_{(m,n)} + y_{(m,n)}\right) } \breve{u}^{(\tilde{m},\tilde{n})}_{(m,n)}, \\ \tilde{v}^{(\tilde{m},\tilde{n})}_{(m,n)} &= e^{\alpha \left( x_{(m,n)} + y_{(m,n)}\right) } \breve{v}^{(\tilde{m},\tilde{n})}_{(m,n)}. \end{aligned}$$ (28)
+
+Substituting ( 28 ) into ( 27 ), we get solutions to
+
+$$\begin{aligned} \begin{aligned}&\sum _{a=-1,0,1}\sum _{b=-1,0,1} \left( k^{1,u}_{(a,b)} \tilde{u}_{(m+a,n+b)} + k^{1,v}_{(a,b)} \tilde{v}_{(m+a,n+b)}\right) = \delta _{m\tilde{m}}\delta _{n\tilde{n}}, \\&\sum _{a=-1,0,1}\sum _{b=-1,0,1} \left( k^{2,u}_{(a,b)} \tilde{u}_{(m+a,n+b)} + k^{2,v}_{(a,b)} \tilde{v}_{(m+a,n+b)}\right) = 0. \end{aligned} \end{aligned}$$ (29)
+
+So do solutions for y-directional body force. When the source term is located at q th DoF, the solution \(\tilde{u},\tilde{v}\) is denoted as the q th solution, whose interior displacements are collectively denoted as a vector \(\widetilde{{\varvec{U}}}^{\text{I},q}\) , and boundary displacements denoted as a vector \(\widetilde{{\varvec{U}}}^{\text{B},q}\) . Hence the unitary input of \({\varvec{F}}^{\text{I}} = e_q\) and boundary displacements \({\varvec{U}}^{\text{B}} = \widetilde{{\varvec{U}}}^{\text{B},q}\) .
+
+To the end, we get a family of Q solutions \(\widetilde{{\varvec{U}}}^{\text{I},q}\) to ( 9 ) with boundary displacements \(\widetilde{{\varvec{U}}}^{\text{B},q}\) .

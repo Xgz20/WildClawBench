@@ -30,6 +30,12 @@ tags:
 
 判定方法实际用于非线性子结构分析；不把关键词共现、相关工作引用或未来应用设想直接当作满足主题。关联作者与论文时区分同名作者，合并同一论文的不同版本。支持多种检索路径，不规定工具、查询次数或操作顺序。
 
+## Evaluator Evidence Requirements
+
+评测端核查 P2（`Clustering analysis accounting for boundary conditions`，DOI `10.1007/s00466-025-02655-9`）时，必须先读取出版方页面及其公开附录，不得只看题名、摘要或搜索摘要。固定入口为：<https://link.springer.com/article/10.1007/s00466-025-02655-9>；随题目私有参考材料保存了页面抓取、Appendix 1–5 的文本投影、来源 URL、抓取时间和 SHA。
+
+公开附录可证明边界条件下的分块方程、cluster-based condensation、损伤/历史场及簇级相场计算，但这类证据本身不自动证明论文已经把聚类模型用于非线性子结构的整体求解。只有原文、作者稿或其他可靠一手方法证据明确建立“非线性本构/相场 + 子结构接口/整体耦合 + 实际应用”联系时，才可确认 P2 满足主题；反之也不能因公开预览缺少某个关键词就直接判定 P2 不满足。若该联系仍无法归属，`topic_selection` 必须保持 `unresolved/null`，不得猜测、补零或重新归一化其他检查点。
+
 ## Grading Criteria
 
 评分规则版本：2026-10-16.1。参考事实范围保持不变。本题使用仓库 v2 Rubric。6 个语义检查点，LLM 预算 100 分；自动代码只在评分阶段导出隐藏参考材料，预算为 0，不检查或要求被测 Agent 创建文件。
@@ -68,7 +74,7 @@ def grade(transcript: list, workspace_path: str) -> dict:
         raise RuntimeError("Evaluator reference must not be a symlink")
     payload = reference.read_bytes()
     digest = sha256(payload).hexdigest()
-    expected = "5b29d21f9c153249ca1e813ab65df6bc4bf6b362db50e7daeb2d8327ab35c9ab"
+    expected = "7c17c1cbdbee307d702d0453268a8f2f3c6fc2ef305344fa0abca1b1acc18da1"
     if digest != expected:
         raise RuntimeError("Evaluator reference version mismatch; review GT and rubric together")
     content = payload.decode("utf-8")

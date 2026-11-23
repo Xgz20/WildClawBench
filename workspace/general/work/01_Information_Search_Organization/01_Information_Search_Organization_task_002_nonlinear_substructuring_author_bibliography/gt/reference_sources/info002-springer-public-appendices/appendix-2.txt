@@ -1,0 +1,27 @@
+Appendix 2: Fundamental solutions subjected to mixed boundary conditions
+
+Consider mixed boundary conditions, namely a part of boundary nodes is subjected to Dirichlet boundary conditions, and rest nodes at boundary is subjected to Neumann boundary conditions. This gives
+
+$$\begin{aligned} {\varvec{U}}^{\text{B}} = \left[ \begin{array}{l} {\varvec{U}}^{\text{D}} \\ {\varvec{U}}^{\text{N}} \end{array} \right], \end{aligned}$$ (30)
+
+where superscripts \(\text{D}\) and \(\text{N}\) represent boundary nodes under Dirichlet and Neumann boundary conditions, respectively. Similaly, we define \({\varvec{F}}^{\text{D}},{\varvec{F}}^{\text{N}}\) . We note that the mixed boundary conditions \({\varvec{U}}^{\text{D}}\) and \({\varvec{F}}^{\text{N}}\) are known. The complete FEM-discretized equation reads
+
+$$\begin{aligned} \left[ \begin{array}{lll} {\varvec{K}}_{\text{DD}}& {\varvec{K}}_{\text{DN}}& {\varvec{K}}_{\text{DI}}\\ {\varvec{K}}_{\text{ND}}& {\varvec{K}}_{\text{NN}}& {\varvec{K}}_{\text{NI}}\\ {\varvec{L}}_{\text{D}}& {\varvec{L}}_{\text{N}}& {\varvec{K}}\end{array} \right] \left[ \begin{array}{l} {\varvec{U}}^{\text{D}}\\ {\varvec{U}}^{\text{N}}\\ {\varvec{U}}^{\text{I}} \end{array} \right] = \left[ \begin{array}{l} {\varvec{F}}^{\text{D}}\\ {\varvec{F}}^{\text{N}}\\ {\varvec{F}}^{\text{I}} \end{array} \right], \end{aligned}$$ (31)
+
+where \(\left( {\varvec{L}}_{\text{D}},{\varvec{L}}_{\text{N}}\right) = {\varvec{L}}\) .
+
+Given the explicit expression of \({\varvec{K}}^{-1}\) in ( 13 ) and ( 15 ), we subsequently give the relation between \(\left[ \begin{array}{l} {\varvec{U}}^{\text{N}}\\ {\varvec{U}}^{\text{I}} \end{array} \right] \) and \(\left[ \begin{array}{l} {\varvec{U}}^{\text{D}}\\ {\varvec{F}}^{\text{N}}\\ {\varvec{F}}^{\text{I}} \end{array} \right] \) .
+
+Solving ( 31 ), we have
+
+$$\begin{aligned} \left[ \begin{array}{l} {\varvec{U}}^{\text{N}}\\ {\varvec{U}}^{\text{I}} \end{array}\right] & = \left[ \begin{array}{ll} {\varvec{K}}_{\text{NN}}& {\varvec{K}}_{\text{NI}}\\ {\varvec{L}}_{\text{N}}& {\varvec{K}}\end{array}\right] ^{-1} \\ & \quad \times\left[ \begin{array}{lll} -{\varvec{K}}_{\text{ND}}& {\varvec{I}}& {\varvec{I}}\\ -{\varvec{L}}_{\text{D}}& {\varvec{0}}& {\varvec{I}} \end{array}\right] \left[ \begin{array}{l} {\varvec{U}}^{\text{D}}\\ {\varvec{F}}^{\text{N}}\\ {\varvec{F}}^{\text{I}} \end{array}\right]. \end{aligned}$$ (32)
+
+Taking \({\varvec{H}} = {\varvec{K}}_{\text{NN}} - {\varvec{K}}_{\text{NI}}{\varvec{K}}^{-1}{\varvec{L}}_{\text{N}}\) , inversion formula for block matrices gives
+
+$$\begin{aligned}& \left[\begin{array}{ll} {\varvec{K}}_{\text{NN}}& {\varvec{K}}_{\text{NI}}\\ {\varvec{L}}_{\text{N}}& {\varvec{K}}\end{array}\right] ^{-1} \\ & \quad = \left[ \begin{array}{ll} {\varvec{H}}^{-1}& - {\varvec{H}}^{-1}{\varvec{K}}_{\text{NI}}{\varvec{K}}^{-1}\\ -{\varvec{K}}^{-1}{\varvec{L}}_{\text{N}}{\varvec{H}}^{-1}&{\varvec{K}}^{-1} + {\varvec{K}}^{-1}{\varvec{L}}_{\text{N}}{\varvec{H}}^{-1}{\varvec{K}}_{\text{NI}}{\varvec{K}}^{-1} \end{array}\right], \end{aligned}$$ (33)
+
+where inversion of the low-order matrix \({\varvec{H}}\) is numerically cheap.
+
+Following cluster-based condensation mentioned before, we get reduced equations under mixed boundary conditions
+
+$$\begin{aligned} \left[ {\varvec{\varepsilon }}\right] ^c = {\varvec{D}}^{\text{mix}}\left[ {\varvec{\tau }}\right] ^c + \tilde{{\varvec{D}}}^{\text{mix}} {\varvec{U}}^{\text{D}}. \end{aligned}$$ (34)

@@ -1,0 +1,100 @@
+{
+  "source_role": "evaluator_reference_not_agent_output",
+  "title": "Clustering analysis accounting for boundary conditions",
+  "doi": "10.1007/s00466-025-02655-9",
+  "publisher": "Springer Nature / Computational Mechanics",
+  "authors": [
+    "Jingcheng Miao",
+    "Gang Pang",
+    "Shaoqiang Tang"
+  ],
+  "online_published": "2025-07-15",
+  "url": "https://link.springer.com/article/10.1007/s00466-025-02655-9",
+  "retrieved_at": "2026-11-23T11:13:38.438012+00:00",
+  "raw_html_sha256": "41aba97b1611f1de5086c9bb9cb1903bddadd75cb0dc85d1796f1c94124eb91d",
+  "extractor": "lxml itertext; h3 AppN and following sibling elements through next appendix heading; whitespace normalized; original mathematical expressions preserved in raw HTML",
+  "appendices": [
+    {
+      "heading": "Appendix 1: Periodic solutions to exponential factor modified equations",
+      "anchor": "App1",
+      "source_url": "https://link.springer.com/article/10.1007/s00466-025-02655-9#App1",
+      "file": "appendix-1.txt",
+      "characters": 3828,
+      "equation_ids": [
+        "Equ27",
+        "Equ28",
+        "Equ29"
+      ],
+      "sha256": "25bd872c88a2a8f51ca245083e41764f640079ce6219336c988f9c4586076287"
+    },
+    {
+      "heading": "Appendix 2: Fundamental solutions subjected to mixed boundary conditions",
+      "anchor": "App2",
+      "source_url": "https://link.springer.com/article/10.1007/s00466-025-02655-9#App2",
+      "file": "appendix-2.txt",
+      "characters": 3443,
+      "equation_ids": [
+        "Equ30",
+        "Equ31",
+        "Equ32",
+        "Equ33",
+        "Equ34"
+      ],
+      "sha256": "39f44b4ccd7571b3857903cb4c61ab18e576be46fb4a15747edffbcbc343d078"
+    },
+    {
+      "heading": "Appendix 3: Phase field model",
+      "anchor": "App3",
+      "source_url": "https://link.springer.com/article/10.1007/s00466-025-02655-9#App3",
+      "file": "appendix-3.txt",
+      "characters": 3543,
+      "equation_ids": [
+        "Equ35",
+        "Equ36",
+        "Equ37",
+        "Equ38",
+        "Equ39",
+        "Equ40",
+        "Equ41",
+        "Equ42"
+      ],
+      "sha256": "0666e1099de3de740f4d58f27f5b0edf6f08f0124d916e162928baeb1ee84c6c"
+    },
+    {
+      "heading": "Appendix 4: CAB for phase field model",
+      "anchor": "App4",
+      "source_url": "https://link.springer.com/article/10.1007/s00466-025-02655-9#App4",
+      "file": "appendix-4.txt",
+      "characters": 1496,
+      "equation_ids": [
+        "Equ43",
+        "Equ44"
+      ],
+      "sha256": "6fa2085be2259bf3a7f9e67cfd6c5ff5f2838287ae56a6acf9f2978777cb95b0"
+    },
+    {
+      "heading": "Appendix 5: Adaptive selection of reference stiffness",
+      "anchor": "App5",
+      "source_url": "https://link.springer.com/article/10.1007/s00466-025-02655-9#App5",
+      "file": "appendix-5.txt",
+      "characters": 3043,
+      "equation_ids": [
+        "Equ45",
+        "Equ46",
+        "Equ47",
+        "Equ48",
+        "Equ49",
+        "Equ50",
+        "Equ51",
+        "Equ52",
+        "Equ53"
+      ],
+      "sha256": "98d5613636c02fc6571daeed951ecaa2eca1b5e2a44e3b96f740279b6f3e3120"
+    }
+  ],
+  "limitations": [
+    "Only public appendices and metadata; not the subscription main body.",
+    "Figure numbers alone do not provide substantive figure captions.",
+    "Supplemental sources do not demonstrate that the evaluated Agent retrieved or used them."
+  ]
+}
