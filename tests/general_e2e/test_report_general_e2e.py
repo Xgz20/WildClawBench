@@ -35,6 +35,14 @@ TASKS = ["task-zero", "task-valid", "task-error", "task-unscored"]
 
 
 class LoomyResourceSupplementScopeTests(unittest.TestCase):
+    def test_complete_metric_cannot_also_claim_a_known_subtotal(self):
+        metrics = json.loads((EXAMPLES / 'resource-metrics-zero.json').read_text())
+        metrics['collection']['native_usage_profile'] = 'loomy-opencode-recorded-usage/v1'
+        REPORT.validate_supplement_resource_metrics(metrics)
+        metrics['collection']['known_subtotals'] = {'input_tokens': 0}
+        with self.assertRaisesRegex(REPORT.ReportError, 'LOOMY_RESOURCE_SUPPLEMENT_CONTRACT_INVALID'):
+            REPORT.validate_supplement_resource_metrics(metrics)
+
     def test_only_bound_resource_profile_enters_the_report_scope(self):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)

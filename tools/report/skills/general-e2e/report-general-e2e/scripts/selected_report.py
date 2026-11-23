@@ -166,6 +166,7 @@ def apply_external_resources(row,args,ref,manifest_sha):
     run=subprocess.run(command,capture_output=True,text=True,timeout=180)
     require(run.returncode==0,"SELECTION_RESOURCE_REPLAY_FAILED:"+run.stderr[-1000:]);verified=json.loads(run.stdout)
     require(verified["status"]=="PASS","SELECTION_RESOURCE_REPLAY_FAILED")
+    report.validate_supplement_resource_metrics(verified['metrics'])
     original=copy.deepcopy(row["resource"])
     for group in verified["metrics"]["metrics"].values():
         for field in group:row["resource"][field]=report.metric_observation(verified["metrics"],field)

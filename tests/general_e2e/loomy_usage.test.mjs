@@ -16,6 +16,7 @@ test('OpenCode native projections count once, normalize cache and fold reasoning
   assert.equal(value.metrics.usage.cache_creation_input_tokens.value, 5);
   assert.equal(value.metrics.usage.reasoning_output_tokens.value, 3);
   assert.equal(value.metrics.requests.request_attempt_count.value, null);
+  assert.deepEqual(value.collection.known_subtotals, {});
 });
 test('missing initialized usage remains partial and does not become observed zero', () => {
   const binding = fixture();

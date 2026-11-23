@@ -691,6 +691,15 @@ def validate_return_supplement_scope(unit_root: Path, unit: Mapping[str, Any]) -
                     raise ReportError('RESOURCE_SUPPLEMENT_SCOPE_INVALID')
 
 
+def validate_supplement_resource_metrics(metrics: Mapping[str, Any]) -> None:
+    if (metrics.get('collection') or {}).get('native_usage_profile') != 'loomy-opencode-recorded-usage/v1':
+        return
+    try:
+        CONTRACTS.validate_contract(metrics, expected_schema_id=RESOURCE_SCHEMA)
+    except CONTRACTS.ContractValidationError as exc:
+        raise ReportError('LOOMY_RESOURCE_SUPPLEMENT_CONTRACT_INVALID: ' + str(exc)) from exc
+
+
 def general_resource_supplement(root: Path, task_id: str, execution_path: Path) -> dict[str, Any] | None:
     unit_root = root / "unit"
     manifest = unit_root / "evidence/resource-supplements" / task_id / "supplement.json"
@@ -707,6 +716,7 @@ def general_resource_supplement(root: Path, task_id: str, execution_path: Path) 
     verified = json.loads(result.stdout)
     if verified.get("status") != "PASS" or verified.get("manifest_sha256") != sha256_file(manifest):
         raise ReportError("GENERAL_RESOURCE_SUPPLEMENT_RECOMPUTATION_FAILED")
+    validate_supplement_resource_metrics(verified['metrics'])
     return verified
 
 

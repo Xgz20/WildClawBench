@@ -3,6 +3,8 @@ name: execute-general-e2e
 description: 在 AstronStudio 等桌面 Harness 中执行单个或批量 General E2E 用例；用于自动或人机协作做题，不负责正式证据收口、评分或报告。
 ---
 
+`0.15.31` 同步 Loomy 0.1.23 用量组件；完全访问门禁与发送协议保持。
+
 `0.15.30` 同步 Loomy 原生用量组件与旧 Profile 离线回放；Token 与请求数由 Collect 统计，完全访问发送门禁不变。
 
 `0.15.29` Loomy 的原生主模型明确返回 HTTP 402 积分不足时，冻结原生头与会话证据并阻断新派发；保留在途原请求，只能在人工恢复额度与明确授权后继续。

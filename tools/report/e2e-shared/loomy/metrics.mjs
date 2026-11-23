@@ -68,7 +68,7 @@ export function nativeUsage(binding) {
     usage[field] = {value: complete ? sums[field] : null,
       status: complete ? 'observed' : known[field] ? 'partial' : 'unavailable',
       basis: USAGE_PROFILE + '; one bound native usage per assistant; input includes cache; output includes reasoning; missing usage is not zero'};
-    if (known[field]) knownSubtotals[field] = sums[field];
+    if (known[field] && !complete) knownSubtotals[field] = sums[field];
   }
   // Exactly the established OpenCode CLI definition: count native step-finish
   // records. It is not an HTTP-attempt counter or an assistant-message count.
