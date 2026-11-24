@@ -385,6 +385,22 @@ def timing_percentile(values, ratio):
     return float(ordered[lower] + (ordered[upper] - ordered[lower]) * (position - lower))
 
 
+def distribution_samples(rows, field):
+    """Only complete per-task observations enter a distribution; keep real zero."""
+    values = [row["resource"][field].get("value") for row in rows
+              if row["resource"][field].get("complete")]
+    return [value for value in values if number(value) and math.isfinite(value) and value >= 0]
+
+
+def distribution_cell(values, task_count, ratio, field):
+    return {"value": timing_percentile(values, ratio),
+            "status": "complete" if values and len(values) == task_count else "partial" if values else "unavailable",
+            "basis": "complete-per-task-observations-only", "metric": field,
+            "complete_cases": len(values), "partial_cases": 0, "total_cases": task_count,
+            "sample_count": len(values), "denominator": len(values),
+            "percentile": ratio, "percentile_method": "linear-interpolation-(n-1)*p"}
+
+
 def task_timing_comparison(data, labels):
     import maas_model_timing as model_timing
     metric = "agent_duration_seconds"
@@ -392,9 +408,7 @@ def task_timing_comparison(data, labels):
     for unit in data["units"]:
         rows = [r for r in data["tasks"] if r["unit_id"] == unit["unit_id"]]
         total = resource_display(unit["resources"][metric])
-        observations = [r["resource"][metric] for r in rows]
-        values = [o["value"] for o in observations if o.get("complete") and number(o.get("value"))
-                  and math.isfinite(o["value"]) and o["value"] >= 0]
+        values = distribution_samples(rows, metric)
         complete = bool(rows) and len(values) == len(rows) and total["status"] == "complete"
         if complete and not math.isclose(sum(values), total["value"], rel_tol=1e-9, abs_tol=1e-6):
             raise ValueError("REPORT_TASK_TIMING_TOTAL_MISMATCH")
@@ -402,27 +416,26 @@ def task_timing_comparison(data, labels):
             total["value"] = float(sum((Decimal(str(v)) for v in values), Decimal(0)))
         average = {**total, "value": float(Decimal(str(total["value"])) / len(rows)) if total["value"] is not None and rows else None,
                    "denominator": len(rows), "basis": "known-task-duration-sum-divided-by-frozen-task-count"}
-        quantile = {"status": "complete" if complete else "unavailable", "basis": "complete-native-task-duration-samples",
-                    "complete_cases": len(values), "partial_cases": 0, "total_cases": len(rows)}
+        median = distribution_cell(values, len(rows), .5, metric)
+        p90 = distribution_cell(values, len(rows), .9, metric)
         model = model_timing.summarize(rows)
         model_cell = {"status": "complete" if model["complete"] else "unavailable", "value": model["total"],
                       "complete_cases": model["known_cases"], "partial_cases": 0, "total_cases": len(rows),
                       "known_subtotal": model["known_subtotal"], "basis": model_timing.PROFILE}
         share = (float(Decimal(str(model["total"])) / Decimal(str(total["value"])))
                  if model["complete"] and complete and total["value"] > 0 else None)
-        cells = [total, model_cell, {**model_cell, "value": share}, average,
+        cells = [total, model_cell, {**model_cell, "value": share}, average, median, dict(median), p90,
                  {**model_cell, "value": float(Decimal(str(model["total"])) / len(rows)) if model["complete"] else None},
-                 {**quantile, "value": timing_percentile(values, .5) if complete else None},
                  {**model_cell, "value": timing_percentile(model["values"], .5) if model["complete"] else None},
-                 {**quantile, "value": timing_percentile(values, .9) if complete else None},
                  {**model_cell, "value": timing_percentile(model["values"], .9) if model["complete"] else None}]
         prepared.append((unit, cells, len(values), model))
     prepared.sort(key=lambda item: (item[1][0]["value"] is None, item[1][0]["value"] or 0, item[0]["unit_id"]))
     view = table(model_timing.HEADERS,
                  [[labels[u["unit_id"]], *[c["value"] for c in cells]] for u, cells, _, _ in prepared],
-                 {str(i): "0.00%" if i == 3 else "#,##0.000" for i in range(1, 10)},
+                 {str(i): "0.00%" if i == 3 else "#,##0.000" for i in range(1, len(model_timing.HEADERS))},
                  ["任务耗时来自原生主任务 agent_duration_seconds，包含已确认失败任务；不使用流程耗时 duration_seconds 替代，也不等同于批次壁钟。",
-                  "平均任务耗时=完整总量或已知小计/当前比较用例数；部分统计标为下限。P50/P90只在逐题完整覆盖时计算，使用排序后(n-1)×p的线性插值；未知不补零，实测零保留。",
+                  "平均任务耗时=完整总量或已知小计/当前比较用例数；部分统计标为下限。任务耗时中位数与P50相同，均与P90按有完整原生计时的逐题样本计算，使用排序后(n-1)×p的线性插值；包含已有计时的失败任务。",
+                  "中位数/P50/P90的样本覆盖见下表；覆盖不足时标为部分样本统计，不表示70题完整分布或消耗下限。缺失、部分小计、非有限值和负值不进入分位数，未知不补零，实测零保留。",
                   "模型耗时采用关联SID去重后的 maas_cube.perf 累计值(ms÷1000)，包含重试、失败/取消及压缩请求；占比=总模型耗时÷总任务耗时，累计口径在并行请求或服务端尾部处理时可能超过100%。",
                   "模型均值及P50/P90先按每题累计模型耗时计算；仅当前比较范围内请求与ES日志全覆盖时展示完整统计，部分已知小计保留在覆盖审计。其他Harness无法确定时显示“-”。"])
     view["metric_field"] = metric
@@ -615,16 +628,17 @@ def build_views(data, references):
         hit_rate = paired_token_measure(rows, ["input_tokens", "cache_read_input_tokens"], ratio=True)
         average = {**display_metrics["total_tokens"], "value": total("total_tokens") / n if total("total_tokens") is not None and n else None,
                    "basis": "known-token-sum-divided-by-frozen-task-count", "denominator": n}
+        token_median = distribution_cell(distribution_samples(rows, "total_tokens"), n, .5, "total_tokens")
         efficiency.append([label, total("total_tokens"), total("total_tokens")/n if total("total_tokens") is not None and n else None,
-                           inputs, ordinary["value"], cached, writes, total("output_tokens"), hit_rate["value"]])
-        efficiency_items = [display_metrics["total_tokens"], average, display_metrics["input_tokens"], ordinary,
+                           token_median["value"], inputs, ordinary["value"], cached, writes, total("output_tokens"), hit_rate["value"]])
+        efficiency_items = [display_metrics["total_tokens"], average, token_median, display_metrics["input_tokens"], ordinary,
                             display_metrics["cache_read_input_tokens"], display_metrics["cache_creation_input_tokens"],
                             display_metrics["output_tokens"], hit_rate]
         for col, item in enumerate(efficiency_items, 1):
             efficiency_cells[f"{row_index}:{col}"] = item
         efficiency_coverage.append([label, *[coverage_label(item) for item in efficiency_items]])
         resource_display_by_unit[unit["unit_id"]] = {"metrics": display_metrics, "average_tokens": average,
-                                                    "ordinary_input_tokens": ordinary, "cache_hit_rate": hit_rate}
+                                                    "median_tokens": token_median, "ordinary_input_tokens": ordinary, "cache_hit_rate": hit_rate}
         caps[unit["unit_id"]] = capability_scores(rows, capability_mapping, dimensions)
         grouped, known = Counter(), 0
         for row in rows:
@@ -652,9 +666,10 @@ def build_views(data, references):
                        "执行错误数统计被测 Harness 执行报错及已识别的原生中断，按用例去重。完成率=原生正常完成数/冻结用例数。执行状态和评分状态分别统计。",
                        "任务耗时=原生主任务时长之和；新流程计时 Profile 从 Prompt 发送至本机确认终态，包含发送、排队与观察等待，排除发送前准备及评分、报告。历史不同边界须按补充审计复算。总请求数按客户端可观测模型响应/请求口径；AstronStudio 为 usage 更新推算，Loomy 沿用 OpenCode CLI 的原生 step-finish 记录数，不包含无 step-finish 的失败请求或未观测 HTTP 重试。",
                        "星号或浅黄色背景表示部分统计的已知小计，完整总量仍未知；覆盖用例数见下表。缺失部分不按 0 填充，无任何可用数据时显示 -。"]),
-        "效率对比": table(["模型@Harness", "总 Token", "平均 Token", "输入 Token（含缓存）", "普通输入 Token", "缓存命中输入 Token", "缓存写入输入 Token", "输出 Token", "缓存命中率"],
-                          efficiency, {"2": "#,##0.00", "8": "0.00%"},
+        "效率对比": table(["模型@Harness", "总 Token", "平均 Token", "中位数Token", "输入 Token（含缓存）", "普通输入 Token", "缓存命中输入 Token", "缓存写入输入 Token", "输出 Token", "缓存命中率"],
+                          efficiency, {"2": "#,##0.00", "3": "#,##0.00", "9": "0.00%"},
                           ["星号或浅黄色背景表示部分统计。平均 Token=已知 Token/冻结用例数；覆盖不全时是每题消耗下限，不是全量精确均值。",
+                           "中位数Token只使用总Token记录完整的逐题样本，包含有完整用量的失败任务；部分小计及缺失不进入排序，实测零保留。部分样本中位数不是全量精确值或下限，覆盖见下表。",
                            "输入 Token（含缓存）直接展示可核验的输入统计。普通输入=输入−缓存命中−缓存写入，仅使用三个字段来源覆盖一致的用例。",
                            "缓存命中输入为 Cache Read，缓存写入输入为 Cache Write；缺失显示-，不默认零。写入或命中缺失且无独立普通输入字段时，普通输入也显示-。",
                            "缓存命中率只在同一用例、相同原生覆盖的输入与命中统计上计算：命中小计/输入小计。部分统计仅代表已知样本，样本范围见下表；不平均逐题比例。"]),
@@ -664,7 +679,7 @@ def build_views(data, references):
     views["总览"]["notes"].insert(0, score_coverage["note"])
     views["总览"]["coverage_table"] = table(["模型@Harness", "Token覆盖", "请求覆盖", "工具覆盖", "任务耗时覆盖", "流程耗时覆盖"], overview_coverage)
     views["效率对比"]["cell_annotations"] = efficiency_cells
-    views["效率对比"]["coverage_table"] = table(["模型@Harness", "总Token覆盖", "平均Token覆盖", "输入覆盖", "普通输入覆盖", "缓存命中覆盖", "缓存写入覆盖", "输出覆盖", "命中率样本"], efficiency_coverage)
+    views["效率对比"]["coverage_table"] = table(["模型@Harness", "总Token覆盖", "平均Token覆盖", "中位数Token样本", "输入覆盖", "普通输入覆盖", "缓存命中覆盖", "缓存写入覆盖", "输出覆盖", "命中率样本"], efficiency_coverage)
     for name, key, names in [("分类对比", "category", category_labels), ("难度对比", "difficulty", {}), ("模态对比", "modality", MODALITIES)]:
         groups = sorted({row.get(key) or "unknown" for row in data["tasks"]})
         if key == "category" and category_order:

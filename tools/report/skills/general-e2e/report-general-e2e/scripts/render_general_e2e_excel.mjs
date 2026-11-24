@@ -149,7 +149,10 @@ function buildView(workbook, name, view, existingSheet = null) {
       sheet.getRange(`${col}${dataRow}:${col}${end}`).format.horizontalAlignment = view.rows.some(row => typeof row[i] === "string") ? "left" : "right";
     }
   }
-  if (name === "效率对比") sheet.getRange("I:I").format.columnWidth = 25;
+  if (name === "效率对比") {
+    const hitRate = view.headers.indexOf("缓存命中率");
+    if (hitRate >= 0) sheet.getRange(`${columnName(hitRate + 1)}:${columnName(hitRate + 1)}`).format.columnWidth = 25;
+  }
   if (name === "分类对比") sheet.getRange("C:H").format.columnWidth = 24;
   if (name === '端到端计分') {
     widths(sheet, { B: 80, C: 16, D: 22, E: 16, F: 16, G: 62 });

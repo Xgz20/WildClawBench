@@ -210,7 +210,10 @@ def render_task_timing_summary(data, peer_labels=None):
         return f"{label} 的原生任务耗时不可用，不用流程耗时替代。"
     text = f"{label} 每个冻结用例平均任务耗时为 {num(row[avg], 3, grouping=True)} 秒"
     if row[p50] is not None and row[p90] is not None:
-        text += f"，P50 为 {num(row[p50], 3, grouping=True)} 秒，P90 为 {num(row[p90], 3, grouping=True)} 秒"
+        text += f"，任务耗时中位数（P50）为 {num(row[p50], 3, grouping=True)} 秒，P90 为 {num(row[p90], 3, grouping=True)} 秒"
+        sample = timing.get("cell_annotations", {}).get(f"{index}:{p50}", {})
+        if sample.get("status") == "partial":
+            text += f"（{sample['complete_cases']}/{sample['total_cases']}题有完整原生计时，仅代表已知样本分布）"
     text += "。"
     peers = [f"{peer[0]} 的 {num(Decimal(str(row[avg])) / Decimal(str(peer[avg])))} 倍"
              for peer in timing["rows"] if peer[0] != label and (peer_labels is None or peer[0] in peer_labels)
@@ -218,7 +221,7 @@ def render_task_timing_summary(data, peer_labels=None):
     if peers:
         text += "按可核验用量，平均任务耗时约为" + "、".join(peers) + "。"
     if timing.get("cell_annotations", {}).get(f"{index}:{avg}", {}).get("status") == "partial":
-        text += "目标组计时覆盖不足，平均值是已知用量下限；分位数未补算。"
+        text += "目标组计时覆盖不足，平均值是已知用量下限；中位数及分位数按已有完整计时的题目统计，样本覆盖另列。"
     if any(timing.get("cell_annotations", {}).get(f"{i}:{avg}", {}).get("status") == "partial"
            for i, peer in enumerate(timing["rows"]) if peer[0] != label and (peer_labels is None or peer[0] in peer_labels)):
         text += "部分参照计时不完整，相关倍数只比较已知用量。"
