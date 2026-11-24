@@ -38,12 +38,16 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-if command -v python3 >/dev/null 2>&1; then
+if [[ -x "${REPO_ROOT}/.venv/bin/python3" ]]; then
+  PYTHON=("${REPO_ROOT}/.venv/bin/python3")
+elif [[ -x "${REPO_ROOT}/.venv/bin/python" ]]; then
+  PYTHON=("${REPO_ROOT}/.venv/bin/python")
+elif command -v python3 >/dev/null 2>&1; then
   PYTHON=(python3)
 elif command -v uv >/dev/null 2>&1; then
   PYTHON=(uv run python)
 else
-  echo "python3 or uv is required to read ${MANIFEST}" >&2
+  echo "Repository .venv/bin/python3 or .venv/bin/python, system python3, or uv is required to read ${MANIFEST}" >&2
   exit 2
 fi
 

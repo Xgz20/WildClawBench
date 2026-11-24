@@ -24,7 +24,8 @@ bash docker/claudecode/build.sh --version v0.4 --skip-save
 Images/wildclawbench-claudecode-ubuntu_v0.4.tar.gz
 ```
 
-服务器只有 `uv`、没有系统 `python3` 时，构建脚本会自动使用 `uv run python` 读取版本清单。
+构建脚本优先使用仓库 `.venv/bin/python3` 或 `.venv/bin/python` 读取版本清单，
+无需先激活虚拟环境；仓库虚拟环境不存在时再使用系统 `python3` 或 `uv run python`。
 
 ## 运行时约定
 

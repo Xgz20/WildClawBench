@@ -15,6 +15,7 @@ DEEPSEEK_HARNESS_DIR = REPO_ROOT / "docker" / "deepseek-harness"
 MINIMAX_CODE_DIR = REPO_ROOT / "docker" / "minimax-code"
 ZCODE_DIR = REPO_ROOT / "docker" / "zcode"
 MIMOCODE_DIR = REPO_ROOT / "docker" / "mimocode"
+OPENCODE_DIR = REPO_ROOT / "docker" / "opencode"
 ASTRONCODE_BUILD = ASTRONCODE_DIR / "build.sh"
 CLAUDECODE_BUILD = CLAUDECODE_DIR / "build.sh"
 CODEX_BUILD = CODEX_DIR / "build.sh"
@@ -22,6 +23,7 @@ DEEPSEEK_HARNESS_BUILD = DEEPSEEK_HARNESS_DIR / "build.sh"
 MINIMAX_CODE_BUILD = MINIMAX_CODE_DIR / "build.sh"
 ZCODE_BUILD = ZCODE_DIR / "build.sh"
 MIMOCODE_BUILD = MIMOCODE_DIR / "build.sh"
+OPENCODE_BUILD = OPENCODE_DIR / "build.sh"
 ASTRONCODE_MANIFEST = ASTRONCODE_DIR / "versions.json"
 CLAUDECODE_MANIFEST = CLAUDECODE_DIR / "versions.json"
 CODEX_MANIFEST = CODEX_DIR / "versions.json"
@@ -44,6 +46,7 @@ BUILD_ENV_NAMES = (
     "MCODE_VERSION",
     "ZCODE_VERSION",
     "MIMOCODE_VERSION",
+    "OPENCODE_VERSION",
     "ZCODE_SOURCE_COMMIT",
     "ZCODE_REPOSITORY",
     "EVAL_BASE_IMAGE",
@@ -250,6 +253,7 @@ class ImageVersionManifestTest(unittest.TestCase):
         self.assertFalse((MINIMAX_CODE_DIR / "releases").exists())
         self.assertFalse((ZCODE_DIR / "releases").exists())
         self.assertFalse((MIMOCODE_DIR / "releases").exists())
+        self.assertFalse((OPENCODE_DIR / "releases").exists())
 
     def test_canonical_builders_are_executable_and_export_capable(self):
         for build_script in (
@@ -260,6 +264,7 @@ class ImageVersionManifestTest(unittest.TestCase):
             MINIMAX_CODE_BUILD,
             ZCODE_BUILD,
             MIMOCODE_BUILD,
+            OPENCODE_BUILD,
         ):
             with self.subTest(build_script=build_script):
                 self.assertTrue(build_script.is_file())

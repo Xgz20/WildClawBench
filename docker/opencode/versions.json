@@ -1,0 +1,23 @@
+{
+  "default": "v0.1",
+  "versions": {
+    "v0.0": {
+      "image": "wildclawbench-opencode-ubuntu:v0.0",
+      "context": "v1",
+      "dockerfile": "v1/Dockerfile",
+      "build_args": {
+        "OPENCODE_VERSION": "1.18.4",
+        "EVAL_BASE_IMAGE": "wildclawbench-codex-ubuntu:v0.0"
+      }
+    },
+    "v0.1": {
+      "image": "wildclawbench-opencode-ubuntu:v0.1",
+      "context": "v2",
+      "dockerfile": "v2/Dockerfile",
+      "build_args": {
+        "OPENCODE_VERSION": "1.19.6",
+        "EVAL_BASE_IMAGE": "wildclawbench-codex-ubuntu:v0.0"
+      }
+    }
+  }
+}

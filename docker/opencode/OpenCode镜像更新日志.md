@@ -51,23 +51,25 @@ docker run --rm --entrypoint opencode \
 
 ## 构建与发布约定
 
-仓库当前没有独立构建脚本，可直接构建 v0.1：
+通过统一构建脚本构建 v0.1：
 
 ```bash
-docker build \
-  -t wildclawbench-opencode-ubuntu:v0.1 \
-  docker/opencode/v2
+bash docker/opencode/build.sh --version v0.1 --skip-save
 ```
 
-指定 npm registry 或升级版本时传入对应 build arg：
+省略 `--skip-save` 会导出 `Images/wildclawbench-opencode-ubuntu_v0.1.tar.gz`。
+构建脚本从 `versions.json` 解析版本目录、镜像 tag、CLI 版本和基础镜像，
+并在 Docker 构建后执行 `opencode --version` 校验。
+
+指定 npm registry 或代理时使用环境变量：
 
 ```bash
-docker build \
-  --build-arg OPENCODE_VERSION=1.19.6 \
-  --build-arg NPM_REGISTRY=https://registry.npmjs.org/ \
-  -t wildclawbench-opencode-ubuntu:v0.1 \
-  docker/opencode/v2
+NPM_REGISTRY=https://registry.npmmirror.com \
+  bash docker/opencode/build.sh --version v0.1 --skip-save
 ```
+
+历史 v0.0 镜像可使用 `bash docker/opencode/build.sh --version v0.0` 重建，
+不会覆盖当前 v0.1。
 
 发布离线包时使用完整 tag 导出，并在分发前验证 `gzip -t` 与 `docker load`。
 
@@ -75,6 +77,8 @@ docker build \
 
 - `docker/opencode/v2/Dockerfile`
 - `docker/opencode/v1/Dockerfile`（历史版本）
+- `docker/opencode/versions.json`
+- `docker/opencode/build.sh`
 - `src/agents/opencode/runner.py`
 - `src/agents/opencode/backend.py`
 - `docs/superpowers/specs/2026-07-31-opencode-thinking-variant-design.md`
