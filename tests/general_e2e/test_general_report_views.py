@@ -55,9 +55,9 @@ class GeneralReportViewsTests(unittest.TestCase):
         self.data["units"][0]["resources"] = REPORT.resource_summary(self.data["tasks"])
         view = VIEWS.build_views(self.data, self.references)["tables"]["效率对比"]
         timing = view["timing_table"]
-        self.assertEqual(timing["headers"], ["模型@Harness", "总任务耗时(s)", "总模型耗时(s)", "总模型耗时占比", "平均任务耗时(s)", "任务耗时中位数(s)", "任务耗时P50(s)", "任务耗时P90(s)", "平均模型耗时(s)", "模型耗时P50(s)", "模型耗时P90(s)"])
-        self.assertEqual([timing["rows"][0][i] for i in [1, 4, 5, 6]], [106, 26.5, 2.5, 2.5])
-        self.assertAlmostEqual(timing["rows"][0][7], 70.9)
+        self.assertEqual(timing["headers"], ["模型@Harness", "总任务耗时(s)", "总模型耗时(s)", "总模型耗时占比", "平均任务耗时(s)", "任务耗时中位数/P50(s)", "任务耗时P90(s)", "平均模型耗时(s)", "模型耗时P50(s)", "模型耗时P90(s)"])
+        self.assertEqual([timing["rows"][0][i] for i in [1, 4, 5]], [106, 26.5, 2.5])
+        self.assertAlmostEqual(timing["rows"][0][6], 70.9)
         self.assertEqual(timing["metric_field"], "agent_duration_seconds")
         self.assertGreater(timing["header_row"], len(view["rows"]) + 1)
         self.assertEqual(len(self.data["tasks"]), 4)  # Includes evaluation_error and unscored runs.
@@ -71,12 +71,12 @@ class GeneralReportViewsTests(unittest.TestCase):
             row["resource"]["duration_seconds"].update(value=1000, complete=True, status="observed")
         self.data["units"][0]["resources"] = REPORT.resource_summary(self.data["tasks"])
         view = VIEWS.build_views(self.data, self.references)["tables"]["效率对比"]["timing_table"]
-        self.assertEqual(view["rows"][0][1:], [None] * 10)
+        self.assertEqual(view["rows"][0][1:], [None] * 9)
         self.data["tasks"][0]["resource"]["agent_duration_seconds"].update(value=0, known_subtotal=0, complete=True, status="observed")
         self.data["tasks"][1]["resource"]["agent_duration_seconds"].update(known_subtotal=10, status="partial")
         self.data["units"][0]["resources"] = REPORT.resource_summary(self.data["tasks"])
         view = VIEWS.build_views(self.data, self.references)["tables"]["效率对比"]["timing_table"]
-        self.assertEqual(view["rows"][0][1:], [10, None, None, 2.5, 0, 0, 0, None, None, None])
+        self.assertEqual(view["rows"][0][1:], [10, None, None, 2.5, 0, 0, None, None, None])
         self.assertEqual(view["cell_annotations"]["0:4"]["status"], "partial")
         self.assertEqual(view["cell_annotations"]["0:5"]["sample_count"], 1)
         self.assertEqual(view["cell_annotations"]["0:5"]["status"], "partial")
@@ -84,7 +84,7 @@ class GeneralReportViewsTests(unittest.TestCase):
         for row in self.data["tasks"]:
             row["resource"]["agent_duration_seconds"].update(value=0, known_subtotal=0, complete=True, status="observed")
         self.data["units"][0]["resources"] = REPORT.resource_summary(self.data["tasks"])
-        self.assertEqual(VIEWS.build_views(self.data, self.references)["tables"]["效率对比"]["timing_table"]["rows"][0][1:], [0, None, None, 0, 0, 0, 0, None, None, None])
+        self.assertEqual(VIEWS.build_views(self.data, self.references)["tables"]["效率对比"]["timing_table"]["rows"][0][1:], [0, None, None, 0, 0, 0, None, None, None])
 
     def test_partial_distribution_uses_only_complete_task_records_including_failures(self):
         for row, value in zip(self.data['tasks'], [0, 2, 4, 100]):
@@ -105,9 +105,9 @@ class GeneralReportViewsTests(unittest.TestCase):
         self.assertEqual(view['cell_annotations']['0:3']['status'], 'partial')
         self.assertEqual(view['coverage_table']['rows'][0][3], '3/4')
         timing = view['timing_table']
-        self.assertEqual(timing['rows'][0][5:7], [2, 2])
-        self.assertAlmostEqual(timing['rows'][0][7], 3.6)
-        self.assertEqual(timing['cell_annotations']['0:7']['sample_count'], 3)
+        self.assertEqual(timing['rows'][0][5], 2)
+        self.assertAlmostEqual(timing['rows'][0][6], 3.6)
+        self.assertEqual(timing['cell_annotations']['0:6']['sample_count'], 3)
 
     def test_distribution_samples_do_not_admit_invalid_counters_or_partial_subtotals(self):
         rows = [{'resource': {'metric': {'complete': complete, 'value': value, 'known_subtotal': 999}}}

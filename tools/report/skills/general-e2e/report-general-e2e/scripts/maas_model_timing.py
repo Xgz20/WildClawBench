@@ -22,7 +22,7 @@ CACHE_SCHEMA = "wildclawbench.maas-perf-cache/v1"
 SID = re.compile(r"^cht[^\s]+@[^\s]+$")
 ITEM_ID = re.compile(r"^(?:rs|resp)_(cht[^\s]+@[^\s]+)_\d+$")
 ES_FIELDS = ["sid", "model", "serviceName", "result", "api_name", "request_time", "response_time", "perf", "@timestamp", "finish_reason"]
-HEADERS = ["模型@Harness", "总任务耗时(s)", "总模型耗时(s)", "总模型耗时占比", "平均任务耗时(s)", "任务耗时中位数(s)", "任务耗时P50(s)", "任务耗时P90(s)", "平均模型耗时(s)", "模型耗时P50(s)", "模型耗时P90(s)"]
+HEADERS = ["模型@Harness", "总任务耗时(s)", "总模型耗时(s)", "总模型耗时占比", "平均任务耗时(s)", "任务耗时中位数/P50(s)", "任务耗时P90(s)", "平均模型耗时(s)", "模型耗时P50(s)", "模型耗时P90(s)"]
 
 
 class ModelTimingError(ValueError):

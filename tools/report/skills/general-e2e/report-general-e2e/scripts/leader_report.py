@@ -204,7 +204,7 @@ def render_task_timing_summary(data, peer_labels=None):
     row = timing["rows"][index]
     indices = {h: i for i, h in enumerate(timing["headers"])}
     avg = indices["平均任务耗时(s)"]
-    p50 = indices["任务耗时P50(s)"]
+    p50 = indices["任务耗时中位数/P50(s)"] if "任务耗时中位数/P50(s)" in indices else indices["任务耗时P50(s)"]
     p90 = indices["任务耗时P90(s)"]
     if row[avg] is None:
         return f"{label} 的原生任务耗时不可用，不用流程耗时替代。"

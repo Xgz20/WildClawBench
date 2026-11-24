@@ -144,22 +144,22 @@ class ModelTimingTests(unittest.TestCase):
             row['model_timing'] = {'complete': True, 'value': value*2, 'known_subtotal': value*2, 'coverage': {'known':1,'total':1}}
         data['units'][0]['resources'] = REPORT.resource_summary(data['tasks'])
         view = REPORT.report_views.task_timing_comparison(data, data['presentation']['unit_labels'])
-        self.assertEqual(view['rows'][0][1:7], [106,212,2,26.5,2.5,2.5])
-        self.assertEqual(view['rows'][0][8:11], [53,5,141.8])
+        self.assertEqual(view['rows'][0][1:6], [106,212,2,26.5,2.5])
+        self.assertEqual(view['rows'][0][7:10], [53,5,141.8])
         data['tasks'] = data['tasks'][:3]; data['units'][0]['resources'] = REPORT.resource_summary(data['tasks'])
         view = REPORT.report_views.task_timing_comparison(data, data['presentation']['unit_labels'])
-        self.assertEqual(view['rows'][0][1:7], [6,12,2,2,2,2])
-        self.assertEqual(view['rows'][0][8:10], [4,4])
+        self.assertEqual(view['rows'][0][1:6], [6,12,2,2,2])
+        self.assertEqual(view['rows'][0][7:9], [4,4])
         data['tasks'][0]['model_timing']['complete'] = False
         view = REPORT.report_views.task_timing_comparison(data, data['presentation']['unit_labels'])
-        self.assertTrue(all(view['rows'][0][i] is None for i in [2,3,8,9,10]))
+        self.assertTrue(all(view['rows'][0][i] is None for i in [2,3,7,8,9]))
 
     def test_report_stage_options_and_target_narrative_use_correct_columns(self):
         fixture = Fixture(self.root/'fixture')
         data = REPORT.aggregate(REPORT.validate_batch_inputs(fixture.batch), '2026-09-21T00:00:00Z')
         uid = data['units'][0]['unit_id']; label = data['presentation']['unit_labels'][uid]
         view = data['presentation']['tables']['效率对比']['timing_table']
-        view['rows'][0] = [label,100,80,.8,25,10,10,40,20,8,32]
+        view['rows'][0] = [label,100,80,.8,25,10,40,20,8,32]
         narrative = leader_report.render_task_timing_summary({'target':{'label':label}, 'tables':{'效率对比':{'timing_table':view}}})
         self.assertIn('25.000 秒', narrative); self.assertIn('20.000 秒', narrative); self.assertIn('80.00%', narrative)
         args = REPORT.build_parser().parse_args(['generate', '--batch-root', str(fixture.batch), '--output-dir',str(self.root/'out'), '--node-modules', str(self.root), '--maas-es-cache', str(self.root/'cache')])

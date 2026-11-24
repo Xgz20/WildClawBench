@@ -424,7 +424,7 @@ def task_timing_comparison(data, labels):
                       "known_subtotal": model["known_subtotal"], "basis": model_timing.PROFILE}
         share = (float(Decimal(str(model["total"])) / Decimal(str(total["value"])))
                  if model["complete"] and complete and total["value"] > 0 else None)
-        cells = [total, model_cell, {**model_cell, "value": share}, average, median, dict(median), p90,
+        cells = [total, model_cell, {**model_cell, "value": share}, average, median, p90,
                  {**model_cell, "value": float(Decimal(str(model["total"])) / len(rows)) if model["complete"] else None},
                  {**model_cell, "value": timing_percentile(model["values"], .5) if model["complete"] else None},
                  {**model_cell, "value": timing_percentile(model["values"], .9) if model["complete"] else None}]
