@@ -728,6 +728,7 @@ def _build_grading_env_args(
         "OPENROUTER_API_KEY",
         "OPENROUTER_BASE_URL",
         "WILDCLAW_JUDGE_TIMEOUT_SECONDS",
+        "WCB_JUDGE_CHANNEL",
     ):
         value = os.environ.get(key, "").strip()
         if value:

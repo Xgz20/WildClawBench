@@ -743,6 +743,11 @@ def grade_the_task(
         else:
             logger.info("[%s] gt directory copied to container %s/gt", task_id, TMP_WORKSPACE)
 
+    if os.environ.get("WCB_DEFER_SCORING") == "1":
+        from src.cli_scoring import freeze_input
+        freeze_input(task_id, output_dir, task, transcript_container_path)
+        return result
+
     # v2: a task is gradable if it has rule checks OR a declarative rubric.
     has_gradable = bool(task.get("automated_checks") or task.get("rubric_criteria"))
     should_grade = has_gradable and (

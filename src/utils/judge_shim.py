@@ -533,6 +533,26 @@ class _Completions:
         self._client = client
 
     def create(self, *, model: str, messages: list[dict[str, Any]], **kwargs: Any) -> Any:
+        channel = os.environ.get("WCB_JUDGE_CHANNEL")
+        if channel:
+            import time
+            import uuid
+            root = Path(channel)
+            call_id = uuid.uuid4().hex
+            request = root / (call_id + ".request.json")
+            temporary = request.with_suffix(".tmp")
+            temporary.write_text(json.dumps({"model": model, "messages": messages}, ensure_ascii=False), encoding="utf-8")
+            temporary.replace(request)
+            reply = root / (call_id + ".response.json")
+            deadline = time.monotonic() + _judge_timeout_seconds()
+            while not reply.is_file():
+                if time.monotonic() >= deadline:
+                    raise TimeoutError("Harness judge response timed out")
+                time.sleep(0.2)
+            result = json.loads(reply.read_text(encoding="utf-8"))
+            if result.get("error"):
+                raise RuntimeError(result["error"])
+            return _Response(result["text"], result["model"], None, raw_response=result)
         wildclaw_judge_schema = str(
             kwargs.pop("wildclaw_judge_schema", "")
             or os.environ.get("WILDCLAW_JUDGE_SCHEMA", "")
