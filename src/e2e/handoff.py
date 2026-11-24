@@ -15,6 +15,7 @@ from .compatibility import verify_installed
 from .engine import load_batch, verify_ready
 from .store import BatchStore
 from .trace import ADAPTER, _is_desktop_user, ensure_resource_coverage
+from .preprocessing import execution_prompt
 
 
 def _bind_prompt_metadata(record, item):
@@ -262,7 +263,10 @@ def _web_context(batch: Path, temporary: Path, manifest: dict, item: dict, task:
     shutil.copyfile(public_prompt, execution_task / "PROMPT.md")
     effective_prompt = restored / "metadata/effective-prompt.md"
     if effective_prompt.is_file():
-        shutil.copyfile(effective_prompt, execution_task / "effective-PROMPT.md")
+        payload = execution_prompt(restored, public_prompt.read_bytes(), item.get("prompt"))
+        shutil.copyfile(public_prompt, execution_task / "base-PROMPT.md")
+        (execution_task / "PROMPT.md").write_bytes(payload)
+        (execution_task / "effective-PROMPT.md").write_bytes(payload)
     _copy(restored / "trace", execution_task / "trace")
     shutil.copyfile(restored / "final-response.md", execution_task / "final-response.md")
     shutil.copyfile(restored / "resource-metrics.json", execution_task / "resource-metrics.json")

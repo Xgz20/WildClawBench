@@ -44,6 +44,13 @@ def _publish(root: Path, store: BatchStore, item: dict, manifest: dict, unit: di
              "native_binding": {key: value for key, value in binding.items() if key != "events"},
              "report": outcome["report"], "process_cleanup": outcome["cleanup"],
              "public_input_sha256": digest(task["public_inventory"]), "prompt_sha256": task["prompt_sha256"]}
+    prompt_metadata = store.get(item["key"]).get("prompt")
+    if prompt_metadata:
+        if (prompt_metadata.get("base_prompt_sha256") != task["prompt_sha256"]
+                or prompt_metadata.get("effective_prompt_sha256") != binding["prompt_sha256"]):
+            raise E2EError("EXECUTION_PROMPT_BINDING_MISMATCH")
+        proof.update(base_prompt_sha256=task["prompt_sha256"],
+                     prompt_sha256=prompt_metadata["effective_prompt_sha256"], prompt=prompt_metadata)
     proof_path = staging / "trace/bindings/execution-proof.json"
     if outcome.get("recovery"):
         proof["native_terminal_recovery"] = outcome["recovery"]
@@ -82,7 +89,9 @@ def _reconcile_sealed(root, store, item, manifest, unit, task):
     receipt = verify_execution(execution)
     original = execution / "original"
     outcome = read_json(original / "metadata/result.json")
-    prompt = (inside(root, task["input_root"]) / "execution/PROMPT.md").read_text(encoding="utf-8")
+    from .preprocessing import execution_prompt
+    base_prompt = (inside(root, task["input_root"]) / "execution/PROMPT.md").read_bytes()
+    prompt = execution_prompt(original, base_prompt, item.get("prompt")).decode("utf-8")
     if unit["harness"]=="workbuddy":
         from .workbuddy_trace import normalize_workbuddy
         archived=read_json(original/"metadata/native-binding.json")

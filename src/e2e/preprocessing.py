@@ -13,6 +13,7 @@ from .common import E2EError, digest, file_sha256, identifier, read_json
 
 
 CAPABILITY = "windows-environment-preprocessing"
+PROMPT_CAPABILITY = "execution-prompt-plugin-mentions-v1"
 KINDS = {"skill", "plugin", "acode", "powershell"}
 PROMPT_DIRECTIVE_KEYS = {"default", "overrides"}
 EXE = "acode-windows-x64.exe"
@@ -263,7 +264,9 @@ def augment_prompt(prompt, directives, recipe):
     """Create a deterministic per-unit Prompt without mutating the source task."""
     if not isinstance(prompt, str) or not isinstance(directives, dict):
         raise E2EError("PREPROCESS_PROMPT_INVALID")
-    mentions = directives.get("plugin_mentions", [])
+    if set(directives) != {"plugin_mentions"}:
+        raise E2EError("PREPROCESS_PROMPT_DIRECTIVES_INVALID")
+    mentions = _normalize_plugin_mentions(directives["plugin_mentions"])
     if not mentions:
         return prompt, {"plugin_mentions": [], "changed": False,
                          "base_prompt_sha256": file_sha256_bytes(prompt.encode("utf-8")),
@@ -273,7 +276,7 @@ def augment_prompt(prompt, directives, recipe):
     if missing:
         raise E2EError("PREPROCESS_PROMPT_PLUGIN_NOT_AVAILABLE: " + ",".join(missing))
     block = "\n\n[评测环境插件]\n" + "\n".join("可用 Web 插件：@" + name for name in mentions) + "\n"
-    effective = prompt.rstrip("\n") + block
+    effective = prompt + block
     return effective, {"plugin_mentions": list(mentions), "changed": True,
                        "base_prompt_sha256": file_sha256_bytes(prompt.encode("utf-8")),
                        "effective_prompt_sha256": file_sha256_bytes(effective.encode("utf-8"))}
@@ -289,6 +292,8 @@ def _validate_prompt_directives(unit, task_ids):
     raw = binding.get("prompt_directives")
     if not raw:
         return
+    if set(raw["overrides"]) - set(task_ids):
+        raise E2EError("PREPROCESS_PROMPT_OVERRIDE_OUTSIDE_SELECTION")
     recipes_by_task = {task_id: effective(unit, task_id) for task_id in task_ids}
     for task_id, directives in ((task_id, prompt_directives(unit, task_id)) for task_id in task_ids):
         targets = {step["target"] for step in (recipes_by_task[task_id] or {}).get("steps", [])
@@ -296,6 +301,24 @@ def _validate_prompt_directives(unit, task_ids):
         missing = [name for name in directives["plugin_mentions"] if name not in targets]
         if missing:
             raise E2EError("PREPROCESS_PROMPT_PLUGIN_NOT_AVAILABLE: " + ",".join(missing))
+
+
+def execution_prompt(source, base, metadata=None):
+    """Read the exact sent bytes from a staging/sealed execution, validating its lock."""
+    prompt_path, lock = source / "metadata/effective-prompt.md", source / "metadata/prompt.json"
+    if not lock.exists() and not prompt_path.exists():
+        if (metadata or {}).get("changed"):
+            raise E2EError("EXECUTION_PROMPT_LOCK_MISSING")
+        return base
+    if not lock.is_file() or not prompt_path.is_file() or lock.is_symlink() or prompt_path.is_symlink():
+        raise E2EError("EXECUTION_PROMPT_LOCK_MISSING")
+    saved = read_json(lock)
+    payload = prompt_path.read_bytes()
+    if (saved.get("base_prompt_sha256") != file_sha256_bytes(base)
+            or saved.get("effective_prompt_sha256") != file_sha256_bytes(payload)
+            or (metadata is not None and saved != metadata)):
+        raise E2EError("EXECUTION_PROMPT_DRIFT")
+    return payload
 
 
 def normalize_binding(raw, harness):
@@ -309,6 +332,9 @@ def normalize_binding(raw, harness):
     result = {"default": default, "overrides": overrides}
     if "prompt_directives" in raw:
         result["prompt_directives"] = _normalize_prompt_directives(raw["prompt_directives"])
+        if harness != "astronstudio" and any([result["prompt_directives"]["default"],
+                                              *result["prompt_directives"]["overrides"].values()]):
+            raise E2EError("PREPROCESS_PROMPT_REQUIRES_ASTUDIO")
     return result
 
 
@@ -365,9 +391,13 @@ def selection(units, tasks):
         if set(unit["preprocessing"]["overrides"]) - all_ids:
             raise E2EError("PREPROCESS_OVERRIDE_OUTSIDE_SELECTION")
         _validate_prompt_directives(unit, ids)
+        if any(prompt_directives(unit, task["task_id"])["plugin_mentions"] and task.get("scene", "web") != "web"
+               for task in tasks):
+            raise E2EError("PREPROCESS_PROMPT_WEB_ONLY")
         rows.append({"unit_index": index, "unit_id": unit["unit_id"],
                      "cases": [{"task_id": key, "recipe": summary(effective(unit, key)),
-                                "prompt_directives": prompt_directives(unit, key)} for key in ids],
+                                **({"prompt_directives": prompt_directives(unit, key)}
+                                   if unit["preprocessing"].get("prompt_directives") else {})} for key in ids],
                      "binding": unit["preprocessing"]})
     if not rows:
         return {}
