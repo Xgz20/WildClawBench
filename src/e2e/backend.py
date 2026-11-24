@@ -221,6 +221,8 @@ class AStudioSandboxDriver:
         self.staging = self.root / "staging"
         self.staging.mkdir(parents=True, exist_ok=True)
         self.preprocess_recipe = None
+        self.prompt_directives = {"plugin_mentions": []}
+        self.effective_prompt = None
 
     def checkpoint(self):
         if self.stop.is_set():
@@ -233,7 +235,9 @@ class AStudioSandboxDriver:
             raise E2EError("PLATFORM_TTL_TOO_SHORT_FOR_TIMEOUT: increase expire_ttl in AgentCube configuration")
         if (self.batch / "batch.json").is_file():
             self.preprocess_recipe = preprocessing.frozen_recipe(self.batch, self.unit["unit_id"], self.task["task_id"])
-        bound = {**self.unit, "preprocessing": {"default": self.preprocess_recipe, "overrides": {}}}
+            self.prompt_directives = preprocessing.frozen_prompt_directives(self.batch, self.unit["unit_id"], self.task["task_id"])
+        bound = {**self.unit, "preprocessing": {"default": self.preprocess_recipe, "overrides": {},
+                                                 "prompt_directives": {"default": self.prompt_directives["plugin_mentions"], "overrides": {}}}}
         if self.preprocess_recipe is not None and self.config.required_expire_ttl(
                 self.unit["timeout_override"], preprocessing.budget(bound)) > self.config.expire_ttl:
             raise E2EError("PLATFORM_TTL_TOO_SHORT_FOR_TIMEOUT: increase expire_ttl in AgentCube configuration")
@@ -361,7 +365,12 @@ try {
         self.client.upload(sid, "/tmp/wcb-input.zip", archive.getvalue())
         unpack = "import zipfile,pathlib;pathlib.Path('/workspace/input').mkdir(parents=True,exist_ok=True);zipfile.ZipFile('/tmp/wcb-input.zip').extractall('/workspace/input')"
         self.client.checked(sid, "python3 -c " + shlex.quote(unpack), 120)
-        self.client.upload(sid, "/run/wgui/instruction.txt", (public / "PROMPT.md").read_bytes())
+        base_prompt = (public / "PROMPT.md").read_text(encoding="utf-8")
+        self.effective_prompt, prompt_metadata = preprocessing.augment_prompt(
+            base_prompt, self.prompt_directives, self.preprocess_recipe)
+        (self.staging / "metadata/effective-prompt.md").write_text(self.effective_prompt, encoding="utf-8")
+        atomic_json(self.staging / "metadata/prompt.json", prompt_metadata)
+        self.client.upload(sid, "/run/wgui/instruction.txt", self.effective_prompt.encode("utf-8"))
         ui = {"permission": "full access"}
         if self.product=="astudio" and self.unit.get("reasoning_effort") is not None:
             ui["reasoning"] = {"none": "None", "high": "High", "max": "Max"}[self.unit["reasoning_effort"].casefold()]
@@ -528,7 +537,7 @@ try {
             windows_preprocess.verify_remote_plugins(self, sid, self.preprocess_recipe, powershell)
             before = self._inventory_native(sid)
             atomic_json(self.staging / "metadata/native-before.json", before)
-            self._phase("PREPARING", native_before=before)
+            self._phase("PREPARING", native_before=before, prompt=prompt_metadata)
         self._phase("RUNNING")
         result = self._job("task-run", self._task_run_command(),
                            timeout=self.unit["timeout_override"] + 1800)
@@ -545,7 +554,13 @@ try {
         self._download_tree(sid, "/logs/artifacts/run", "run")
         identity = {"batch_id": self.batch.name + f"-r{row['run_index']:04d}", "unit_id": row["unit_id"], "task_id": row["task_id"],
                     "attempt_id": row["attempt_id"]}
-        prompt = (inside(self.batch, self.task["input_root"]) / "execution/PROMPT.md").read_text(encoding="utf-8")
+        prompt_path = self.staging / "metadata/effective-prompt.md"
+        if prompt_path.is_file():
+            prompt = prompt_path.read_text(encoding="utf-8")
+        else:
+            base_prompt = (inside(self.batch, self.task["input_root"]) / "execution/PROMPT.md").read_text(encoding="utf-8")
+            prompt, prompt_metadata = preprocessing.augment_prompt(base_prompt, self.prompt_directives, self.preprocess_recipe)
+            atomic_json(self.staging / "metadata/prompt.json", prompt_metadata)
         before = self.store.get(self.key).get("native_before", {})
         before_close, before_binding = self._bound_native(sid, before, report, identity, prompt, "before-cleanup")
         if self.preprocess_recipe:

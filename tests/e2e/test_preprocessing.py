@@ -15,7 +15,7 @@ import zipfile
 from src.e2e.backend import ObservationPaused
 from src.e2e.common import E2EError, atomic_json, digest, read_json, utc_now
 from src.e2e.preparation import normalize_plan
-from src.e2e.preprocessing import effective, freeze_assets, frozen_recipe, inspect_asset, selection
+from src.e2e.preprocessing import augment_prompt, effective, freeze_assets, frozen_prompt_directives, frozen_recipe, inspect_asset, selection
 from src.e2e.windows_preprocess import _receipt, _upload, apply_recipe, bind_running_acode, build_payload
 
 
@@ -201,6 +201,34 @@ class PreprocessingTests(unittest.TestCase):
             atomic_json(root / "preprocessing.json", {})
             with self.assertRaisesRegex(E2EError, "BINDINGS_DRIFT"):
                 frozen_recipe(root, unit["unit_id"], "replace")
+
+    def test_explicit_plugin_prompt_is_opt_in_and_case_scoped(self):
+        plugin_asset = {"name": "sites.zip", "kind": "plugin", "sha256": "a" * 64, "size": 10}
+        plugin_recipe = {"version_id": 8, "version": 2, "name": "Sites 1.17", "steps": [
+            {"kind": "plugin", "target": "sites-skills", "marketplace": "astron-plugin-hub",
+             "asset": plugin_asset, "timeout": 20}
+        ]}
+        plan = normalize_plan({"selection": {"scenario": "web", "dataset": "fixture"}, "runs": 1,
+            "units": [{"unit_id": "astudio-web", "harness": "astronstudio", "model": "spark-x2.6",
+                "preprocessing": {"default": plugin_recipe, "overrides": {},
+                    "prompt_directives": {"default": [], "overrides": {"web-023": ["sites-skills"]}}}}]})
+        cases = [{"task_id": task} for task in ("web-023", "web-024")]
+        preview = selection(plan["units"], cases)
+        directives = preview["preprocessing"][0]["cases"]
+        self.assertEqual(directives[0]["prompt_directives"]["plugin_mentions"], ["sites-skills"])
+        self.assertEqual(directives[1]["prompt_directives"]["plugin_mentions"], [])
+        base = "帮我完成这个 Web 任务。\n"
+        unchanged, metadata = augment_prompt(base, directives[1]["prompt_directives"], plugin_recipe)
+        self.assertEqual(unchanged, base)
+        self.assertFalse(metadata["changed"])
+        effective_prompt, metadata = augment_prompt(base, directives[0]["prompt_directives"], plugin_recipe)
+        self.assertIn("@sites-skills", effective_prompt)
+        self.assertTrue(metadata["changed"])
+        self.assertNotEqual(metadata["base_prompt_sha256"], metadata["effective_prompt_sha256"])
+
+    def test_prompt_plugin_requires_a_matching_plugin_recipe(self):
+        with self.assertRaisesRegex(E2EError, "PROMPT_PLUGIN_NOT_AVAILABLE"):
+            augment_prompt("任务", {"plugin_mentions": ["sites-skills"]}, None)
 
     def test_resume_observes_existing_step_and_failure_records_no_script_output(self):
         with tempfile.TemporaryDirectory() as directory:
