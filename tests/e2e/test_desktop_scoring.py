@@ -34,6 +34,12 @@ def browser_event(server, name, call, output, arguments=None):
 
 
 class DesktopScoringTests(unittest.TestCase):
+    def test_astudio_is_the_public_scoring_name_and_legacy_alias_is_accepted(self):
+        canonical = scoring._config({**CONFIG, "harness": "astudio"})
+        legacy = scoring._config({**CONFIG, "harness": "astronstudio"})
+        self.assertEqual(canonical["harness"], "astudio")
+        self.assertEqual(legacy["harness"], "astudio")
+
     def test_chatgpt_subscription_uses_the_guest_account_without_gateway_credentials(self):
         base = {**CONFIG, "harness": "chatgpt-desktop", "model": "gpt-6.2-sol",
                 "reasoning_effort": "high"}
@@ -80,9 +86,11 @@ class DesktopScoringTests(unittest.TestCase):
                 scoring._verify_subscription_profile(config)
 
     def test_model_and_template_are_pinned(self):
-        self.assertEqual(scoring._config(CONFIG), CONFIG)
+        self.assertEqual(scoring._config(CONFIG)["harness"], "astudio")
+        self.assertEqual({key: value for key, value in scoring._config(CONFIG).items() if key != "harness"},
+                         {key: value for key, value in CONFIG.items() if key != "harness"})
         self.assertEqual(scoring._config({**CONFIG, "reasoning_effort": "high"})["reasoning_effort"], "high")
-        self.assertEqual(scoring._config({**CONFIG, "reasoning_effort": "none"}), CONFIG)
+        self.assertEqual(scoring._config({**CONFIG, "reasoning_effort": "none"})["harness"], "astudio")
         astudio = scoring._config({**CONFIG, "reasoning_effort": "max", "model": "glm-5.3"})
         self.assertEqual(astudio["reasoning_effort"], "max")
         self.assertEqual(astudio["model"], "glm-5.3")

@@ -31,6 +31,19 @@ from .windows_preprocess import diagnostic_code, public_diagnostics
 CAPABILITY = "agentcube-desktop-scoring-v1"
 RESULT_SCHEMA = "wildclawbench.desktop-score-set/v1"
 SKILLS = {"general": "score-general-e2e", "web": "score-web-e2e"}
+SCORING_HARNESS_ALIASES = {"astronstudio": "astudio", "astudio": "astudio"}
+
+
+def normalize_scoring_harness(value: object) -> str:
+    """Normalize the public scoring name while retaining old execution ids."""
+    if not isinstance(value, str):
+        raise E2EError("DESKTOP_SCORER_HARNESS_UNSUPPORTED")
+    try:
+        return SCORING_HARNESS_ALIASES[value.casefold()]
+    except KeyError as exc:
+        if value.casefold() == "chatgpt-desktop":
+            return "chatgpt-desktop"
+        raise E2EError("DESKTOP_SCORER_HARNESS_UNSUPPORTED") from exc
 
 
 class JobState:
@@ -66,12 +79,11 @@ class Stop:
 
 
 def _config(value):
-    harness, model = value.get("harness"), value.get("model")
-    if harness not in {"astronstudio", "chatgpt-desktop"}:
-        raise E2EError("DESKTOP_SCORER_HARNESS_UNSUPPORTED")
+    harness, model = normalize_scoring_harness(value.get("harness")), value.get("model")
     if not isinstance(model, str) or not re.fullmatch(r"[A-Za-z0-9_.-]{1,128}", model):
         raise E2EError("DESKTOP_SCORER_MODEL_INVALID")
-    config = {key: value.get(key) for key in ("harness", "model", "template", "concurrency", "timeout_seconds")}
+    config = {key: value.get(key) for key in ("model", "template", "concurrency", "timeout_seconds")}
+    config["harness"] = harness
     effort = value.get("reasoning_effort")
     if harness == "chatgpt-desktop":
         if effort not in {"low", "high"}:
