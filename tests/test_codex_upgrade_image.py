@@ -13,7 +13,7 @@ from pathlib import Path
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-DOCKERFILE = REPO_ROOT / "docker" / "codex" / "v1" / "Dockerfile"
+DOCKERFILE = REPO_ROOT / "docker" / "codex" / "v2" / "Dockerfile"
 BUILD_SCRIPT = REPO_ROOT / "docker" / "codex" / "build.sh"
 BUILD_MANIFEST = REPO_ROOT / "docker" / "codex" / "versions.json"
 TAOBAO_REGISTRY = "https://registry.npmmirror.com"
@@ -59,7 +59,7 @@ class CodexUpgradeDockerfileTest(unittest.TestCase):
     def test_pins_codex_version(self):
         self.assertRegex(
             self.instruction_content,
-            r"(?m)^ARG CODEX_VERSION=0\.146\.0\s*$",
+            r"(?m)^ARG CODEX_VERSION=0\.171\.0\s*$",
         )
 
     def test_defaults_to_taobao_npm_registry(self):
@@ -162,22 +162,22 @@ class CodexBuildScriptTest(unittest.TestCase):
         self.assertTrue(os.access(BUILD_SCRIPT, os.X_OK), "build script not executable")
 
     def test_defaults_to_upgraded_image_tag(self):
-        self.assertEqual("v0.1", self.manifest["default"])
+        self.assertEqual("v0.2", self.manifest["default"])
         self.assertEqual(
-            "wildclawbench-codex-ubuntu:v0.1",
-            self.manifest["versions"]["v0.1"]["image"],
+            "wildclawbench-codex-ubuntu:v0.2",
+            self.manifest["versions"]["v0.2"]["image"],
         )
 
     def test_defaults_to_official_base_image(self):
         self.assertEqual(
             "wildclawbench-codex-ubuntu:v0.0",
-            self.manifest["versions"]["v0.1"]["build_args"]["EVAL_BASE_IMAGE"],
+            self.manifest["versions"]["v0.2"]["build_args"]["EVAL_BASE_IMAGE"],
         )
 
     def test_uses_codex_build_context_and_dockerfile(self):
-        entry = self.manifest["versions"]["v0.1"]
-        self.assertEqual("v1", entry["context"])
-        self.assertEqual("v1/Dockerfile", entry["dockerfile"])
+        entry = self.manifest["versions"]["v0.2"]
+        self.assertEqual("v2", entry["context"])
+        self.assertEqual("v2/Dockerfile", entry["dockerfile"])
 
     def test_propagates_version_and_registry_build_args(self):
         for variable in ("CODEX_VERSION", "NPM_REGISTRY"):
@@ -254,6 +254,7 @@ class CodexBuildScriptTest(unittest.TestCase):
             docker_stub.chmod(0o755)
 
             environment = os.environ.copy()
+            environment.pop("CODEX_VERSION", None)
             environment.update(
                 {
                     "EVAL_BASE_IMAGE": "wildclawbench-codex-ubuntu:v0.1",
@@ -303,6 +304,7 @@ class CodexBuildScriptTest(unittest.TestCase):
             docker_stub.chmod(0o755)
 
             environment = os.environ.copy()
+            environment.pop("CODEX_VERSION", None)
             environment.update(
                 {
                     "DOCKER_CALLED_MARKER": str(docker_marker),
@@ -330,7 +332,7 @@ class CodexBuildScriptTest(unittest.TestCase):
 
 
 class CodexRunnerDefaultImageTest(unittest.TestCase):
-    """runner 默认镜像须与构建脚本产出的 tag 一致（v0.1）。"""
+    """runner 默认镜像须与构建脚本产出的 tag 一致（v0.2）。"""
 
     @classmethod
     def setUpClass(cls):
@@ -341,7 +343,7 @@ class CodexRunnerDefaultImageTest(unittest.TestCase):
 
     def test_runner_defaults_to_upgraded_image(self):
         self.assertIn(
-            'os.environ.get("DOCKER_IMAGE_CODEX") or "wildclawbench-codex-ubuntu:v0.1"',
+            'os.environ.get("DOCKER_IMAGE_CODEX") or "wildclawbench-codex-ubuntu:v0.2"',
             self.runner_source,
         )
 

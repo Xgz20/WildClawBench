@@ -6,7 +6,7 @@ from pathlib import Path
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-DOCKERFILE = REPO_ROOT / "docker" / "claudecode" / "v3" / "Dockerfile"
+DOCKERFILE = REPO_ROOT / "docker" / "claudecode" / "v4" / "Dockerfile"
 MANIFEST = REPO_ROOT / "docker" / "claudecode" / "versions.json"
 
 
@@ -17,8 +17,8 @@ class ClaudeCodeImageTests(unittest.TestCase):
         cls.manifest = json.loads(MANIFEST.read_text(encoding="utf-8"))
 
     def test_pins_latest_official_cli_and_clean_base(self) -> None:
-        entry = self.manifest["versions"]["v0.3"]
-        self.assertEqual("2.1.250", entry["build_args"]["CLAUDE_CODE_VERSION"])
+        entry = self.manifest["versions"]["v0.4"]
+        self.assertEqual("2.1.330", entry["build_args"]["CLAUDE_CODE_VERSION"])
         self.assertEqual(
             "wildclawbench-codex-ubuntu:v0.0",
             entry["build_args"]["EVAL_BASE_IMAGE"],

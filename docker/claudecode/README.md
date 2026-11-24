@@ -4,9 +4,9 @@ Claude Code 镜像采用版本目录、`versions.json` 和统一构建脚本维�
 
 ## 当前正式版本
 
-- 镜像：`wildclawbench-claudecode-ubuntu:v0.3`
-- Claude Code：`2.1.250`
-- 构建目录：`docker/claudecode/v3`
+- 镜像：`wildclawbench-claudecode-ubuntu:v0.4`
+- Claude Code：`2.1.330`
+- 构建目录：`docker/claudecode/v4`
 - 评测底座：`wildclawbench-codex-ubuntu:v0.0`
 - Node.js：`node:24-bookworm-slim` 提供的 Node 24
 
@@ -15,13 +15,13 @@ Claude Code 镜像采用版本目录、`versions.json` 和统一构建脚本维�
 ## 构建
 
 ```bash
-bash docker/claudecode/build.sh --version v0.3 --skip-save
+bash docker/claudecode/build.sh --version v0.4 --skip-save
 ```
 
 省略 `--skip-save` 时，构建完成后会导出：
 
 ```text
-Images/wildclawbench-claudecode-ubuntu_v0.3.tar.gz
+Images/wildclawbench-claudecode-ubuntu_v0.4.tar.gz
 ```
 
 服务器只有 `uv`、没有系统 `python3` 时，构建脚本会自动使用 `uv run python` 读取版本清单。

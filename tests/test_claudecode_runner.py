@@ -31,7 +31,7 @@ class ClaudeCodeRunnerTests(unittest.TestCase):
 
         self.assertEqual(
             agent.image,
-            "wildclawbench-claudecode-ubuntu:v0.3",
+            "wildclawbench-claudecode-ubuntu:v0.4",
         )
 
     def test_image_override_precedence_remains_compatible(self) -> None:
@@ -94,12 +94,12 @@ class ClaudeCodeRunnerTests(unittest.TestCase):
     def test_probe_harness_version_reads_claudecode_package_metadata(self) -> None:
         with patch("src.agents.claudecode.runner.subprocess.run") as run:
             run.return_value.returncode = 0
-            run.return_value.stdout = "2.1.250 (Claude Code)\n"
+            run.return_value.stdout = "2.1.330 (Claude Code)\n"
             run.return_value.stderr = ""
 
             version = self.agent._probe_harness_version("claudecode-version-test")
 
-        self.assertEqual(version, "2.1.250")
+        self.assertEqual(version, "2.1.330")
         run.assert_called_once_with(
             [
                 "docker",

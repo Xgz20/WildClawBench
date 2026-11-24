@@ -1,5 +1,5 @@
 {
-  "default": "v0.3",
+  "default": "v0.4",
   "versions": {
     "v0.3": {
       "image": "wildclawbench-claudecode-ubuntu:v0.3",
@@ -7,6 +7,16 @@
       "dockerfile": "v3/Dockerfile",
       "build_args": {
         "CLAUDE_CODE_VERSION": "2.1.250",
+        "EVAL_BASE_IMAGE": "wildclawbench-codex-ubuntu:v0.0",
+        "NODE_RUNTIME_IMAGE": "node:24-bookworm-slim"
+      }
+    },
+    "v0.4": {
+      "image": "wildclawbench-claudecode-ubuntu:v0.4",
+      "context": "v4",
+      "dockerfile": "v4/Dockerfile",
+      "build_args": {
+        "CLAUDE_CODE_VERSION": "2.1.330",
         "EVAL_BASE_IMAGE": "wildclawbench-codex-ubuntu:v0.0",
         "NODE_RUNTIME_IMAGE": "node:24-bookworm-slim"
       }

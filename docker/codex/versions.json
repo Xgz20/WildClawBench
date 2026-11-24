@@ -1,5 +1,5 @@
 {
-  "default": "v0.1",
+  "default": "v0.2",
   "versions": {
     "v0.1": {
       "image": "wildclawbench-codex-ubuntu:v0.1",
@@ -7,6 +7,15 @@
       "dockerfile": "v1/Dockerfile",
       "build_args": {
         "CODEX_VERSION": "0.146.0",
+        "EVAL_BASE_IMAGE": "wildclawbench-codex-ubuntu:v0.0"
+      }
+    },
+    "v0.2": {
+      "image": "wildclawbench-codex-ubuntu:v0.2",
+      "context": "v2",
+      "dockerfile": "v2/Dockerfile",
+      "build_args": {
+        "CODEX_VERSION": "0.171.0",
         "EVAL_BASE_IMAGE": "wildclawbench-codex-ubuntu:v0.0"
       }
     }

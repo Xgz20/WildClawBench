@@ -120,34 +120,35 @@ class ImageVersionManifestTest(unittest.TestCase):
                     self.assertEqual("linux/amd64", entry.get("platform"))
                 self.assertTrue((ASTRONCODE_DIR / entry["dockerfile"]).is_file())
 
-    def test_codex_manifest_binds_v01_to_pinned_cli_and_base(self):
+    def test_codex_manifest_defaults_to_v02_and_preserves_v01(self):
         manifest = self._load_manifest(CODEX_MANIFEST)
-        self.assertEqual("v0.1", manifest["default"])
-        self.assertEqual({"v0.1"}, set(manifest["versions"]))
-        entry = manifest["versions"]["v0.1"]
-        self.assertEqual("wildclawbench-codex-ubuntu:v0.1", entry["image"])
-        self.assertEqual("v1", entry["context"])
-        self.assertEqual("v1/Dockerfile", entry["dockerfile"])
+        self.assertEqual("v0.2", manifest["default"])
+        self.assertEqual({"v0.1", "v0.2"}, set(manifest["versions"]))
+        entry = manifest["versions"]["v0.2"]
+        self.assertEqual("wildclawbench-codex-ubuntu:v0.2", entry["image"])
+        self.assertEqual("v2", entry["context"])
+        self.assertEqual("v2/Dockerfile", entry["dockerfile"])
         self.assertEqual(
             {
-                "CODEX_VERSION": "0.146.0",
+                "CODEX_VERSION": "0.171.0",
                 "EVAL_BASE_IMAGE": "wildclawbench-codex-ubuntu:v0.0",
             },
             entry["build_args"],
         )
         self.assertTrue((CODEX_DIR / entry["dockerfile"]).is_file())
+        self.assertEqual("0.146.0", manifest["versions"]["v0.1"]["build_args"]["CODEX_VERSION"])
 
-    def test_claudecode_manifest_defaults_to_official_global_cli(self):
+    def test_claudecode_manifest_defaults_to_v04_and_preserves_v03(self):
         manifest = self._load_manifest(CLAUDECODE_MANIFEST)
-        self.assertEqual("v0.3", manifest["default"])
-        self.assertEqual({"v0.3"}, set(manifest["versions"]))
-        entry = manifest["versions"]["v0.3"]
-        self.assertEqual("wildclawbench-claudecode-ubuntu:v0.3", entry["image"])
-        self.assertEqual("v3", entry["context"])
-        self.assertEqual("v3/Dockerfile", entry["dockerfile"])
+        self.assertEqual("v0.4", manifest["default"])
+        self.assertEqual({"v0.3", "v0.4"}, set(manifest["versions"]))
+        entry = manifest["versions"]["v0.4"]
+        self.assertEqual("wildclawbench-claudecode-ubuntu:v0.4", entry["image"])
+        self.assertEqual("v4", entry["context"])
+        self.assertEqual("v4/Dockerfile", entry["dockerfile"])
         self.assertEqual(
             {
-                "CLAUDE_CODE_VERSION": "2.1.250",
+                "CLAUDE_CODE_VERSION": "2.1.330",
                 "EVAL_BASE_IMAGE": "wildclawbench-codex-ubuntu:v0.0",
                 "NODE_RUNTIME_IMAGE": "node:24-bookworm-slim",
             },
@@ -157,14 +158,16 @@ class ImageVersionManifestTest(unittest.TestCase):
         self.assertEqual("2.1.88", legacy["claude_code_version"])
         self.assertFalse(legacy["buildable"])
         self.assertTrue((CLAUDECODE_DIR / entry["dockerfile"]).is_file())
+        self.assertEqual("2.1.250", manifest["versions"]["v0.3"]["build_args"]["CLAUDE_CODE_VERSION"])
 
-    def test_deepseek_harness_manifest_preserves_history_and_defaults_to_v3(self):
+    def test_deepseek_harness_manifest_preserves_history_and_defaults_to_v4(self):
         manifest = self._load_manifest(DEEPSEEK_HARNESS_MANIFEST)
-        self.assertEqual("v0.2", manifest["default"])
+        self.assertEqual("v0.3", manifest["default"])
         expected = {
             "v0.0": ("v1", "0.1.0-rc.6"),
             "v0.1": ("v2", "0.1.1-rc.2"),
             "v0.2": ("v3", "0.1.2-rc.1"),
+            "v0.3": ("v4", "0.2.2-rc.5"),
         }
         self.assertEqual(set(expected), set(manifest["versions"]))
         for version, (context, dsh_version) in expected.items():
@@ -489,7 +492,7 @@ class CanonicalBuildCliTest(unittest.TestCase):
         )
         self.assertEqual([], events)
 
-    def test_codex_default_build_uses_pinned_tag_cli_and_base(self):
+    def test_codex_default_build_uses_latest_context_and_cli(self):
         result, events = self._run_with_docker_stub(
             ["bash", str(CODEX_BUILD)],
             {"SKIP_SAVE": "1"},
@@ -497,48 +500,48 @@ class CanonicalBuildCliTest(unittest.TestCase):
         self.assertEqual(0, result.returncode, result.stderr)
         self.assertEqual("image", events[0][0])
         build = self._event(events, "build")
-        context = CODEX_DIR / "v1"
+        context = CODEX_DIR / "v2"
         self.assertEqual(str(context / "Dockerfile"), build[build.index("-f") + 1])
         self.assertEqual(
-            "wildclawbench-codex-ubuntu:v0.1",
+            "wildclawbench-codex-ubuntu:v0.2",
             build[build.index("-t") + 1],
         )
-        self.assertIn("CODEX_VERSION=0.146.0", build)
+        self.assertIn("CODEX_VERSION=0.171.0", build)
         self.assertIn("EVAL_BASE_IMAGE=wildclawbench-codex-ubuntu:v0.0", build)
         self.assertEqual(str(context), build[-1])
         self.assertNotIn("save", [event[0] for event in events])
 
-    def test_deepseek_harness_default_build_uses_v3_and_pinned_dsh(self):
+    def test_deepseek_harness_default_build_uses_v4_and_pinned_dsh(self):
         result, events = self._run_with_docker_stub(
             ["bash", str(DEEPSEEK_HARNESS_BUILD)],
             {"SKIP_SAVE": "1"},
         )
         self.assertEqual(0, result.returncode, result.stderr)
         build = self._event(events, "build")
-        context = DEEPSEEK_HARNESS_DIR / "v3"
+        context = DEEPSEEK_HARNESS_DIR / "v4"
         self.assertEqual(str(context / "Dockerfile"), build[build.index("-f") + 1])
         self.assertEqual(
-            "wildclawbench-deepseek-harness-ubuntu:v0.2",
+            "wildclawbench-deepseek-harness-ubuntu:v0.3",
             build[build.index("-t") + 1],
         )
-        self.assertIn("DSH_VERSION=0.1.2-rc.1", build)
+        self.assertIn("DSH_VERSION=0.2.2-rc.5", build)
         self.assertEqual(str(context), build[-1])
         self.assertNotIn("save", [event[0] for event in events])
 
-    def test_claudecode_default_build_uses_v3_and_pinned_cli(self):
+    def test_claudecode_default_build_uses_v4_and_pinned_cli(self):
         result, events = self._run_with_docker_stub(
             ["bash", str(CLAUDECODE_BUILD)],
             {"SKIP_SAVE": "1"},
         )
         self.assertEqual(0, result.returncode, result.stderr)
         build = self._event(events, "build")
-        context = CLAUDECODE_DIR / "v3"
+        context = CLAUDECODE_DIR / "v4"
         self.assertEqual(str(context / "Dockerfile"), build[build.index("-f") + 1])
         self.assertEqual(
-            "wildclawbench-claudecode-ubuntu:v0.3",
+            "wildclawbench-claudecode-ubuntu:v0.4",
             build[build.index("-t") + 1],
         )
-        self.assertIn("CLAUDE_CODE_VERSION=2.1.250", build)
+        self.assertIn("CLAUDE_CODE_VERSION=2.1.330", build)
         self.assertIn("EVAL_BASE_IMAGE=wildclawbench-codex-ubuntu:v0.0", build)
         self.assertIn("NODE_RUNTIME_IMAGE=node:24-bookworm-slim", build)
         self.assertEqual(str(context), build[-1])
@@ -550,7 +553,7 @@ class CanonicalBuildCliTest(unittest.TestCase):
             {"CLAUDE_CODE_VERSION": "2.1.236", "SKIP_SAVE": "1"},
         )
         self.assertNotEqual(0, result.returncode)
-        self.assertIn("CLAUDE_CODE_VERSION must be 2.1.250", result.stderr)
+        self.assertIn("CLAUDE_CODE_VERSION must be 2.1.330", result.stderr)
         self.assertEqual([], events)
 
     def test_deepseek_harness_historical_build_uses_v1(self):
@@ -579,7 +582,7 @@ class CanonicalBuildCliTest(unittest.TestCase):
             {"DSH_VERSION": "0.1.0-rc.6", "SKIP_SAVE": "1"},
         )
         self.assertNotEqual(0, result.returncode)
-        self.assertIn("DSH_VERSION must be 0.1.2-rc.1", result.stderr)
+        self.assertIn("DSH_VERSION must be 0.2.2-rc.5", result.stderr)
         self.assertEqual([], events)
 
     def test_pinned_codex_base_cannot_be_overridden(self):
@@ -672,7 +675,7 @@ class CanonicalBuildCliTest(unittest.TestCase):
                 '>> "${DOCKER_EVENT_LOG:?}"\n'
                 'case "${1:-}" in\n'
                 "  image|build) exit 0 ;;\n"
-                '  run) printf "codex-cli 0.146.0\\n"; exit 0 ;;\n'
+                '  run) printf "codex-cli 0.171.0\\n"; exit 0 ;;\n'
                 '  save) printf "fake image: %s\\n" "${2:-}"; exit 0 ;;\n'
                 "  *) exit 64 ;;\n"
                 "esac\n",

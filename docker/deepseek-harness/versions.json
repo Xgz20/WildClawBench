@@ -1,5 +1,5 @@
 {
-  "default": "v0.2",
+  "default": "v0.3",
   "versions": {
     "v0.0": {
       "image": "wildclawbench-deepseek-harness-ubuntu:v0.0",
@@ -27,6 +27,16 @@
       "dockerfile": "v3/Dockerfile",
       "build_args": {
         "DSH_VERSION": "0.1.2-rc.1",
+        "EVAL_BASE_IMAGE": "wildclawbench-codex-ubuntu:v0.0",
+        "NODE_RUNTIME_IMAGE": "node:24-bookworm-slim"
+      }
+    },
+    "v0.3": {
+      "image": "wildclawbench-deepseek-harness-ubuntu:v0.3",
+      "context": "v4",
+      "dockerfile": "v4/Dockerfile",
+      "build_args": {
+        "DSH_VERSION": "0.2.2-rc.5",
         "EVAL_BASE_IMAGE": "wildclawbench-codex-ubuntu:v0.0",
         "NODE_RUNTIME_IMAGE": "node:24-bookworm-slim"
       }

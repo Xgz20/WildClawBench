@@ -115,7 +115,7 @@ class ClaudeCodeTranscriptTests(unittest.TestCase):
             {
                 "type": "system",
                 "subtype": "init",
-                "claude_code_version": "2.1.250",
+                "claude_code_version": "2.1.330",
             },
             self.wrapped_message("user", "run the task", message_id="user-1"),
             self.wrapped_message(

@@ -130,9 +130,9 @@ class CodexAgent(BaseAgent):
         openrouter_base_url: str = "",
         reasoning_effort_default: str = DEFAULT_REASONING_EFFORT,
     ) -> None:
-        # v0.1 = 官方底座 v0.0 + Codex CLI 0.146.0（docker/codex/v1/Dockerfile）。
-        # 需先 bash docker/codex/build.sh 构建；未构建时用 DOCKER_IMAGE_CODEX 指回 v0.0。
-        resolved_image = image or os.environ.get("DOCKER_IMAGE_CODEX") or "wildclawbench-codex-ubuntu:v0.1"
+        # v0.2 = 官方底座 v0.0 + Codex CLI 0.171.0（docker/codex/v2/Dockerfile）。
+        # 需先 bash docker/codex/build.sh 构建；未构建时用 DOCKER_IMAGE_CODEX 显式指定可用历史 tag。
+        resolved_image = image or os.environ.get("DOCKER_IMAGE_CODEX") or "wildclawbench-codex-ubuntu:v0.2"
         self.image: str = resolved_image
         self.openrouter_api_key = (
             openrouter_api_key or os.environ.get("OPENROUTER_API_KEY", "")

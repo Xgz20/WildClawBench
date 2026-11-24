@@ -6,11 +6,12 @@
 
 | 记录日期 | 完整镜像 tag | Claude Code | Node.js | 构建来源 |
 | --- | --- | --- | --- | --- |
-| 2026-08-28 | `wildclawbench-claudecode-ubuntu:v0.3` | `2.1.250` | Node 24 | `docker/claudecode/v3/Dockerfile` |
+| 2026-11-23 | `wildclawbench-claudecode-ubuntu:v0.4` | `2.1.330` | Node 24 | `docker/claudecode/v4/Dockerfile` |
+| 2026-08-28 | `wildclawbench-claudecode-ubuntu:v0.3` | `2.1.250` | Node 24 | 历史版本 |
 
-### v0.3
+### v0.4
 
-- 改用官方全局包 `@anthropic-ai/claude-code@2.1.250`，命令为 `claude`。
+- 使用官方全局包 `@anthropic-ai/claude-code@2.1.330`，命令为 `claude`。
 - 从干净的 `wildclawbench-codex-ubuntu:v0.0` 评测底座重建，不继承旧 `v0.2-patched` 镜像层。
 - 使用 `node:24-bookworm-slim` 提供 Node 24，满足 Claude Code 的 Node.js 版本要求。
 - 保留底座中的 Google Chrome、Agent Browser、Playwright、Python、Git、jq 和文档处理工具。
@@ -18,25 +19,22 @@
 - 无头执行使用 `--print --output-format stream-json`，原始 transcript 仍落在 `/claude_code/log/chat.json`，保持现有评分和产物收集路径兼容。
 - Runner 会优先调用全局 `claude`，显式覆盖为历史镜像时仍可回退到 `/claude_code/start.sh`。
 
-### 验证记录
+### 验证边界
 
-- 镜像构建成功，镜像内 `claude --version` 为 `2.1.250`，Node.js 为 `v24.19.0`。
-- 镜像内 Google Chrome `147.0.7727.101`、Agent Browser `0.26.0`、Python `3.11.15` 可用，且不存在 `/claude_code/.env` 和 `/root/.claude.json`。
-- MaaS `xopglm52` 真实工具调用通过：Harness 正常退出，生成目标文件，转换轨迹包含一组配对的 `tool_use` / `tool_result`，usage 非零。
-- `gpt-5.5` 真实调用到达 one-iflytek，但服务端连续返回 `503`，错误为当前分组无可用渠道；该结果不计为镜像或 runner 通过，也不归因于本次代码回归。
-- ClaudeCode、transcript、镜像布局相关聚焦测试共 `52` 项通过。
-- 完整单元测试执行 `620` 项，结果为 `54 failures + 1 error`；未修改主分支执行 `611` 项也为 `54 failures + 1 error`，逐项比较失败集合完全一致，因此只能说明本次升级没有新增单测失败，不能描述为全量测试通过。
+- 已核对 npm 固定版本、Node 24 runtime、无凭据镜像约束及 `v4` 构建上下文。
+- 目标 Docker daemon 构建后应检查 `claude --version` 为 `2.1.330`、Node 为 `v24.x`，并确认 Chrome、Agent Browser、Python、Git、jq 可用。
+- 还需补做一条 MaaS 工具调用冒烟，确认全局 `claude` 启动、stream-json transcript、轨迹转换和 usage 产物均正常；静态检查不等价于真实 provider 或全量评测通过。
 
 构建命令：
 
 ```bash
-bash docker/claudecode/build.sh --version v0.3 --skip-save
+bash docker/claudecode/build.sh --version v0.4 --skip-save
 ```
 
 导出离线镜像时省略 `--skip-save`：
 
 ```bash
-bash docker/claudecode/build.sh --version v0.3
+bash docker/claudecode/build.sh --version v0.4
 ```
 
 ## 历史镜像
@@ -54,18 +52,19 @@ bash docker/claudecode/build.sh --version v0.3
 ## 使用约定
 
 ```bash
-export DOCKER_IMAGE_CLAUDECODE=wildclawbench-claudecode-ubuntu:v0.3
+export DOCKER_IMAGE_CLAUDECODE=wildclawbench-claudecode-ubuntu:v0.4
 ```
 
 离线加载：
 
 ```bash
-docker load -i Images/wildclawbench-claudecode-ubuntu_v0.3.tar.gz
+docker load -i Images/wildclawbench-claudecode-ubuntu_v0.4.tar.gz
 ```
 
 ## 相关实现
 
-- `docker/claudecode/v3/Dockerfile`
+- `docker/claudecode/v4/Dockerfile`
+- `docker/claudecode/v3/Dockerfile`（历史版本）
 - `docker/claudecode/versions.json`
 - `docker/claudecode/build.sh`
 - `src/agents/claudecode/runner.py`

@@ -10,29 +10,30 @@ DOCKER_ROOT = Path(__file__).parents[1] / "docker" / "deepseek-harness"
 V1_ROOT = DOCKER_ROOT / "v1"
 V2_ROOT = DOCKER_ROOT / "v2"
 V3_ROOT = DOCKER_ROOT / "v3"
+V4_ROOT = DOCKER_ROOT / "v4"
 
 
 class DeepSeekHarnessDockerContractTests(unittest.TestCase):
     def test_dockerfile_pins_node_and_dsh_and_checks_version(self) -> None:
-        dockerfile = (V3_ROOT / "Dockerfile").read_text(encoding="utf-8")
+        dockerfile = (V4_ROOT / "Dockerfile").read_text(encoding="utf-8")
 
         self.assertIn("ARG EVAL_BASE_IMAGE=wildclawbench-codex-ubuntu:v0.0", dockerfile)
         self.assertIn("ARG NODE_RUNTIME_IMAGE=node:24-bookworm-slim", dockerfile)
         self.assertIn("FROM ${NODE_RUNTIME_IMAGE} AS node-runtime", dockerfile)
         self.assertIn("FROM ${EVAL_BASE_IMAGE}", dockerfile)
         self.assertIn("COPY --from=node-runtime /usr/local/bin/node", dockerfile)
-        self.assertIn("ARG DSH_VERSION=0.1.2-rc.1", dockerfile)
+        self.assertIn("ARG DSH_VERSION=0.2.2-rc.5", dockerfile)
         self.assertIn("npm install -g", dockerfile)
         self.assertIn("@deepseek-ai/dsh@${DSH_VERSION}", dockerfile)
         self.assertIn("dsh --version", dockerfile)
 
-    def test_version_manifest_preserves_history_and_selects_v3_by_default(self) -> None:
+    def test_version_manifest_preserves_history_and_selects_v4_context_by_default(self) -> None:
         manifest = json.loads(
             (DOCKER_ROOT / "versions.json").read_text(encoding="utf-8")
         )
 
-        self.assertEqual(manifest["default"], "v0.2")
-        self.assertEqual(set(manifest["versions"]), {"v0.0", "v0.1", "v0.2"})
+        self.assertEqual(manifest["default"], "v0.3")
+        self.assertEqual(set(manifest["versions"]), {"v0.0", "v0.1", "v0.2", "v0.3"})
         self.assertEqual(manifest["versions"]["v0.0"]["context"], "v1")
         self.assertEqual(
             manifest["versions"]["v0.0"]["build_args"]["DSH_VERSION"],
@@ -48,9 +49,12 @@ class DeepSeekHarnessDockerContractTests(unittest.TestCase):
             manifest["versions"]["v0.2"]["build_args"]["DSH_VERSION"],
             "0.1.2-rc.1",
         )
+        self.assertEqual(manifest["versions"]["v0.3"]["context"], "v4")
+        self.assertEqual(manifest["versions"]["v0.3"]["build_args"]["DSH_VERSION"], "0.2.2-rc.5")
         self.assertTrue((V1_ROOT / "Dockerfile").is_file())
         self.assertTrue((V2_ROOT / "Dockerfile").is_file())
         self.assertTrue((V3_ROOT / "Dockerfile").is_file())
+        self.assertTrue((V4_ROOT / "Dockerfile").is_file())
         self.assertFalse((DOCKER_ROOT / "Dockerfile").exists())
 
     def test_canonical_builder_uses_manifest_and_exports_images(self) -> None:
@@ -66,14 +70,14 @@ class DeepSeekHarnessDockerContractTests(unittest.TestCase):
         self.assertIn("uv run python", source)
 
     def test_dockerfile_includes_node_pty_native_build_prerequisites(self) -> None:
-        dockerfile = (V3_ROOT / "Dockerfile").read_text(encoding="utf-8")
+        dockerfile = (V4_ROOT / "Dockerfile").read_text(encoding="utf-8")
 
         self.assertRegex(dockerfile, r"apt-get install[^\n]*python3")
         self.assertRegex(dockerfile, r"apt-get install[^\n]*make")
         self.assertRegex(dockerfile, r"apt-get install[^\n]*g\+\+")
 
     def test_entrypoint_contract_supports_optional_native_search(self) -> None:
-        entrypoint = (V3_ROOT / "wcb-dsh").read_text(encoding="utf-8")
+        entrypoint = (V4_ROOT / "wcb-dsh").read_text(encoding="utf-8")
 
         self.assertIn(': "${DSH_MODEL_ID:', entrypoint)
         self.assertIn(': "${OPENROUTER_API_KEY:', entrypoint)
@@ -100,14 +104,14 @@ class DeepSeekHarnessDockerContractTests(unittest.TestCase):
         self.assertNotIn("sk-", entrypoint)
 
     def test_entrypoint_declares_requested_reasoning_effort_on_custom_model(self) -> None:
-        entrypoint = (V3_ROOT / "wcb-dsh").read_text(encoding="utf-8")
+        entrypoint = (V4_ROOT / "wcb-dsh").read_text(encoding="utf-8")
 
         self.assertIn("reasoning: !!js process.env.DSH_REASONING || undefined", entrypoint)
         self.assertIn("reasoningEfforts: !!js", entrypoint)
         self.assertIn("[process.env.DSH_REASONING]", entrypoint)
 
     def test_entrypoint_uses_maas_max_tokens_request_field(self) -> None:
-        entrypoint = (V3_ROOT / "wcb-dsh").read_text(encoding="utf-8")
+        entrypoint = (V4_ROOT / "wcb-dsh").read_text(encoding="utf-8")
 
         self.assertIn("process.env.DSH_MAX_TOKENS", entrypoint)
         self.assertIn(
@@ -123,12 +127,12 @@ class DeepSeekHarnessDockerContractTests(unittest.TestCase):
         )
 
     def test_entrypoint_selects_api_from_environment_with_chat_default(self) -> None:
-        entrypoint = (V3_ROOT / "wcb-dsh").read_text(encoding="utf-8")
+        entrypoint = (V4_ROOT / "wcb-dsh").read_text(encoding="utf-8")
 
         self.assertIn("process.env.DSH_API || 'openai-completions'", entrypoint)
 
     def test_entrypoint_applies_patch_before_forwarding_task(self) -> None:
-        entrypoint = (V3_ROOT / "wcb-dsh").read_text(encoding="utf-8")
+        entrypoint = (V4_ROOT / "wcb-dsh").read_text(encoding="utf-8")
 
         launch = entrypoint.index("dsh --profile headless")
         patch = entrypoint.index("--patch", launch)
@@ -138,7 +142,7 @@ class DeepSeekHarnessDockerContractTests(unittest.TestCase):
     def test_readme_documents_formal_backend_image_and_command(self) -> None:
         readme = (DOCKER_ROOT / "README.md").read_text(encoding="utf-8")
 
-        self.assertIn("wildclawbench-deepseek-harness-ubuntu:v0.2", readme)
+        self.assertIn("wildclawbench-deepseek-harness-ubuntu:v0.3", readme)
         self.assertIn("DOCKER_IMAGE_DEEPSEEK_HARNESS", readme)
         self.assertIn("eval/run_batch.py", readme)
         self.assertIn("--agent-backend deepseek-harness", readme)

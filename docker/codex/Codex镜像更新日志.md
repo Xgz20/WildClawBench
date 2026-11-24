@@ -6,26 +6,27 @@
 
 | 日期 | 完整镜像 tag | Codex CLI | 基础镜像 | 主要变更 | 当前定位 |
 | --- | --- | --- | --- | --- | --- |
-| 2026-08-04 | `wildclawbench-codex-ubuntu:v0.1` | `0.146.0` | `wildclawbench-codex-ubuntu:v0.0` | 升级 Codex CLI，清理底座旧版配置 | 当前 Codex 评测推荐版本 |
+| 2026-11-23 | `wildclawbench-codex-ubuntu:v0.2` | `0.171.0` | `wildclawbench-codex-ubuntu:v0.0` | 升级 Codex CLI，清理底座旧版配置 | 当前 Codex 评测推荐版本 |
+| 2026-08-04 | `wildclawbench-codex-ubuntu:v0.1` | `0.146.0` | `wildclawbench-codex-ubuntu:v0.0` | 历史版本 |
 | 2026-04-19 | `wildclawbench-codex-ubuntu:v0.0` | `0.121.0` | 官方 WildClawBench 底座 | 原始评测环境 | 兼容旧评测 |
 
-`v0.0` 的构建历史和 Dockerfile 不在本仓库；本仓库只把它作为基础镜像使用。`v0.1` 是当前仓库 `docker/codex/v1/Dockerfile` 构建的升级镜像。
+`v0.0` 的构建历史和 Dockerfile 不在本仓库；本仓库只把它作为基础镜像使用。`v0.2` 是当前仓库 `docker/codex/v2/Dockerfile` 构建的升级镜像，`v0.1` 保留历史 CLI。
 
-## v0.1
+## v0.2
 
 ### 版本信息
 
-- 完整镜像 tag：`wildclawbench-codex-ubuntu:v0.1`
-- 版本 Dockerfile：`docker/codex/v1/Dockerfile`
+- 完整镜像 tag：`wildclawbench-codex-ubuntu:v0.2`
+- 版本 Dockerfile：`docker/codex/v2/Dockerfile`
 - 构建脚本：`docker/codex/build.sh`
-- Codex CLI：`0.146.0`
+- Codex CLI：`0.171.0`
 - 基础镜像：`wildclawbench-codex-ubuntu:v0.0`
-- 默认离线包：`Images/wildclawbench-codex-ubuntu_v0.1.tar.gz`
-- 版本提交：`4d3ef0c`（2026-08-04）
+- 默认离线包：`Images/wildclawbench-codex-ubuntu_v0.2.tar.gz`
+- 该版本通过 `versions.json` 登记，具体构建提交以仓库 Git 历史为准。
 
 ### 更新内容
 
-- 先卸载底座中的 `@openai/codex`，再锁定安装 `@openai/codex@0.146.0`。
+- 先卸载底座中的 `@openai/codex`，再锁定安装 `@openai/codex@0.171.0`。
 - 使用 `@openai/codex-linux-x64` 平台包，避免新版 vendor 布局不匹配导致 CLI 启动失败。
 - 通过 `NPM_REGISTRY` 构建参数选择 npm registry，默认使用 `https://registry.npmmirror.com`。
 - 删除底座遗留的 `/root/.codex` 配置和旧版 shim；运行时由 runner 注入模型、provider、base URL、sandbox 等配置。
@@ -33,18 +34,19 @@
 
 ### 本机验证
 
-2026-08-14 在本机 Docker daemon 中检查：
+构建后应在目标 Docker daemon 中检查：
 
 ```text
 wildclawbench-codex-ubuntu:v0.0 -> codex-cli 0.121.0
 wildclawbench-codex-ubuntu:v0.1 -> codex-cli 0.146.0
+wildclawbench-codex-ubuntu:v0.2 -> codex-cli 0.171.0
 ```
 
 验证命令：
 
 ```bash
 docker run --rm --entrypoint codex \
-  wildclawbench-codex-ubuntu:v0.1 --version
+  wildclawbench-codex-ubuntu:v0.2 --version
 ```
 
 该检查只证明本机 tag 可启动并报告 CLI 版本，不等价于全量任务评测验证。
@@ -65,7 +67,7 @@ docker run --rm --entrypoint codex \
 
 ## 构建与发布约定
 
-默认构建 `v0.1`：
+默认构建 `v0.2`：
 
 ```bash
 bash docker/codex/build.sh
@@ -77,13 +79,13 @@ bash docker/codex/build.sh
 
 ```bash
 NPM_REGISTRY=https://registry.npmjs.org/ \
-  bash docker/codex/build.sh --version v0.1
+  bash docker/codex/build.sh --version v0.2
 ```
 
 只构建不导出离线包：
 
 ```bash
-SKIP_SAVE=1 bash docker/codex/build.sh --version v0.1
+SKIP_SAVE=1 bash docker/codex/build.sh --version v0.2
 ```
 
 离线包发布前应同时执行 `gzip -t` 和 `docker load`，不能只根据文件扩展名判断其可用性。
@@ -91,7 +93,8 @@ SKIP_SAVE=1 bash docker/codex/build.sh --version v0.1
 ## 相关实现
 
 - `docker/codex/versions.json`
-- `docker/codex/v1/Dockerfile`
+- `docker/codex/v2/Dockerfile`
+- `docker/codex/v1/Dockerfile`（历史版本）
 - `docker/codex/build.sh`
 - `script/build-codex-image.sh`（兼容包装）
 - `src/agents/codex/runner.py`

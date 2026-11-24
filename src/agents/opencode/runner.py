@@ -114,7 +114,7 @@ class OpenCodeAgent(BaseAgent):
         resolved_image = (
             image
             or os.environ.get("DOCKER_IMAGE_OPENCODE")
-            or "wildclawbench-opencode-ubuntu:v0.0"
+            or "wildclawbench-opencode-ubuntu:v0.1"
         )
         self.image: str = resolved_image
         self.openrouter_api_key = (

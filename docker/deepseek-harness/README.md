@@ -3,10 +3,10 @@
 This image is the runtime for the WildClawBench `deepseek-harness` backend. It
 uses `wildclawbench-codex-ubuntu:v0.0` as the final evaluation base, adds Node
 24 from `node:24-bookworm-slim`, and installs the published
-`@deepseek-ai/dsh@0.1.2-rc.1` package. Versioned build contexts are immutable:
-`v1` preserves DSH `0.1.0-rc.6`, `v2` preserves DSH `0.1.1-rc.2`, and `v3`
-contains DSH `0.1.2-rc.1`. `versions.json` maps image tags to those contexts
-and selects v0.2 by default.
+`@deepseek-ai/dsh@0.2.2-rc.5` package. Versioned build contexts are immutable:
+`v1` preserves DSH `0.1.0-rc.6`, `v2` preserves DSH `0.1.1-rc.2`, `v3`
+preserves DSH `0.1.2-rc.1`, and `v4` contains DSH `0.2.2-rc.5`.
+`versions.json` maps image tags to those contexts and selects v0.3 by default.
 
 The shared WCB base keeps the Python, browser, media, and document toolchain
 aligned with the other Harness images. Both bases run as root, so this is task
@@ -16,19 +16,19 @@ still uses `DSH_PERMISSION_MODE=danger-full-access` inside the task container.
 ## Build
 
 ```bash
-bash docker/deepseek-harness/build.sh --version v0.2 --skip-save
+bash docker/deepseek-harness/build.sh --version v0.3 --skip-save
 
 docker run --rm --entrypoint dsh \
-  wildclawbench-deepseek-harness-ubuntu:v0.2 --version
+  wildclawbench-deepseek-harness-ubuntu:v0.3 --version
 ```
 
-The expected version is `0.1.2-rc.1`. The local Docker daemon must already
+The expected version is `0.2.2-rc.5`. The local Docker daemon must already
 contain `wildclawbench-codex-ubuntu:v0.0`. `EVAL_BASE_IMAGE` and
 `NODE_RUNTIME_IMAGE` are build arguments when compatible mirrored tags are
 required, but they must match the selected manifest entry. Set
 `NPM_REGISTRY=<registry>` when a compatible npm mirror is required. Omit
-`--version` to build the default v0.2 image, or use `--version v0.1` or
-`--version v0.0` to rebuild a preserved historical image. Omit `--skip-save`
+`--version` to build the default v0.3 image, or use `--version v0.2`,
+`--version v0.1` or `--version v0.0` to rebuild a preserved historical image. Omit `--skip-save`
 to export the selected image below `Images/`.
 
 ## Run Through WildClawBench
@@ -48,7 +48,7 @@ and model ID are unnecessary; task-provided alternatives such as
 ```bash
 export OPENROUTER_API_KEY='<redacted>'
 export OPENROUTER_BASE_URL='https://provider.example/v2'
-export DOCKER_IMAGE_DEEPSEEK_HARNESS='wildclawbench-deepseek-harness-ubuntu:v0.2'
+export DOCKER_IMAGE_DEEPSEEK_HARNESS='wildclawbench-deepseek-harness-ubuntu:v0.3'
 export DEEPSEEK_SEARCH_ENABLED=false
 
 uv run eval/run_batch.py \
@@ -141,7 +141,7 @@ uv run python tools/deepseek_harness_poc.py convert \
   --output /path/to/output
 
 uv run python tools/deepseek_harness_poc.py run \
-  --image wildclawbench-deepseek-harness-ubuntu:v0.2 \
+  --image wildclawbench-deepseek-harness-ubuntu:v0.3 \
   --workspace /path/to/task-workspace \
   --model xopglm52 \
   --api openai-responses \

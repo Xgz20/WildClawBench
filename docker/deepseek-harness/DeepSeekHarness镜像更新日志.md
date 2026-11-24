@@ -6,7 +6,8 @@
 
 | 日期 | 完整镜像 tag | DSH | Node | 基础镜像 | 主要变更 |
 | --- | --- | --- | --- | --- | --- |
-| 2026-09-04 | `wildclawbench-deepseek-harness-ubuntu:v0.2` | `0.1.2-rc.1` | `24.19.0` | `wildclawbench-codex-ubuntu:v0.0` | 升级到官方 `dsh-v0.1.2-rc.1`；按协议设置 MaaS 输出上限，修复 Responses 加载失败 |
+| 2026-11-23 | `wildclawbench-deepseek-harness-ubuntu:v0.3` | `0.2.2-rc.5` | `24.x` | `wildclawbench-codex-ubuntu:v0.0` | 升级到 npm latest DSH；保留 Search 开关与协议配置 |
+| 2026-09-04 | `wildclawbench-deepseek-harness-ubuntu:v0.2` | `0.1.2-rc.1` | `24.19.0` | `wildclawbench-codex-ubuntu:v0.0` | 历史版本 |
 | 2026-08-27 | `wildclawbench-deepseek-harness-ubuntu:v0.1` | `0.1.1-rc.2` | `24.19.0` | `wildclawbench-codex-ubuntu:v0.0` | 升级到官方 `dsh-v0.1.1-rc.2`，复核 headless patch、模型请求、session 持久化与转换兼容性 |
 | 2026-08-15 | `wildclawbench-deepseek-harness-ubuntu:v0.0` | `0.1.0-rc.6` | `24.19.0` | `wildclawbench-codex-ubuntu:v0.0` | 增加 `DEEPSEEK_SEARCH_ENABLED` 开关，可同时移除 DeepSeek Search provider 和 `web_search` 工具 |
 | 2026-08-14 | `wildclawbench-deepseek-harness-ubuntu:v0.0` | `0.1.0-rc.6` | `24.19.0` | `wildclawbench-codex-ubuntu:v0.0` | 首次正式评测镜像，增加协议选择、技能规范化和轨迹入口 |
@@ -14,79 +15,47 @@
 
 `wildclawbench-deepseek-harness-poc:0.1.0-rc.6` 是旧 v0.0 镜像在本机的同一
 image ID 别名，不应作为独立构建版本对外宣传。当前正式评测默认使用
-`wildclawbench-deepseek-harness-ubuntu:v0.2`。
+`wildclawbench-deepseek-harness-ubuntu:v0.3`。
 
-## v0.2
+## v0.3
 
 ### 版本信息
 
-- 完整镜像 tag：`wildclawbench-deepseek-harness-ubuntu:v0.2`
-- Dockerfile：`docker/deepseek-harness/v3/Dockerfile`
-- 入口脚本：`docker/deepseek-harness/v3/wcb-dsh`
+- 完整镜像 tag：`wildclawbench-deepseek-harness-ubuntu:v0.3`
+- Dockerfile：`docker/deepseek-harness/v4/Dockerfile`
+- 入口脚本：`docker/deepseek-harness/v4/wcb-dsh`
 - 版本清单：`docker/deepseek-harness/versions.json`
 - 构建脚本：`docker/deepseek-harness/build.sh`
-- DSH：`@deepseek-ai/dsh@0.1.2-rc.1`
-- 官方 tag：`dsh-v0.1.2-rc.1`
+- DSH：`@deepseek-ai/dsh@0.2.2-rc.5`
+- 官方 npm dist-tag：`latest -> 0.2.2-rc.5`
 - Node：`24.19.0`，来自 `node:24-bookworm-slim`
 - 基础镜像：`wildclawbench-codex-ubuntu:v0.0`
-- 计划离线包：`Images/wildclawbench-deepseek-harness-ubuntu_v0.2.tar.gz`
+- 计划离线包：`Images/wildclawbench-deepseek-harness-ubuntu_v0.3.tar.gz`
 
 ### 更新内容
 
-- 将 DSH 固定版本从 `0.1.1-rc.2` 升级到官方发布的 `0.1.2-rc.1`。
-- 新增独立 `v3` 构建上下文，保留 `v1/v2` 历史镜像内容不变。
-- MaaS 输出上限继续通过模型级 `maxTokens` 传给 DSH；仅在
-  `openai-completions` 下增加 `compat.maxTokensField=max_tokens`。
-- `openai-responses` 不再携带 Completions 专属 compat 配置，由 pi-ai 将
-  `maxTokens` 按 Responses 协议序列化为 `max_output_tokens`，避免插件加载阶段退出。
-- runner 默认镜像切换为 v0.2；v0.0 和 v0.1 仍可通过
+- 将 DSH 固定版本升级到 `0.2.2-rc.5`，并新增独立 `v4` 构建上下文。
+- 保留 v1、v2、v3 目录和对应镜像 tag，历史结果可以按原版本复现。
+- 继续保留 `DEEPSEEK_SEARCH_ENABLED` 开关、OpenAI Chat/Responses 协议选择、
+  `maxTokens` 字段映射和原生 session 转换入口。
+- runner 默认镜像切换为 v0.3；v0.0、v0.1 和 v0.2 仍可通过
   `DOCKER_IMAGE_DEEPSEEK_HARNESS` 显式指定。
 
-### 本机验证
+### 验证边界
 
-2026-09-04 在 macOS Docker Desktop 的 Linux amd64 环境完成：
-
-```text
-image: wildclawbench-deepseek-harness-ubuntu:v0.2
-image id: sha256:cf227f1eee13063873ef67f28c6aa5897574d604d8b3ad32ecf3c2924a9a1cbb
-DSH: 0.1.2-rc.1
-Node: v24.19.0
-headless help: PASS
-Responses 请求字段: max_output_tokens=16384
-Chat Completions 请求字段: max_tokens=16384
-Responses mock completion: PASS
-bash tool round trip: PASS
-session conversion: 5 messages / 2 requests / 38 tokens
-```
-
-两种协议使用本机 mock HTTP 服务捕获真实请求体：Responses 请求到达
-`/v1/responses`，且没有携带 `max_tokens`；Chat Completions 请求到达
-`/v1/chat/completions`，且没有携带 `max_output_tokens`。这验证了插件加载、
-协议路由和输出上限字段映射。Responses mock 还返回了完整流式完成事件，DSH
-输出 `responses-smoke-complete` 并以退出码 0 结束。
-
-另一次两轮 Chat Completions mock 让模型先调用 `bash` 执行
-`printf shell-ok`，再返回最终消息。第二次模型请求包含已完成的工具结果；DSH
-以退出码 0 完成，并生成可由现有转换器读取的 `session.jsonl`。转换结果保留
-一组配对的 tool use/result，usage 为 2 次请求。构建时 npm 对未授权安装脚本
-给出告警，但镜像内 `node-pty` 加载和上述真实 `bash` 工具回路均已通过。
-
-上述 mock 验证没有使用真实模型凭据。随后使用 Spark-X2.5 和
-`openai-responses` 完成单题真实链路冒烟：镜像内 DSH `0.1.2-rc.1` 正常启动，
-执行状态为 `finished`、退出码为 0、未超时；轨迹记录 7 次模型请求、6 次
-`bash` 和 1 次 `write`，7 组 tool use/result 全部配对，任务产物正常生成。
-Claude Opus 5 Judge 的 5 个 legacy 评分项全部成功，最终得分为 `0.9496`，
-异常检测为 `PASS`。
-
-该次真实冒烟执行时尚未配置专用模型目录凭据，目录解析结果为
-`model_not_found`，因此没有注入 `max_output_tokens=256000`。它验证了真实
-Responses 推理、工具回路、轨迹转换、判分与异常检测；协议字段映射仍由上述
-两种协议的请求捕获 mock 覆盖。真实全量评测和显式 256000 注入不在本次验证范围。
+本版本已完成 npm 元数据和静态构建输入核对；在目标服务器构建后，应使用
+`dsh --version`、headless help、协议 mock、工具 round trip 和单题真实 provider
+冒烟逐项确认。未完成这些运行时检查前，不把 v0.3 描述为已通过完整生产验收。
 
 ### 离线包状态
 
-本次默认使用 `--skip-save` 构建验证，不自动导出离线包。正式发布前需执行
+构建命令默认不导出离线包（使用 `--skip-save`）。正式发布前需执行
 `docker save`、`gzip -t`、`docker load` 和 `docker image inspect` 验证。
+
+## v0.2
+
+v0.2 保留 DSH `0.1.2-rc.1`，构建上下文为 `docker/deepseek-harness/v3`，用于复现
+2026-09-04 的历史结果；不要将其与 v0.3 的 npm latest 结果混合比较。
 
 ## v0.1
 
@@ -183,10 +152,10 @@ Python 3.11.15
 ## 构建与发布约定
 
 ```bash
-bash docker/deepseek-harness/build.sh --version v0.2 --skip-save
+bash docker/deepseek-harness/build.sh --version v0.3 --skip-save
 
 docker run --rm --entrypoint dsh \
-  wildclawbench-deepseek-harness-ubuntu:v0.2 --version
+  wildclawbench-deepseek-harness-ubuntu:v0.3 --version
 ```
 
 可通过 `EVAL_BASE_IMAGE`、`NODE_RUNTIME_IMAGE` 和 `NPM_REGISTRY` build arg 指定兼容源。发布离线包时应使用完整 tag 导出并验证 `gzip -t`、`docker load` 和 `docker image inspect`。
@@ -201,5 +170,7 @@ docker run --rm --entrypoint dsh \
 - `docker/deepseek-harness/v2/wcb-dsh`
 - `docker/deepseek-harness/v3/Dockerfile`
 - `docker/deepseek-harness/v3/wcb-dsh`
+- `docker/deepseek-harness/v4/Dockerfile`
+- `docker/deepseek-harness/v4/wcb-dsh`
 - `docker/deepseek-harness/README.md`
 - `src/agents/deepseek_harness/runner.py`
