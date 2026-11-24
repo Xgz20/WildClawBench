@@ -38,6 +38,20 @@ class NativeMcpTests(unittest.TestCase):
         meta = next(event for event in value["events"] if event.get("content") == "mcp_tool_call_end")
         self.assertEqual(meta["native_status"], self.end)
 
+    def test_unicode_line_separators_inside_tool_output_do_not_split_jsonl_records(self):
+        text = "native output\u0085continues\u2028with\u2029unicode separators"
+        row = next(row for row in self.rows if row.get('payload', {}).get('type') == 'function_call_output')
+        row['payload']['output'] = text
+        raw = ('\r\n'.join(json.dumps(row, ensure_ascii=False) for row in self.rows) + '\r\n').encode()
+        self.path.write_bytes(raw)
+        result = normalize_rollout(self.path, identity={'batch_id':'b','unit_id':'u','task_id':'t','attempt_id':'a'},
+            prompt='prompt', guest_cwd=GUEST, requested_model='spark-x2.6', requested_effort='high',
+            report={'usage':{'input_tokens':100,'output_tokens':10,'cache_tokens':50}})
+        self.assertEqual(result['missing'], [])
+        self.assertEqual(result['native_event_count'], len(self.rows))
+        self.assertEqual(next(event['tool']['result'] for event in result['events'] if event['type'] == 'tool_result'), text)
+        self.assertEqual(self.path.read_bytes(), raw)
+
     def test_recurring_stream_diagnostic_is_retained_in_a_completed_trace(self):
         diagnostic = {"type": "stream_error", "message": "reconnecting"}
         self.rows.insert(-1, {"type": "event_msg", "payload": diagnostic})

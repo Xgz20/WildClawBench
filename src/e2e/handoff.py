@@ -152,7 +152,7 @@ def _general_context(batch: Path, temporary: Path, manifest: dict, item: dict, t
         started_at=binding.get("native_started_at");finished_at=binding.get("native_finished_at")
     else:
         native_path = next((evidence / "trace/raw").glob("rollout-*.jsonl"))
-        native_rows = [json.loads(line) for line in native_path.read_text(encoding="utf-8-sig").splitlines() if line.strip()]
+        native_rows = [json.loads(line) for line in native_path.read_text(encoding="utf-8-sig").split("\n") if line.strip()]
         if unit["harness"] == "chatgpt-desktop":
             users = [row for row in native_rows if _is_desktop_user(row)]
         else:
