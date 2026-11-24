@@ -1,7 +1,10 @@
 import copy
+import contextlib
+import io
 import json
 from pathlib import Path
 import unittest
+from unittest.mock import patch
 import zipfile
 
 from src.e2e.common import E2EError, atomic_json, file_sha256
@@ -13,6 +16,26 @@ from tests.e2e import test_scheduler
 
 
 class CaseRerunTests(unittest.TestCase):
+    def test_public_cli_rerun_without_repo_root_can_cancel_before_dispatch(self):
+        from src.e2e import cli
+        workspace = self.root.parent / 'cli-workspace'
+        (workspace / 'batches').mkdir(parents=True)
+        moved = workspace / 'batches' / self.root.name
+        self.root.rename(moved)
+        self.root = moved
+        self.store = BatchStore(moved)
+        calls = len(self.fixture.provider.calls)
+        output = io.StringIO()
+        with patch('src.e2e.agentcube.AgentCubeConfig.load', return_value=self.fixture.config), contextlib.redirect_stdout(output):
+            cli.main(['--api-version', '1', 'rerun-case', '--workspace-root', str(workspace),
+                      '--batch-id', moved.name, '--unit-id', 'unit', '--task-id', 't0', '--run-index', '1',
+                      '--request-id', 'public-cli-cancelled', '--cancel-before-dispatch'])
+        envelope = json.loads(output.getvalue().strip().split('\n')[-1])
+        self.assertEqual(envelope['type'], 'result')
+        current = self.store.get('unit/run-0001/t0')
+        self.assertEqual((current['phase'], current['execution_version']), ('CANCELLED', 2))
+        self.assertEqual(len(self.fixture.provider.calls), calls)
+
     def setUp(self):
         self.fixture = test_scheduler.SchedulerTests()
         self.fixture.setUp()
