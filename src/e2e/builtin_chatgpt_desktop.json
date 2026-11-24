@@ -1,0 +1,122 @@
+{
+  "id": "chatgpt-desktop-winarena-pc-20261122-193046-chatgpt-pro-37fa332a-v5",
+  "harness": "chatgpt-desktop",
+  "display_name": "ChatGPT 桌面端 · Codex Local",
+  "backend": "agentcube",
+  "template": "winarena-pc-20261122-193046-chatgpt-pro-37fa332a-v5",
+  "scenarios": [
+    "general",
+    "web"
+  ],
+  "enabled": true,
+  "models": [
+    {
+      "id": "gpt-6.2-sol",
+      "display_name": "GPT-6.2 Sol",
+      "reasoning_efforts": [
+        "low",
+        "high"
+      ],
+      "kind": "builtin"
+    },
+    {
+      "id": "gpt-6.2-astra",
+      "display_name": "GPT-6.2 Astra",
+      "reasoning_efforts": [
+        "low",
+        "high"
+      ],
+      "kind": "builtin"
+    },
+    {
+      "id": "gpt-6.1-terra",
+      "display_name": "GPT-6.1 Terra",
+      "reasoning_efforts": [
+        "low",
+        "high"
+      ],
+      "kind": "builtin"
+    },
+    {
+      "id": "gpt-6.1-sol",
+      "display_name": "GPT-6.1 Sol",
+      "reasoning_efforts": [
+        "low",
+        "high"
+      ],
+      "kind": "builtin"
+    },
+    {
+      "id": "gpt-6-astra",
+      "display_name": "GPT-6 Astra",
+      "reasoning_efforts": [
+        "low",
+        "high"
+      ],
+      "kind": "builtin"
+    },
+    {
+      "id": "gpt-6-sol",
+      "display_name": "GPT-6 Sol",
+      "reasoning_efforts": [
+        "low",
+        "high"
+      ],
+      "kind": "builtin"
+    },
+    {
+      "id": "gpt-6-luna",
+      "display_name": "GPT-6 Luna",
+      "reasoning_efforts": [
+        "low",
+        "high"
+      ],
+      "kind": "builtin"
+    },
+    {
+      "id": "gpt-5.6-sol",
+      "display_name": "GPT-5.6 Sol",
+      "reasoning_efforts": [
+        "low",
+        "high"
+      ],
+      "kind": "builtin"
+    },
+    {
+      "id": "gpt-5.6-terra",
+      "display_name": "GPT-5.6 Terra",
+      "reasoning_efforts": [
+        "low",
+        "high"
+      ],
+      "kind": "builtin"
+    },
+    {
+      "id": "gpt-5.6-luna",
+      "display_name": "GPT-5.6 Luna",
+      "reasoning_efforts": [
+        "low",
+        "high"
+      ],
+      "kind": "builtin"
+    }
+  ],
+  "reasoning_efforts": [
+    "low",
+    "high"
+  ],
+  "default_model": "gpt-6.2-sol",
+  "default_permission": "full access",
+  "controller_revision": "37fa332a3a2c360406e7b830c5b0036582346ed7",
+  "client_version": "26.1117.4957.0",
+  "model_catalog_source": "windows-agent-arena-chatgpt-desktop-pilot",
+  "allow_unlisted_builtin_models": false,
+  "custom_models_supported": false,
+  "driver_sha256": "e983d34962a4a6be2f4f9f65fa03c65aaedc70a123dee061f1c58dcde03fd7a9",
+  "template_namespace": "agentcube-windows",
+  "chatgpt_scoring_auth": "subscription",
+  "desktop_scoring_scenarios": [
+    "general",
+    "web"
+  ]
+}

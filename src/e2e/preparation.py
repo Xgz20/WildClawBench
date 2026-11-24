@@ -11,7 +11,7 @@ import shutil
 import sys
 import uuid
 
-from . import DEFAULT_AGENTCUBE_TEMPLATE, DEFAULT_EXECUTION_CONCURRENCY
+from . import DEFAULT_AGENTCUBE_TEMPLATE, DEFAULT_CHATGPT_DESKTOP_TEMPLATE, DEFAULT_EXECUTION_CONCURRENCY
 from .artifacts import inventory, copy_stream_readonly, _protect, remove_temporary_tree
 from .common import E2EError, atomic_json, digest, file_sha256, identifier, inside, load_script, read_json, utc_now
 from .store import BatchStore, controller_lock
@@ -281,9 +281,13 @@ def normalize_plan(raw: dict) -> dict:
             raise E2EError("HARNESS_UNIT_OBJECT_REQUIRED")
         if set(raw_unit) - {"unit_id", "harness", "backend", "model", "reasoning_effort", "template", "max_concurrency", "timeout_override", "max_mode", "workbuddy_full_access", "chatgpt_permission", "preprocessing", "template_binding"}:
             raise E2EError("HARNESS_UNIT_UNKNOWN_KEYS")
+        default_template = (
+            DEFAULT_CHATGPT_DESKTOP_TEMPLATE
+            if raw_unit.get("harness") == "chatgpt-desktop" else DEFAULT_AGENTCUBE_TEMPLATE
+        )
         unit = {"harness": raw_unit.get("harness"), "backend": raw_unit.get("backend", "agentcube"),
                 "model": raw_unit.get("model"), "reasoning_effort": raw_unit.get("reasoning_effort"),
-                "template": raw_unit.get("template", DEFAULT_AGENTCUBE_TEMPLATE),
+                "template": raw_unit.get("template", default_template),
                 "max_concurrency": raw_unit.get("max_concurrency", plan["execution_concurrency"]),
                 "timeout_override": raw_unit.get("timeout_override", plan["timeout_override"])}
         if not isinstance(unit["model"], str) or not unit["model"].strip():
@@ -303,6 +307,8 @@ def normalize_plan(raw: dict) -> dict:
                 if permission not in ("ask for approval", "full access"):
                     raise E2EError("CHATGPT_DESKTOP_PERMISSION_UNSUPPORTED")
                 unit["chatgpt_permission"] = permission
+            elif unit["template"] == DEFAULT_CHATGPT_DESKTOP_TEMPLATE:
+                unit["chatgpt_permission"] = "full access"
         elif unit["reasoning_effort"] is not None and str(unit["reasoning_effort"]).casefold() not in {"none", "high", "max"}:
             raise E2EError("ASTUDIO_REASONING_UNSUPPORTED")
         if "chatgpt_permission" in raw_unit and unit["harness"] != "chatgpt-desktop":

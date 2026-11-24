@@ -1,5 +1,7 @@
 from pathlib import Path
+import json
 from unittest.mock import patch
+from src.e2e import DEFAULT_AGENTCUBE_TEMPLATE, DEFAULT_CHATGPT_DESKTOP_TEMPLATE
 from src.e2e.controller_catalog import builtin_catalog, chatgpt_desktop_profile, default_profiles
 from src.e2e.environment import runtime_status
 from src.e2e.preparation import normalize_plan
@@ -8,8 +10,17 @@ from src.e2e.preparation import normalize_plan
 def test_builtin_catalog_covers_controller_defaults_and_never_publishes_connections():
     catalog = builtin_catalog()
     profiles = default_profiles()
-    assert {p["harness"] for p in profiles} == {"astronstudio", "workbuddy"}
-    assert {p["template"] for p in profiles} == {"winarena-pc-20261118-a"}
+    assert {p["harness"] for p in profiles} == {"astronstudio", "workbuddy", "chatgpt-desktop"}
+    assert {p["template"] for p in profiles if p["harness"] != "chatgpt-desktop"} == {DEFAULT_AGENTCUBE_TEMPLATE}
+    desktop = next(p for p in profiles if p["harness"] == "chatgpt-desktop")
+    assert desktop["template"] == DEFAULT_CHATGPT_DESKTOP_TEMPLATE
+    assert desktop["template_namespace"] == "agentcube-windows"
+    assert desktop["controller_revision"] == "37fa332a3a2c360406e7b830c5b0036582346ed7"
+    assert desktop["scenarios"] == desktop["desktop_scoring_scenarios"] == ["general", "web"]
+    assert desktop["chatgpt_scoring_auth"] == "subscription"
+    assert desktop["default_permission"] == "full access"
+    assert desktop["reasoning_efforts"] == ["low", "high"]
+    assert "gpt-6.2-sol" in {row["id"] for row in desktop["models"]}
     assert {"auto", "spark-x2.6", "spark-x2.6-preview", "spark-x2.6-lite", "glm-5.3",
             "glm-5.3-flash", "glm-5.2", "deepseek-v4.1-flash", "deepseek-v4-pro",
             "deepseek-v4-flash"} <= {row["id"] for row in catalog["products"]["astronstudio"]["models"]}
@@ -23,6 +34,75 @@ def test_builtin_catalog_covers_controller_defaults_and_never_publishes_connecti
     assert next(p for p in profiles if p["harness"] == "workbuddy")[
         "max_mode_supported"
     ]
+
+
+def test_default_chatgpt_profile_is_independent_of_the_shared_template():
+    profiles = default_profiles(template="another-astudio-template")
+    assert {row["template"] for row in profiles if row["harness"] != "chatgpt-desktop"} == {"another-astudio-template"}
+    desktop = next(row for row in profiles if row["harness"] == "chatgpt-desktop")
+    assert desktop["template"] == DEFAULT_CHATGPT_DESKTOP_TEMPLATE
+    desktop["models"].clear()
+    assert next(row for row in default_profiles() if row["harness"] == "chatgpt-desktop")["models"]
+
+
+def test_describe_publishes_default_chatgpt_and_preserves_explicit_file_replacement(tmp_path, monkeypatch):
+    from src.e2e.protocol import describe
+
+    monkeypatch.setenv("WCB_E2E_CAPABILITIES_FILE", "")
+    repo = Path(__file__).resolve().parents[2]
+    description = describe(repo)
+    assert {row["harness"] for row in description["profiles"] if row["enabled"]} == {
+        "astronstudio", "workbuddy", "chatgpt-desktop"
+    }
+    desktop = next(row for row in description["profiles"] if row["harness"] == "chatgpt-desktop")
+    external = tmp_path / "capabilities.json"
+    external.write_text(json.dumps({"schema": "wildclawbench.e2e-capabilities/v1", "profiles": [desktop]}))
+    monkeypatch.setenv("WCB_E2E_CAPABILITIES_FILE", str(external))
+    assert describe(repo)["profiles"] == [desktop]
+
+
+def test_default_chatgpt_execution_preflight_and_subscription_scoring_use_the_published_binding(monkeypatch):
+    from src.case_catalog import current_cases
+    from src.e2e.desktop_scoring import _config, _verify_subscription_profile
+    from src.e2e.protocol import preflight, profiles
+
+    monkeypatch.setenv("WCB_E2E_CAPABILITIES_FILE", "")
+    repo = Path(__file__).resolve().parents[2]
+    desktop = next(row for row in profiles() if row["harness"] == "chatgpt-desktop")
+    for scenario, library in (("general", "general-regression"), ("web", "web-custom")):
+        task = current_cases(repo, library)[0]
+        plan = {
+            "selection": {"scenario": scenario, "library_dataset": library, "task_ids": [task["task_id"]]},
+            "units": [{"harness": "chatgpt-desktop", "model": "gpt-6.2-sol", "reasoning_effort": "high"}],
+        }
+        result = preflight(repo, plan)
+        assert result["valid"], result["issues"]
+        unit = result["plan"]["units"][0]
+        assert unit["template"] == desktop["template"]
+        assert unit["chatgpt_permission"] == "full access"
+
+    binding = {
+        "id": 1, "namespace": desktop["template_namespace"],
+        "image_digest": "sha256:" + "a" * 64, "waa_revision": desktop["controller_revision"],
+        "profile_id": desktop["id"],
+    }
+    scoring = _config({
+        "harness": "chatgpt-desktop", "model": "gpt-6.2-sol", "reasoning_effort": "high",
+        "template": desktop["template"], "template_binding": binding,
+        "chatgpt_scoring_auth": "subscription", "concurrency": 1, "timeout_seconds": 120,
+    })
+    _verify_subscription_profile(scoring)
+
+
+def test_explicit_chatgpt_template_and_permission_remain_frozen():
+    plan = normalize_plan({
+        "selection": {"scenario": "web"},
+        "units": [{"harness": "chatgpt-desktop", "model": "gpt-6.2-sol", "template": "legacy-chatgpt",
+                   "chatgpt_permission": "ask for approval"}],
+    })
+    unit = plan["units"][0]
+    assert unit["template"] == "legacy-chatgpt"
+    assert unit["chatgpt_permission"] == "ask for approval"
 
 
 def test_runtime_status_never_allocates_or_claims_authentication():

@@ -6,10 +6,11 @@ import json
 from pathlib import Path
 import hashlib
 import subprocess
-from . import DEFAULT_AGENTCUBE_TEMPLATE
+from . import DEFAULT_AGENTCUBE_TEMPLATE, DEFAULT_CHATGPT_DESKTOP_TEMPLATE
 from .common import E2EError
 
 CATALOG = Path(__file__).with_name("builtin_models.json")
+CHATGPT_PROFILE = Path(__file__).with_name("builtin_chatgpt_desktop.json")
 
 
 def builtin_catalog():
@@ -172,4 +173,8 @@ def chatgpt_desktop_profile(controller_root: Path, template: str, revision: str)
 
 
 def default_profiles(template=DEFAULT_AGENTCUBE_TEMPLATE):
-    return profiles_from_catalog(builtin_catalog(), template)
+    profiles = profiles_from_catalog(builtin_catalog(), template)
+    desktop = json.loads(CHATGPT_PROFILE.read_text(encoding="utf-8"))
+    if desktop["template"] != DEFAULT_CHATGPT_DESKTOP_TEMPLATE:
+        raise E2EError("CHATGPT_DEFAULT_TEMPLATE_MISMATCH")
+    return [*profiles, desktop]
