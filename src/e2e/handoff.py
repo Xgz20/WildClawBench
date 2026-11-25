@@ -15,6 +15,20 @@ from .compatibility import verify_installed
 from .engine import load_batch, verify_ready
 from .store import BatchStore
 from .trace import ADAPTER, _is_desktop_user, ensure_resource_coverage
+from .preprocessing import execution_prompt
+
+
+def _bind_prompt_metadata(record, item):
+    metadata = item.get("prompt")
+    if not metadata:
+        return
+    prompt = record.setdefault("prompt", {})
+    prompt.update({"base_sha256": metadata.get("base_prompt_sha256"),
+                   "effective_sha256": metadata.get("effective_prompt_sha256"),
+                   "plugin_mentions": metadata.get("plugin_mentions", []),
+                   "changed": bool(metadata.get("changed"))})
+    if metadata.get("effective_prompt_sha256"):
+        prompt["sha256"] = metadata["effective_prompt_sha256"]
 
 
 def _artifact(path: Path, root: Path, *, typed=False):
@@ -116,6 +130,9 @@ def _general_context(batch: Path, temporary: Path, manifest: dict, item: dict, t
     proof = read_json(evidence / "trace/bindings/execution-proof.json")
     atomic_json(evidence / "execution/automation-state.json", proof)
     shutil.copyfile(public_task / "PROMPT.md", evidence / "execution/PROMPT.md")
+    effective_prompt = restored / "metadata/effective-prompt.md"
+    if effective_prompt.is_file():
+        shutil.copyfile(effective_prompt, evidence / "execution/effective-prompt.md")
     resources = read_json(restored / "resource-metrics.json")
     if resources["collection"]["collector"] == ADAPTER and "coverage" not in resources["collection"]:
         ensure_resource_coverage(resources)
@@ -135,7 +152,7 @@ def _general_context(batch: Path, temporary: Path, manifest: dict, item: dict, t
         started_at=binding.get("native_started_at");finished_at=binding.get("native_finished_at")
     else:
         native_path = next((evidence / "trace/raw").glob("rollout-*.jsonl"))
-        native_rows = [json.loads(line) for line in native_path.read_text(encoding="utf-8-sig").splitlines() if line.strip()]
+        native_rows = [json.loads(line) for line in native_path.read_text(encoding="utf-8-sig").split("\n") if line.strip()]
         if unit["harness"] == "chatgpt-desktop":
             users = [row for row in native_rows if _is_desktop_user(row)]
         else:
@@ -164,6 +181,9 @@ def _general_context(batch: Path, temporary: Path, manifest: dict, item: dict, t
               "resource_metrics_path": evidence_relative + "/resource-metrics.json",
               "human_assistance": {"mode": "automatic", "operation_count": 0, "semantic_intervention_count": 0}}
     record["session"]["verified"] = True
+    _bind_prompt_metadata(record, item)
+    if (evidence / "execution/effective-prompt.md").is_file():
+        record["prompt"]["effective_file"] = evidence_relative + "/execution/effective-prompt.md"
     atomic_json(evidence / "execution-record.json", record)
     artifacts = [_artifact(path, unit_root, typed=True) for path in evidence.rglob("*")
                  if path.is_file() and path not in {evidence / "evidence-manifest.json", evidence / "execution-record.json"}]
@@ -241,6 +261,12 @@ def _web_context(batch: Path, temporary: Path, manifest: dict, item: dict, task:
     _copy(restored / ready["workspace"], execution_task / "workspace")
     public_prompt = inside(batch, task["input_root"]) / "execution/PROMPT.md"
     shutil.copyfile(public_prompt, execution_task / "PROMPT.md")
+    effective_prompt = restored / "metadata/effective-prompt.md"
+    if effective_prompt.is_file():
+        payload = execution_prompt(restored, public_prompt.read_bytes(), item.get("prompt"))
+        shutil.copyfile(public_prompt, execution_task / "base-PROMPT.md")
+        (execution_task / "PROMPT.md").write_bytes(payload)
+        (execution_task / "effective-PROMPT.md").write_bytes(payload)
     _copy(restored / "trace", execution_task / "trace")
     shutil.copyfile(restored / "final-response.md", execution_task / "final-response.md")
     shutil.copyfile(restored / "resource-metrics.json", execution_task / "resource-metrics.json")
@@ -260,6 +286,9 @@ def _web_context(batch: Path, temporary: Path, manifest: dict, item: dict, task:
                     for group in resources["metrics"].values() for key, metric in group.items()}}
     record["artifacts"]["harness_transcript"] = "trace/transcript.jsonl"
     record["reasoning_effort"] = ready["reasoning_effort"]
+    _bind_prompt_metadata(record, item)
+    if (execution_task / "effective-PROMPT.md").is_file():
+        record["prompt"]["effective_file"] = "execution/tasks/" + task["task_id"] + "/effective-PROMPT.md"
     atomic_json(execution_task / "execution_record.json", record)
     snapshot = scoring_prepare.snapshot_workspace(execution_task / "workspace")
     if snapshot["forbidden_directories"]:

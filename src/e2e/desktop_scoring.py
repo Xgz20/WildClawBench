@@ -26,6 +26,7 @@ from .engine import load_batch
 from .handoff import export_scoring_context
 from .preparation import normalize_template_binding
 from .store import BatchStore, controller_lock, refresh_controller_heartbeat
+from .trace import model_identity
 from .windows_preprocess import diagnostic_code, public_diagnostics
 
 CAPABILITY = "agentcube-desktop-scoring-v1"
@@ -144,6 +145,12 @@ def _prompt(scene, task_id, record, archive, attempt, config):
             "先读 desktop-scoring-tooling/desktop_web_browser.md。工作目录已包含 Web Skill 所需的 workspace 和 private-scoring。按上述分类和实际项目说明启动站点，"
             "只通过 127.0.0.1 服务。使用 AStudio 原生浏览器操作页面、观察实际状态并保存宽屏和窄屏证据。"
             "使用 AStudio 原生浏览器保存视口 PNG（fullPage=false），每张截图都先回传到 evidence 并调用 image_understanding 读图，再写入评分引用。"
+            "截图前先按实际可用接口选择：优先使用 astron_browser_tab + astron_browser_inspect(action=screenshot,path=...)；"
+            "如客户端提供 astron_browser_save_screenshot，则使用该接口及其返回的 filename、sha256。"
+            "先完成一张原生截图→接收回执→独立读图的闭环，再继续逐项评分。"
+            "astron_browser_screenshot 返回图片占位文本时，不得把它当作已读图；"
+            "禁止编写 CDP、Playwright、窗口截图或从轨迹提取图片的替代脚本。"
+            "若上述落盘接口不可用，立即按 Skill 写入 evaluation_error，说明原生截图接口缺失，不生成能力分数。"
             "以 AStudio 工具清单中的原生接口执行，遇到工具和证据链故障填写 evaluation_error。"
             "完成后保存 private-scoring/score_input.json，运行 finalize_score，停止受管服务并清理运行时副本。\n"
         )
@@ -523,6 +530,56 @@ def _artifacts(work, **paths):
             for kind, path in paths.items() if path and path.is_file()}
 
 
+def _incomplete_native_failure(work, artifacts, driver):
+    """Project retained native evidence, without guessing why an HTTP 429 occurred."""
+    reference = artifacts.get("native_trace")
+    if not reference:
+        return {}
+    try:
+        path = inside(work, reference["path"])
+        if file_sha256(path) != reference["sha256"]:
+            return {}
+        raw = path.read_bytes()
+    except (E2EError, OSError, TypeError, KeyError):
+        return {}
+    context = None
+    failure = None
+    for line in raw.split(b"\n"):
+        if not line.strip():
+            continue
+        try:
+            event = json.loads(line)
+        except (UnicodeError, ValueError):
+            # Partial failure logs remain diagnostic data, never a valid score.
+            continue
+        if not isinstance(event, dict) or not isinstance(event.get("payload"), dict):
+            continue
+        payload = event["payload"]
+        if event.get("type") == "turn_context":
+            context = payload
+        if payload.get("type") == "error":
+            info = payload.get("codex_error_info") or {}
+            info = info.get("response_too_many_failed_attempts") if isinstance(info, dict) else None
+            if isinstance(info, dict) and type(info.get("http_status_code")) is int and info["http_status_code"] == 429:
+                failure = {"domain": "model_service", "http_status": 429,
+                           "occurred_at": event.get("timestamp"),
+                           "message": "评分模型请求返回 HTTP 429，原生客户端重试耗尽；请核对请求速率、配额及服务端日志。"}
+    result = {}
+    if failure:
+        result.update(error="DESKTOP_SCORING_MODEL_HTTP_429", failure_diagnostics=failure)
+    if context and isinstance(context.get("model"), str):
+        try:
+            observed = model_identity(context["model"])
+            matched = observed.casefold() == driver._native_model().casefold()
+        except (E2EError, TypeError, AttributeError):
+            matched = False
+        if matched:
+            identity = {"harness": driver.unit["harness"], "model": driver.unit["model"],
+                        "native_model": observed, "reasoning_effort": context.get("effort", context.get("reasoning_effort"))}
+            result.update(agent_used=True, agent_identity=identity, judge=identity)
+    return result
+
+
 def _record_agent_response(work, response, driver, row, attempt):
     binding = response["binding"]
     if binding["actual_model"].casefold() != driver._native_model().casefold():
@@ -624,6 +681,7 @@ def _job(batch, item, config, agentcube, root, attempt, cancel):
         row.update(status="evaluation_error", error=code)
         if driver and code == "CONTROLLER_EXECUTION_INCOMPLETE":
             row["artifacts"].update(driver.archive_incomplete_run(work))
+            row.update(_incomplete_native_failure(work, row["artifacts"], driver))
         state.update(None, "release", result=row)
     finally:
         if driver:

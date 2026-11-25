@@ -221,6 +221,7 @@ class AStudioSandboxDriver:
         self.staging = self.root / "staging"
         self.staging.mkdir(parents=True, exist_ok=True)
         self.preprocess_recipe = None
+        self.prompt_directives = {"plugin_mentions": []}
 
     def checkpoint(self):
         if self.stop.is_set():
@@ -233,7 +234,9 @@ class AStudioSandboxDriver:
             raise E2EError("PLATFORM_TTL_TOO_SHORT_FOR_TIMEOUT: increase expire_ttl in AgentCube configuration")
         if (self.batch / "batch.json").is_file():
             self.preprocess_recipe = preprocessing.frozen_recipe(self.batch, self.unit["unit_id"], self.task["task_id"])
-        bound = {**self.unit, "preprocessing": {"default": self.preprocess_recipe, "overrides": {}}}
+            self.prompt_directives = preprocessing.frozen_prompt_directives(self.batch, self.unit["unit_id"], self.task["task_id"])
+        bound = {**self.unit, "preprocessing": {"default": self.preprocess_recipe, "overrides": {},
+                                                 "prompt_directives": {"default": self.prompt_directives["plugin_mentions"], "overrides": {}}}}
         if self.preprocess_recipe is not None and self.config.required_expire_ttl(
                 self.unit["timeout_override"], preprocessing.budget(bound)) > self.config.expire_ttl:
             raise E2EError("PLATFORM_TTL_TOO_SHORT_FOR_TIMEOUT: increase expire_ttl in AgentCube configuration")
@@ -361,7 +364,8 @@ try {
         self.client.upload(sid, "/tmp/wcb-input.zip", archive.getvalue())
         unpack = "import zipfile,pathlib;pathlib.Path('/workspace/input').mkdir(parents=True,exist_ok=True);zipfile.ZipFile('/tmp/wcb-input.zip').extractall('/workspace/input')"
         self.client.checked(sid, "python3 -c " + shlex.quote(unpack), 120)
-        self.client.upload(sid, "/run/wgui/instruction.txt", (public / "PROMPT.md").read_bytes())
+        prompt, _ = self._prompt_input(freeze=True)
+        self.client.upload(sid, "/run/wgui/instruction.txt", prompt)
         ui = {"permission": "full access"}
         if self.product=="astudio" and self.unit.get("reasoning_effort") is not None:
             ui["reasoning"] = {"none": "None", "high": "High", "max": "Max"}[self.unit["reasoning_effort"].casefold()]
@@ -387,6 +391,37 @@ try {
             if previous and previous["slug"] != mapping["slug"]:
                 raise E2EError("ASTUDIO_NATIVE_MODEL_CATALOG_DRIFT")
             self._phase("PREPARING", native_builtin_model=mapping)
+
+    def _prompt_input(self, *, freeze=False):
+        base = (inside(self.batch, self.task["input_root"]) / "execution/PROMPT.md").read_bytes()
+        if self.task.get("prompt_sha256") and preprocessing.file_sha256_bytes(base) != self.task["prompt_sha256"]:
+            raise E2EError("FROZEN_TASK_PROMPT_DRIFT")
+        prompt, metadata = preprocessing.augment_prompt(base.decode("utf-8"),
+            getattr(self, "prompt_directives", {"plugin_mentions": []}), getattr(self, "preprocess_recipe", None))
+        payload = prompt.encode("utf-8")
+        path = self.staging / "metadata/effective-prompt.md"
+        lock = self.staging / "metadata/prompt.json"
+        if freeze and metadata["changed"]:
+            # Before dispatch a partially published pair can safely be completed,
+            # but existing bytes must already match this frozen configuration.
+            if ((path.exists() and (path.is_symlink() or path.read_bytes() != payload))
+                    or (lock.exists() and read_json(lock) != metadata)):
+                raise E2EError("EXECUTION_PROMPT_DRIFT")
+            path.parent.mkdir(parents=True, exist_ok=True)
+            if not path.exists():
+                temporary = path.with_name(".effective-prompt-" + uuid.uuid4().hex)
+                try:
+                    temporary.write_bytes(payload)
+                    temporary.replace(path)
+                finally:
+                    temporary.unlink(missing_ok=True)
+            if not lock.exists():
+                atomic_json(lock, metadata)
+        # Resumed dispatches must use the original locked bytes. Never recreate
+        # missing changed prompts once the original task could have been sent.
+        payload = preprocessing.execution_prompt(self.staging, base,
+            metadata if metadata["changed"] or path.exists() or lock.exists() else None)
+        return payload, metadata
 
     def _download_tree(self, sid, remote: str, name: str):
         target = self.staging / name
@@ -528,7 +563,10 @@ try {
             windows_preprocess.verify_remote_plugins(self, sid, self.preprocess_recipe, powershell)
             before = self._inventory_native(sid)
             atomic_json(self.staging / "metadata/native-before.json", before)
-            self._phase("PREPARING", native_before=before)
+            _, prompt_metadata = self._prompt_input()
+            self._phase("PREPARING", native_before=before,
+                        **({"prompt": prompt_metadata} if prompt_metadata["changed"] else {}))
+        prompt_bytes, _ = self._prompt_input()
         self._phase("RUNNING")
         result = self._job("task-run", self._task_run_command(),
                            timeout=self.unit["timeout_override"] + 1800)
@@ -545,7 +583,7 @@ try {
         self._download_tree(sid, "/logs/artifacts/run", "run")
         identity = {"batch_id": self.batch.name + f"-r{row['run_index']:04d}", "unit_id": row["unit_id"], "task_id": row["task_id"],
                     "attempt_id": row["attempt_id"]}
-        prompt = (inside(self.batch, self.task["input_root"]) / "execution/PROMPT.md").read_text(encoding="utf-8")
+        prompt = prompt_bytes.decode("utf-8")
         before = self.store.get(self.key).get("native_before", {})
         before_close, before_binding = self._bound_native(sid, before, report, identity, prompt, "before-cleanup")
         if self.preprocess_recipe:

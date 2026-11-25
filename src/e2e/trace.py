@@ -141,7 +141,9 @@ def normalize_rollout(path: Path, *, identity: dict, prompt: str, guest_cwd: str
                       desktop: bool = False) -> dict:
     raw = path.read_bytes()
     rows = []
-    for number, line in enumerate(raw.decode("utf-8-sig").splitlines(), 1):
+    # JSONL records are separated by physical LF. Unicode NEL/LS/PS are
+    # legal characters inside JSON strings, not additional record boundaries.
+    for number, line in enumerate(raw.decode("utf-8-sig").split("\n"), 1):
         if line.strip():
             item = json.loads(line)
             if not isinstance(item, dict) or not isinstance(item.get("payload"), dict):

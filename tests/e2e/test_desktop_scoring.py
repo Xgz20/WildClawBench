@@ -40,6 +40,40 @@ class DesktopScoringTests(unittest.TestCase):
         self.assertEqual(canonical["harness"], "astudio")
         self.assertEqual(legacy["harness"], "astudio")
 
+    def test_incomplete_native_429_preserves_observed_model_without_claiming_a_balance_cause(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            path = root / 'native.jsonl'
+            rows = [
+                {'type': 'turn_context', 'payload': {'model': 'builtin/eGRlZXBzZWVrLWZsYXNoLWlu', 'effort': 'high'}},
+                {'type': 'response_item', 'payload': {'output': 'valid\u0085unicode\u2028text'}},
+                {'type': 'event_msg', 'timestamp': '2026-11-24T11:37:44Z', 'payload': {
+                    'type': 'error', 'message': 'untrusted provider response: secret-never-public',
+                    'codex_error_info': {'response_too_many_failed_attempts': {'http_status_code': 429}}}},
+            ]
+            path.write_bytes(('\n'.join(json.dumps(row, ensure_ascii=False) for row in rows) + '\n{"truncated"').encode())
+            artifacts = scoring._artifacts(root, native_trace=path)
+            driver = Mock(unit={'harness': 'astronstudio', 'model': 'DeepSeek-V4.1-Flash'})
+            driver._native_model.return_value = 'xdeepseek-flash-in'
+            result = scoring._incomplete_native_failure(root, artifacts, driver)
+            self.assertEqual(result['error'], 'DESKTOP_SCORING_MODEL_HTTP_429')
+            self.assertEqual(result['failure_diagnostics']['http_status'], 429)
+            self.assertTrue(result['agent_used'])
+            self.assertEqual(result['agent_identity']['native_model'], 'xdeepseek-flash-in')
+            self.assertNotIn('secret-never-public', json.dumps(result))
+            self.assertNotIn('total_score', result)
+            path.write_text('changed')
+            self.assertEqual(scoring._incomplete_native_failure(root, artifacts, driver), {})
+
+    def test_astudio_prompt_requires_native_capture_before_scoring_and_keeps_chatgpt_route(self):
+        prompt = scoring._prompt('web', 'case', None, None, 'attempt', CONFIG)
+        self.assertIn('astron_browser_save_screenshot', prompt)
+        self.assertIn('先完成一张原生截图', prompt)
+        self.assertIn('禁止编写 CDP', prompt)
+        chatgpt = scoring._prompt('web', 'case', None, None, 'attempt', {**CONFIG, 'harness': 'chatgpt-desktop'})
+        self.assertIn('tab.getScreenshot', chatgpt)
+        self.assertNotIn('astron_browser_save_screenshot', chatgpt)
+
     def test_chatgpt_subscription_uses_the_guest_account_without_gateway_credentials(self):
         base = {**CONFIG, "harness": "chatgpt-desktop", "model": "gpt-6.2-sol",
                 "reasoning_effort": "high"}

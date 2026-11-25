@@ -4,6 +4,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+import zipfile
 
 from src.e2e.agentcube import AgentCubeConfig
 from src.e2e.common import read_json
@@ -13,6 +14,7 @@ from src.e2e.preparation import prepare_batch
 from src.e2e.pipeline import init_orchestration
 from src.e2e.packages import export_package, import_package
 from src.e2e.store import BatchStore
+from src.e2e.preprocessing import augment_prompt, frozen_prompt_directives, frozen_recipe
 from tests.e2e.test_scheduler import FakeDriver, Provider
 
 
@@ -82,19 +84,52 @@ class GeneralImportTests(unittest.TestCase):
 
 class WebHandoffTests(unittest.TestCase):
     def test_canonical_web_handoff_preserves_execution_trace_and_known_resources(self):
+        self.check_web_handoff(False)
+
+    def test_web_plugin_prompt_survives_scoring_handoff_and_versioned_export(self):
+        self.check_web_handoff(True)
+
+    def check_web_handoff(self, mention):
         with tempfile.TemporaryDirectory() as directory:
             repo = Path(__file__).resolve().parents[2]
             task_id = "07_Website_Generation_task_002_focus_pomodoro_clock"
+            unit = {"harness": "astronstudio", "model": "spark-x2.6", "reasoning_effort": "high"}
+            assets = Path(directory) / 'assets';assets.mkdir()
+            if mention:
+                import hashlib
+                package = assets / 'sites.zip'
+                with zipfile.ZipFile(package, 'w') as archive:
+                    archive.writestr('.codex-plugin/plugin.json', '{"name":"sites-skills","version":"1.0.17"}')
+                checksum = hashlib.sha256(package.read_bytes()).hexdigest()
+                size = package.stat().st_size;package.rename(assets / checksum)
+                unit['preprocessing'] = {'default': {'version_id': 1, 'version': 1, 'name': 'Sites', 'steps': [
+                    {'kind': 'plugin', 'target': 'sites-skills', 'marketplace': 'astron-plugin-hub', 'timeout': 20,
+                     'asset': {'kind': 'plugin', 'name': 'sites.zip', 'size': size, 'sha256': checksum}}]},
+                    'overrides': {}, 'prompt_directives': {'default': ['sites-skills'], 'overrides': {}}}
             batch = prepare_batch(repo, Path(directory), {
                 "batch_id": "synthetic-web-handoff", "selection": {"scenario": "web", "task_ids": [task_id]},
-                "units": [{"harness": "astronstudio", "model": "spark-x2.6", "reasoning_effort": "high"}]})
+                "units": [unit]}, preprocess_asset_dir=assets)
             provider = Provider()
+
+            class PromptDriver(FakeDriver):
+                def execute(self):
+                    if mention:
+                        from src.e2e.common import atomic_json
+                        self.store.update(self.item['key'], 'PREPARING', prompt=metadata)
+                        atomic_json(self.staging / 'metadata/prompt.json', metadata)
+                        (self.staging / 'metadata/effective-prompt.md').write_bytes(self.task['prompt'].encode())
+                    return super().execute()
 
             def factory(**kwargs):
                 task = kwargs["task"]
-                prompt = (batch / task["input_root"] / "execution/PROMPT.md").read_text()
-                return FakeDriver(**{**kwargs, "task": {**task, "prompt": prompt}}, provider=provider)
+                prompt = (batch / task["input_root"] / "execution/PROMPT.md").read_bytes().decode()
+                nonlocal metadata
+                prompt, metadata = augment_prompt(prompt,
+                    frozen_prompt_directives(batch, kwargs['unit']['unit_id'], task_id),
+                    frozen_recipe(batch, kwargs['unit']['unit_id'], task_id))
+                return PromptDriver(**{**kwargs, "task": {**task, "prompt": prompt}}, provider=provider)
 
+            metadata = None
             try:
                 result = run_batch(batch, AgentCubeConfig(user_id="synthetic", auth_token="synthetic"), driver_factory=factory)
                 self.assertEqual(result["status"], "COMPLETED")
@@ -108,6 +143,12 @@ class WebHandoffTests(unittest.TestCase):
                 self.assertEqual(record["usage"]["total_tokens"], 110)
                 self.assertIsNone(record["usage"]["request_count"])
                 self.assertEqual(record["tools"]["call_count"], 1)
+                if mention:
+                    self.assertEqual(record['prompt']['sha256'], metadata['effective_prompt_sha256'])
+                    self.assertEqual(record['prompt']['plugin_mentions'], ['sites-skills'])
+                    self.assertIn('@sites-skills', (root / 'PROMPT.md').read_text())
+                    source = Path(context['context_root']) / 'unit/execution/tasks' / task_id
+                    self.assertNotIn('@sites-skills', (source / 'base-PROMPT.md').read_text())
                 self.assertEqual(record["usage"]["collection"]["scope"], "primary-task")
                 self.assertTrue((root / record["artifacts"]["harness_transcript"]).is_file())
                 self.assertTrue((root / "trace/raw/rollout-test.jsonl").is_file())

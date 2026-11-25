@@ -267,7 +267,7 @@ def _rerun_case(args):
     from .engine import run_batch
     from .preparation import _revision
     request = {"unit_id": args.unit_id, "task_id": args.task_id, "run_indices": args.run_index,
-               "request_id": args.request_id, "executor_revision": _revision(args.repo_root),
+               "request_id": args.request_id, "executor_revision": _revision(Path(__file__).resolve().parents[2]),
                "expected_attempts": read_json(args.expected_attempts) if args.expected_attempts else {}}
     progress = (lambda event: _print_event(args, args.batch_id, event)) if args.jsonl else None
     return run_batch(_batch_root(args), AgentCubeConfig.load(args.agentcube_config),

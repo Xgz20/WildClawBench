@@ -15,6 +15,7 @@ from .backend import GUEST_WORKSPACE, NATIVE_ROOT
 from .common import E2EError, atomic_json, file_sha256, inside, read_json, relative_path, utc_now
 from .engine import _publish, load_batch, verify_ready
 from .store import BatchStore, controller_lock
+from .preprocessing import execution_prompt
 from .trace import normalize_rollout, windows_equal
 
 
@@ -122,7 +123,8 @@ def recover_native_terminal(root: Path, *, execution_key: str, capsule: Path,
         with io.BytesIO(files[native["path"]]) as stream:
             copy_stream_readonly(stream, native_path)
         binding = normalize_rollout(native_path, identity=identity,
-            prompt=(inside(root, task["input_root"]) / "execution/PROMPT.md").read_text(encoding="utf-8"),
+            prompt=execution_prompt(staging, (inside(root, task["input_root"]) / "execution/PROMPT.md").read_bytes(),
+                                    row.get("prompt")).decode("utf-8"),
             guest_cwd=GUEST_WORKSPACE, requested_model=(row.get("native_builtin_model") or {}).get("slug", unit["model"]),
             requested_effort=unit.get("reasoning_effort"), report=report)
         _require(not binding["missing"], "RECOVERY_NATIVE_TRACE_INCOMPLETE")
