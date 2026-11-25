@@ -14,7 +14,7 @@ import time
 from urllib.parse import urlsplit
 
 from .artifacts import inventory, remove_temporary_tree, _protect_office_inode, OFFICE_SUFFIXES
-from .common import E2EError, atomic_json, digest, file_sha256, identifier, inside, read_json
+from .common import E2EError, atomic_json, digest, file_sha256, identifier, inside, read_json, utc_now
 from .engine import load_batch, verify_ready
 from .handoff import export_scoring_context
 from .store import BatchStore, controller_lock, refresh_controller_heartbeat
@@ -140,6 +140,8 @@ def _result_row(item, state, work: Path):
               'run_index': item['run_index'], 'execution_attempt_id': item['attempt_id'],
               'work_root': str(work), 'container_released': state.get('container_released', False),
               'scoring_runtime': {key: state.get(key) for key in ['container_id', 'container_started_at', 'container_finished_at']}}
+    if state.get('scoring_started_at'):
+        common['scoring_timing'] = {'started_at': state['scoring_started_at'], 'finished_at': state.get('scoring_finished_at')}
     if (work / 'result.json').is_file() and state.get('verified'):
         result = read_json(work / 'result.json')
         score_file = inside(work, result['score_path'])
@@ -210,6 +212,8 @@ def score_one(batch: Path, item: dict, manifest: dict, config: dict, root: Path,
             failure = item.get('error') or {}
             state.update(phase='execution_unscored', container_released=True,
                          error=failure.get('message') or failure.get('code') or 'EXECUTION_' + item['phase'])
+        else:
+            state['scoring_started_at'] = utc_now()
         atomic_json(state_file, state)
     if state['phase'] == 'execution_unscored':
         return _result_row(item, state, work)
@@ -222,6 +226,13 @@ def score_one(batch: Path, item: dict, manifest: dict, config: dict, root: Path,
         if result.get('score_path') and file_sha256(Path(result['score_path'])) != result['score_sha256']:
             raise E2EError('SCORING_RESULT_DRIFT')
         return result
+    if state.get('scoring_finished_at') and not state.get('verified'):
+        # Explicit recovery can continue an unfinished attempt. Its elapsed
+        # flow includes the recovery interval; release-only recovery does not.
+        state.pop('scoring_finished_at')
+        state.pop('error', None)
+        state['phase'] = 'preparing'
+        atomic_json(state_file, state)
     try:
         task = next(row for row in manifest['tasks'] if row['task_id'] == item['task_id'])
         if task['scene'] != 'general':
@@ -314,6 +325,9 @@ def score_one(batch: Path, item: dict, manifest: dict, config: dict, root: Path,
     except Exception as error:
         state.update(phase='failed', error=str(error).replace(api_key, '[REDACTED]') if api_key else str(error))
     finally:
+        if state.get('scoring_started_at') and not state.get('scoring_finished_at'):
+            state['scoring_finished_at'] = utc_now()
+            atomic_json(state_file, state)
         # Shared CLI images are allowed; cleanup is always by this job's exact container ID/label.
         try:
             for container_name in [name, name + '-verify']:

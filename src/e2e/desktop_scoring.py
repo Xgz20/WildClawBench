@@ -60,6 +60,13 @@ class JobState:
         return dict(self.data)
 
     def update(self, _key, phase, **fields):
+        started = self.data.get("scoring_started_at")
+        if started and isinstance(fields.get("result"), dict):
+            # Publish the result and its time boundary atomically. A later
+            # release retry must not extend this scoring attempt's duration.
+            closed = self.data.get("scoring_finished_at") or utc_now()
+            fields["scoring_finished_at"] = closed
+            fields["result"]["scoring_timing"] = {"started_at": started, "finished_at": closed}
         self.data.update(fields, phase=phase)
         atomic_json(self.path, self.data)
         return self.get(_key)
@@ -694,7 +701,7 @@ def _job(batch, item, config, agentcube, root, attempt, cancel):
     row.update(state.data.get("result", {}))
     try:
         if "attempt_id" not in state.data:
-            state.update(None, state.data["phase"], **identity)
+            state.update(None, state.data["phase"], **identity, scoring_started_at=utc_now())
         task = _prepare(batch, item, work, attempt, config)
         if not state.data.get("deadline"):
             state.update(None, state.data["phase"], deadline=time.time() + config["timeout_seconds"])
