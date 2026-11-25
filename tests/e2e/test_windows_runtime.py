@@ -82,3 +82,13 @@ class WindowsRuntimeTests(unittest.TestCase):
         self.assertIn("backup-before-install", script)
         self.assertIn("/KEEP_APP_DATA", script)
         self.assertNotIn("login-secret", script)
+
+    def test_session_override_requires_explicit_snapshot_request(self):
+        template = installer_script(specification())
+        self.assertIn("$restoreSession=$false", template)
+        self.assertIn("if($restoreSession){", template)
+        self.assertIn("sessionRestored=$restoreSession", template)
+        self.assertIn("loginSource=", template)
+        explicit = installer_script({**specification(), "session_file": "/private/session.json"})
+        self.assertIn("$restoreSession=$true", explicit)
+        self.assertIn("ASTRON_REQUESTED_SESSION_FILE_MISSING", explicit)

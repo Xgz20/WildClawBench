@@ -50,9 +50,10 @@ def installer_script(spec, identity=None, model="auto"):
     # 安装和登录只修改运行环境，脚本与私有备份均位于候选 Workspace 之外。
     values = {"VERSION": spec["version"], "URL": spec["download_url"], "SIZE": str(spec["size"]),
               "SHA": spec["sha512"].lower(), "GUEST": GUEST, "DATA": DATA,
-              "IDENTITY": identity or digest(spec), "MODEL": model}
+              "IDENTITY": identity or digest(spec), "MODEL": model,
+              "RESTORE_SESSION": "$true" if spec.get("session_file") else "$false"}
     script = r'''$ErrorActionPreference='Stop'
-$dir='__GUEST__';$data='__DATA__';$exe='C:\Users\Docker\AppData\Local\Programs\AStudio\AStudio.exe'
+$dir='__GUEST__';$data='__DATA__';$exe='C:\Users\Docker\AppData\Local\Programs\AStudio\AStudio.exe';$restoreSession=__RESTORE_SESSION__
 function State($stage,$details){@{stage=$stage;details=$details;identity='__IDENTITY__';version='__VERSION__';utc=(Get-Date).ToUniversalTime().ToString('o')}|ConvertTo-Json -Depth 5 -Compress|Set-Content -Encoding UTF8 "$dir\status.json"}
 function Version(){
  $f=[IO.File]::OpenRead('C:\Users\Docker\AppData\Local\Programs\AStudio\resources\app.asar');$r=New-Object IO.BinaryReader($f)
@@ -82,7 +83,8 @@ try{
  }
  $after=Version
  if($after -ne '__VERSION__'){throw 'ASTUDIO_INSTALLED_VERSION_MISMATCH'}
- if(Test-Path "$dir\session.json"){
+ if($restoreSession){
+  if(!(Test-Path "$dir\session.json")){throw 'ASTRON_REQUESTED_SESSION_FILE_MISSING'}
   if(Get-CimInstance Win32_Process|Where-Object{$_.ExecutablePath -eq $exe}){throw 'ASTUDIO_AUTH_RESTORE_REQUIRES_IDLE_APP'}
   $s=Get-Content -Raw -Encoding UTF8 "$dir\session.json"|ConvertFrom-Json
   if(!$s.uid -or !$s.token -or !$s.modelBearerToken){throw 'ASTRON_SESSION_INVALID'}
@@ -91,6 +93,9 @@ try{
   $who=[Security.Principal.WindowsIdentity]::GetCurrent().Name
   & icacls "$data\userdata\astron-session.json" /inheritance:r /grant:r "$($who):F" 'SYSTEM:F'|Out-Null
   Remove-Item "$dir\session.json"
+ }elseif(Test-Path "$dir\session.json"){
+  # 没有显式请求账号覆盖时，旧暂存文件不得改变模板账号。
+  Remove-Item "$dir\session.json" -Force
  }
  # 原合同中的 /tmp_workspace 在 Windows 中解析到 C:\tmp_workspace；只建立受控别名，不覆盖已有目录。
  $workspace='C:\ProgramData\WGUI\workspace\project';New-Item -ItemType Directory -Force $workspace|Out-Null
@@ -118,7 +123,7 @@ try{
  $p=Start-Process $exe -ArgumentList '--shutdown-for-uninstall' -PassThru -Wait
  for($i=0;$i -lt 30;$i++){if(!(Get-CimInstance Win32_Process|Where-Object{$_.ExecutablePath -eq $exe})){break};Start-Sleep -Seconds 1}
  if(Get-CimInstance Win32_Process|Where-Object{$_.ExecutablePath -eq $exe}){throw 'ASTUDIO_WARMUP_STILL_RUNNING'}
- State 'ready' @{before=$before;after=$after;installerSha512='__SHA__';model='__MODEL__';catalogCount=@($catalog.models).Count;catalogAccountMatched=$true;catalogFetchedAt=$catalog.fetchedAt;workspaceAlias=$alias;workspaceTarget=$workspace;warmupStopped=$true}
+ State 'ready' @{before=$before;after=$after;installerSha512='__SHA__';model='__MODEL__';catalogCount=@($catalog.models).Count;catalogAccountMatched=$true;catalogFetchedAt=$catalog.fetchedAt;workspaceAlias=$alias;workspaceTarget=$workspace;warmupStopped=$true;sessionRestored=$restoreSession;loginSource=$(if($restoreSession){'explicit_snapshot'}else{'template'})}
 }catch{State 'failed' @{error=$_.Exception.Message;errorType=$_.Exception.GetType().FullName;errorId=$_.FullyQualifiedErrorId};exit 1}
 '''
     for key, value in values.items():
