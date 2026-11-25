@@ -15,8 +15,10 @@ from .common import E2EError, digest, file_sha256, identifier, read_json
 CAPABILITY = "windows-environment-preprocessing"
 PROMPT_CAPABILITY = "execution-prompt-plugin-mentions-v1"
 INDEPENDENT_PROMPT_CAPABILITY = "execution-independent-plugin-mentions-v1"
+PROMPT_STEP_CAPABILITY = "preprocess-prompt-plugin-step-v1"
+PROMPT_STEP = "prompt_plugin"
 PLUGIN_VALIDATION = "installed-plugin-v1"
-KINDS = {"skill", "plugin", "acode", "powershell"}
+KINDS = {"skill", "plugin", "acode", "powershell", PROMPT_STEP}
 PROMPT_DIRECTIVE_KEYS = {"default", "overrides"}
 EXE = "acode-windows-x64.exe"
 MANIFEST = "acode-runtime-manifest.json"
@@ -103,7 +105,7 @@ def inspect_asset(path: Path, kind: str, name: str):
     import hashlib
 
     safe_name(name)
-    if not isinstance(kind, str) or kind not in KINDS | {"file"} or not path.is_file() or path.is_symlink():
+    if not isinstance(kind, str) or kind not in (KINDS - {PROMPT_STEP}) | {"file"} or not path.is_file() or path.is_symlink():
         raise E2EError("PREPROCESS_ASSET_INVALID")
     size = path.stat().st_size
     limit = ARCHIVE_LIMIT[kind][0] * 1024 * 1024 if kind in ARCHIVE_LIMIT else (
@@ -200,6 +202,15 @@ def normalize_recipe(raw, harness):
         if not isinstance(item, dict) or not isinstance(item.get("kind"), str) or item["kind"] not in KINDS:
             raise E2EError("PREPROCESS_ACTION_INVALID")
         kind = item["kind"]
+        if kind == PROMPT_STEP:
+            if harness != "astronstudio":
+                raise E2EError("PREPROCESS_ACTION_REQUIRES_ASTUDIO")
+            if set(item) != {"kind", "plugin_mentions"} or not item["plugin_mentions"]:
+                raise E2EError("PREPROCESS_PROMPT_STEP_INVALID")
+            if any(step["kind"] == PROMPT_STEP for step in steps):
+                raise E2EError("PREPROCESS_PROMPT_STEP_DUPLICATE")
+            steps.append({"kind": kind, "plugin_mentions": _normalize_plugin_mentions(item["plugin_mentions"])})
+            continue
         base = {"kind", "asset", "timeout"}
         fields = {"skill": {"target", "source"}, "plugin": {"target", "marketplace"},
                   "acode": set(), "powershell": {"attachments"}}[kind]
@@ -227,8 +238,9 @@ def normalize_recipe(raw, harness):
                 raise E2EError("PREPROCESS_DUPLICATE_TARGET")
             targets.add((kind, target))
         steps.append(step)
-    if sum(step["timeout"] + 30 for step in steps) > 1200:
+    if sum(step["timeout"] + 30 for step in steps if step["kind"] != PROMPT_STEP) > 1200:
         raise E2EError("PREPROCESS_TOTAL_TIMEOUT_TOO_LARGE")
+    steps = [step for step in steps if step["kind"] != PROMPT_STEP] + [step for step in steps if step["kind"] == PROMPT_STEP]
     return {**raw, "steps": steps}
 
 
@@ -255,11 +267,23 @@ def _normalize_prompt_directives(raw):
 
 def prompt_directives(unit, task_id):
     binding = unit.get("preprocessing") or {}
+    recipe = effective(unit, task_id)
+    if has_prompt_step(recipe):
+        return {"plugin_mentions": recipe_mentions(recipe)}
     raw = binding.get("prompt_directives")
     if not raw:
         return {"plugin_mentions": []}
     mentions = raw["overrides"].get(task_id, raw["default"])
     return {"plugin_mentions": list(mentions)}
+
+
+def has_prompt_step(recipe):
+    return any(step["kind"] == PROMPT_STEP for step in (recipe or {}).get("steps", []))
+
+
+def recipe_mentions(recipe):
+    return [name for step in (recipe or {}).get("steps", []) if step["kind"] == PROMPT_STEP
+            for name in step["plugin_mentions"]]
 
 
 def augment_prompt(prompt, directives, recipe, *, scene="web"):
@@ -333,15 +357,20 @@ def normalize_binding(raw, harness):
     overrides = {identifier(task, "task_id"): None if value is None else normalize_recipe(value, harness)
                  for task, value in raw["overrides"].items()}
     result = {"default": default, "overrides": overrides}
+    recipe_prompt = any(has_prompt_step(recipe) for recipe in (default, *overrides.values()))
     if raw.get("prompt_plugin_validation") not in {None, PLUGIN_VALIDATION}:
         raise E2EError("PROMPT_PLUGIN_VALIDATION_UNSUPPORTED")
     if "prompt_directives" in raw:
         result["prompt_directives"] = _normalize_prompt_directives(raw["prompt_directives"])
+        if recipe_prompt and (result["prompt_directives"]["default"] or result["prompt_directives"]["overrides"]):
+            raise E2EError("PREPROCESS_PROMPT_CONFIGURATION_CONFLICT")
         if harness != "astronstudio" and any([result["prompt_directives"]["default"],
                                               *result["prompt_directives"]["overrides"].values()]):
             raise E2EError("PREPROCESS_PROMPT_REQUIRES_ASTUDIO")
         if any([result["prompt_directives"]["default"], *result["prompt_directives"]["overrides"].values()]):
             result["prompt_plugin_validation"] = PLUGIN_VALIDATION
+    if recipe_prompt:
+        result["prompt_plugin_validation"] = PLUGIN_VALIDATION
     return result
 
 
@@ -417,7 +446,7 @@ def selection(units, tasks):
         rows.append({"unit_index": index, "unit_id": unit["unit_id"],
                      "cases": [{"task_id": key, "recipe": summary(effective(unit, key)),
                                 **({"prompt_directives": prompt_directives(unit, key)}
-                                   if unit["preprocessing"].get("prompt_directives") else {})} for key in ids],
+                                   if unit["preprocessing"].get("prompt_directives") or has_prompt_step(effective(unit, key)) else {})} for key in ids],
                      "binding": unit["preprocessing"]})
     if not rows:
         return {}
@@ -427,7 +456,8 @@ def selection(units, tasks):
 
 def freeze_assets(units, source, destination):
     assets = {asset["sha256"]: asset for unit in units for recipe in recipes(unit)
-              for step in recipe["steps"] for asset in (step["asset"], *step.get("attachments", []))}
+              for step in recipe["steps"] if step["kind"] != PROMPT_STEP
+              for asset in (step["asset"], *step.get("attachments", []))}
     if assets and source is None:
         raise E2EError("PREPROCESS_ASSET_DIRECTORY_REQUIRED")
     for sha, asset in assets.items():
@@ -447,6 +477,7 @@ def checked_asset(path, ref):
 
 def budget(unit):
     binding = unit.get("preprocessing") or {}
-    witness = 2 * 105 + TRANSFER_TIMEOUT + 40 if binding.get("prompt_plugin_validation") == PLUGIN_VALIDATION else 0
-    return witness + max((sum(step["timeout"] + 40 + TRANSFER_TIMEOUT for step in recipe["steps"])
+    witness = (2 * 105 + TRANSFER_TIMEOUT + 40
+               if binding.get("prompt_plugin_validation") == PLUGIN_VALIDATION or any(has_prompt_step(recipe) for recipe in recipes(unit)) else 0)
+    return witness + max((sum(step["timeout"] + 40 + TRANSFER_TIMEOUT for step in recipe["steps"] if step["kind"] != PROMPT_STEP)
                           for recipe in recipes(unit)), default=0)

@@ -112,6 +112,29 @@ class PromptPluginExecutionTests(unittest.TestCase):
         self.assertIsNone(driver.preprocess_recipe)
         self.assertEqual(snapshot(self.batch)['executions'][0]['prompt_plugins'], witness)
 
+    def test_recipe_prompt_step_uses_real_driver_dispatch_and_records_verified_step(self):
+        from src.e2e.preprocessing import normalize_binding
+        self.initialize(False)
+        binding = normalize_binding({'default': {'version_id': 3, 'version': 1, 'name': '只引用 Sites',
+            'steps': [{'kind': 'prompt_plugin', 'plugin_mentions': ['sites-skills']}]}, 'overrides': {}}, 'astronstudio')
+        bindings = {'astudio-web': binding}
+        atomic_json(self.batch / 'preprocessing.json', bindings)
+        self.manifest['preprocessing_bindings_sha256'] = digest(bindings)
+        atomic_json(self.batch / 'batch.json', self.manifest)
+        driver = self.driver()
+        driver.client.windows_execute.return_value = {'output': json.dumps({'status': 'passed', 'plugins': [
+            {'name': 'sites-skills', 'enabled': True, 'version': '1.0.17', 'tree_sha256': 'a' * 64}]})}
+        with patch('src.e2e.backend.windows_preprocess.verify_remote_plugins'), \
+                patch('src.e2e.backend.windows_preprocess.bind_running_acode'), patch('src.e2e.backend.validate_collect'):
+            result = driver.execute()
+        self.assertEqual(driver._prompt_input()[0].decode().count('@sites-skills'), 1)
+        receipt = self.store.get(self.item['key'])['preprocess_receipt']
+        self.assertEqual(receipt['steps'][0]['kind'], 'prompt_plugin')
+        self.assertEqual(receipt['steps'][0]['status'], 'passed')
+        self.assertEqual(receipt['status'], 'passed')
+        self.assertEqual(driver._job.call_count, 1)
+        self.assertEqual(result['binding']['prompt_sha256'], self.store.get(self.item['key'])['prompt']['effective_prompt_sha256'])
+
     def test_missing_referenced_plugin_stops_before_dispatch_with_explicit_failure(self):
         self.initialize(True, replacement=False, runtime_validation=True)
         driver = self.driver()

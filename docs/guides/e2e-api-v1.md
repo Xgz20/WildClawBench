@@ -72,7 +72,18 @@ scoring-purpose 导出另提供 parent_reports，按 run 保存完整父 General
 
 ## 环境预处理
 
-`describe` 发布 `windows-environment-preprocessing` 能力。配置单元可提供 `preprocessing`，其中 `default` 为冻结方案或 null，`overrides` 按用例 ID 覆盖，同样允许 null 表示跳过。方案包含 `version_id`、`version`、`name` 和有序 `steps`。每步指定 `kind`、`timeout`、附件摘要 `asset`，以及该动作的专用字段。
+`describe` 发布 `windows-environment-preprocessing` 能力。配置单元可提供 `preprocessing`，其中 `default` 为冻结方案或 null，`overrides` 按用例 ID 覆盖，同样允许 null 表示不应用该方案的环境修改及 Prompt 引用。方案包含 `version_id`、`version`、`name` 和有序 `steps`。环境修改步骤指定 `kind`、`timeout`、附件摘要 `asset`，以及该动作的专用字段。
+
+发布 `preprocess-prompt-plugin-step-v1` 的执行器另外支持 AStudio 方案中的
+`{"kind":"prompt_plugin","plugin_mentions":["sites-skills"]}`。每个方案最多一个此类
+步骤，可以只有此步骤；无需附件或自定义超时。它固定在环境修改步骤之后，工作区
+投递完毕、派题之前，沿用既有插件检查器验证安装、启用状态、版本、来源和文件摘要。
+失败即停止派发，步骤回执与插件核验详情归档；成功后沿用生效 Prompt 的摘要与恢复
+绑定，执行后继续核对插件漂移。沙箱生命周期预算包含前后核验与检查器投递时间。
+
+插件名属于方案版本，按单元默认与逐题方案覆盖生效；默认不选方案时原 Prompt 字节
+保持不变。旧的 `prompt_directives` 仍可读取和执行，新方案步骤与非空旧执行级引用
+不能同时使用，防止两套引用规则互相覆盖。新增步骤不改变原冻结批次和既有四种动作。
 
 `inspect-preprocess-asset --kind ... --name ... --file ...` 校验上传件并返回类型、大小、SHA-256、可选 Skill 名称或插件/内核版本。预检返回 `preprocessing_sha256` 和按单元展开的生效范围。创建预处理批次时，`run` 接收 `--expected-preprocessing-sha256` 和按 SHA-256 命名的 `--preprocess-asset-dir`。执行器验证并冻结为私有控制文件，续接沿用同一版本。公开回执包含版本号、步骤结果与摘要。
 

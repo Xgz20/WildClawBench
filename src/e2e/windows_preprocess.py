@@ -259,6 +259,14 @@ def apply_recipe(driver, sid, recipe, wgui, encode):
     if not row.get("preprocess_receipt"):
         driver._phase("PREPARING", preprocess_receipt=state)
     for index, step in enumerate(recipe["steps"]):
+        if step["kind"] == "prompt_plugin" and index >= len(state["steps"]):
+            # The declarative final step is verified after all environment
+            # changes and workspace delivery, immediately before dispatch.
+            state["current"] = {"index": index, "kind": step["kind"], "stage": "verify",
+                                "started_at": state.get("current", {}).get("started_at") or utc_now()}
+            atomic_json(driver.staging / "metadata/preprocessing.json", state)
+            driver._phase("PREPARING", preprocess_receipt=state)
+            return
         key = str(index)
         invocation = digest({"identity": identity, "step": index})
         job = jobs.get(key)
@@ -333,7 +341,50 @@ def verify_remote_plugins(driver, sid, recipe, encode):
                            else "ASTUDIO_REMOTE_PLUGIN_CACHE_UNVERIFIED")
 
 
+def _finish_prompt_step(driver, error=None):
+    recipe = getattr(driver, "preprocess_recipe", None)
+    if not isinstance(recipe, dict):
+        return
+    index = next((i for i, step in enumerate(recipe["steps"]) if step["kind"] == "prompt_plugin"), None)
+    row = driver.store.get(driver.key)
+    state = row.get("preprocess_receipt")
+    if index is None or not isinstance(state, dict) or index < len(state["steps"]):
+        return
+    if len(state["steps"]) != index:
+        raise E2EError("PREPROCESS_STEP_RECEIPT_SEQUENCE_INVALID")
+    from datetime import datetime
+    started = state.get("current", {}).get("started_at") or utc_now()
+    witness = row.get("prompt_plugin_witness", {})
+    success = error is None and witness.get("status") == "passed"
+    result = {"index": index, "kind": "prompt_plugin", "stage": "verify", "status": "passed" if success else "failed",
+              "plugin_mentions": recipe["steps"][index]["plugin_mentions"],
+              "duration_seconds": max(0, (datetime.fromisoformat(utc_now()) - datetime.fromisoformat(started)).total_seconds())}
+    if success:
+        result["after_sha256"] = digest(witness.get("plugins", []))
+    else:
+        result["error"] = diagnostic_code(error or witness.get("error", ""), "PROMPT_PLUGIN_INSPECTION_FAILED")
+    state.pop("current", None)
+    state["steps"].append(result)
+    state["status"] = result["status"]
+    atomic_json(driver.staging / "metadata/preprocessing.json", state)
+    driver._phase(row["phase"], preprocess_receipt=state)
+    if not success and error is None:
+        raise E2EError(result["error"])
+
+
 def verify_prompt_plugins(driver, sid, wgui, encode, *, after_execution=False):
+    try:
+        _verify_prompt_plugins(driver, sid, wgui, encode, after_execution=after_execution)
+    except (PlatformError, OSError, ValueError) as error:
+        from .backend import ObservationPaused
+        if not after_execution and not isinstance(error, ObservationPaused):
+            _finish_prompt_step(driver, error)
+        raise
+    if not after_execution:
+        _finish_prompt_step(driver)
+
+
+def _verify_prompt_plugins(driver, sid, wgui, encode, *, after_execution=False):
     from .backend import GUEST_WORKSPACE
     names = driver.prompt_directives.get("plugin_mentions", [])
     if not names or not getattr(driver, "prompt_plugin_validation", False):

@@ -11,9 +11,9 @@ from .agentcube import AgentCubeConfig, PlatformError
 from .backend import DRIVERS, ObservationPaused, WGUI, powershell
 from .common import E2EError, atomic_json, identifier, utc_now
 from .preparation import normalize_template_binding
-from .preprocessing import budget, normalize_recipe
+from .preprocessing import budget, normalize_recipe, recipe_mentions, has_prompt_step
 from .protocol import profiles
-from .windows_preprocess import apply_recipe, diagnostic_code
+from .windows_preprocess import apply_recipe, diagnostic_code, verify_prompt_plugins
 
 
 CAPABILITY = "windows-preprocess-validation"
@@ -43,6 +43,9 @@ class ValidationStore:
         self.row.update(phase=phase, **deepcopy(fields))
         if "preprocess_receipt" in fields:
             self.receipt["preprocessing"] = deepcopy(fields["preprocess_receipt"])
+            atomic_json(self.path, self.receipt)
+        if "prompt_plugin_witness" in fields:
+            self.receipt["prompt_plugin_witness"] = deepcopy(fields["prompt_plugin_witness"])
             atomic_json(self.path, self.receipt)
         return self.get(key)
 
@@ -112,6 +115,9 @@ def run_validation(root: Path, raw: dict, config_path: Path | None, *, stop=None
         factory = driver_factory or DRIVERS[("agentcube", unit["harness"])]
         driver = factory(batch_root=root, store=store, item=store.get(root.name),
                          task={}, unit=unit, config=config, stop_event=stop)
+        driver.preprocess_recipe = recipe
+        driver.prompt_directives = {"plugin_mentions": recipe_mentions(recipe)}
+        driver.prompt_plugin_validation = has_prompt_step(recipe)
         driver.checkpoint()
         store.event("creating", "running")
         sid = driver.client.create_session()
@@ -129,6 +135,8 @@ def run_validation(root: Path, raw: dict, config_path: Path | None, *, stop=None
         store.event("bootstrap", "passed")
         store.event("preprocessing", "running")
         apply_recipe(driver, sid, recipe, WGUI, powershell)
+        if has_prompt_step(recipe):
+            verify_prompt_plugins(driver, sid, WGUI, powershell)
         store.event("preprocessing", "passed")
         result["outcome"] = "passed"
     except (ObservationPaused, KeyboardInterrupt):

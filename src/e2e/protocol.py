@@ -87,6 +87,7 @@ def describe(repo: Path) -> dict:
             preprocessing.CAPABILITY,
             preprocessing.PROMPT_CAPABILITY,
             preprocessing.INDEPENDENT_PROMPT_CAPABILITY,
+            preprocessing.PROMPT_STEP_CAPABILITY,
             "windows-preprocess-validation",
             "managed-preprocess-validation-template-v1",
             "execution",
