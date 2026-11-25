@@ -269,7 +269,7 @@ def normalize_plan(raw: dict) -> dict:
     for raw_unit in plan["units"]:
         if not isinstance(raw_unit, dict):
             raise E2EError("HARNESS_UNIT_OBJECT_REQUIRED")
-        if set(raw_unit) - {"unit_id", "harness", "backend", "model", "reasoning_effort", "template", "max_concurrency", "timeout_override", "max_mode", "workbuddy_full_access", "chatgpt_permission", "preprocessing", "template_binding"}:
+        if set(raw_unit) - {"unit_id", "harness", "backend", "model", "reasoning_effort", "template", "max_concurrency", "timeout_override", "max_mode", "workbuddy_full_access", "chatgpt_permission", "preprocessing", "prompt_directives", "template_binding"}:
             raise E2EError("HARNESS_UNIT_UNKNOWN_KEYS")
         default_template = (
             DEFAULT_CHATGPT_DESKTOP_TEMPLATE
@@ -318,8 +318,16 @@ def normalize_plan(raw: dict) -> dict:
             unit["workbuddy_full_access"] = True
         if "template_binding" in raw_unit:
             unit["template_binding"] = normalize_template_binding(raw_unit["template_binding"])
-        if "preprocessing" in raw_unit:
-            unit["preprocessing"] = preprocessing.normalize_binding(raw_unit["preprocessing"], unit["harness"])
+        environment = raw_unit.get("preprocessing")
+        if environment is not None and not isinstance(environment, dict):
+            raise E2EError("PREPROCESS_BINDING_INVALID")
+        if raw_unit.get("prompt_directives") is not None:
+            environment = dict(environment or {"default": None, "overrides": {}})
+            if environment.get("prompt_directives") not in (None, raw_unit["prompt_directives"]):
+                raise E2EError("PROMPT_DIRECTIVES_CONFLICT")
+            environment["prompt_directives"] = raw_unit["prompt_directives"]
+        if environment is not None:
+            unit["preprocessing"] = preprocessing.normalize_binding(environment, unit["harness"])
         unit["unit_id"] = raw_unit.get("unit_id") or unit["harness"] + "-" + digest(unit)[:12]
         identifier(unit["unit_id"], "unit_id")
         identifier(unit["template"], "template")

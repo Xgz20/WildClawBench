@@ -333,6 +333,79 @@ def verify_remote_plugins(driver, sid, recipe, encode):
                            else "ASTUDIO_REMOTE_PLUGIN_CACHE_UNVERIFIED")
 
 
+def verify_prompt_plugins(driver, sid, wgui, encode, *, after_execution=False):
+    from .backend import GUEST_WORKSPACE
+    names = driver.prompt_directives.get("plugin_mentions", [])
+    if not names or not getattr(driver, "prompt_plugin_validation", False):
+        return
+    row = driver.store.get(driver.key)
+    previous = row.get("prompt_plugin_witness")
+    guest = WINDOWS_ROOT / row["attempt_id"] / "plugin-references"
+    remote = "/tmp/wcb-plugin-references-" + row["attempt_id"]
+    files = {"check_plugins.py": Path(__file__).with_name("prompt_plugins_guest.py").read_bytes(),
+             "preprocess_windows_guest.py": Path(__file__).with_name("preprocess_windows_guest.py").read_bytes(),
+             "request.json": json.dumps({"names": names, "cwd": GUEST_WORKSPACE}, sort_keys=True).encode()}
+    identity = digest({"session_id": sid, "attempt_id": row["attempt_id"], "names": names,
+                       "files": {name: digest_bytes(data) for name, data in files.items()}})
+    if previous and previous.get("identity") != identity:
+        raise E2EError("PROMPT_PLUGIN_WITNESS_DRIFT")
+    if after_execution and (not previous or previous.get("status") != "passed"):
+        raise E2EError("PROMPT_PLUGIN_WITNESS_MISSING")
+    if not after_execution:
+        driver.client.checked(sid, "mkdir -p " + shlex.quote(remote) + " && chmod 700 " + shlex.quote(remote))
+        for name, data in files.items():
+            driver.client.upload(sid, remote + "/" + name, data)
+        driver._checked_job("prompt-plugin-inspector-upload", wgui + " workspace upload --source "
+                            + shlex.quote(remote) + " --guest " + shlex.quote(str(guest)), timeout=120)
+    checks = "".join("if((Get-FileHash -Algorithm SHA256 -LiteralPath '" + str(guest / name)
+                     + "').Hash.ToLower() -ne '" + digest_bytes(data)
+                     + "'){throw 'PROMPT_PLUGIN_INSPECTOR_DRIFT'};" for name, data in files.items())
+    command = "$ErrorActionPreference='Stop';" + checks + "$py=" + PYTHON + ";& $py -I -X utf8 '" + str(guest / "check_plugins.py") + "'"
+    state = {"identity": identity, "status": "failed", "checked_at": utc_now(),
+             "session_id": sid, "attempt_id": row["attempt_id"], "plugin_mentions": names}
+    observed = None
+    if len(names) == 1:
+        state["plugin_name"] = names[0]
+    try:
+        driver.checkpoint()
+        value = json.loads(driver.client.windows_execute(sid, encode(command), timeout=105)["output"])
+        if not isinstance(value, dict) or value.get("status") != "passed":
+            raise E2EError(diagnostic_code(value.get("error", "") if isinstance(value, dict) else "", "PROMPT_PLUGIN_INSPECTION_FAILED"))
+        observed = value.get("plugins")
+        if (not isinstance(observed, list) or any(not isinstance(p, dict) for p in observed)
+                or [p.get("name") for p in observed] != names
+                or any(p.get("enabled") is not True or not isinstance(p.get("tree_sha256"), str)
+                       or not SHA.fullmatch(p["tree_sha256"]) for p in observed)):
+            raise E2EError("PROMPT_PLUGIN_INSPECTION_FAILED")
+        def stable(plugins):
+            return [{key: item.get(key) for key in ["name", "marketplace", "source_path", "version", "cache_version",
+                                                   "tree_sha256", "hash_scope", "identity_sha256", "enabled"]} for item in plugins]
+        if previous and stable(previous.get("plugins", [])) != stable(observed):
+            raise E2EError("PROMPT_PLUGIN_CHANGED_DURING_EXECUTION")
+        state.update(status="passed", plugins=observed, verified_after_execution=after_execution)
+        before = driver.staging / "metadata/prompt-plugins-before.json"
+        if not before.exists():
+            atomic_json(before, state)
+    except (PlatformError, ValueError, KeyError, E2EError) as error:
+        from .backend import ObservationPaused
+        if isinstance(error, ObservationPaused):
+            raise
+        state["error"] = diagnostic_code(error, "PROMPT_PLUGIN_INSPECTION_FAILED")
+        if previous:
+            state["plugins"] = previous.get("plugins", [])
+        if isinstance(observed, list):
+            state["observed_plugins"] = observed
+    atomic_json(driver.staging / "metadata/prompt-plugins.json", state)
+    driver._phase(row["phase"], prompt_plugin_witness=state)
+    if state["status"] != "passed":
+        raise E2EError(state["error"])
+
+
+def digest_bytes(data):
+    import hashlib
+    return hashlib.sha256(data).hexdigest()
+
+
 def bind_running_acode(driver, sid, encode, *, required=True):
     row = driver.store.get(driver.key)
     state = row.get("preprocess_receipt")

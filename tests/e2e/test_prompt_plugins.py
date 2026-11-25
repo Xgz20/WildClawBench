@@ -37,13 +37,17 @@ class PromptPluginExecutionTests(unittest.TestCase):
                      'attempt_id': 'exec-fixture', 'execution_root': 'units/astudio-web/runs/run-0001/tasks/web/executions/exec-fixture'}
         self.config = AgentCubeConfig(user_id='fixture', auth_token='synthetic')
 
-    def initialize(self, enabled):
+    def initialize(self, enabled, *, replacement=True, runtime_validation=False):
         manifest = {'schema': 'wildclawbench.sandbox-batch/v1', 'plan': {'batch_id': 'batch'},
                     'units': [self.unit], 'tasks': [self.task]}
         if enabled:
             bindings = {'astudio-web': {'default': {'version_id': 1, 'version': 1, 'name': 'Sites',
                 'steps': [{'kind': 'plugin', 'target': 'sites-skills', 'timeout': 20}]}, 'overrides': {},
                 'prompt_directives': {'default': ['sites-skills'], 'overrides': {}}}}
+            if not replacement:
+                bindings['astudio-web']['default'] = None
+            if runtime_validation:
+                bindings['astudio-web']['prompt_plugin_validation'] = 'installed-plugin-v1'
             atomic_json(self.batch / 'preprocessing.json', bindings)
             manifest['preprocessing_bindings_sha256'] = digest(bindings)
         atomic_json(self.batch / 'batch.json', manifest)
@@ -91,6 +95,62 @@ class PromptPluginExecutionTests(unittest.TestCase):
         self.assertNotIn('prompt', self.store.get(self.item['key']))
         self.assertNotIn('prompt', snapshot(self.batch)['executions'][0])
         self.assertEqual(result['binding']['prompt_sha256'], hashlib.sha256(self.base).hexdigest())
+
+    def test_reference_without_replacement_is_verified_before_dispatch_and_after_completion(self):
+        self.initialize(True, replacement=False, runtime_validation=True)
+        driver = self.driver()
+        plugin = {'name': 'sites-skills', 'enabled': True, 'version': '1.0.16', 'marketplace': 'fixture',
+                  'source_path': 'C:/fixture', 'tree_sha256': 'a' * 64}
+        driver.client.windows_execute.return_value = {'output': json.dumps({'status': 'passed', 'plugins': [plugin]})}
+        result = self.execute(driver)
+        self.assertIn('@sites-skills', driver._prompt_input()[0].decode())
+        self.assertEqual(result['binding']['prompt_sha256'], self.store.get(self.item['key'])['prompt']['effective_prompt_sha256'])
+        self.assertEqual(driver.client.windows_execute.call_count, 3)  # workspace mkdir + pre/post witnesses
+        witness = self.store.get(self.item['key'])['prompt_plugin_witness']
+        self.assertTrue(witness['verified_after_execution'])
+        self.assertEqual(witness['plugins'][0]['version'], '1.0.16')
+        self.assertIsNone(driver.preprocess_recipe)
+        self.assertEqual(snapshot(self.batch)['executions'][0]['prompt_plugins'], witness)
+
+    def test_missing_referenced_plugin_stops_before_dispatch_with_explicit_failure(self):
+        self.initialize(True, replacement=False, runtime_validation=True)
+        driver = self.driver()
+        driver.client.windows_execute.return_value = {'output': '{"status":"failed","error":"PROMPT_PLUGIN_NOT_INSTALLED"}'}
+        with self.assertRaisesRegex(E2EError, 'PROMPT_PLUGIN_NOT_INSTALLED'):
+            self.execute(driver)
+        driver._job.assert_not_called()
+        self.assertEqual(self.store.get(self.item['key'])['prompt_plugin_witness']['status'], 'failed')
+
+    def test_new_ready_receipt_binds_plugin_witness_and_rejects_missing_provenance(self):
+        self.initialize(True, replacement=False, runtime_validation=True)
+        driver = self.driver()
+        driver.client.windows_execute.return_value = {'output': json.dumps({'status': 'passed', 'plugins': [
+            {'name': 'sites-skills', 'enabled': True, 'tree_sha256': 'a' * 64}]})}
+        result = self.execute(driver)
+        item = self.store.get(self.item['key'])
+        _publish(self.batch, self.store, item, self.manifest, self.unit, self.task, result)
+        ready = verify_ready(self.batch, item, self.manifest)
+        self.assertEqual(len(ready['prompt_plugins_sha256']), 64)
+        path = driver.root / 'execution-ready.json'
+        path.chmod(0o644)
+        del ready['prompt_plugins_sha256']
+        path.write_text(json.dumps(ready))
+        with self.assertRaisesRegex(E2EError, 'PROMPT_PLUGIN_WITNESS_DRIFT'):
+            verify_ready(self.batch, item, self.manifest)
+
+    def test_plugin_drift_keeps_original_witness_and_never_redispatches(self):
+        self.initialize(True, replacement=False, runtime_validation=True)
+        driver = self.driver()
+        plugin = {'name': 'sites-skills', 'enabled': True, 'tree_sha256': 'a' * 64}
+        driver.client.windows_execute.side_effect = [
+            {'output': ''},
+            {'output': json.dumps({'status': 'passed', 'plugins': [plugin]})},
+            {'output': json.dumps({'status': 'passed', 'plugins': [{**plugin, 'tree_sha256': 'b' * 64}]})}]
+        with self.assertRaisesRegex(E2EError, 'PROMPT_PLUGIN_CHANGED_DURING_EXECUTION'):
+            self.execute(driver)
+        self.assertEqual(driver._job.call_count, 1)
+        original = json.loads((driver.staging / 'metadata/prompt-plugins-before.json').read_text())
+        self.assertEqual(original['plugins'][0]['tree_sha256'], 'a' * 64)
 
     def test_real_driver_records_and_resumes_the_exact_plugin_prompt_without_uploading_twice(self):
         self.initialize(True);driver = self.driver()

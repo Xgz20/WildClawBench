@@ -222,6 +222,7 @@ class AStudioSandboxDriver:
         self.staging.mkdir(parents=True, exist_ok=True)
         self.preprocess_recipe = None
         self.prompt_directives = {"plugin_mentions": []}
+        self.prompt_plugin_validation = False
 
     def checkpoint(self):
         if self.stop.is_set():
@@ -236,7 +237,9 @@ class AStudioSandboxDriver:
         if (self.batch / "batch.json").is_file():
             self.preprocess_recipe = preprocessing.frozen_recipe(self.batch, self.unit["unit_id"], self.task["task_id"])
             self.prompt_directives = preprocessing.frozen_prompt_directives(self.batch, self.unit["unit_id"], self.task["task_id"])
+            self.prompt_plugin_validation = preprocessing.requires_plugin_witness(self.batch, self.unit["unit_id"])
         bound = {**self.unit, "preprocessing": {"default": self.preprocess_recipe, "overrides": {},
+                                                 **({"prompt_plugin_validation": preprocessing.PLUGIN_VALIDATION} if self.prompt_plugin_validation else {}),
                                                  "prompt_directives": {"default": self.prompt_directives["plugin_mentions"], "overrides": {}}}}
         if self.preprocess_recipe is not None and self.config.required_expire_ttl(
                 self.unit["timeout_override"], preprocessing.budget(bound), self.failure_retention_seconds) > self.config.expire_ttl:
@@ -398,7 +401,8 @@ try {
         if self.task.get("prompt_sha256") and preprocessing.file_sha256_bytes(base) != self.task["prompt_sha256"]:
             raise E2EError("FROZEN_TASK_PROMPT_DRIFT")
         prompt, metadata = preprocessing.augment_prompt(base.decode("utf-8"),
-            getattr(self, "prompt_directives", {"plugin_mentions": []}), getattr(self, "preprocess_recipe", None))
+            getattr(self, "prompt_directives", {"plugin_mentions": []}), getattr(self, "preprocess_recipe", None),
+            scene=self.task.get("scene", "web"))
         payload = prompt.encode("utf-8")
         path = self.staging / "metadata/effective-prompt.md"
         lock = self.staging / "metadata/prompt.json"
@@ -562,6 +566,7 @@ try {
             windows_preprocess.apply_recipe(self, sid, self.preprocess_recipe, WGUI, powershell)
             self._upload(sid)
             windows_preprocess.verify_remote_plugins(self, sid, self.preprocess_recipe, powershell)
+            windows_preprocess.verify_prompt_plugins(self, sid, WGUI, powershell)
             before = self._inventory_native(sid)
             atomic_json(self.staging / "metadata/native-before.json", before)
             _, prompt_metadata = self._prompt_input()
@@ -581,6 +586,7 @@ try {
         if result["exit_code"] != 0 or report.get("status") != "completed":
             raise E2EError("CONTROLLER_EXECUTION_INCOMPLETE: " + str(report.get("status")))
         windows_preprocess.verify_remote_plugins(self, sid, self.preprocess_recipe, powershell)
+        windows_preprocess.verify_prompt_plugins(self, sid, WGUI, powershell, after_execution=True)
         self._download_tree(sid, "/logs/artifacts/run", "run")
         identity = {"batch_id": self.batch.name + f"-r{row['run_index']:04d}", "unit_id": row["unit_id"], "task_id": row["task_id"],
                     "attempt_id": row["attempt_id"]}

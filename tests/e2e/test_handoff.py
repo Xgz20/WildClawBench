@@ -118,7 +118,16 @@ class WebHandoffTests(unittest.TestCase):
                         self.store.update(self.item['key'], 'PREPARING', prompt=metadata)
                         atomic_json(self.staging / 'metadata/prompt.json', metadata)
                         (self.staging / 'metadata/effective-prompt.md').write_bytes(self.task['prompt'].encode())
-                    return super().execute()
+                    outcome = super().execute()
+                    if mention:
+                        row = self.store.get(self.item['key'])
+                        witness = {'status': 'passed', 'verified_after_execution': True,
+                            'session_id': row['session_id'], 'attempt_id': row['attempt_id'],
+                            'plugin_mentions': ['sites-skills'], 'plugins': [
+                                {'name': 'sites-skills', 'version': '1.0.17', 'tree_sha256': 'a' * 64}]}
+                        atomic_json(self.staging / 'metadata/prompt-plugins.json', witness)
+                        self.store.update(self.item['key'], row['phase'], prompt_plugin_witness=witness)
+                    return outcome
 
             def factory(**kwargs):
                 task = kwargs["task"]

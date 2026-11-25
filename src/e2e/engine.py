@@ -74,7 +74,9 @@ def _publish(root: Path, store: BatchStore, item: dict, manifest: dict, unit: di
 
 def _ready_document(root, item, manifest, unit, task, outcome, binding, receipt):
     execution = inside(root, item["execution_root"])
+    witness = _prompt_plugin_provenance(root, item, execution / "original")
     return {"schema": READY_SCHEMA, "identity": outcome["identity"], "parent_batch_id": root.name,
+             **({"prompt_plugins_sha256": witness} if witness else {}),
              "parent_batch_sha256": digest(manifest), "unit_id": unit["unit_id"], "run_index": item["run_index"],
              "task_id": task["task_id"], "parent_task_ids": unit["task_ids"],
              "execution_root": item["execution_root"], "workspace": outcome["workspace"],
@@ -82,6 +84,23 @@ def _ready_document(root, item, manifest, unit, task, outcome, binding, receipt)
              "native_session": binding["session"], "actual_model": binding["actual_model"],
              "reasoning_effort": binding["reasoning_effort"], "max_mode": binding.get("max_mode"), "trace_status": "partial" if binding["missing"] else "complete",
              "scoring_allowed": True, "created_at": utc_now()}
+
+
+def _prompt_plugin_provenance(root, item, original):
+    from .preprocessing import frozen_prompt_directives, requires_plugin_witness
+    names = frozen_prompt_directives(root, item["unit_id"], item["task_id"])["plugin_mentions"]
+    if not names or not requires_plugin_witness(root, item["unit_id"]):
+        return None
+    path = original / "metadata/prompt-plugins.json"
+    if not path.is_file() or path.is_symlink():
+        raise E2EError("PROMPT_PLUGIN_WITNESS_MISSING")
+    witness = read_json(path)
+    proof = read_json(original / "trace/bindings/execution-proof.json")
+    if (witness.get("status") != "passed" or witness.get("verified_after_execution") is not True
+            or witness.get("attempt_id") != item["attempt_id"] or witness.get("plugin_mentions") != names
+            or not witness.get("session_id") or witness["session_id"] != proof.get("session_id")):
+        raise E2EError("PROMPT_PLUGIN_WITNESS_DRIFT")
+    return file_sha256(path)
 
 
 def _reconcile_sealed(root, store, item, manifest, unit, task):
@@ -119,6 +138,9 @@ def verify_ready(root: Path, item: dict, manifest: dict) -> dict:
     outcome = read_json(original / "metadata/result.json")
     index = read_json(original / "trace/trace-index.json")
     unit = next(unit for unit in manifest["units"] if unit["unit_id"] == item["unit_id"])
+    witness = _prompt_plugin_provenance(root, item, original)
+    if witness and ready.get("prompt_plugins_sha256") != witness:
+        raise E2EError("PROMPT_PLUGIN_WITNESS_DRIFT")
     expected = {"batch_id": root.name + f"-r{item['run_index']:04d}", "unit_id": item["unit_id"],
                 "task_id": item["task_id"], "attempt_id": item["attempt_id"]}
     if (ready.get("schema") != READY_SCHEMA or ready.get("identity") != expected
