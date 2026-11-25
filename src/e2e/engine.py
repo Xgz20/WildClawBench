@@ -13,6 +13,7 @@ from .backend import DRIVERS, ObservationPaused
 from .common import E2EError, atomic_json, digest, file_sha256, inside, read_json, redact, utc_now
 from .store import BatchStore, controller_lock, refresh_controller_heartbeat
 from .trace import resource_metrics, write_trace
+from .retention import execution_held, retained, preserve_failure, reap
 
 
 READY_SCHEMA = "wildclawbench.task-execution-handoff/v1"
@@ -157,6 +158,8 @@ def _worker(root: Path, store: BatchStore, item: dict, manifest: dict, unit: dic
             final_phase = failure.get("execution_phase", "FAILED")
             current = store.update(item["key"], final_phase, error=failure)
         if current["phase"] in {"FAILED", "CANCELLED"}:
+            if retained(current):
+                return
             try:
                 cleanup = driver.client.delete_session(current["session_id"])
             except PlatformError as error:
@@ -213,6 +216,9 @@ def _failure(root, store, item, driver, error, *, final_phase="FAILED"):
     if final_phase == "CANCELLED":
         failure["execution_phase"] = final_phase
     try:
+        capture = getattr(type(driver), "capture_failure_scene", None)
+        if final_phase == "FAILED" and capture and load_batch(root)["plan"].get("failure_retention_seconds", 0):
+            driver.capture_failure_scene()
         preservation = driver.salvage()
         atomic_json(driver.staging / "metadata/failure.json", failure)
         if row.get("dispatch_armed_at") and not preservation.get("complete"):
@@ -221,6 +227,11 @@ def _failure(root, store, item, driver, error, *, final_phase="FAILED"):
             return
         seal_execution(driver.root, {"batch_id": root.name + f"-r{item['run_index']:04d}", "unit_id": item["unit_id"],
                                      "task_id": item["task_id"], "attempt_id": item["attempt_id"]})
+        screenshot = driver.root / "original/evidence/failure-screen.png"
+        if final_phase == "FAILED" and preserve_failure(store, item["key"], driver.config.public(),
+                load_batch(root)["plan"].get("failure_retention_seconds", 0), failure=failure, preservation=preservation,
+                screenshot=screenshot.relative_to(root).as_posix() if screenshot.is_file() else None):
+            return
         cleanup = None
         if row.get("session_id"):
             cleanup = driver.client.delete_session(row["session_id"])
@@ -303,13 +314,13 @@ def run_batch(root: Path, config: AgentCubeConfig, *, unit_ids: list[str] | None
                     heartbeat()
                     rows = store.rows()
                     attention = any(row["phase"] == "NEEDS_ATTENTION" and (not selected_tasks or selected_row(row)) for row in rows)
-                    held = sum(row["resource_held"] for row in rows)
+                    held = sum(execution_held(row) for row in rows)
                     active_units = Counter(unit for _, unit in futures.values())
                     for row in rows:
                         key, unit_id = row["key"], row["unit_id"]
                         if not selected_row(row) or key in seen or stop.is_set():
                             continue
-                        resumable = row["phase"] in {"RESERVED", "CREATING", "PREPARING", "RUNNING", "COLLECTING", "SEALING", "NEEDS_ATTENTION"} or row["resource_held"]
+                        resumable = row["phase"] in {"RESERVED", "CREATING", "PREPARING", "RUNNING", "COLLECTING", "SEALING", "NEEDS_ATTENTION"} or execution_held(row)
                         if row["phase"] != "PENDING" and not resumable:
                             continue
                         if len(futures) >= capacity or active_units[unit_id] >= units[unit_id]["max_concurrency"]:
@@ -339,7 +350,7 @@ def run_batch(root: Path, config: AgentCubeConfig, *, unit_ids: list[str] | None
                     stop.set()
         summary = store.summary()
         summary.update(batch_id=root.name, interrupted=interrupted,
-                       status="NEEDS_ATTENTION" if summary["resource_held"] or any(
+                       status="NEEDS_ATTENTION" if summary["execution_resources_held"] or any(
                            row["phase"] in {"NEEDS_ATTENTION", "RESERVED", "CREATING", "PREPARING", "RUNNING", "COLLECTING", "SEALING"}
                            for row in summary["executions"]) else "FAILED" if summary["phase_counts"].get("FAILED")
                        else "COMPLETED" if all(row["phase"] == "COMPLETED" for row in summary["executions"]) else "PENDING")
@@ -354,6 +365,8 @@ def cleanup_batch(root: Path, config: AgentCubeConfig, *, cancel: bool = False) 
     load_batch(root)
     store = BatchStore(root)
     with controller_lock(root):
+        for retained_item in store.retentions():
+            reap(root, config, attempt_id=retained_item["attempt_id"], force=True)
         for item in store.rows():
             if not item["resource_held"]:
                 continue
@@ -385,6 +398,8 @@ def cancel_batch(root: Path, config: AgentCubeConfig, driver_factory=None) -> di
     tasks = {task["task_id"]: task for task in manifest["tasks"]}
     stop = threading.Event()
     with controller_lock(root):
+        for retained_item in store.retentions():
+            reap(root, config, attempt_id=retained_item["attempt_id"], force=True)
         for item in store.rows():
             if not item.get("session_id"):
                 if item.get("creation_intent_at"):

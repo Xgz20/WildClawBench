@@ -88,8 +88,8 @@ class AgentCubeConfig:
                 # Keep legacy runtime fingerprints stable when using their original timeout.
                 and not (key == "create_timeout_seconds" and value == 900)}
 
-    def required_expire_ttl(self, execution_timeout: int, preprocessing_timeout: int = 0) -> int:
-        return execution_timeout + preprocessing_timeout + 2400 + max(0, self.create_timeout_seconds - 900)
+    def required_expire_ttl(self, execution_timeout: int, preprocessing_timeout: int = 0, failure_retention_seconds: int = 0) -> int:
+        return execution_timeout + preprocessing_timeout + failure_retention_seconds + 2400 + max(0, self.create_timeout_seconds - 900)
 
 
 def validate_chatgpt_gateway(value: str) -> None:

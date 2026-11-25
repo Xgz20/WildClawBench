@@ -238,7 +238,8 @@ def next_actions(batch: Path, *, owner: str, claim_ready: bool = True, after: in
                                 "orchestration": row["orchestration"], "context": row["context"],
                                 "takeover_requires_thread_reconciliation": row.get("takeover_requires_reconciliation", False)})
         events = store.events(after)
-        execution_terminal = all(row["phase"] in {"COMPLETED", "FAILED", "CANCELLED"} and not row["resource_held"] for row in store.rows())
+        from .retention import execution_held
+        execution_terminal = all(row["phase"] in {"COMPLETED", "FAILED", "CANCELLED"} and not execution_held(row) for row in store.rows())
         scoring_terminal = all(row["phase"] in {"SCORED", "FAILED"} for row in store.scoring_rows())
         if execution_terminal and scoring_terminal and not (batch / "selected-results.json").exists():
             actions.append({"action": "COMPOSE_SELECTED_RESULTS"})

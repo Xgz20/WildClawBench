@@ -96,6 +96,41 @@
         },
         "additionalProperties": true
       }
+    },
+    "execution_resources_held": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "retained_sandboxes_held": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "retained_sandboxes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "attempt_id",
+          "session_id",
+          "status",
+          "destroy_after",
+          "evidence_sealed"
+        ],
+        "properties": {
+          "status": {
+            "enum": [
+              "retained",
+              "release_pending",
+              "release_failed",
+              "released"
+            ]
+          },
+          "evidence_sealed": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": true
+      }
     }
   },
   "additionalProperties": true

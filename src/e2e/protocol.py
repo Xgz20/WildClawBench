@@ -90,6 +90,7 @@ def describe(repo: Path) -> dict:
             "managed-preprocess-validation-template-v1",
             "execution",
             "case-round-rerun-v1",
+            "failed-sandbox-retention-v1",
             "execution-version-history-v1",
             "versioned-result-export-v1",
             "events",
@@ -116,6 +117,14 @@ def describe(repo: Path) -> dict:
         ],
         "profiles": profiles(),
         "parameters": [
+            {
+                "key": "failure_retention_seconds",
+                "display_name": "异常沙箱保留时间（秒，0为立即回收）",
+                "value_type": "integer",
+                "default": 1800,
+                "minimum": 0,
+                "maximum": 86400,
+            },
             {
                 "key": "execution_concurrency",
                 "display_name": "执行并发",
@@ -336,7 +345,7 @@ def preflight(repo: Path, raw: dict, config_path: Path | None = None, *, check_r
             if not os.environ.get("WCB_CHATGPT_API_KEY", "").strip():
                 issues.append({"code": "WCB_CHATGPT_API_KEY_REQUIRED"})
         if any(
-            config.required_expire_ttl(unit["timeout_override"], preprocessing.budget(unit)) > config.expire_ttl
+            config.required_expire_ttl(unit["timeout_override"], preprocessing.budget(unit), plan.get("failure_retention_seconds", 0)) > config.expire_ttl
             for unit in plan["units"]
         ):
             issues.append({"code": "PLATFORM_TTL_TOO_SHORT_FOR_TIMEOUT"})
@@ -417,6 +426,7 @@ def events(batch: Path, after: int) -> dict:
 def snapshot(batch: Path, *, execution_rows=None) -> dict:
     from .engine import load_batch
     from .store import BatchStore
+    from .retention import retained
 
     manifest = load_batch(batch)
     raw = BatchStore(batch).summary()
@@ -510,8 +520,9 @@ def snapshot(batch: Path, *, execution_rows=None) -> dict:
                 "started_at": start, "finished_at": finish, "duration_seconds": duration,
                 "stage": row["phase"],
                 "terminal": row["phase"] in TERMINAL_PHASES
-                and not row["resource_held"],
+                and (not row["resource_held"] or retained(row)),
                 "resource_held": row["resource_held"],
+                **({"sandbox_retention": row["sandbox_retention"]} if row.get("sandbox_retention") else {}),
                 "session_id": row.get("session_id"),
                 "error": error,
                 **({"preprocessing": row["preprocess_receipt"]} if row.get("preprocess_receipt") else {}),
@@ -542,9 +553,10 @@ def snapshot(batch: Path, *, execution_rows=None) -> dict:
     counts = Counter(row["stage"] for row in executions)
     terminal = all(row["terminal"] for row in executions)
     held = sum(row["resource_held"] for row in executions)
+    execution_held = raw.get("execution_resources_held", held)
     state = "running"
     if counts.get("NEEDS_ATTENTION") or (
-        held and all(row["stage"] in TERMINAL_PHASES for row in executions)
+        execution_held and all(row["stage"] in TERMINAL_PHASES for row in executions)
     ):
         state = "needs_attention"
     elif terminal:
@@ -587,7 +599,10 @@ def snapshot(batch: Path, *, execution_rows=None) -> dict:
         "counts": dict(counts),
         "total": len(executions),
         "finished": sum(row["terminal"] for row in executions),
-        "resource_held": held,
+        "resource_held": raw["resource_held"],
+        "execution_resources_held": execution_held,
+        "retained_sandboxes_held": raw.get("retained_sandboxes_held", 0),
+        "retained_sandboxes": raw.get("retained_sandboxes", []),
         "allowed_actions": actions,
         "controllers": raw.get("controllers", {}),
     }

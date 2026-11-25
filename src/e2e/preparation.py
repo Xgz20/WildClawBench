@@ -245,12 +245,18 @@ def normalize_plan(raw: dict) -> dict:
     if raw.get("schema_version", PLAN_SCHEMA) != PLAN_SCHEMA:
         raise E2EError("BATCH_PLAN_SCHEMA_UNSUPPORTED")
     allowed = {"schema_version", "batch_id", "selection", "units", "runs", "execution_concurrency",
-               "scoring_mode", "scoring_concurrency", "timeout_override"}
+               "scoring_mode", "scoring_concurrency", "timeout_override", "failure_retention_seconds"}
     if set(raw) - allowed:
         raise E2EError("BATCH_PLAN_UNKNOWN_KEYS")
+    # Legacy plans keep immediate cleanup. Platform description defaults are
+    # materialized into new plans before preflight and freezing.
+    retention = raw.get("failure_retention_seconds", 0)
+    if type(retention) is not int or not 0 <= retention <= 86400:
+        raise E2EError("FAILURE_RETENTION_SECONDS_INVALID")
     plan = {"schema_version": PLAN_SCHEMA, "batch_id": raw.get("batch_id") or
             "e2e-" + datetime.now().strftime("%Y%m%d-%H%M%S") + "-" + uuid.uuid4().hex[:8],
             "selection": raw.get("selection") or {}, "units": raw.get("units") or [],
+            "failure_retention_seconds": retention,
             "runs": raw.get("runs", 1), "execution_concurrency": raw.get("execution_concurrency", DEFAULT_EXECUTION_CONCURRENCY),
             "scoring_mode": raw.get("scoring_mode", "streaming"), "scoring_concurrency": raw.get("scoring_concurrency", 3),
             "timeout_override": raw.get("timeout_override", 10800)}

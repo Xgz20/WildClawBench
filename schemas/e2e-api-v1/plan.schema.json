@@ -61,13 +61,32 @@
           },
           "template_binding": {
             "type": "object",
-            "required": ["id", "namespace", "image_digest", "profile_id", "waa_revision"],
+            "required": [
+              "id",
+              "namespace",
+              "image_digest",
+              "profile_id",
+              "waa_revision"
+            ],
             "properties": {
-              "id": { "type": "integer", "minimum": 1 },
-              "namespace": { "type": "string" },
-              "image_digest": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" },
-              "profile_id": { "type": "string" },
-              "waa_revision": { "type": "string", "pattern": "^[a-f0-9]{7,40}$" }
+              "id": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "namespace": {
+                "type": "string"
+              },
+              "image_digest": {
+                "type": "string",
+                "pattern": "^sha256:[a-f0-9]{64}$"
+              },
+              "profile_id": {
+                "type": "string"
+              },
+              "waa_revision": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{7,40}$"
+              }
             },
             "additionalProperties": false
           },
@@ -82,12 +101,19 @@
           },
           "preprocessing": {
             "type": "object",
-            "required": ["default", "overrides"],
+            "required": [
+              "default",
+              "overrides"
+            ],
             "properties": {
-              "default": { "$ref": "#/definitions/preprocessingRecipe" },
+              "default": {
+                "$ref": "#/definitions/preprocessingRecipe"
+              },
               "overrides": {
                 "type": "object",
-                "additionalProperties": { "$ref": "#/definitions/preprocessingRecipe" }
+                "additionalProperties": {
+                  "$ref": "#/definitions/preprocessingRecipe"
+                }
               }
             },
             "additionalProperties": false
@@ -114,27 +140,68 @@
     "timeout_override": {
       "type": "integer",
       "minimum": 1
+    },
+    "failure_retention_seconds": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 86400,
+      "description": "平台新批次默认1800秒；旧冻结计划缺失字段时按0。"
     }
   },
   "definitions": {
     "preprocessingRecipe": {
-      "type": ["object", "null"],
-      "required": ["version_id", "version", "name", "steps"],
+      "type": [
+        "object",
+        "null"
+      ],
+      "required": [
+        "version_id",
+        "version",
+        "name",
+        "steps"
+      ],
       "properties": {
-        "version_id": { "type": "integer", "minimum": 1 },
-        "version": { "type": "integer", "minimum": 1 },
-        "name": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "version_id": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "version": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
         "steps": {
           "type": "array",
           "minItems": 1,
           "maxItems": 12,
           "items": {
             "type": "object",
-            "required": ["kind", "asset", "timeout"],
+            "required": [
+              "kind",
+              "asset",
+              "timeout"
+            ],
             "properties": {
-              "kind": { "enum": ["skill", "plugin", "acode", "powershell"] },
-              "asset": { "type": "object" },
-              "timeout": { "type": "integer", "minimum": 10, "maximum": 600 }
+              "kind": {
+                "enum": [
+                  "skill",
+                  "plugin",
+                  "acode",
+                  "powershell"
+                ]
+              },
+              "asset": {
+                "type": "object"
+              },
+              "timeout": {
+                "type": "integer",
+                "minimum": 10,
+                "maximum": 600
+              }
             }
           }
         }

@@ -92,6 +92,7 @@ def build_parser() -> argparse.ArgumentParser:
     run.add_argument("--concurrency", "--parallel", type=int, help="批次沙箱并发，默认 3")
     run.add_argument("--runs", type=int, help="每题独立 run 数，默认 1")
     run.add_argument("--timeout-override", type=int, help="统一覆盖 wgui 运行预算（秒），默认 10800")
+    run.add_argument("--failure-retention-seconds", type=int, help="异常沙箱保留秒数；平台新批次默认1800，旧计划缺省为0")
     run.add_argument("--scoring-mode", choices=("streaming", "batch"))
     run.add_argument("--scoring-concurrency", type=int, help="评分槽位，默认 3")
     run.add_argument("--dry-run", action="store_true")
@@ -128,6 +129,12 @@ def build_parser() -> argparse.ArgumentParser:
     _batch(cleanup)
     _agentcube(cleanup)
     cleanup.add_argument("--cancel", action="store_true", help="显式允许取消仍活动的本批次任务")
+    retention = commands.add_parser("retention-reap", help="回收已到期的异常现场；可按执行尝试提前回收")
+    _batch(retention)
+    _agentcube(retention)
+    retention.add_argument("--attempt-id")
+    retention.add_argument("--force", action="store_true")
+    retention.add_argument("--watch", action="store_true", help="独立观察直到所选保留实例全部确认回收；中断后可再次启动")
     reconcile = commands.add_parser("reconcile-absent-creation", help="依据操作员观测及平台精确查无回执收口派发前创建超时")
     _batch(reconcile)
     _agentcube(reconcile)
@@ -211,7 +218,7 @@ def _run(args):
                              "task": str(args.task.resolve()) if args.task else None, "task_ids": args.task_id,
                              "categories": args.category, "tags": args.tag, "exclude_tags": args.exclude_tag,
                              "modality": args.modality}, "units": [unit]}
-    for name in ("batch_id", "runs", "execution_concurrency", "scoring_mode", "scoring_concurrency", "timeout_override"):
+    for name in ("batch_id", "runs", "execution_concurrency", "scoring_mode", "scoring_concurrency", "timeout_override", "failure_retention_seconds"):
         value = getattr(args, "concurrency" if name == "execution_concurrency" else name)
         if value is not None:
             raw[name] = value
@@ -295,6 +302,23 @@ def _reconcile_absent_creation(args):
     from .creation_recovery import reconcile_absent_creation
     return reconcile_absent_creation(_batch_root(args), args.execution_key, args.platform_proof.resolve(),
                                      args.expected_proof_sha256, AgentCubeConfig.load(args.agentcube_config))
+
+
+def _retention_reap(args):
+    import time
+    from .agentcube import AgentCubeConfig
+    from .retention import reap
+    from .store import BatchStore
+    if args.force and args.watch:
+        raise E2EError("RETENTION_FORCE_AND_WATCH_CONFLICT")
+    root = _batch_root(args)
+    config = AgentCubeConfig.load(args.agentcube_config)
+    while True:
+        result = reap(root, config, attempt_id=args.attempt_id, force=args.force)
+        if not args.watch or not any(value["status"] != "released" and
+                (not args.attempt_id or value["attempt_id"] == args.attempt_id) for value in BatchStore(root).retentions()):
+            return result
+        time.sleep(10)
 
 
 def _restore(args):
@@ -472,7 +496,7 @@ def main(argv=None) -> int:
             print(json.dumps({"type": "POC_INPUT_ERROR", "error": str(error)}, ensure_ascii=False))
             return 2
     handlers = {"run": _run, "resume": _resume, "rerun-case": _rerun_case, "execution-history": _execution_history,
-                "recover-native-terminal": _recover_native_terminal, "status": _status, "cleanup": _cleanup,
+                "recover-native-terminal": _recover_native_terminal, "status": _status, "cleanup": _cleanup, "retention-reap": _retention_reap,
                 "reconcile-absent-creation": _reconcile_absent_creation, "validate-preprocess": _validate_preprocess,
                 "restore": _restore, "export": _export, "import": _import, "pipeline": _pipeline, "headless-score": _headless_score, "desktop-score": _desktop_score, "general-report": _general_report,
                 **{name: _public_command for name in ("describe", "catalog", "preflight", "events", "artifacts", "environment-status", "inspect-preprocess-asset")}}

@@ -18,7 +18,7 @@ import zipfile
 
 from .agentcube import AgentCubeClient, AgentCubeConfig, PlatformError, validate_chatgpt_gateway
 from .artifacts import _members, _protect, copy_stream_readonly, inventory, quarantine_local_metadata, remove_temporary_tree
-from .common import E2EError, atomic_json, digest, file_sha256, identifier, inside, read_json, utc_now
+from .common import E2EError, atomic_json, digest, file_sha256, identifier, inside, read_json, redact, utc_now
 from .trace import normalize_rollout, windows_equal
 from . import preprocessing, windows_preprocess
 
@@ -230,7 +230,8 @@ class AStudioSandboxDriver:
     def preflight(self):
         if self.unit["model"].casefold().startswith(("custom/","third-party/")) or "://" in self.unit["model"]:
             raise E2EError("CUSTOM_TESTED_MODELS_NOT_SUPPORTED")
-        if self.config.required_expire_ttl(self.unit["timeout_override"]) > self.config.expire_ttl:
+        self.failure_retention_seconds = read_json(self.batch / "batch.json")["plan"].get("failure_retention_seconds", 0) if getattr(self, "batch", None) and (self.batch / "batch.json").is_file() else 0
+        if self.config.required_expire_ttl(self.unit["timeout_override"], failure_retention_seconds=self.failure_retention_seconds) > self.config.expire_ttl:
             raise E2EError("PLATFORM_TTL_TOO_SHORT_FOR_TIMEOUT: increase expire_ttl in AgentCube configuration")
         if (self.batch / "batch.json").is_file():
             self.preprocess_recipe = preprocessing.frozen_recipe(self.batch, self.unit["unit_id"], self.task["task_id"])
@@ -238,7 +239,7 @@ class AStudioSandboxDriver:
         bound = {**self.unit, "preprocessing": {"default": self.preprocess_recipe, "overrides": {},
                                                  "prompt_directives": {"default": self.prompt_directives["plugin_mentions"], "overrides": {}}}}
         if self.preprocess_recipe is not None and self.config.required_expire_ttl(
-                self.unit["timeout_override"], preprocessing.budget(bound)) > self.config.expire_ttl:
+                self.unit["timeout_override"], preprocessing.budget(bound), self.failure_retention_seconds) > self.config.expire_ttl:
             raise E2EError("PLATFORM_TTL_TOO_SHORT_FOR_TIMEOUT: increase expire_ttl in AgentCube configuration")
         for name, value in self.task.get("requirements", {}).items():
             if str(value).strip().casefold() not in {"", "none", "null", "n/a", "无", "{}", "[]"}:
@@ -603,6 +604,34 @@ try {
             raise E2EError("NATIVE_TRACE_INCOMPLETE: " + ",".join(binding["missing"]))
         return {"identity": identity, "report": report, "binding": binding, "native_path": str(native_path.relative_to(self.staging)),
                 "workspace": "collect/workspace", "cleanup": cleanup}
+
+    def capture_failure_scene(self):
+        """Best-effort desktop snapshot before quiescing the owned client tree."""
+        row = self.store.get(self.key)
+        if not row.get("session_id"):
+            return
+        remote = r"C:\Windows\Temp\wcb-failure-" + identifier(row["attempt_id"], "attempt_id") + ".png"
+        script = r"""$ErrorActionPreference='Stop'
+Add-Type -AssemblyName System.Windows.Forms
+Add-Type -AssemblyName System.Drawing
+$r=[Windows.Forms.Screen]::PrimaryScreen.Bounds
+$b=New-Object Drawing.Bitmap($r.Width,$r.Height)
+$g=[Drawing.Graphics]::FromImage($b)
+try{$g.CopyFromScreen($r.Location,[Drawing.Point]::Empty,$r.Size);$b.Save('__PATH__',[Drawing.Imaging.ImageFormat]::Png)}
+finally{$g.Dispose();$b.Dispose()}
+@{sha256=(Get-FileHash -LiteralPath '__PATH__' -Algorithm SHA256).Hash.ToLower();width=$r.Width;height=$r.Height}|ConvertTo-Json -Compress
+""".replace("__PATH__", remote)
+        try:
+            proof = json.loads(self.client.windows_execute(row["session_id"], powershell(script), timeout=30)["output"].strip().lstrip("\ufeff"))
+            data = self.client.windows_download(row["session_id"], remote)
+            if not data.startswith(b"\x89PNG\r\n\x1a\n") or hashlib.sha256(data).hexdigest() != proof["sha256"]:
+                raise E2EError("FAILURE_SCREENSHOT_TRANSFER_MISMATCH")
+            target = self.staging / "evidence/failure-screen.png"
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_bytes(data)
+            atomic_json(self.staging / "metadata/failure-screen.json", {**proof, "captured_at": utc_now(), "purpose": "debug-scene"})
+        except Exception as error:
+            atomic_json(self.staging / "metadata/failure-screen.json", {"status": "unavailable", "error": str(redact(str(error), self.config.auth_token))[:1000]})
 
     def salvage(self):
         row = self.store.get(self.key)

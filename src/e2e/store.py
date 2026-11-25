@@ -120,7 +120,59 @@ class BatchStore:
 
     def rows(self) -> list[dict]:
         with self.transaction() as db:
-            return [self._row(row) for row in db.execute("SELECT * FROM executions ORDER BY ordinal")]
+            return [self._with_retention(db, self._row(row)) for row in db.execute("SELECT * FROM executions ORDER BY ordinal")]
+
+    @staticmethod
+    def _retentions(db):
+        if not db.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='retained_sandboxes'").fetchone():
+            return []
+        return [json.loads(row[0]) for row in db.execute("SELECT data FROM retained_sandboxes ORDER BY rowid")]
+
+    def retentions(self):
+        with self.transaction() as db:
+            return self._retentions(db)
+
+    @classmethod
+    def _with_retention(cls, db, row):
+        from .retention import public_record
+        value = next((item for item in cls._retentions(db) if item["attempt_id"] == row.get("attempt_id")), None)
+        if value:
+            row = {**row, "sandbox_retention": public_record(value)}
+            if value["status"] == "released":
+                row["resource_held"] = False
+        return row
+
+    def retain_failure(self, key, value, **fields):
+        from .retention import public_record
+        with self.transaction() as db:
+            row = db.execute("SELECT * FROM executions WHERE key=?", (key,)).fetchone()
+            data = json.loads(row["data"])
+            if data["attempt_id"] != value["attempt_id"] or data.get("session_id") != value["session_id"]:
+                raise E2EError("RETENTION_EXECUTION_IDENTITY_MISMATCH")
+            db.execute("CREATE TABLE IF NOT EXISTS retained_sandboxes (attempt_id TEXT PRIMARY KEY,data TEXT NOT NULL)")
+            existing = db.execute("SELECT data FROM retained_sandboxes WHERE attempt_id=?", (value["attempt_id"],)).fetchone()
+            if existing:
+                return
+            db.execute("INSERT INTO retained_sandboxes VALUES (?,?)", (value["attempt_id"], json.dumps(value)))
+            data.update(fields, updated_at=utc_now())
+            db.execute("UPDATE executions SET phase='FAILED',resource_held=1,data=? WHERE key=?", (json.dumps(data), key))
+            db.execute("INSERT INTO events(at,kind,item_key,data) VALUES (?,?,?,?)",
+                       (utc_now(), "SANDBOX_RETAINED", key, json.dumps(public_record(value))))
+
+    def update_retention(self, attempt_id, **fields):
+        from .retention import public_record
+        with self.transaction() as db:
+            row = db.execute("SELECT data FROM retained_sandboxes WHERE attempt_id=?", (attempt_id,)).fetchone()
+            if not row:
+                raise E2EError("RETAINED_ATTEMPT_UNKNOWN")
+            value = {**json.loads(row[0]), **fields}
+            db.execute("UPDATE retained_sandboxes SET data=? WHERE attempt_id=?", (json.dumps(value), attempt_id))
+            current = db.execute("SELECT * FROM executions WHERE key=?", (value["execution_key"],)).fetchone()
+            if current and json.loads(current["data"])["attempt_id"] == attempt_id and value["status"] == "released":
+                db.execute("UPDATE executions SET resource_held=0 WHERE key=?", (value["execution_key"],))
+            db.execute("INSERT INTO events(at,kind,item_key,data) VALUES (?,?,?,?)",
+                       (utc_now(), "SANDBOX_RETENTION_UPDATED", value["execution_key"], json.dumps(public_record(value))))
+            return value
 
     @staticmethod
     def _row(row) -> dict:
@@ -131,7 +183,7 @@ class BatchStore:
             row = db.execute("SELECT * FROM executions WHERE key=?", (key,)).fetchone()
             if row is None:
                 raise E2EError("EXECUTION_KEY_UNKNOWN")
-            return self._row(row)
+            return self._with_retention(db, self._row(row))
 
     def versions(self, key: str | None = None) -> list[dict]:
         """Return immutable attempts without changing the active execution set."""
@@ -143,6 +195,8 @@ class BatchStore:
             if db.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='execution_history'").fetchone():
                 query = "SELECT data FROM execution_history" + (" WHERE key=?" if key is not None else "") + " ORDER BY version"
                 history = [json.loads(row[0]) for row in db.execute(query, (key,) if key is not None else ())]
+            history = [self._with_retention(db, row) for row in history]
+            current = [self._with_retention(db, row) for row in current]
         active = {row["key"]: row["attempt_id"] for row in current}
         return [{**row, "execution_version": row.get("execution_version", 1),
                  "is_final": active.get(row["key"]) == row["attempt_id"]}
@@ -194,7 +248,9 @@ class BatchStore:
                 if any(active.get(key) != value for key, value in receipt["attempts"].items()):
                     raise E2EError("RERUN_REQUEST_SUPERSEDED")
                 return {**receipt, "reused": True}
-            if any(row["resource_held"] or row["phase"] not in {"COMPLETED", "FAILED", "CANCELLED"} for row in rows):
+            from .retention import execution_held
+            rows = [self._with_retention(db, row) for row in rows]
+            if any(execution_held(row) or row["phase"] not in {"COMPLETED", "FAILED", "CANCELLED"} for row in rows):
                 raise E2EError("RERUN_REQUIRES_RELEASED_EXECUTIONS")
             case = [row for row in rows if row["unit_id"] == unit_id and row["task_id"] == task_id]
             if not case or set(rounds) - {row["run_index"] for row in case}:
@@ -350,6 +406,7 @@ class BatchStore:
         temporary.replace(target)
 
     def summary(self) -> dict:
+        from .retention import execution_held, public_record, HELD_STATES
         rows = self.rows()
         counts = {}
         for row in rows:
@@ -360,7 +417,13 @@ class BatchStore:
             metadata = dict(db.execute("SELECT key,value FROM metadata WHERE key IN ('pipeline_owner','pipeline_owner_lease')"))
         pipeline_owner = json.loads(metadata["pipeline_owner_lease"]) if metadata.get("pipeline_owner_lease") else (
             {"owner": metadata["pipeline_owner"]} if metadata.get("pipeline_owner") else None)
+        retained = [value for value in self.retentions() if value["status"] in HELD_STATES]
+        active_attempts = {row.get("attempt_id") for row in rows}
+        held = sum(row["resource_held"] for row in rows) + sum(value["attempt_id"] not in active_attempts for value in retained)
         return {"schema": "wildclawbench.e2e-batch-summary/v1", "executions": rows,
-                "phase_counts": counts, "resource_held": sum(row["resource_held"] for row in rows),
+                "phase_counts": counts, "resource_held": held,
+                "execution_resources_held": sum(execution_held(row) for row in rows),
+                "retained_sandboxes_held": len(retained),
+                "retained_sandboxes": [public_record(value) for value in self.retentions()],
                 "scoring": self.scoring_rows(), "observed_at": utc_now(),
                 "controllers": {"execution": _lease_status(execution_owner), "pipeline": _lease_status(pipeline_owner)}}

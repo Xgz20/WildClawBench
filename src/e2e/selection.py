@@ -97,7 +97,8 @@ def compose_results(batch: Path) -> dict:
     with controller_lock(batch, "scoring-queue"), controller_lock(batch, "selection"):
         items = store.rows()
         claims = {row["key"]: row for row in store.scoring_rows()}
-        if any(item["phase"] not in {"COMPLETED", "FAILED", "CANCELLED"} or item["resource_held"] for item in items):
+        from .retention import execution_held
+        if any(item["phase"] not in {"COMPLETED", "FAILED", "CANCELLED"} or execution_held(item) for item in items):
             raise E2EError("EXECUTION_SCOPE_NOT_TERMINAL")
         if any(row["phase"] not in {"SCORED", "FAILED"} for row in claims.values()):
             raise E2EError("SCORING_SCOPE_NOT_TERMINAL")
