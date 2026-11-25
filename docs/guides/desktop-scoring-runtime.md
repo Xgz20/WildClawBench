@@ -44,3 +44,20 @@ Web 桌面评分继续使用原生浏览器和原有 Node 工具链，不安装�
 
 部署需要发布包含本适配器的框架制品。已失败的评分操作及原执行回执不修改；更新后
 通过平台“重跑本轮评分”创建新的评分尝试，无需重跑原题执行。
+
+## Windows 评分回传至 Linux / macOS
+
+Windows ZIP 中的只读属性不能直接当作 POSIX 权限，通用解包也会为目录添加写权限。
+桌面评分器在控制端导入副本中重新封存 `candidate-original/`，并按冻结 manifest 的
+`private_scoring.workspace_entries` 恢复 GT 的精确权限，再调用原 Skill 的
+`verify-score --archived`。导入前后核对全部文件内容摘要；不改候选、GT、分数、规则、
+manifest 或评分审计，不取消只读校验，不让校验失败降级成有效评分。
+
+`scoring-verification.json` 记录权限恢复审计、校验工具、退出码、稳定错误码和限长的
+脱敏 stdout/stderr，通过评分日志入口预览或下载。错误提示同时提供稳定的具体原因；
+超时与工具不可用也会留下回执。该接收逻辑由 AStudio / ChatGPT 桌面评分共用，不修改
+原生 Codex 评分 Skill 或 Docker CLI 的评分逻辑。
+
+执行器修复不会自动升级旧批次的冻结 Skill。特别是 `0.29.4` 的报销 BOM 问题，需按
+[JSON BOM 兼容说明](general-json-bom.md) 使用新版评分 Skill；不能把回传校验通过
+解释为已升级评分口径。

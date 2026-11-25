@@ -515,9 +515,12 @@ class DesktopScoringTests(unittest.TestCase):
             context.mkdir()
             (context / "record.json").write_text("original", encoding="utf-8")
             (context / "rules.zip").write_bytes(b"fixture")
+            (returned / "candidate-original/workspace").mkdir(parents=True)
+            (returned / "private/gt").mkdir(parents=True)
             atomic_json(returned / "score.json", {"identity": {"attempt_id": "desk-scope"}, "judge": {"model": CONFIG["model"]},
                                                   "result": {"valid": True, "total_score": 0.7}})
             atomic_json(returned / "attempt-manifest.json", {
+                "paths": {"gt": "private/gt"}, "private_scoring": {"workspace_entries": []},
                 "source": {"execution_record_sha256": file_sha256(context / "record.json"),
                            "scoring_package_sha256": file_sha256(context / "rules.zip")},
                 "digests": {"execution_record_sha256": file_sha256(context / "record.json")},

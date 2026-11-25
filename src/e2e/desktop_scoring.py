@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from concurrent.futures import FIRST_COMPLETED, ThreadPoolExecutor, wait
 import json
+import os
 import re
 import shlex
 from pathlib import Path
@@ -20,7 +21,8 @@ from .backend import (
     AStudioSandboxDriver, ChatGPTDesktopSandboxDriver, GUEST_WORKSPACE, ObservationPaused,
     WGUI, powershell, read_astudio_native_model,
 )
-from .common import E2EError, atomic_json, digest, file_sha256, identifier, inside, read_json, utc_now
+from .common import E2EError, atomic_json, digest, file_sha256, identifier, inside, read_json, redact, utc_now
+from .desktop_score_import import restore_general_permissions
 from .desktop_web_evidence import verify_chatgpt_browser, verify_native_browser
 from .engine import load_batch
 from .handoff import export_scoring_context
@@ -411,8 +413,34 @@ def _verify_subscription_profile(config):
         raise E2EError("CHATGPT_SUBSCRIPTION_SCORING_PROFILE_NOT_PUBLISHED")
 
 
-def _run(argv, cwd):
-    result = subprocess.run([str(arg) for arg in argv], cwd=cwd, capture_output=True, timeout=180)
+def _run(argv, cwd, *, log=None):
+    command = [str(arg) for arg in argv]
+    try:
+        result = subprocess.run(command, cwd=cwd, capture_output=True, timeout=180)
+    except (subprocess.TimeoutExpired, OSError) as error:
+        code = ("DESKTOP_SCORING_VERIFICATION_TIMEOUT" if isinstance(error, subprocess.TimeoutExpired)
+                else "DESKTOP_SCORING_VERIFICATION_TOOL_UNAVAILABLE")
+        result = subprocess.CompletedProcess(command, -1, stdout=b"", stderr=json.dumps({"error": {"code": code}}).encode())
+    if log is not None:
+        secrets = [value for name, value in os.environ.items() if value and
+                   re.search(r"password|token|secret|api_?key", name, re.I)]
+        streams = {name: (getattr(result, name) or b"").decode("utf-8", errors="replace")
+                   for name in ("stdout", "stderr")}
+        code = None
+        for body in (streams["stderr"], streams["stdout"]):
+            try:
+                error = json.loads(body).get("error", {})
+                value = error.get("code") if isinstance(error, dict) else None
+                if isinstance(value, str) and re.fullmatch(r"[A-Z][A-Z0-9_]{1,99}", value):
+                    code = value
+                    break
+            except (ValueError, AttributeError):
+                pass
+        receipt = read_json(log) if log.is_file() else {}
+        streams = {name: redact(body, secrets)[:16384] for name, body in streams.items()}
+        receipt.setdefault("steps", []).append({"tool": Path(argv[1]).name, "exit_code": result.returncode,
+                                                "error_code": code, "occurred_at": utc_now(), **streams})
+        atomic_json(log, receipt)
     if result.returncode:
         raise E2EError("DESKTOP_SCORING_VERIFICATION_FAILED")
     return result.stdout
@@ -436,10 +464,12 @@ def _read_general(work, returned, context, attempt, model, *, needs_agent=True):
     for name in ("execution_record", "scoring_package"):
         if inputs.get(name + "_sha256") != file_sha256(inside(work / "context", context[name])):
             raise E2EError("DESKTOP_SCORING_GENERAL_SOURCE_DRIFT")
-    verified = json.loads(_run([sys.executable, skill, "verify-score", "--attempt-root", target, "--archived"], work))
+    log = work / "scoring-verification.json"
+    atomic_json(log, {"permission_restoration": restore_general_permissions(target)})
+    verified = json.loads(_run([sys.executable, skill, "verify-score", "--attempt-root", target, "--archived"], work, log=log))
     if verified.get("status") != "PASS":
         raise E2EError("DESKTOP_SCORING_VERIFICATION_NOT_PASS")
-    return target / "score.json", score["result"].get("total_score") if score["result"].get("valid") else None, verified, {}
+    return target / "score.json", score["result"].get("total_score") if score["result"].get("valid") else None, verified, {"log": log}
 
 
 def _build_web_on_guest(driver, package, skill):
@@ -533,7 +563,7 @@ def _read_web(work, returned, context, binding, driver, *, harness, model):
     skill = Path(context["installed_skills"]) / SKILLS["web"] / "scripts"
     score_path = private / "task_score.json"
     _run(["node", skill / "finalize_score.mjs", "--task-contract", private / "task_contract.json",
-          "--score-input", private / "score_input.json", "--output", score_path], source)
+          "--score-input", private / "score_input.json", "--output", score_path], source, log=work / "scoring-verification.json")
     package = inside(work / "context", context["unit_root"])
     _build_web_on_guest(driver, package, skill.parent)
     export = skill.parent.parent / "run-web-e2e/scripts/run_web_e2e.py"
@@ -541,13 +571,13 @@ def _read_web(work, returned, context, binding, driver, *, harness, model):
     if exported.is_dir():
         shutil.rmtree(exported)
     receipt = json.loads(_run([sys.executable, export, "export-return", "--package-root", package,
-                               "--output-dir", exported], work))
+                               "--output-dir", exported], work, log=work / "scoring-verification.json"))
     return_zip = inside(exported, Path(receipt["archive"]).name)
     if file_sha256(return_zip) != receipt["identity"]["archive"]["sha256"]:
         raise E2EError("DESKTOP_SCORING_WEB_RETURN_DRIFT")
     score = read_json(score_path)
     value = score.get("metrics", {}).get("total_score") if score.get("evaluation", {}).get("status") == "completed" else None
-    artifacts = {"submission": return_zip}
+    artifacts = {"submission": return_zip, "log": work / "scoring-verification.json"}
     evidence = private / "evidence"
     if evidence.is_dir():
         bundle = work / "browser-evidence.zip"
@@ -695,11 +725,11 @@ def _job(batch, item, config, agentcube, root, attempt, cancel):
                     extract_zip(archive, temporary)
                     temporary.rename(returned)
                 context = read_json(work / "context/handoff.json")
-                score, number, verification, _ = _read_general(work, returned, context, attempt, config["model"], needs_agent=False)
+                score, number, verification, other = _read_general(work, returned, context, attempt, config["model"], needs_agent=False)
                 row.update(status="valid" if number is not None else "evaluation_error", total_score=number,
                            score_path=str(score), score_sha256=file_sha256(score), verification=verification,
                            attempt_root=str(score.parent),
-                           artifacts=_artifacts(work, score=score, audit=driver.staging / "installation.json"))
+                           artifacts=_artifacts(work, score=score, audit=driver.staging / "installation.json", **other))
                 state.update(None, "release", result=row)
             else:
                 _record_agent_response(work, response, driver, row, attempt)
@@ -712,7 +742,14 @@ def _job(batch, item, config, agentcube, root, attempt, cancel):
     except (E2EError, OSError, ValueError, KeyError, subprocess.SubprocessError) as error:
         code = diagnostic_code(error, "DESKTOP_SCORING_EXECUTION_FAILED")
         row.update(status="evaluation_error", error=code)
-        if driver:
+        diagnostic = work / "scoring-verification.json"
+        if diagnostic.is_file():
+            row["artifacts"].update(_artifacts(work, log=diagnostic))
+            steps = read_json(diagnostic).get("steps", [])
+            if steps and steps[-1].get("error_code"):
+                row["failure_diagnostics"] = {"domain": "scoring_verification", "occurred_at": steps[-1]["occurred_at"],
+                    "message": "评分产物校验失败：" + steps[-1]["error_code"]}
+        elif driver:
             diagnostic = driver.staging / "metadata/scoring-runtime-steps.jsonl"
             if not diagnostic.is_file():
                 diagnostic = driver.staging / "metadata/scoring-install-failure.json"
