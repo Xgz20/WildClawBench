@@ -46,3 +46,10 @@ Linux 控制端实际为 Python 3.11.9 虚拟环境；同模板 Windows 探针�
 证据保存在服务器 `<WCB_E2E_OUTPUT_ROOT>/diagnostics/20261125-desktop-runtime*`。
 最终版本的 Windows 冷启动、规则评分和 Linux 回传校验仍待验收，不能将上述单项结果
 表述为完整 Windows 桌面评分验收通过。远程业务服务尚未部署本修复，原评分记录保留。
+
+## 后续 BOM 修复
+
+用户确认修复编码问题后，已在 `score-general-e2e 0.29.5` 登记精确、版本化的 BOM
+读取兼容，新尝试冻结修复 Profile；本页记录的原产物与诊断零分保留。
+实现及范围见 [JSON BOM 兼容说明](../guides/general-json-bom.md)。
+后续实机验收由用户手动执行，本轮不再创建沙箱或运行平台评测。

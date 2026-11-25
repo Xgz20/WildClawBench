@@ -495,3 +495,15 @@ _PROFILES['e2143d3977f9e0a9812134e6e891101b39471a806bacffc08e17ec947b0b5a3b'] = 
     ],
     'current_source_sha256': '7435dcfc89a3c650323ada70e291a4314de473c6fe3a35d9522ab9e57b408c6b',
 }
+
+
+_PROFILES['641db66b4245b9cbd97b959dacada889b48ce86e33312bc12a6db023bce85792'] = {
+    'task_id': '01_Productivity_Flow_task_001_expense_policy_check',
+    'profile': 'expense-policy-json-utf8-bom/v1',
+    'reason': '兼容候选JSON文件开头的单个UTF-8 BOM；不改候选字节、JSON内容、输入文件摘要、业务判定、容差或评分权重。',
+    'changes': [
+        ('result_path.read_text(encoding="utf-8")',
+         'result_path.read_text(encoding="utf-8-sig")'),
+    ],
+    'current_source_sha256': 'ff528beef73aa9bc7ef4cadba196cae09318bd34358d8a234dd56e617acef6c0',
+}

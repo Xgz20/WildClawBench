@@ -4,6 +4,7 @@ import json
 from pathlib import Path
 import tempfile
 import unittest
+from eval_general_e2e.datasets.source_history import dataset_task_path
 from unittest.mock import patch
 
 from src.utils import grading as legacy_grading
@@ -35,7 +36,7 @@ def local_fixture_executor(source: str, context: dict) -> dict:
 
 class GradingCoreTests(unittest.TestCase):
     def test_public_api_and_same_fixture_match_legacy_combiner(self) -> None:
-        self.assertEqual(CORE_VERSION, "0.16.0")
+        self.assertEqual(CORE_VERSION, "0.16.1")
         source = """
 def grade(transcript: list, workspace_path: str) -> dict:
     assert workspace_path == "/tmp_workspace"
@@ -132,7 +133,7 @@ def grade(transcript: list, workspace_path: str) -> dict:
         })
         for row in manifest["tasks"]:
             task_id = row["task_id"]
-            task = parse_task_md(REPO_ROOT / row["source"]["task_path"])
+            task = parse_task_md(dataset_task_path(REPO_ROOT, row["source"]["task_path"]))
             discovered = inspect_rule_dependencies(task["automated_checks"])
             expected = audit_by_task[task_id]["automated_checks"]
             with self.subTest(task_id=task_id):

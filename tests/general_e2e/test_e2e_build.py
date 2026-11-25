@@ -517,8 +517,11 @@ import json
 import sys
 sys.path.insert(0, sys.argv[1])
 import wildclawbench_grading_core as core
+from wildclawbench_grading_core.source_repairs import profile_entry
 payload = core.inspect_rule_dependencies('import yaml\\nimport playwright.sync_api\\nfrom PIL import Image')
-print(json.dumps({'version': core.CORE_VERSION, 'external': payload['external'], 'marker_api': callable(core.prepare_xlsx_marker_intervention) and callable(core.verify_xlsx_marker_intervention), 'numeric_api': callable(core.prepare_xlsx_numeric_intervention) and callable(core.verify_xlsx_numeric_intervention), 'html_api': all(callable(getattr(core,n)) for n in ['create_html_lock','validate_html_lock','html_lock_digest','observe_html','verify_html_observation'])}))
+result = {'version': core.CORE_VERSION, 'external': payload['external'], 'marker_api': callable(core.prepare_xlsx_marker_intervention) and callable(core.verify_xlsx_marker_intervention), 'numeric_api': callable(core.prepare_xlsx_numeric_intervention) and callable(core.verify_xlsx_numeric_intervention), 'html_api': all(callable(getattr(core,n)) for n in ['create_html_lock','validate_html_lock','html_lock_digest','observe_html','verify_html_observation'])}
+result['bom_profile'] = profile_entry('641db66b4245b9cbd97b959dacada889b48ce86e33312bc12a6db023bce85792')['profile']
+print(json.dumps(result))
 """
         completed = subprocess.run(
             [sys.executable, "-I", "-c", source, str(vendor_parent)],
@@ -530,7 +533,8 @@ print(json.dumps({'version': core.CORE_VERSION, 'external': payload['external'],
         )
         self.assertEqual(completed.returncode, 0, completed.stderr)
         payload = json.loads(completed.stdout)
-        self.assertEqual(payload["version"], "0.16.0")
+        self.assertEqual(payload["version"], "0.16.1")
+        self.assertEqual(payload["bom_profile"], "expense-policy-json-utf8-bom/v1")
         self.assertTrue(payload["marker_api"])
         self.assertTrue(payload["numeric_api"])
         self.assertTrue(payload["html_api"])
