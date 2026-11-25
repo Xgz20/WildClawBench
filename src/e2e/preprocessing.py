@@ -14,6 +14,8 @@ from .common import E2EError, digest, file_sha256, identifier, read_json
 
 CAPABILITY = "windows-environment-preprocessing"
 PROMPT_CAPABILITY = "execution-prompt-plugin-mentions-v1"
+INDEPENDENT_PROMPT_CAPABILITY = "execution-independent-plugin-mentions-v1"
+PLUGIN_VALIDATION = "installed-plugin-v1"
 KINDS = {"skill", "plugin", "acode", "powershell"}
 PROMPT_DIRECTIVE_KEYS = {"default", "overrides"}
 EXE = "acode-windows-x64.exe"
@@ -260,7 +262,7 @@ def prompt_directives(unit, task_id):
     return {"plugin_mentions": list(mentions)}
 
 
-def augment_prompt(prompt, directives, recipe):
+def augment_prompt(prompt, directives, recipe, *, scene="web"):
     """Create a deterministic per-unit Prompt without mutating the source task."""
     if not isinstance(prompt, str) or not isinstance(directives, dict):
         raise E2EError("PREPROCESS_PROMPT_INVALID")
@@ -271,11 +273,10 @@ def augment_prompt(prompt, directives, recipe):
         return prompt, {"plugin_mentions": [], "changed": False,
                          "base_prompt_sha256": file_sha256_bytes(prompt.encode("utf-8")),
                          "effective_prompt_sha256": file_sha256_bytes(prompt.encode("utf-8"))}
-    targets = {step["target"] for step in (recipe or {}).get("steps", []) if step["kind"] == "plugin"}
-    missing = [name for name in mentions if name not in targets]
-    if missing:
-        raise E2EError("PREPROCESS_PROMPT_PLUGIN_NOT_AVAILABLE: " + ",".join(missing))
-    block = "\n\n[评测环境插件]\n" + "\n".join("可用 Web 插件：@" + name for name in mentions) + "\n"
+    # Availability is checked in the actual sandbox after environment preparation.
+    # A Prompt may name a preinstalled plugin without replacing any files.
+    label = "可用 Web 插件：@" if scene == "web" else "可用插件：@"
+    block = "\n\n[评测环境插件]\n" + "\n".join(label + name for name in mentions) + "\n"
     effective = prompt + block
     return effective, {"plugin_mentions": list(mentions), "changed": True,
                        "base_prompt_sha256": file_sha256_bytes(prompt.encode("utf-8")),
@@ -294,6 +295,8 @@ def _validate_prompt_directives(unit, task_ids):
         return
     if set(raw["overrides"]) - set(task_ids):
         raise E2EError("PREPROCESS_PROMPT_OVERRIDE_OUTSIDE_SELECTION")
+    if binding.get("prompt_plugin_validation") == PLUGIN_VALIDATION:
+        return
     recipes_by_task = {task_id: effective(unit, task_id) for task_id in task_ids}
     for task_id, directives in ((task_id, prompt_directives(unit, task_id)) for task_id in task_ids):
         targets = {step["target"] for step in (recipes_by_task[task_id] or {}).get("steps", [])
@@ -322,7 +325,7 @@ def execution_prompt(source, base, metadata=None):
 
 
 def normalize_binding(raw, harness):
-    if not isinstance(raw, dict) or set(raw) - {"default", "overrides", "prompt_directives"} \
+    if not isinstance(raw, dict) or set(raw) - {"default", "overrides", "prompt_directives", "prompt_plugin_validation"} \
             or set(raw) & {"default", "overrides"} != {"default", "overrides"} \
             or not isinstance(raw["overrides"], dict):
         raise E2EError("PREPROCESS_BINDING_INVALID")
@@ -330,11 +333,15 @@ def normalize_binding(raw, harness):
     overrides = {identifier(task, "task_id"): None if value is None else normalize_recipe(value, harness)
                  for task, value in raw["overrides"].items()}
     result = {"default": default, "overrides": overrides}
+    if raw.get("prompt_plugin_validation") not in {None, PLUGIN_VALIDATION}:
+        raise E2EError("PROMPT_PLUGIN_VALIDATION_UNSUPPORTED")
     if "prompt_directives" in raw:
         result["prompt_directives"] = _normalize_prompt_directives(raw["prompt_directives"])
         if harness != "astronstudio" and any([result["prompt_directives"]["default"],
                                               *result["prompt_directives"]["overrides"].values()]):
             raise E2EError("PREPROCESS_PROMPT_REQUIRES_ASTUDIO")
+        if any([result["prompt_directives"]["default"], *result["prompt_directives"]["overrides"].values()]):
+            result["prompt_plugin_validation"] = PLUGIN_VALIDATION
     return result
 
 
@@ -381,6 +388,19 @@ def frozen_prompt_directives(batch, unit_id, task_id):
     return prompt_directives({"preprocessing": bindings.get(unit_id)}, task_id)
 
 
+def requires_plugin_witness(batch, unit_id):
+    expected = read_json(batch / "batch.json").get("preprocessing_bindings_sha256")
+    if not expected:
+        return False
+    bindings = read_json(batch / "preprocessing.json")
+    if digest(bindings) != expected:
+        raise E2EError("PREPROCESS_BINDINGS_DRIFT")
+    policy = (bindings.get(unit_id) or {}).get("prompt_plugin_validation")
+    if policy not in {None, PLUGIN_VALIDATION}:
+        raise E2EError("PROMPT_PLUGIN_VALIDATION_UNSUPPORTED")
+    return policy == PLUGIN_VALIDATION
+
+
 def selection(units, tasks):
     rows = []
     ids = [task["task_id"] for task in tasks]
@@ -391,7 +411,7 @@ def selection(units, tasks):
         if set(unit["preprocessing"]["overrides"]) - all_ids:
             raise E2EError("PREPROCESS_OVERRIDE_OUTSIDE_SELECTION")
         _validate_prompt_directives(unit, ids)
-        if any(prompt_directives(unit, task["task_id"])["plugin_mentions"] and task.get("scene", "web") != "web"
+        if unit['preprocessing'].get('prompt_plugin_validation') != PLUGIN_VALIDATION and any(prompt_directives(unit, task["task_id"])["plugin_mentions"] and task.get("scene", "web") != "web"
                for task in tasks):
             raise E2EError("PREPROCESS_PROMPT_WEB_ONLY")
         rows.append({"unit_index": index, "unit_id": unit["unit_id"],
@@ -426,5 +446,7 @@ def checked_asset(path, ref):
 
 
 def budget(unit):
-    return max((sum(step["timeout"] + 40 + TRANSFER_TIMEOUT for step in recipe["steps"])
-                for recipe in recipes(unit)), default=0)
+    binding = unit.get("preprocessing") or {}
+    witness = 2 * 105 + TRANSFER_TIMEOUT + 40 if binding.get("prompt_plugin_validation") == PLUGIN_VALIDATION else 0
+    return witness + max((sum(step["timeout"] + 40 + TRANSFER_TIMEOUT for step in recipe["steps"])
+                          for recipe in recipes(unit)), default=0)

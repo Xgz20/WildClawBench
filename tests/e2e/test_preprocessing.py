@@ -226,9 +226,10 @@ class PreprocessingTests(unittest.TestCase):
         self.assertTrue(metadata["changed"])
         self.assertNotEqual(metadata["base_prompt_sha256"], metadata["effective_prompt_sha256"])
 
-    def test_prompt_plugin_requires_a_matching_plugin_recipe(self):
-        with self.assertRaisesRegex(E2EError, "PROMPT_PLUGIN_NOT_AVAILABLE"):
-            augment_prompt("任务", {"plugin_mentions": ["sites-skills"]}, None)
+    def test_prompt_plugin_can_reference_an_existing_plugin_without_a_recipe(self):
+        prompt, metadata = augment_prompt("任务", {"plugin_mentions": ["sites-skills"]}, None)
+        self.assertIn('@sites-skills', prompt)
+        self.assertTrue(metadata['changed'])
 
     def test_resume_observes_existing_step_and_failure_records_no_script_output(self):
         with tempfile.TemporaryDirectory() as directory:

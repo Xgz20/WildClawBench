@@ -114,6 +114,14 @@
                 "additionalProperties": {
                   "$ref": "#/definitions/preprocessingRecipe"
                 }
+              },
+              "prompt_directives": {
+                "$ref": "#/definitions/promptDirectives"
+              },
+              "prompt_plugin_validation": {
+                "enum": [
+                  "installed-plugin-v1"
+                ]
               }
             },
             "additionalProperties": false
@@ -122,6 +130,16 @@
             "type": [
               "string",
               "null"
+            ]
+          },
+          "prompt_directives": {
+            "anyOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/definitions/promptDirectives"
+              }
             ]
           }
         },
@@ -202,6 +220,37 @@
                 "minimum": 10,
                 "maximum": 600
               }
+            }
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "promptDirectives": {
+      "type": "object",
+      "required": [
+        "default",
+        "overrides"
+      ],
+      "properties": {
+        "default": {
+          "type": "array",
+          "maxItems": 12,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,119}$"
+          }
+        },
+        "overrides": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "array",
+            "maxItems": 12,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,119}$"
             }
           }
         }

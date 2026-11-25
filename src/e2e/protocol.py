@@ -86,6 +86,7 @@ def describe(repo: Path) -> dict:
             "windows-astudio-runtime-bootstrap",
             preprocessing.CAPABILITY,
             preprocessing.PROMPT_CAPABILITY,
+            preprocessing.INDEPENDENT_PROMPT_CAPABILITY,
             "windows-preprocess-validation",
             "managed-preprocess-validation-template-v1",
             "execution",
@@ -520,6 +521,7 @@ def snapshot(batch: Path, *, execution_rows=None) -> dict:
                 "session_id": row.get("session_id"),
                 "error": error,
                 **({"preprocessing": row["preprocess_receipt"]} if row.get("preprocess_receipt") else {}),
+                **({"prompt_plugins": row["prompt_plugin_witness"]} if row.get("prompt_plugin_witness") else {}),
                 **({"prompt": {key: value for key, value in row["prompt"].items()
                                if key in {"changed", "plugin_mentions", "base_prompt_sha256", "effective_prompt_sha256"}}}
                    if row.get("prompt") else {}),
