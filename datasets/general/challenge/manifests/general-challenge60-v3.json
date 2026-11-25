@@ -2,8 +2,8 @@
   "bundle_protocol": "general-e2e-package-v1",
   "contract_version": "general-e2e-contract-v1",
   "created_at": "2026-11-20T00:00:00+08:00",
-  "dataset_digest": "6c3334c98b8ddb347252973f7923c70a2d37b0b8aa6228c39b6e1a6b75c491c5",
-  "dataset_id": "general-challenge-v3",
+  "dataset_digest": "d96ee8714276aa49f5d3e11b2529047d16368d032041a3b470a0b49459983c5f",
+  "dataset_id": "general-challenge60-v3",
   "digest_algorithm": "wildclawbench.dataset-manifest-sha256/v1",
   "generated_by": "eval_general_e2e.datasets.bundle/1",
   "schema": {
@@ -33,7 +33,7 @@
       "datasets/general/challenge/dataset.yaml"
     ],
     "task_registry_path": "provenance/task_sources.yaml",
-    "task_registry_sha256": "d96f60df85e484f94e4b09490f029a3117a075307bc93c5ffcef3f082bc12b47"
+    "task_registry_sha256": "50d8b54037047c72ca4ad6e33dad159559b8fedd8404ec3fee7be61c7a0a4318"
   },
   "statistics": {
     "category_counts": {

@@ -41,12 +41,12 @@ category_directories:
   05_Software_Engineering: software_engineering
   06_Planning_Coordination: planning_coordination
   07_Content_Operations: content_operations
-default_release: general-challenge-v3
+default_release: general-challenge60-v3
 releases:
-  general-challenge-v3:
+  general-challenge60-v3:
     status: frozen
     created_at: '2026-11-20T00:00:00+08:00'
-    manifest: datasets/general/challenge/manifests/general-challenge-v3.json
+    manifest: datasets/general/challenge/manifests/general-challenge60-v3.json
     task_ids:
     - 01_Office_Documents_task_001_policy_crosswalk
     - 01_Office_Documents_task_002_meeting_decision_repair

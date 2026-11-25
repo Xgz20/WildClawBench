@@ -462,7 +462,7 @@ class RegisteredSourceContractTests(unittest.TestCase):
         registered = load_registered_dataset(REPO_ROOT, "general-challenge")
         definition = registered.definition
         self.assertEqual(registered.status, "frozen")
-        self.assertEqual(definition.dataset_id, "general-challenge-v3")
+        self.assertEqual(definition.dataset_id, "general-challenge60-v3")
         self.assertEqual(definition.task_ids, tuple(aliases[task["task_id"]] for task in source["tasks"]))
         self.assertEqual(definition.include_tags, ("custom", "general-challenge"))
         self.assertEqual(definition.expected_task_count, 60)

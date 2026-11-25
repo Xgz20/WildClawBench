@@ -31,7 +31,12 @@ def dataset_task_paths(repo: Path, dataset_id: str, *, materialize_root: Path | 
                           'general-custom70-v4', 'general-custom70-v5', 'general-custom70-v6'}:
         raise ValueError("UNSUPPORTED_CLI_DATASET")
     definition = DATASETS[dataset_id]
-    manifest, members = compile_dataset(repo, definition=definition)
+    if ((repo / ".wildclawbench-assets/index.json").is_file()
+            or (repo / ".wildclawbench-revision").is_file()):
+        from src.e2e.dataset_assets import frozen_dataset
+        manifest, members = frozen_dataset(repo, dataset_id)
+    else:
+        manifest, members = compile_dataset(repo, definition=definition)
     if manifest != load_manifest_lock(dataset_manifest_path(dataset_id)):
         raise ValueError("CLI_DATASET_SOURCE_DRIFT: rebuild a reviewed dataset version before dispatch")
     historical = dataset_id in load_layout(repo).get("historical_releases", ())

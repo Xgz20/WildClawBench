@@ -156,12 +156,6 @@ def describe(repo: Path) -> dict:
 
 def catalog(repo: Path, scenario: str = "general", dataset: str | None = None,
             library_dataset: str | None = None) -> dict:
-    from eval_general_e2e.datasets.bundle import (
-        DATASETS,
-        dataset_manifest_path,
-        load_manifest_lock,
-    )
-
     if library_dataset:
         from src.case_catalog import index
         group = index(repo, library_dataset, dataset)["datasets"][0]
@@ -172,9 +166,9 @@ def catalog(repo: Path, scenario: str = "general", dataset: str | None = None,
                 "categories": [{"id": key, "count": value} for key, value in categories.items()],
                 "profiles": profiles()}
 
+    from .dataset_assets import maintained_releases
     datasets = []
-    for dataset_id in DATASETS:
-        manifest = load_manifest_lock(dataset_manifest_path(dataset_id))
+    for dataset_id, manifest in maintained_releases(repo).items():
         datasets.append(
             {
                 "id": dataset_id,

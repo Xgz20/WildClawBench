@@ -318,27 +318,13 @@ def _adapt_imported_contract(contract: dict[str, Any]) -> None:
     }
 
 
-def _derive_source_revision(repo_root: Path, scope: Sequence[str] = ("tasks/extension", "workspace/extension")) -> str:
-    completed = subprocess.run(
-        [
-            "git",
-            "log",
-            "-1",
-            "--format=%H",
-            "--",
-            *scope,
-        ],
-        cwd=repo_root,
-        check=False,
-        capture_output=True,
-        text=True,
-    )
-    revision = completed.stdout.strip()
-    if completed.returncode != 0 or not re.fullmatch(r"[0-9a-f]{40}", revision):
-        raise ValueError(
-            "unable to derive source revision; pass source_revision explicitly"
-        )
-    return revision
+def _content_revision(tasks: list[dict], registry: bytes, schema: bytes) -> str:
+    """Identify selected task bytes, materials and contracts without Git history."""
+    return "sha256:" + _canonical_sha256({
+        "tasks": tasks,
+        "task_registry_sha256": _sha256_bytes(registry),
+        "schema_sha256": _sha256_bytes(schema),
+    })
 
 
 def _assert_expected_statistics(
@@ -686,7 +672,7 @@ def _compile_source_tree(
         "timeout_counts": dict(sorted(timeout_counts.items(), key=lambda item: int(item[0]))),
     }
     _assert_expected_statistics(statistics, definition)
-    revision = source_revision or definition.source_revision or _derive_source_revision(repo_root, definition.revision_scope)
+    revision = source_revision or definition.source_revision or _content_revision(task_records, registry_bytes, schema_bytes)
     manifest: dict[str, Any] = {
         "schema_id": SCHEMA_ID,
         "schema_version": SCHEMA_VERSION,

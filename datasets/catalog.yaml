@@ -39,11 +39,6 @@ datasets:
     kind: alias
     default_release: general-custom70-v6
     releases:
-    - general-custom116-v1
-    - general-custom70-v2
-    - general-custom70-v3
-    - general-custom70-v4
-    - general-custom70-v5
     - general-custom70-v6
   general-challenge:
     definition: datasets/general/challenge/dataset.yaml

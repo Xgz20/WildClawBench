@@ -22,7 +22,8 @@ from tools.report.lib.eval_dataset.selectors import select_task_files
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-CHALLENGE_MANIFEST_SHA256 = "9d29be72598a9d002a25ac4f8435ac18714a3b1343072f3e389810523350b78d"
+# Renaming the release also changes the identity in its registry projection.
+CHALLENGE_MANIFEST_SHA256 = "f3fdd9dc48347c2d0b7e850faa4443bce4be2ded3d62026dc20a3bdb45f1b833"
 
 
 class DatasetIntegrationTests(unittest.TestCase):
@@ -49,7 +50,7 @@ class DatasetIntegrationTests(unittest.TestCase):
                     load_registered_dataset(REPO_ROOT, dataset_id, release_id="general-hard-v1")
 
     def test_explicit_selections_keep_logical_paths_and_exact_release_membership(self) -> None:
-        for dataset_id in (*DATASETS, "general-challenge-v3"):
+        for dataset_id in (*DATASETS, "general-challenge60-v3"):
             with self.subTest(dataset_id=dataset_id):
                 registered = load_registered_dataset(REPO_ROOT, dataset_id)
                 result = select_task_files(REPO_ROOT, dataset_id=dataset_id)
@@ -64,8 +65,8 @@ class DatasetIntegrationTests(unittest.TestCase):
 
     def test_challenge_catalog_exposes_only_the_numbered_release(self) -> None:
         selected = load_registered_dataset(REPO_ROOT, "general-challenge")
-        self.assertEqual(selected.definition.dataset_id, "general-challenge-v3")
-        self.assertEqual(selected, load_registered_dataset(REPO_ROOT, "general-challenge-v3"))
+        self.assertEqual(selected.definition.dataset_id, "general-challenge60-v3")
+        self.assertEqual(selected, load_registered_dataset(REPO_ROOT, "general-challenge60-v3"))
         for retired in ("general-hard", "general-hard-v1", "general-challenge-v2"):
             with self.subTest(retired=retired), self.assertRaises(CatalogError):
                 load_registered_dataset(REPO_ROOT, retired)
@@ -131,11 +132,11 @@ class DatasetIntegrationTests(unittest.TestCase):
             self.assertEqual(bundle.main(["build", "--repo-root", str(REPO_ROOT), "--dataset", "general-custom70-v2"]), 0)
         self.assertIs(legacy.call_args.kwargs["definition"], DATASETS["general-custom70-v2"])
         with patch.object(bundle, "build_registered_bundle", return_value=result) as registered, redirect_stdout(io.StringIO()):
-            self.assertEqual(bundle.main(["build", "--repo-root", str(REPO_ROOT), "--dataset-id", "general-challenge", "--release-id", "general-challenge-v3"]), 0)
+            self.assertEqual(bundle.main(["build", "--repo-root", str(REPO_ROOT), "--dataset-id", "general-challenge", "--release-id", "general-challenge60-v3"]), 0)
         self.assertEqual(registered.call_args.args[1], "general-challenge")
-        self.assertEqual(registered.call_args.kwargs["release_id"], "general-challenge-v3")
+        self.assertEqual(registered.call_args.kwargs["release_id"], "general-challenge60-v3")
         for command in (["build", "--dataset", "general-custom70-v2", "--dataset-id", "general-challenge"],
-                        ["build", "--release-id", "general-challenge-v3"],
+                        ["build", "--release-id", "general-challenge60-v3"],
                         ["build", "--dataset-id", "general-challenge", "--manifest", "another.json"]):
             with self.subTest(command=command), redirect_stderr(io.StringIO()), self.assertRaises(SystemExit) as stopped:
                 bundle.main(command)
@@ -146,7 +147,7 @@ class FrozenDatasetCompilationTests(unittest.TestCase):
     def test_all_builtin_and_challenge_releases_match_their_original_locks(self) -> None:
         # This matrix intentionally compiles one release at a time. Keep it out
         # of parallel test invocations: some products include large workspaces.
-        for dataset_id in (*DATASETS, "general-challenge-v3"):
+        for dataset_id in (*DATASETS, "general-challenge60-v3"):
             with self.subTest(dataset_id=dataset_id):
                 registered = load_registered_dataset(REPO_ROOT, dataset_id)
                 locked = bundle.load_manifest_lock(registered.manifest_path)

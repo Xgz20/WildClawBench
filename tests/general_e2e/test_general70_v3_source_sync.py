@@ -33,7 +33,7 @@ class General70V3SourceSyncTests(unittest.TestCase):
                 task=parse_task_md(path)
                 self.assertEqual(task['automated_checks'],old[task['task_id']]['automated_checks'])
     def test_frozen_revisions_do_not_follow_later_git_source_commits(self):
-        with patch('eval_general_e2e.datasets.bundle._derive_source_revision',side_effect=AssertionError('must use the explicit source revision')):
+        with patch('eval_general_e2e.datasets.bundle._content_revision',side_effect=AssertionError('must use the explicit source revision')):
             for definition in [GENERAL70_V2_DEFINITION,GENERAL70_V3_DEFINITION]:
                 manifest,_=compile_dataset(REPO_ROOT,definition=definition)
                 self.assertEqual(manifest,load_manifest_lock(dataset_manifest_path(definition.dataset_id)))

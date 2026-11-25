@@ -6,7 +6,6 @@ import io
 import json
 import re
 from pathlib import Path
-import os
 import shutil
 import sys
 import uuid
@@ -28,23 +27,8 @@ def canonical_script(repo: Path, scene: str, skill: str, script: str):
 
 
 def _general_catalog(repo: Path, dataset: str):
-    from eval_general_e2e.datasets.bundle import DATASETS, compile_dataset, dataset_manifest_path, load_manifest_lock
-    if dataset in DATASETS:
-        manifest, members = compile_dataset(repo, definition=DATASETS[dataset])
-        locked = load_manifest_lock(dataset_manifest_path(dataset))
-    else:
-        from eval_general_e2e.datasets.catalog import load_registered_dataset
-        try:
-            registered = load_registered_dataset(repo, dataset)
-        except (OSError, ValueError) as exc:
-            raise E2EError("GENERAL_DATASET_UNKNOWN") from exc
-        if registered.status != "frozen":
-            raise E2EError("GENERAL_DATASET_NOT_FROZEN")
-        locked = load_manifest_lock(registered.manifest_path)
-        manifest, members = compile_dataset(repo, definition=registered.definition,
-                                            source_revision=locked["source"]["revision"])
-    if manifest != locked:
-        raise E2EError("GENERAL_DATASET_SOURCE_DRIFT")
+    from .dataset_assets import frozen_dataset
+    manifest, members = frozen_dataset(repo, dataset)
     tasks = []
     for task in manifest["tasks"]:
         tasks.append({**task, "scene": "general", "metric_profile": "general-e2e-contract-v1",
@@ -448,25 +432,5 @@ def prepare_batch(repo: Path, workspace: Path, raw_plan: dict, *, expected_selec
 
 
 def _revision(repo: Path) -> str:
-    # CI/CD framework artifacts intentionally omit .git. The deployment pipeline
-    # records the checked-out commit in WCB_E2E_REVISION so describe/resume still
-    # exposes a stable provenance value inside the read-only release directory.
-    configured = os.environ.get("WCB_E2E_REVISION", "").strip()
-    if not configured:
-        marker = repo / ".wildclawbench-revision"
-        if marker.is_file():
-            configured = marker.read_text(encoding="utf-8").strip()
-    if configured:
-        if not re.fullmatch(r"[0-9a-fA-F]{40}", configured):
-            raise ValueError("WCB_E2E_REVISION_INVALID")
-        return configured.lower()
-
-    import subprocess
-
-    return subprocess.run(
-        ["git", "rev-parse", "HEAD"],
-        cwd=repo,
-        capture_output=True,
-        text=True,
-        check=True,
-    ).stdout.strip()
+    from src.release import release_revision
+    return release_revision(repo)

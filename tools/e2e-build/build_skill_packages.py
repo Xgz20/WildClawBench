@@ -109,17 +109,12 @@ def tree_content_sha256(root: Path) -> str:
 
 
 def git_revision(repo_root: Path) -> str:
-    completed = subprocess.run(
-        ["git", "rev-parse", "HEAD"],
-        cwd=repo_root,
-        check=False,
-        capture_output=True,
-        text=True,
-    )
-    revision = completed.stdout.strip()
-    if completed.returncode != 0 or not GIT_REVISION_RE.fullmatch(revision):
-        raise BuildError("SOURCE_REVISION_UNAVAILABLE")
-    return revision
+    # Keep this standalone build tool usable outside a Python package install.
+    reader = runpy.run_path(str(repo_root / "src/release.py"))["release_revision"]
+    try:
+        return reader(repo_root)
+    except (OSError, ValueError, subprocess.CalledProcessError) as exc:
+        raise BuildError("SOURCE_REVISION_UNAVAILABLE") from exc
 
 
 def _validate_relative_path(value: object, field: str) -> str:

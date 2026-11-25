@@ -17,6 +17,7 @@ from .definition import DATASETS, DEFAULT_DEFINITION, DatasetDefinition
 
 ID_RE = re.compile(r"^[a-z0-9][a-z0-9._-]*$")
 TASK_ID_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_]*_task_[0-9]{3,}_[a-z0-9_]+$")
+SOURCE_REVISION_RE = re.compile(r"^(?:[0-9a-f]{40}|sha256:[0-9a-f]{64})$")
 
 
 class CatalogError(ValueError):
@@ -262,7 +263,7 @@ def _family_release(root: Path, series_id: str, path: Path, release_id: str | No
         except (OSError, ValueError) as exc:
             raise CatalogError("frozen release manifest is missing or invalid") from exc
         revision = (locked.get("source") or {}).get("revision")
-        if locked.get("dataset_id") != selected or not isinstance(revision, str) or not re.fullmatch(r"[0-9a-f]{40}", revision):
+        if locked.get("dataset_id") != selected or not isinstance(revision, str) or not SOURCE_REVISION_RE.fullmatch(revision):
             raise CatalogError("frozen release manifest identity/source revision mismatch")
         definition = replace(definition, source_revision=revision)
     return RegisteredDataset(series_id, definition, path, manifest, status)

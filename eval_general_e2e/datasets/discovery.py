@@ -31,10 +31,16 @@ def discover_frozen_tasks(
         raise ValueError("dataset execution requires a frozen release; building/ready sources are not runnable as a release")
     manifest = load_manifest_lock(registered.manifest_path)
     _validate_manifest(manifest)
-    compiled, members = compile_dataset(root, definition=registered.definition, source_revision=manifest["source"]["revision"])
+    published = ((root / ".wildclawbench-assets/index.json").is_file()
+                 or (root / ".wildclawbench-revision").is_file())
+    if published:
+        from src.e2e.dataset_assets import frozen_dataset
+        compiled, members = frozen_dataset(root, registered.definition.dataset_id)
+    else:
+        compiled, members = compile_dataset(root, definition=registered.definition, source_revision=manifest["source"]["revision"])
     if compiled != manifest:
         raise ValueError("dataset sources differ from the frozen manifest; publish a new release")
-    historical = archived_source_revision(root, manifest["dataset_id"]) is not None
+    historical = published or archived_source_revision(root, manifest["dataset_id"]) is not None
     frozen_root = (materialize_verified_workspaces(manifest, members, workspace_cache, include_task_files=historical)
                    if workspace_cache is not None else None)
     identity = {"series_id": registered.series_id, "release_id": registered.definition.dataset_id,

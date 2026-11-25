@@ -107,12 +107,12 @@ def releases(repo: Path, entry: dict) -> list[dict]:
     definition = catalog[series]
     if definition.get("kind") == "alias":
         default = definition["default_release"]
-        paths = {key: catalog[key]["manifest"] for key in definition["releases"]}
+        paths = {default: catalog[default]["manifest"]}
     else:
         definition = load_mapping(repository_path(repo, definition["definition"], label="dataset definition"))
         default = definition["default_release"]
-        paths = {key: item["manifest"] for key, item in definition["releases"].items()
-                 if item["status"] == "frozen"}
+        release = definition["releases"][default]
+        paths = {default: release["manifest"]} if release["status"] == "frozen" else {}
     return [{"id": key, "recommended": key == default,
              "manifest": load_manifest_lock(repository_path(repo, path, label="dataset manifest"))}
             for key, path in reversed(list(paths.items()))]

@@ -46,6 +46,7 @@ output_qwen/
 output*/
 eval_out_debug
 .cache/
+.wildclawbench-assets/
 .hfd/
 hfd.sh
 grocery/

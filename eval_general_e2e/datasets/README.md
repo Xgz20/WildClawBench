@@ -1,18 +1,22 @@
 # General E2E 数据集包
 
 当前题面在 `tasks/general/{regression,work,challenge}/`，素材在对应的 `workspace/general/`。
-目录迁移保留旧60题和70题的冻结 ID、清单及评分身份。旧版本从
-`datasets/layout.json` 指定的迁移前 Git 提交及当时的题源快照重建。浅克隆需要先获取对应历史。
+平台新任务只提供各系列的最终冻结版本：基础60题、真实工作70题 v6、通用挑战60题 v3。
+普通手动选题使用内容 SHA256，不读取 Git 日志。CI 预构建最终冻结集的完整数据包，
+服务器直接验包读取，不携带 Git 历史或旧版题源快照。
+构建、退役规则和批次恢复边界见[发行说明](../../docs/guides/e2e-release-datasets.md)。
 
 新批次可以按系列选择冻结版本。例如，明确选用基础60题、真实工作70题 v6 和挑战60题 v3：
 
 ```bash
 python -m eval_general_e2e.datasets.bundle build --dataset-id general-regression --release-id general-custom60-v1
 python -m eval_general_e2e.datasets.bundle build --dataset-id general-work --release-id general-custom70-v6
-python -m eval_general_e2e.datasets.bundle build --dataset-id general-challenge --release-id general-challenge-v3
+python -m eval_general_e2e.datasets.bundle build --dataset-id general-challenge --release-id general-challenge60-v3
 ```
 
-以上命令用于准备冻结数据集包。现有 `--dataset <历史版本ID>` 仍可用于构建相应旧版。
+以上命令用于源码构建端准备冻结数据集包。旧布局的最终版本在 CI 中使用
+`datasets/layout.json` 指定的迁移前源码；浅克隆需要先获取对应历史。
+下方历史版本表和旧版构建命令仅供开发端审计，不作为平台的新任务选项。
 
 以下冻结数据集，使用同一套七阶段 Skill：
 
@@ -25,14 +29,14 @@ python -m eval_general_e2e.datasets.bundle build --dataset-id general-challenge 
 | `general-custom70-v4` | 冻结杨联芬原刊参考 | 70 | 同一70题范围及独立五维 |
 | `general-custom70-v5` | 补齐Info002作者消歧与Info004董炳月、王吉鹏／荆亚平原刊证据 | 70 | 同一70题范围及独立五维 |
 | `general-custom70-v6` | 保留v5并补齐Info001冻结题源及参考 | 70 | 同一70题范围及独立五维 |
-| `general-challenge-v3` | `tasks/general/challenge/`，按冻结清单选择 | 60 | 独立七维，7类，含6道必须理解视觉信息的题目 |
+| `general-challenge60-v3` | `tasks/general/challenge/`，按冻结清单选择 | 60 | 独立七维，7类，含6道必须理解视觉信息的题目 |
 
 挑战集题号形如 `01_Office_Documents_task_001_policy_crosswalk`。
-`general-challenge` 和 `general-challenge-v3` 均选择当前编号版。以下命令可独立校验构建产物。
+`general-challenge` 和 `general-challenge60-v3` 均选择当前编号版。以下命令可独立校验构建产物。
 
 ```bash
 python -m eval_general_e2e.datasets.bundle verify \
-  --bundle report-workspace/general-e2e/datasets/general-challenge-v3/general-challenge-v3.dataset.zip
+  --bundle report-workspace/general-e2e/datasets/general-challenge60-v3/general-challenge60-v3.dataset.zip
 ```
 
 冻结版本按原源码锚点核对题面、输入、GT和评分契约；修改已发布内容时建立新版本，
@@ -43,7 +47,7 @@ CLI显式数据集执行从已核验的冻结材料生成独立的 `exec/gt` Wor
 模式复验后复用。归档题面与GT使用同一冻结版本，缓存漂移即拒绝调度。
 恢复输出检查真实 `evaluation_scope.json.planned_tasks` 的版本与digest，防止跨版混用结果。
 
-下一轮70题评测选择 `general-custom70-v5`，并配套 Score 0.10.94 / Orchestrate 0.11.78 或经核验的后续版本。
+当前70题新任务选择最终版 `general-custom70-v6`。以下记录说明 v5 的历史修订：当时配套 Score 0.10.94 / Orchestrate 0.11.78 或经核验的后续版本。
 新版私有评分材料可离线核对新增来源。构建使用 `python -m eval_general_e2e.datasets.bundle build --dataset general-custom70-v5`。
 v4的68道其余题、全部公开Prompt及执行材料摘要保持一致。旧批次使用原数据锁。
 
