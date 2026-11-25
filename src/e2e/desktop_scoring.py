@@ -14,7 +14,7 @@ import sys
 import time
 
 from . import windows_preprocess
-from .agentcube import AgentCubeConfig
+from .agentcube import AgentCubeConfig, PlatformError
 from .artifacts import extract_zip, inventory, remove_temporary_tree
 from .backend import (
     AStudioSandboxDriver, ChatGPTDesktopSandboxDriver, GUEST_WORKSPACE, ObservationPaused,
@@ -157,6 +157,8 @@ def _prompt(scene, task_id, record, archive, attempt, config):
     return header + (
         f"按 Skill 指令继续控制器准备的独立通用评分尝试。单元目录为 unit，执行回执为 {record}，评分包为 {archive}。"
         f"输出根为 attempts，固定评分尝试为 {attempt}，语义协议 codex-agent-judge-v1，裁判模型 {config['model']}，推理档 {config.get('reasoning_effort', 'none')}。"
+        "评分 Python 使用 desktop-scoring-tooling/installation.json 中已校验的 python；"
+        "run-rules、prepare-rule-review、check-aggregation 等 --runtime-python 参数均使用这个专用虚拟环境，禁止改用系统 Python 或修改 runtime lock。"
         "按冻结题目运行规则、证据查询和语义合分流程，完成 finalize 与 verify-score，保留 attempts 下的全部标准回执。\n"
     )
 
@@ -196,7 +198,7 @@ def _prepare(batch, item, work, attempt, config):
             "task_id": item["task_id"], "attempt": attempt, "timeout_seconds": config["timeout_seconds"],
             "execution_record": handoff.get("execution_record"), "scoring_package": handoff.get("scoring_package")}
     atomic_json(tooling / "skill-lock.json", lock)
-    for name in ("desktop_score_guest.py", "preprocess_windows_guest.py"):
+    for name in ("desktop_score_guest.py", "desktop_score_runtime.py", "preprocess_windows_guest.py"):
         shutil.copyfile(Path(__file__).with_name(name), tooling / name)
     if scene == "web":
         for name in ("desktop_web_browser.md", "desktop_web_screenshot.mjs", "desktop_web_bundle_guest.py"):
@@ -246,18 +248,49 @@ class ScoringWorkspace:
         script = (
             "$ErrorActionPreference='Stop';$python=" + windows_preprocess.PYTHON
             + ";if(!(Test-Path -LiteralPath $python)){throw 'DESKTOP_SCORING_PYTHON_UNAVAILABLE'};"
-            + "& $python '" + root + r"\desktop_score_guest.py' '" + GUEST_WORKSPACE + "';"
-            + "if($LASTEXITCODE -ne 0){exit $LASTEXITCODE}"
+            + "$d='" + root + "';$status=Join-Path $d 'installation-status.bin';"
+            + "$intent=Join-Path $d 'installation-worker.json';"
+            + "if(!(Test-Path -LiteralPath $status) -and !(Test-Path -LiteralPath $intent)){"
+            + "$file=[IO.File]::Open($intent,[IO.FileMode]::CreateNew,[IO.FileAccess]::Write,[IO.FileShare]::None);$file.Dispose();"
+            + "$p=Start-Process -FilePath $python -ArgumentList ('-X utf8 '+[char]34+(Join-Path $d 'desktop_score_guest.py')+[char]34+' '+[char]34+'"
+            + GUEST_WORKSPACE + "'+[char]34) -WindowStyle Hidden -PassThru;"
+            + "@{pid=$p.Id;started=$p.StartTime.ToUniversalTime().Ticks}|ConvertTo-Json -Compress|Set-Content -LiteralPath $intent -Encoding UTF8;};"
+            + "if(Test-Path -LiteralPath $status){Get-Content -LiteralPath $status -Raw -Encoding UTF8;exit 0};"
+            + "$raw=Get-Content -LiteralPath $intent -Raw -Encoding UTF8;"
+            + "if(!$raw){'{\"status\":\"running\"}';exit 0};"
+            + "$job=$raw|ConvertFrom-Json;$p=Get-Process -Id $job.pid -ErrorAction SilentlyContinue;"
+            + "if(!$p -or $p.StartTime.ToUniversalTime().Ticks -ne $job.started){"
+            + "if(Test-Path -LiteralPath $status){Get-Content -LiteralPath $status -Raw -Encoding UTF8;exit 0};"
+            + "'{\"status\":\"failed\",\"error\":\"DESKTOP_SCORING_INSTALLATION_WORKER_LOST\"}';exit 0};"
+            + "'{\"status\":\"running\"}'"
         )
-        result = self.client.windows_execute(sid, powershell(script), timeout=self.stop.remaining())
-        try:
-            installation = json.loads(result["output"].strip().splitlines()[-1])
-        except (KeyError, ValueError, IndexError) as error:
-            raise E2EError("DESKTOP_SCORING_SKILL_INSTALLATION_FAILED") from error
+        while True:
+            self.checkpoint()
+            try:
+                result = self.client.windows_execute(sid, powershell(script), timeout=min(30, self.stop.remaining()))
+            except PlatformError as error:
+                if not error.uncertain:
+                    raise
+                # A timed-out POST may already have launched the worker. Its
+                # exclusive guest claim prevents a retry from launching twice.
+                self.stop.wait(2)
+                continue
+            try:
+                installation = json.loads(result["output"].strip().splitlines()[-1])
+            except (KeyError, ValueError, IndexError) as error:
+                raise E2EError("DESKTOP_SCORING_SKILL_INSTALLATION_FAILED") from error
+            if installation.get("status") != "running":
+                break
+            self.stop.wait(2)
         if installation.get("status") == "failed":
             code = diagnostic_code(installation.get("error"), "DESKTOP_SCORING_SKILL_INSTALLATION_FAILED")
             atomic_json(self.staging / "metadata/scoring-install-failure.json",
                         {"error": code, **public_diagnostics(installation)})
+            try:
+                steps = self.client.windows_download(sid, root + r"\general-runtime-steps.bin")
+                (self.staging / "metadata/scoring-runtime-steps.jsonl").write_bytes(steps)
+            except (E2EError, OSError):
+                pass
             raise E2EError(code)
         lock = self.task["skill_lock"]
         if any(installation.get(key) != lock[key] for key in ("name", "version", "inventory_sha256")):
@@ -679,6 +712,11 @@ def _job(batch, item, config, agentcube, root, attempt, cancel):
     except (E2EError, OSError, ValueError, KeyError, subprocess.SubprocessError) as error:
         code = diagnostic_code(error, "DESKTOP_SCORING_EXECUTION_FAILED")
         row.update(status="evaluation_error", error=code)
+        if driver:
+            diagnostic = driver.staging / "metadata/scoring-runtime-steps.jsonl"
+            if not diagnostic.is_file():
+                diagnostic = driver.staging / "metadata/scoring-install-failure.json"
+            row["artifacts"].update(_artifacts(work, log=diagnostic))
         if driver and code == "CONTROLLER_EXECUTION_INCOMPLETE":
             row["artifacts"].update(driver.archive_incomplete_run(work))
             row.update(_incomplete_native_failure(work, row["artifacts"], driver))

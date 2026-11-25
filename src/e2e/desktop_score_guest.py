@@ -10,6 +10,7 @@ import subprocess
 import sys
 
 from preprocess_windows_guest import StepError, astudio_paths, quiescent, runtime, _reparse
+from desktop_score_runtime import prepare_runtime
 
 
 ERROR_CODE = re.compile(r"[A-Z][A-Z0-9_]{1,99}\Z")
@@ -77,15 +78,20 @@ def prepare_general(work, target, tooling, request):
         shutil.rmtree(preparation)
     run("verify", "--attempt-root", attempt)
     contract = json.loads((attempt / "private/contract.json").read_text(encoding="utf-8"))
+    general_runtime = prepare_runtime(target, tooling, request["timeout_seconds"], contract=contract)
     if contract["grading_type"] != "automated":
-        return False
+        return False, general_runtime
     if not (attempt / "score.json").is_file():
         if not (attempt / "rule-component.json").is_file():
-            run("run-rules", "--attempt-root", attempt, "--runtime-python", sys.executable)
+            run("run-rules", "--attempt-root", attempt, "--runtime-python", general_runtime["python"])
+        if not (attempt / "semantic").exists():
+            # The frozen Skill records "not-required" for automated cases.
+            # finalize/verify-score still require that standard audit receipt.
+            run("prepare-semantics", "--attempt-root", attempt)
         run("finalize", "--attempt-root", attempt)
     run("verify-score", "--attempt-root", attempt)
     shutil.make_archive(str(tooling / "rules-result"), "zip", root_dir=work, base_dir="attempts")
-    return True
+    return True, general_runtime
 
 
 def install(work):
@@ -135,20 +141,37 @@ def install(work):
 
 
 def describe_installation(work, tooling, request, target, node, disposition):
-    rules_only = request["scene"] == "general" and prepare_general(work, target, tooling, request)
+    rules_only, general_runtime = (prepare_general(work, target, tooling, request) if request["scene"] == "general" else (False, None))
+    python = general_runtime["python"] if general_runtime else sys.executable
     name = request["name"]
     receipt = {"name": name, "version": request["version"], "inventory_sha256": request["inventory_sha256"],
-               "skill_root": str(target), "python": sys.executable, "node": node, "status": disposition, "rules_only": rules_only}
+               "skill_root": str(target), "python": python, "node": node, "status": disposition, "rules_only": rules_only,
+               **({"general_runtime": general_runtime} if general_runtime else {})}
     (tooling / "installation.json").write_text(json.dumps(receipt, ensure_ascii=False), encoding="utf-8")
     print(json.dumps(receipt, ensure_ascii=False))
 
 
 if __name__ == "__main__":
+    tooling = Path(sys.argv[1]) / "desktop-scoring-tooling"
     try:
         install(Path(sys.argv[1]).resolve(strict=True))
+        result = json.loads((tooling / "installation.json").read_text(encoding="utf-8"))
     except (OSError, ValueError, StepError, subprocess.SubprocessError) as error:
         code = str(error)
-        print(json.dumps({"status": "failed",
+        steps = tooling / "general-runtime-steps.jsonl"
+        if steps.is_file():
+            # AgentCube's Windows file endpoint may wrap JSON responses.
+            try:
+                shutil.copyfile(steps, tooling / "general-runtime-steps.bin")
+            except OSError:
+                pass
+        result = {"status": "failed",
                           "error": code if ERROR_CODE.fullmatch(code) else "DESKTOP_SCORING_SKILL_INSTALLATION_FAILED",
                           "exception": type(error).__name__, "winerror": getattr(error, "winerror", None),
-                          **(error.diagnostics if isinstance(error, StepError) else {})}))
+                          **(error.diagnostics if isinstance(error, StepError) else {})}
+        print(json.dumps(result))
+    # Publish once the complete receipt exists; never expose partial JSON while
+    # the controller polls a long-running bootstrap through short API calls.
+    pending = tooling / "installation-status.bin.tmp"
+    pending.write_text(json.dumps(result, ensure_ascii=False), encoding="utf-8")
+    pending.replace(tooling / "installation-status.bin")

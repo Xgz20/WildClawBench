@@ -34,6 +34,40 @@ def browser_event(server, name, call, output, arguments=None):
 
 
 class DesktopScoringTests(unittest.TestCase):
+    def test_installation_uses_short_polls_and_waits_for_atomic_worker_receipt(self):
+        with tempfile.TemporaryDirectory() as temp:
+            driver = object.__new__(scoring.ScoringDriver)
+            driver.staging = Path(temp)
+            (driver.staging / "metadata").mkdir()
+            driver.task = {"skill_lock": {"name": "score-general-e2e", "version": "fixture", "inventory_sha256": "a" * 64}}
+            receipt = {**driver.task["skill_lock"], "status": "installed", "rules_only": True}
+            driver.client = Mock()
+            driver.client.windows_execute.side_effect = [
+                scoring.PlatformError("launch reply timed out", uncertain=True),
+                {"output": '{"status":"running"}'}, {"output": json.dumps(receipt)}]
+            driver.stop = Mock()
+            driver.stop.remaining.return_value = 3600
+            driver.checkpoint = Mock()
+            driver._phase = Mock()
+            with patch.object(scoring.AStudioSandboxDriver, "_upload"), self.assertRaises(scoring.RulesReady):
+                driver._upload("session")
+            self.assertEqual(driver.client.windows_execute.call_count, 3)
+            self.assertTrue(all(call.kwargs["timeout"] == 30 for call in driver.client.windows_execute.call_args_list))
+            self.assertEqual(driver.stop.wait.call_count, 2)
+            self.assertEqual(json.loads((driver.staging / "installation.json").read_text()), receipt)
+            driver._phase.assert_called_once_with("COLLECTING", rules_ready=True)
+
+    def test_installation_poll_observes_cancellation_before_another_api_call(self):
+        driver = object.__new__(scoring.ScoringDriver)
+        driver.client = Mock()
+        driver.client.windows_execute.return_value = {"output": '{"status":"running"}'}
+        driver.stop = Mock()
+        driver.stop.remaining.return_value = 3600
+        driver.checkpoint = Mock(side_effect=[None, scoring.ObservationPaused()])
+        with patch.object(scoring.AStudioSandboxDriver, "_upload"), self.assertRaises(scoring.ObservationPaused):
+            driver._upload("session")
+        self.assertEqual(driver.client.windows_execute.call_count, 1)
+
     def test_astudio_is_the_public_scoring_name_and_legacy_alias_is_accepted(self):
         canonical = scoring._config({**CONFIG, "harness": "astudio"})
         legacy = scoring._config({**CONFIG, "harness": "astronstudio"})
@@ -244,6 +278,7 @@ class DesktopScoringTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             driver = Mock()
+            driver.staging = root / "job/work/desktop/staging"
             driver.client.delete_session.return_value = {"confirmed": True}
             provenance = {"log": {"path": "diagnostic.json", "sha256": "a" * 64}}
             driver.archive_incomplete_run.return_value = provenance
@@ -266,6 +301,30 @@ class DesktopScoringTests(unittest.TestCase):
             calls = [name for name, _, _ in driver.mock_calls]
             self.assertLess(calls.index("archive_incomplete_run"), calls.index("client.delete_session"))
 
+    def test_runtime_preparation_failure_keeps_step_receipt_after_release(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            driver = Mock()
+            driver.staging = root / "job/work/desktop/staging"
+            driver.client.delete_session.return_value = {"confirmed": True}
+
+            def setup(**kwargs):
+                def execute():
+                    metadata = driver.staging / "metadata"
+                    metadata.mkdir(parents=True)
+                    (metadata / "scoring-runtime-steps.jsonl").write_text('{"action":"bootstrap-runtime","error":"RUNTIME_BOOTSTRAP_FAILED"}\n')
+                    kwargs["store"].update(None, "PREPARING", session_id="session", resource_held=True)
+                    raise E2EError("RUNTIME_BOOTSTRAP_FAILED")
+                driver.execute.side_effect = execute
+                return driver
+
+            with patch.object(scoring, "_prepare", return_value={}), \
+                    patch.object(scoring, "ScoringDriver", side_effect=setup):
+                row = scoring._job(root, ITEM, CONFIG, AgentCubeConfig(), root / "job", "desk-test", root / "cancel.json")
+            self.assertEqual(row["status"], "evaluation_error")
+            self.assertFalse(row["agent_used"])
+            self.assertTrue(row["container_released"])
+            self.assertTrue(row["artifacts"]["log"]["path"].endswith("scoring-runtime-steps.jsonl"))
     def test_native_visual_evidence_binds_capture_receiver_and_image_tool(self):
         with tempfile.TemporaryDirectory() as tmp:
             private = Path(tmp)
