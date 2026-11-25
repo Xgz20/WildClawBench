@@ -317,7 +317,19 @@ export function processIdentity(pid, overrides = {}) {
       process_group_mode: "windows-process-tree",
     };
   }
-  const output = runSync("/bin/ps", ["-p", String(pid), "-o", "pgid=,stat=,lstart=,command="], { encoding: "utf8" }).trim();
+  let output;
+  try {
+    output = runSync("/bin/ps", ["-p", String(pid), "-o", "pgid=,stat=,lstart=,command="], { encoding: "utf8" }).trim();
+  } catch (error) {
+    // An init process can reap the service between the liveness probe and ps.
+    // Only a confirmed vanished PID counts as stopped; preserve other failures.
+    try {
+      probePid(pid);
+    } catch (probeError) {
+      if (probeError?.code === "ESRCH") return null;
+    }
+    throw error;
+  }
   const match = output.match(/^(\d+)\s+(\S+)\s+(.{24})\s+(.+)$/);
   if (!match) throw new Error(`无法读取评分服务进程身份：PID ${pid}`);
   if (match[2].startsWith("Z")) return null;

@@ -28,6 +28,26 @@ const PNG_1X1 = Buffer.from(
 );
 const JPEG_SIGNATURE_SAMPLE = Buffer.from([0xff, 0xd8, 0xff, 0xe0, 0x00, 0x10, 0xff, 0xd9]);
 
+test("POSIX process identity accepts a service reaped between probe and ps", () => {
+  let probes = 0;
+  const identity = processIdentity(321, {
+    platform: "linux",
+    probePid: () => {
+      if (++probes === 2) throw Object.assign(new Error("process exited"), { code: "ESRCH" });
+    },
+    execFileSync: () => { throw Object.assign(new Error("ps found no process"), { status: 1 }); },
+  });
+  assert.equal(identity, null);
+  assert.equal(probes, 2);
+});
+
+test("POSIX process identity preserves ps failures while the PID still exists", () => {
+  const failure = new Error("ps failed while process remains alive");
+  assert.throws(() => processIdentity(321, {
+    platform: "linux", probePid: () => {}, execFileSync: () => { throw failure; },
+  }), (error) => error === failure);
+});
+
 test("Windows managed processes terminate only the recorded PID tree", () => {
   const identity = { pid: 321, pgid: 321 };
   assert.deepEqual(processTerminationInvocation(identity, { platform: "win32" }), {
