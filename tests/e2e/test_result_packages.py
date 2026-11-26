@@ -39,8 +39,8 @@ class ResultPackageTests(unittest.TestCase):
             writers.append(path.open("r+b"))
             freeze_metadata_files(root)
 
-        def capture(root):
-            result = inventory(root)
+        def capture(root, **kwargs):
+            result = inventory(root, **kwargs)
             writers[0].seek(0)
             writers[0].write(b"subsequent update")
             writers[0].flush()

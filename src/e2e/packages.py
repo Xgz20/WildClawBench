@@ -9,7 +9,7 @@ import tempfile
 import uuid
 import zipfile
 
-from .artifacts import _members, _protect, extract_zip, freeze_metadata_files, import_execution, inventory, quarantine_local_metadata, remove_temporary_tree, verify_backup, verify_execution
+from .artifacts import _members, _protect, extract_zip, freeze_metadata_files, import_execution, inventory, quarantine_local_metadata, remove_temporary_tree, verify_backup, verify_execution, write_zip_member
 from .common import E2EError, atomic_json, digest, file_sha256, inside, load_script, read_json, utc_now
 from .compatibility import verify_installed
 from .engine import load_batch
@@ -32,7 +32,7 @@ def _protect_scoring_contexts(root: Path, index: dict):
                       *unit.glob("evidence/tasks/*/*/candidate/workspace")]
         for path in candidates:
             if path.is_dir():
-                _protect(path)
+                _protect(path, allow_symlinks=True)
 
 
 def _local_report_inputs(batch: Path, stage: Path, manifest: dict, exported: list[dict]) -> list[dict]:
@@ -241,16 +241,16 @@ def export_package(batch: Path, output: Path, *, keys: list[str] | None = None, 
         descriptor = os.open(stage / "package-integrity.json", os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o444)
         with os.fdopen(descriptor, "w", encoding="utf-8") as integrity:
             freeze_metadata_files(stage)
-            _protect(stage)
-            files = [row for row in inventory(stage) if row["path"] != "package-integrity.json"]
+            _protect(stage, allow_symlinks=True)
+            files = [row for row in inventory(stage, allow_symlinks=True) if row["path"] != "package-integrity.json"]
             json.dump({"schema": PACKAGE_SCHEMA, "entries": files}, integrity, ensure_ascii=False, indent=2)
             integrity.flush()
             os.fsync(integrity.fileno())
         temporary = output.with_name("." + output.name + "." + uuid.uuid4().hex + ".tmp")
         try:
             with zipfile.ZipFile(temporary, "x", compression=zipfile.ZIP_DEFLATED, allowZip64=True) as archive:
-                for path in sorted(stage.rglob("*")):
-                    archive.write(path, path.relative_to(stage).as_posix())
+                for row in inventory(stage, allow_symlinks=True):
+                    write_zip_member(archive, stage, row)
             _verify_package(temporary)
             temporary.rename(output)
         finally:
@@ -271,7 +271,7 @@ def export_package(batch: Path, output: Path, *, keys: list[str] | None = None, 
 def _verify_package(path: Path) -> dict:
     import hashlib
     with zipfile.ZipFile(path) as archive:
-        members = _members(archive)
+        members = _members(archive, allow_symlinks=True)
         document = json.loads(archive.read("package-integrity.json"))
         if document.get("schema") != PACKAGE_SCHEMA:
             raise E2EError("RESULT_PACKAGE_SCHEMA_UNSUPPORTED")
@@ -284,7 +284,12 @@ def _verify_package(path: Path) -> dict:
             info = members[row["path"]]
             if info.is_dir() != (row["kind"] == "directory"):
                 raise E2EError("RESULT_PACKAGE_MEMBER_TYPE_MISMATCH")
-            if row["kind"] == "file":
+            link = (info.external_attr >> 16) & 0o170000 == 0o120000
+            if link != (row.get('kind') == 'symlink') or row.get('kind') not in {'file', 'directory', 'symlink'}:
+                raise E2EError('RESULT_PACKAGE_MEMBER_TYPE_MISMATCH')
+            if link and archive.read(info).decode('utf-8') != row.get('target'):
+                raise E2EError('RESULT_PACKAGE_LINK_TARGET_MISMATCH')
+            if row["kind"] in {'file', 'symlink'}:
                 if info.file_size != row["size"]:
                     raise E2EError("RESULT_PACKAGE_MEMBER_SIZE_MISMATCH")
                 h = hashlib.sha256()
@@ -317,7 +322,10 @@ def import_package(archive: Path, receipt_path: Path | None, workspace: Path) ->
             raise E2EError("IMPORT_DESTINATION_CONFLICT")
         with zipfile.ZipFile(archive) as source:
             entries = json.loads(source.read("package-integrity.json"))["entries"]
+        observed_links = {row['path']: row for row in inventory(destination, allow_symlinks=True) if row['kind'] == 'symlink'}
         for entry in entries:
+            if entry['kind'] == 'symlink' and observed_links.get(entry['path']) != entry:
+                raise E2EError('IMPORTED_PACKAGE_INPUT_DRIFT')
             if entry["kind"] == "file":
                 path = inside(destination, entry["path"])
                 if not path.is_file() or path.stat().st_size != entry["size"] or file_sha256(path) != entry["sha256"]:
@@ -333,12 +341,12 @@ def import_package(archive: Path, receipt_path: Path | None, workspace: Path) ->
         return {**previous, "status": "already_imported"}
     temporary = imports / (".import-" + uuid.uuid4().hex)
     try:
-        extract_zip(archive, temporary, readonly_data=True)
+        extract_zip(archive, temporary, readonly_data=True, allow_symlinks=True)
         _protect_scoring_contexts(temporary, index)
         with zipfile.ZipFile(archive) as source:
             expected = json.loads(source.read("package-integrity.json"))["entries"]
         expected_files = {row["path"] for row in expected if row["kind"] == "file"} | {"package-integrity.json"}
-        quarantine_local_metadata(temporary, expected_files, imports / ".local-metadata" / uuid.uuid4().hex)
+        quarantine_local_metadata(temporary, expected_files, imports / ".local-metadata" / uuid.uuid4().hex, allow_symlinks=True)
         for row in expected:
             if row["kind"] == "file" and file_sha256(inside(temporary, row["path"])) != row["sha256"]:
                 raise E2EError("EXTRACTED_RESULT_PACKAGE_DRIFT: " + row["path"])

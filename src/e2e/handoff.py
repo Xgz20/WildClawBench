@@ -32,6 +32,14 @@ def _bind_prompt_metadata(record, item):
 
 
 def _artifact(path: Path, root: Path, *, typed=False):
+    if path.is_symlink():
+        if not typed:
+            raise E2EError('HANDOFF_SYMLINK_RECEIPT_FORBIDDEN')
+        import hashlib, os
+        target = os.readlink(path)
+        data = target.encode('utf-8')
+        return {'path': path.relative_to(root).as_posix(), 'sha256': hashlib.sha256(data).hexdigest(),
+                'size': len(data), 'type': 'symlink', 'target': target}
     row = {"path": path.relative_to(root).as_posix(), "sha256": file_sha256(path), "size": path.stat().st_size}
     if typed:
         row["type"] = "file"
@@ -41,16 +49,17 @@ def _artifact(path: Path, root: Path, *, typed=False):
 def _copy(source: Path, target: Path, *, protect=True):
     if target.exists():
         raise E2EError("HANDOFF_COPY_TARGET_EXISTS")
-    expected_files = {path.relative_to(source).as_posix() for path in source.rglob("*") if path.is_file()}
+    inventory(source, allow_symlinks=True)
+    expected_files = {path.relative_to(source).as_posix() for path in source.rglob("*") if path.is_file() and not path.is_symlink()}
     def copy_file(source_file, destination_file):
         with Path(source_file).open("rb") as input_file:
             copy_stream_readonly(input_file, Path(destination_file))
         return str(destination_file)
 
-    shutil.copytree(source, target, copy_function=copy_file if protect else shutil.copyfile)
+    shutil.copytree(source, target, symlinks=True, copy_function=copy_file if protect else shutil.copyfile)
     if protect:
-        _protect(target)
-    quarantine_local_metadata(target, expected_files, target.parent / ".local-metadata" / uuid.uuid4().hex)
+        _protect(target, allow_symlinks=True)
+    quarantine_local_metadata(target, expected_files, target.parent / ".local-metadata" / uuid.uuid4().hex, allow_symlinks=True)
 
 
 def _general_inventory(score_root: Path, candidate: Path):
@@ -95,7 +104,7 @@ def _general_context(batch: Path, temporary: Path, manifest: dict, item: dict, t
         execution_zip, scoring_zip = prepare._unit_packages(archive, task["dataset"]["id"], assets["dataset_manifest"],
             public_unit, identity["batch_id"], dataset_ref, release_ref, catalog, packages)
     unit_root = temporary / "unit"
-    extract_zip(execution_zip, unit_root, strip_root=True)
+    extract_zip(execution_zip, unit_root, strip_root=True, allow_symlinks=True)
     public_task = unit_root / "execution/tasks" / task["task_id"]
     if file_sha256(public_task / "PROMPT.md") != task["prompt_sha256"]:
         raise E2EError("SCORING_PACKAGE_PROMPT_DRIFT")
@@ -110,7 +119,12 @@ def _general_context(batch: Path, temporary: Path, manifest: dict, item: dict, t
     source = _general_inventory(score_root, public_task / "workspace")
     if candidate["sha256"] != source["sha256"]:
         raise E2EError("CANDIDATE_COPY_DRIFT")
-    entries, candidate_sha = candidate["entries"], candidate["sha256"]
+    # The frozen JS collector compares serialized entry objects, including key
+    # order. Preserve its established symlink representation exactly.
+    entries = [({'path': row['path'], 'type': 'symlink', 'target': row['target'],
+                 'sha256': row['sha256'], 'size': row['size'], 'mode': row['mode']}
+                if row['type'] == 'symlink' else row) for row in candidate['entries']]
+    candidate_sha = candidate['sha256']
     file_count = sum(row["type"] != "directory" for row in entries)
     total_bytes = sum(row["size"] for row in entries if row["type"] != "directory")
     frozen_at = utc_now()
@@ -186,7 +200,7 @@ def _general_context(batch: Path, temporary: Path, manifest: dict, item: dict, t
         record["prompt"]["effective_file"] = evidence_relative + "/execution/effective-prompt.md"
     atomic_json(evidence / "execution-record.json", record)
     artifacts = [_artifact(path, unit_root, typed=True) for path in evidence.rglob("*")
-                 if path.is_file() and path not in {evidence / "evidence-manifest.json", evidence / "execution-record.json"}]
+                 if (path.is_file() or path.is_symlink()) and path not in {evidence / "evidence-manifest.json", evidence / "execution-record.json"}]
     artifacts.sort(key=lambda row: row["path"])
     evidence_manifest = {"schema_version": "wildclawbench.general-e2e-evidence-manifest/v1", "identity": identity,
                          "dataset": task["dataset"], "collected_at": frozen_at,

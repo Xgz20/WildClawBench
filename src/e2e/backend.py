@@ -201,7 +201,7 @@ $proof.phase='completed';foreach($entry in @{after=$after;late_process_detected=
 
 
 
-def validate_collect(root: Path) -> dict:
+def validate_collect(root: Path, *, allow_symlinks=False) -> dict:
     manifest = json.loads((root / "manifest.json").read_text(encoding="utf-8"))
     if manifest.get("schema_version") != 2 or not isinstance(manifest.get("files"), list):
         raise E2EError("COLLECT_MANIFEST_INVALID")
@@ -213,7 +213,7 @@ def validate_collect(root: Path) -> dict:
         expected.add(row["path"])
         if path.stat().st_size != row["size"] or file_sha256(path) != row["sha256"]:
             raise E2EError("COLLECT_MEMBER_DRIFT")
-    actual = {path.relative_to(root).as_posix() for path in root.rglob("*") if path.is_file()}
+    actual = {path.relative_to(root).as_posix() for path in root.rglob("*") if path.is_file() and (not allow_symlinks or not path.is_symlink())}
     if actual != expected | {"manifest.json"}:
         raise E2EError("COLLECT_MEMBER_SET_MISMATCH")
     return manifest
@@ -266,7 +266,7 @@ class AStudioSandboxDriver:
             if str(value).strip().casefold() not in {"", "none", "null", "n/a", "无", "{}", "[]"}:
                 raise E2EError("TASK_RUNTIME_REQUIREMENT_NEEDS_ADAPTER: " + name)
         definition = inside(self.batch, self.task["input_root"])
-        observed = inventory(definition)
+        observed = inventory(definition, allow_symlinks=True)
         expected = self.task["definition_inventory"]
         observed = [row for row in observed if row["path"] != "task-definition.json"]
         if observed != expected:
@@ -382,6 +382,8 @@ try {
         archive = io.BytesIO()
         with zipfile.ZipFile(archive, "w", compression=zipfile.ZIP_DEFLATED) as target:
             for path in sorted((public / "workspace").rglob("*")):
+                if path.is_symlink():
+                    continue
                 target.write(path, path.relative_to(public / "workspace").as_posix())
         self.client.upload(sid, "/tmp/wcb-input.zip", archive.getvalue())
         unpack = "import zipfile,pathlib;pathlib.Path('/workspace/input').mkdir(parents=True,exist_ok=True);zipfile.ZipFile('/tmp/wcb-input.zip').extractall('/workspace/input')"
@@ -407,6 +409,8 @@ try {
         atomic_json(self.staging / "metadata/run-request.json", request)
         atomic_json(self.staging / "metadata/collect-request.json", collect)
         self._checked_job("workspace-upload", WGUI + " workspace upload --source /workspace/input --guest " + shlex.quote(GUEST_WORKSPACE))
+        from . import windows_workspace
+        windows_workspace.install(self, sid, powershell)
         if self.product == "astudio" and self.unit["model"].casefold() in ASTUDIO_CATALOG_MODELS:
             mapping = read_astudio_native_model(self.client, sid, self.unit["model"])
             previous = self.store.get(self.key).get("native_builtin_model")
@@ -451,9 +455,9 @@ try {
         transport = self.staging / "metadata" / (name + "-transport.json")
         if target.is_dir() and transport.exists():
             expected_files = set(read_json(transport)["files"])
-            _protect(target)
+            _protect(target, allow_symlinks=True)
             quarantine_local_metadata(target, expected_files,
-                                      self.staging / "metadata/local-metadata" / (name + "-" + uuid.uuid4().hex))
+                                      self.staging / "metadata/local-metadata" / (name + "-" + uuid.uuid4().hex), allow_symlinks=True)
             return target
         remote_zip = "/tmp/wcb-" + name + ".zip"
         script = ("import pathlib,zipfile;root=pathlib.Path(" + repr(remote) + ");"
@@ -472,9 +476,9 @@ try {
                 atomic_json(transport, {"schema": "wildclawbench.download-transport/v1", "source": remote,
                                         "archive_sha256": file_sha256(archive_path), "files": sorted(expected_files)})
                 if target.is_dir():
-                    _protect(target)
+                    _protect(target, allow_symlinks=True)
                     quarantine_local_metadata(target, expected_files,
-                                              self.staging / "metadata/local-metadata" / (name + "-" + uuid.uuid4().hex))
+                                              self.staging / "metadata/local-metadata" / (name + "-" + uuid.uuid4().hex), allow_symlinks=True)
                     return target
                 for relative, info in members.items():
                     output = inside(temporary, relative)
@@ -567,6 +571,7 @@ try {
         return WGUI + " task run --request /run/wgui/run-request.json --output /logs/artifacts/run"
 
     def execute(self) -> dict:
+        from . import windows_workspace
         self.preflight()
         row = self.store.get(self.key)
         runtime = self.config.public()
@@ -615,9 +620,11 @@ try {
         if self.preprocess_recipe:
             windows_preprocess.bind_running_acode(self, sid, powershell)
         cleanup = self._cleanup_processes(sid)
+        windows_workspace.prepare_collection(self, sid, powershell)
         self._checked_job("task-collect", WGUI + " task collect --request /run/wgui/collect-request.json --output /logs/artifacts/collect", timeout=600)
         collected = self._download_tree(sid, "/logs/artifacts/collect", "collect")
-        validate_collect(collected)
+        validate_collect(collected, allow_symlinks=True)
+        windows_workspace.restore_collection(self, collected)
         native_path, binding = self._bound_native(sid, before, report, identity, prompt, "after-cleanup")
         if (before_binding["session"] != binding["session"]
                 or not native_path.read_bytes().startswith(before_close.read_bytes())):
@@ -701,6 +708,8 @@ finally{$g.Dispose();$b.Dispose()}
         try:
             collect_name = "failure-quiesced-collect" if quiesced else "collect"
             job_name = "failure-quiesced-task-collect" if quiesced else "failure-task-collect"
+            from . import windows_workspace
+            windows_workspace.prepare_collection(self, sid, powershell)
             self._checked_job(job_name, WGUI + " task collect --request /run/wgui/collect-request.json --output /logs/artifacts/" + collect_name, timeout=600)
             results["collect_command"] = True
         except Exception as error:
@@ -711,7 +720,8 @@ finally{$g.Dispose();$b.Dispose()}
             try:
                 self._download_tree(sid, remote, name)
                 if component == "collect":
-                    validate_collect(self.staging / name)
+                    validate_collect(self.staging / name, allow_symlinks=True)
+                    windows_workspace.restore_collection(self, self.staging / name)
                 results[component] = True
             except Exception as error:
                 results[component] = False

@@ -90,7 +90,13 @@ def prepare_general(work, target, tooling, request):
             run("prepare-semantics", "--attempt-root", attempt)
         run("finalize", "--attempt-root", attempt)
     run("verify-score", "--attempt-root", attempt)
-    shutil.make_archive(str(tooling / "rules-result"), "zip", root_dir=work, base_dir="attempts")
+    # A rules-only result bypasses normal WGUI collection. Keep the same link
+    # transport semantics rather than letting make_archive dereference links.
+    import importlib.util
+    spec = importlib.util.spec_from_file_location('_desktop_workspace_links', Path(__file__).with_name('workspace_links.py'))
+    transport = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(transport)
+    transport.archive_tree(work / 'attempts', tooling / 'rules-result.zip', prefix='attempts')
     return True, general_runtime
 
 

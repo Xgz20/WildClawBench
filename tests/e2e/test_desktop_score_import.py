@@ -64,7 +64,7 @@ class DesktopScoreImportTests(unittest.TestCase):
                 restore_general_permissions(target)
             (target / "private/gt/extra.json").unlink()
             (target / "escape").symlink_to(Path(directory))
-            with self.assertRaisesRegex(E2EError, "UNSUPPORTED_ARTIFACT_TYPE"):
+            with self.assertRaisesRegex(E2EError, "WORKSPACE_LINK_TARGET_INVALID"):
                 restore_general_permissions(target)
 
     def test_failed_verification_keeps_diagnostic_code_and_redacted_log(self):

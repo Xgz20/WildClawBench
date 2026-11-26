@@ -153,9 +153,37 @@ def _select(tasks: list[dict], selection: dict, repo: Path, web) -> list[dict]:
     return selected
 
 
+def general_workspace_links(task: dict, members: dict) -> list[dict]:
+    from .workspace_links import target_path
+    prefix = 'tasks/' + task['task_id'] + '/execution/exec/'
+    links = []
+    for path, member in members.items():
+        if member.kind != 'symlink' or not path.startswith('tasks/' + task['task_id'] + '/'):
+            continue
+        if not path.startswith(prefix):
+            raise E2EError('TASK_LINK_OUTSIDE_EXECUTION_WORKSPACE: ' + path)
+        relative = path[len(prefix):]
+        try:
+            target = member.data.decode('utf-8')
+            selected = target_path(relative, target)
+            seen = {relative}
+            while prefix + selected in members and members[prefix + selected].kind == 'symlink':
+                if selected in seen:
+                    raise ValueError('WORKSPACE_LINK_CYCLE: ' + relative)
+                seen.add(selected)
+                selected = target_path(selected, members[prefix + selected].data.decode('utf-8'))
+        except (ValueError, UnicodeError) as error:
+            raise E2EError(str(error)) from error
+        target_member = members.get(prefix + selected)
+        links.append({'path': relative, 'target': target,
+                      'target_is_directory': bool(target_member and target_member.kind == 'directory')})
+    return sorted(links, key=lambda row: row['path'])
+
+
 def _write_general(task: dict, members: dict, destination: Path, prepare) -> dict:
     prefix = "tasks/" + task["task_id"] + "/"
     contract = json.loads(members[task["bundle"]["execution_contract_path"]].data)
+    links = general_workspace_links(task, members)
     destination.mkdir(parents=True)
     for path, member in members.items():
         if not path.startswith(prefix):
@@ -170,17 +198,21 @@ def _write_general(task: dict, members: dict, destination: Path, prepare) -> dic
             target.parent.mkdir(parents=True, exist_ok=True)
             with io.BytesIO(member.data) as source:
                 copy_stream_readonly(source, target, mode=member.mode)
-        else:
+        elif member.kind != 'symlink':
             raise E2EError("WINDOWS_EXECUTION_SYMLINK_UNSUPPORTED: " + path)
     workspace = destination / "execution/workspace"
     workspace.mkdir(parents=True, exist_ok=True)
+    if links:
+        from .workspace_links import install
+        install(workspace, links)
     prompt, mapping = prepare.map_prompt_workspace(contract["prompt"])
     entries = [prepare.ZipEntry("workspace/" + p.relative_to(workspace).as_posix(), p.read_bytes())
-               for p in sorted(workspace.iterdir()) if p.is_file()]
+               for p in sorted(workspace.iterdir()) if p.is_file() and not p.is_symlink()]
     prompt, public_context = prepare.inline_public_context(prompt, entries, workspace_prefix="workspace/")
     (destination / "execution/PROMPT.md").write_bytes(prompt.encode("utf-8"))
     shutil.copyfile(destination / "task.md", destination / "private-scoring/task.md")
     return {"prompt_mapping": mapping, "public_context_delivery": public_context,
+            **({'workspace_links': links} if links else {}),
             "requirements": {key: contract.get(key, "") for key in ("env", "skills", "warmup")}}
 
 
@@ -343,6 +375,9 @@ def prepare_batch(repo: Path, workspace: Path, raw_plan: dict, *, expected_selec
     from .protocol import resolve
     repo, workspace = repo.resolve(strict=True), workspace.expanduser().resolve()
     plan, selected, members, general_manifest, web = resolve(repo, raw_plan)
+    for task in selected:
+        if task['scene'] == 'general':
+            general_workspace_links(task, members)
     if expected_selection_sha256 and digest(selected) != expected_selection_sha256:
         raise E2EError("CONFIRMED_SELECTION_CHANGED")
     preprocessing_selection = preprocessing.selection(plan["units"], selected)
@@ -376,11 +411,11 @@ def prepare_batch(repo: Path, workspace: Path, raw_plan: dict, *, expected_selec
                          else _write_web(task, destination, repo, web))
                 # Freeze before recording modes/hashes. In particular, Office
                 # inputs must never be exposed as writable host replicas.
-                _protect(destination)
+                _protect(destination, allow_symlinks=True)
                 prompt = destination / "execution/PROMPT.md"
                 row = {**task, **extra, "input_root": relative, "prompt_sha256": file_sha256(prompt),
-                       "public_inventory": inventory(destination / "execution/workspace"),
-                       "definition_inventory": inventory(destination)}
+                       "public_inventory": inventory(destination / "execution/workspace", allow_symlinks=True),
+                       "definition_inventory": inventory(destination, allow_symlinks=True)}
                 # The root itself is not part of its inventory; briefly enable
                 # only that directory to publish the descriptor, then reseal it.
                 destination.chmod(destination.stat().st_mode | 0o200)

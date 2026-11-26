@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+
 import argparse
 import json
 import os
@@ -11,6 +12,12 @@ import sys
 import traceback
 from typing import Any
 import math
+import importlib.util
+
+_portable_spec = importlib.util.spec_from_file_location('_general_rule_portable_links', Path(__file__).with_name('portable_links.py'))
+_portable_module = importlib.util.module_from_spec(_portable_spec)
+_portable_spec.loader.exec_module(_portable_module)
+rule_readlinks = _portable_module.rule_readlinks
 
 
 REQUEST_SCHEMA = "wildclawbench.general-e2e-rule-worker-request/v1"
@@ -153,7 +160,8 @@ def execute(request_path: Path, result_path: Path) -> int:
         grade = namespace.get("grade")
         if not callable(grade):
             raise ValueError("automated_checks did not define callable grade()")
-        raw = grade(transcript=transcript, workspace_path=str(workspace))
+        with rule_readlinks(workspace):
+            raw = grade(transcript=transcript, workspace_path=str(workspace))
         if not isinstance(raw, dict):
             raise ValueError("grade() must return a JSON object")
         json.dumps(raw, ensure_ascii=False, allow_nan=False)

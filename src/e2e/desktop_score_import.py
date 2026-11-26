@@ -8,7 +8,7 @@ from .common import E2EError, digest, inside, read_json
 
 def restore_general_permissions(attempt):
     """Change permissions on the imported copy; leave every frozen byte intact."""
-    before = inventory(attempt)
+    before = inventory(attempt, allow_symlinks=True)
     manifest = read_json(attempt / "attempt-manifest.json")
     paths = manifest.get("paths", {})
     canonical = attempt / "candidate-original"
@@ -16,7 +16,7 @@ def restore_general_permissions(attempt):
         raise E2EError("DESKTOP_SCORING_CANONICAL_COPY_INVALID")
     # ZIP transport creates writable directories and may discard DOS readonly
     # attributes. The archived verifier still requires canonical inputs sealed.
-    _protect(canonical)
+    _protect(canonical, allow_symlinks=True)
     gt = inside(attempt, paths.get("gt"))
     observed = {row["path"]: row for row in inventory(gt)}
     entries = manifest.get("private_scoring", {}).get("workspace_entries")
@@ -37,8 +37,9 @@ def restore_general_permissions(attempt):
     # Restore the manifest's exact GT modes, rather than relaxing its verifier.
     for path, mode in sorted(modes, key=lambda item: len(item[0].parts), reverse=True):
         path.chmod(mode)
-    after = inventory(attempt)
-    files = lambda rows: {row["path"]: row["sha256"] for row in rows if row["kind"] == "file"}
+    after = inventory(attempt, allow_symlinks=True)
+    files = lambda rows: {row["path"]: ("symlink:" + row["sha256"] if row["kind"] == "symlink" else row["sha256"])
+                          for row in rows if row["kind"] in {"file", "symlink"}}
     if files(before) != files(after):
         raise E2EError("DESKTOP_SCORING_IMPORT_CONTENT_DRIFT")
     previous = {row["path"]: row["mode"] for row in before}

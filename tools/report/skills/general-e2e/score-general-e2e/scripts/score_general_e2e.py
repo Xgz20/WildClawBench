@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+
 import argparse
 import ast
 import base64
@@ -31,6 +32,7 @@ import zipfile
 
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+import portable_links
 import failure_evidence
 import execution_accountability
 import execution_supplement
@@ -579,7 +581,7 @@ def _safe_symlink_target(relative: PurePosixPath, target: str) -> str:
 
 
 def _mode_string(path: Path) -> str:
-    return f"{stat.S_IMODE(path.lstat().st_mode):04o}"
+    return f"{portable_links.mode(path):04o}"
 
 
 def _new_native_rule_review_profile(contract, contract_sha, judge):
@@ -622,14 +624,14 @@ def _inventory_tree(root: Path) -> tuple[list[dict[str, Any]], str]:
                     "mode": f"{stat.S_IMODE(info.st_mode):04o}",
                 })
             elif stat.S_ISLNK(info.st_mode):
-                target = os.readlink(child)
+                target = portable_links.readlink(child)
                 _safe_symlink_target(relative, target)
                 entries.append({
                     "path": relative.as_posix(),
                     "type": "symlink",
                     "sha256": _sha256_bytes(target.encode("utf-8")),
-                    "size": len(target),
-                    "mode": f"{stat.S_IMODE(info.st_mode):04o}",
+                    "size": len(target.encode('utf-8')),
+                    "mode": f"{portable_links.mode(child):04o}",
                     "target": target,
                 })
             else:
@@ -780,6 +782,8 @@ def _remove_tree(path: Path) -> None:
 def _preserve_symlink_mode(path: Path, mode: int) -> None:
     if not path.is_symlink():
         raise ScoringRuntimeError('SYMLINK_MODE_TARGET_INVALID', str(path))
+    if os.name == "nt" and mode == 0o777:
+        return  # Windows has no mutable POSIX symlink permission bits.
     if stat.S_IMODE(path.lstat().st_mode) != mode:
         if hasattr(os, 'lchmod'):
             os.lchmod(path, mode)
@@ -809,9 +813,9 @@ def _copy_inventory(
             shutil.copyfile(source.joinpath(*relative.parts), target, follow_symlinks=False)
         elif kind == "symlink":
             target.parent.mkdir(parents=True, exist_ok=True)
-            link_target = os.readlink(source.joinpath(*relative.parts))
+            link_target = portable_links.readlink(source.joinpath(*relative.parts))
             _safe_symlink_target(relative, link_target)
-            os.symlink(link_target, target)
+            portable_links.symlink(link_target, target, target_is_directory=source.joinpath(*relative.parts).is_dir())
             if isinstance(item.get('mode'), str):
                 _preserve_symlink_mode(target, int(item['mode'], 8))
         else:
@@ -986,6 +990,8 @@ def _task_package_materials(
 def _write_gt(root: Path, entries: Sequence[tuple[Mapping[str, Any], bytes]]) -> None:
     root.mkdir(parents=True, exist_ok=False)
     directory_modes: list[tuple[Path, int]] = []
+    import posixpath
+    kinds = {str(item.get("path")): item.get("kind") for item, _ in entries}
     for item, data in entries:
         relative = _safe_relative(item.get("path"), "gt entry")
         target = root.joinpath(*relative.parts)
@@ -1000,7 +1006,7 @@ def _write_gt(root: Path, entries: Sequence[tuple[Mapping[str, Any], bytes]]) ->
             target.parent.mkdir(parents=True, exist_ok=True)
             link_target = data.decode("utf-8", errors="surrogateescape")
             _safe_symlink_target(relative, link_target)
-            os.symlink(link_target, target)
+            portable_links.symlink(link_target, target, target_is_directory=kinds.get(posixpath.normpath(str(relative.parent / link_target))) == "directory")
             if isinstance(item.get('mode'), str):
                 _preserve_symlink_mode(target, int(item['mode'], 8))
         else:

@@ -120,12 +120,12 @@ def _config(value):
 
 
 def _files(root):
-    return {row["path"]: row["sha256"] for row in inventory(root) if row["kind"] == "file"}
+    return {row["path"]: ("symlink:" + row["sha256"] if row["kind"] == "symlink" else row["sha256"]) for row in inventory(root, allow_symlinks=True) if row["kind"] in {"file", "symlink"}}
 
 
 def _copy(source, target):
-    inventory(source)  # reject links and unsupported file types before copying
-    shutil.copytree(source, target)
+    inventory(source, allow_symlinks=True)  # validate bounded link targets before copying
+    shutil.copytree(source, target, symlinks=True)
 
 
 def _prompt(scene, task_id, record, archive, attempt, config):
@@ -178,7 +178,7 @@ def _prepare(batch, item, work, attempt, config):
     receipt = definition / "task-definition.json"
     if receipt.is_file():
         task = read_json(receipt)
-        if task["definition_inventory"] != [row for row in inventory(definition) if row["path"] != receipt.name]:
+        if task["definition_inventory"] != [row for row in inventory(definition, allow_symlinks=True) if row["path"] != receipt.name]:
             raise E2EError("DESKTOP_SCORING_INPUT_DRIFT")
         return task
     if not context.is_dir():
@@ -207,7 +207,7 @@ def _prepare(batch, item, work, attempt, config):
             "task_id": item["task_id"], "attempt": attempt, "timeout_seconds": config["timeout_seconds"],
             "execution_record": handoff.get("execution_record"), "scoring_package": handoff.get("scoring_package")}
     atomic_json(tooling / "skill-lock.json", lock)
-    for name in ("desktop_score_guest.py", "desktop_score_runtime.py", "preprocess_windows_guest.py"):
+    for name in ("desktop_score_guest.py", "desktop_score_runtime.py", "preprocess_windows_guest.py", "workspace_links.py"):
         shutil.copyfile(Path(__file__).with_name(name), tooling / name)
     if scene == "web":
         for name in ("desktop_web_browser.md", "desktop_web_screenshot.mjs", "desktop_web_bundle_guest.py"):
@@ -221,7 +221,7 @@ def _prepare(batch, item, work, attempt, config):
     (definition / "execution/PROMPT.md").write_text(
         _prompt(scene, item["task_id"], record, archive, attempt, config), encoding="utf-8")
     task = {"input_root": "input", "task_id": item["task_id"], "skill_lock": lock,
-            "definition_inventory": inventory(definition)}
+            "definition_inventory": inventory(definition, allow_symlinks=True)}
     atomic_json(receipt, task)
     return task
 
@@ -729,7 +729,7 @@ def _job(batch, item, config, agentcube, root, attempt, cancel):
                     temporary = work / ".rule-return"
                     if temporary.exists():
                         shutil.rmtree(temporary)
-                    extract_zip(archive, temporary)
+                    extract_zip(archive, temporary, allow_symlinks=True)
                     temporary.rename(returned)
                 context = read_json(work / "context/handoff.json")
                 score, number, verification, other = _read_general(work, returned, context, attempt, config["model"], needs_agent=False)

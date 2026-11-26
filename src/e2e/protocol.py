@@ -16,6 +16,7 @@ from .common import E2EError, digest, file_sha256, inside, read_json
 from .preparation import (
     canonical_script,
     normalize_plan,
+    general_workspace_links,
     _general_catalog,
     _current_general,
     _web_catalog,
@@ -81,6 +82,7 @@ def describe(repo: Path) -> dict:
             "managed-agentcube-templates-v1",
             "preflight",
             "runtime-preflight",
+            "relative-workspace-symlinks-v1",
             "workbuddy-permission",
             "environment-status",
             "windows-astudio-runtime-bootstrap",
@@ -303,6 +305,10 @@ def preflight(repo: Path, raw: dict, config_path: Path | None = None, *, check_r
             )
     for task in tasks:
         if task["scene"] == "general":
+            try:
+                general_workspace_links(task, members)
+            except E2EError as error:
+                issues.append({'task_id': task['task_id'], 'code': str(error).split(':', 1)[0], 'message': str(error)})
             contract = json.loads(
                 members[task["bundle"]["execution_contract_path"]].data
             )

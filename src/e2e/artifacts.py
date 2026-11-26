@@ -52,7 +52,7 @@ def copy_stream_readonly(source, destination: Path, mode=0o444):
         _protect_office_inode(destination, output.fileno())
 
 
-def inventory(root: Path) -> list[dict]:
+def inventory(root: Path, *, allow_symlinks=False) -> list[dict]:
     if root.is_symlink() or not root.is_dir():
         raise E2EError("ARTIFACT_ROOT_INVALID")
     rows = []
@@ -60,6 +60,14 @@ def inventory(root: Path) -> list[dict]:
         relative = path.relative_to(root).as_posix()
         relative_path(relative)
         if relative == SEAL:
+            continue
+        if path.is_symlink() and allow_symlinks:
+            from .workspace_links import link_entry
+            try:
+                row = link_entry(relative, os.readlink(path))
+            except (ValueError, RuntimeError) as error:
+                raise E2EError(str(error)) from error
+            rows.append({**row, 'mode': 0o777})
             continue
         if path.is_symlink() or not (path.is_file() or path.is_dir()):
             raise E2EError(f"UNSUPPORTED_ARTIFACT_TYPE: {relative}")
@@ -72,7 +80,7 @@ def inventory(root: Path) -> list[dict]:
 
 
 def _verify_tree(root: Path, manifest: dict) -> None:
-    actual = inventory(root)
+    actual = inventory(root, allow_symlinks=any(row['kind'] == 'symlink' for row in manifest['entries']))
     # Write permissions may be removed by the explicit readonly protection policy.
     def content(rows):
         return [{key: value for key, value in row.items() if key != "mode"} for row in rows]
@@ -80,9 +88,13 @@ def _verify_tree(root: Path, manifest: dict) -> None:
         raise E2EError("EXECUTION_ORIGINAL_DRIFT")
 
 
-def _protect(root: Path) -> None:
+def _protect(root: Path, *, allow_symlinks=False) -> None:
     for path in sorted(root.rglob("*"), key=lambda p: len(p.parts), reverse=True):
         if path.is_symlink():
+            if allow_symlinks:
+                from .workspace_links import target_path
+                target_path(path.relative_to(root).as_posix(), os.readlink(path))
+                continue
             raise E2EError("UNSUPPORTED_ARTIFACT_LINK")
         mode = stat.S_IMODE(path.stat().st_mode)
         if mode & 0o222:
@@ -128,8 +140,8 @@ def freeze_metadata_files(root: Path):
             path.parent.chmod(mode)
 
 
-def quarantine_local_metadata(root: Path, expected_files: set[str], quarantine: Path) -> list[dict]:
-    actual = {path.relative_to(root).as_posix() for path in root.rglob("*") if path.is_file()}
+def quarantine_local_metadata(root: Path, expected_files: set[str], quarantine: Path, *, allow_symlinks=False) -> list[dict]:
+    actual = {path.relative_to(root).as_posix() for path in root.rglob("*") if path.is_file() and (not allow_symlinks or not path.is_symlink())}
     extras = sorted(actual - expected_files)
     if not extras:
         return []
@@ -158,21 +170,29 @@ def quarantine_local_metadata(root: Path, expected_files: set[str], quarantine: 
         "basis": "Files absent from the source archive or source tree; preserved outside the candidate payload"})
     if any(Path(row["path"]).name != ".DS_Store" for row in records):
         raise E2EError("UNDECLARED_LOCAL_CONTENT_QUARANTINED")
-    actual = {path.relative_to(root).as_posix() for path in root.rglob("*") if path.is_file()}
+    actual = {path.relative_to(root).as_posix() for path in root.rglob("*") if path.is_file() and (not allow_symlinks or not path.is_symlink())}
     if actual != expected_files:
         raise E2EError("LOCAL_CONTENT_CHANGED_DURING_QUARANTINE")
     return records
 
 
-def _members(archive: zipfile.ZipFile) -> dict[str, zipfile.ZipInfo]:
+def _members(archive: zipfile.ZipFile, *, allow_symlinks=False) -> dict[str, zipfile.ZipInfo]:
     members = {}
     total = 0
     for info in archive.infolist():
         name = info.filename.rstrip("/")
         relative_path(name)
         kind = stat.S_IFMT(info.external_attr >> 16)
-        if name in members or kind == stat.S_IFLNK:
+        if name in members or (kind == stat.S_IFLNK and not allow_symlinks):
             raise E2EError("ARCHIVE_DUPLICATE_OR_LINK")
+        if kind == stat.S_IFLNK:
+            from .workspace_links import target_path
+            if info.file_size > 32768:
+                raise E2EError('ARCHIVE_LINK_TARGET_TOO_LARGE')
+            try:
+                target_path(name, archive.read(info).decode('utf-8'))
+            except (ValueError, UnicodeError) as error:
+                raise E2EError(str(error)) from error
         members[name] = info
         total += info.file_size
         if len(members) > 100_000 or total > MAX_ARCHIVE_BYTES:
@@ -185,25 +205,51 @@ def _members(archive: zipfile.ZipFile) -> dict[str, zipfile.ZipInfo]:
     return members
 
 
+def write_zip_member(archive, root, row):
+    if row['kind'] == 'symlink':
+        info = zipfile.ZipInfo(row['path'])
+        info.create_system = 3
+        info.external_attr = (stat.S_IFLNK | 0o777) << 16
+        archive.writestr(info, row['target'].encode('utf-8'))
+    else:
+        archive.write(inside(root, row['path']), row['path'])
+
+
+def materialize_zip_links(archive, members, root, *, strip_root=False):
+    from .workspace_links import install
+    links = []
+    for name, info in members.items():
+        if stat.S_IFMT(info.external_attr >> 16) == stat.S_IFLNK:
+            relative = '/'.join(name.split('/')[1:]) if strip_root else name
+            links.append({'path': relative, 'target': archive.read(info).decode('utf-8')})
+    if links:
+        try:
+            install(root, links)
+        except ValueError as error:
+            raise E2EError(str(error)) from error
+
+
 def _verify_archive(path: Path, expected_seal_sha: str | None = None) -> dict:
     with zipfile.ZipFile(path) as archive:
-        members = _members(archive)
+        members = _members(archive, allow_symlinks=True)
         if SEAL not in members:
             raise E2EError("ARCHIVE_SEAL_MISSING")
         seal_bytes = archive.read(SEAL)
         if expected_seal_sha and hashlib.sha256(seal_bytes).hexdigest() != expected_seal_sha:
             raise E2EError("ARCHIVE_SEAL_MISMATCH")
         manifest = json.loads(seal_bytes)
-        if manifest.get("schema") != "wildclawbench.execution-original/v1":
+        if manifest.get("schema") not in {"wildclawbench.execution-original/v1", "wildclawbench.execution-original/v2"}:
             raise E2EError("ARCHIVE_SEAL_SCHEMA_INVALID")
         entries = manifest["entries"]
         if not isinstance(entries, list) or not isinstance(manifest.get("identity"), dict):
             raise E2EError("ARCHIVE_SEAL_INVALID")
+        if manifest['schema'].endswith('/v1') and any(isinstance(row, dict) and row.get('kind') == 'symlink' for row in entries):
+            raise E2EError('ARCHIVE_LINK_SCHEMA_REQUIRED')
         for row in entries:
-            if (not isinstance(row, dict) or row.get("kind") not in {"file", "directory"}
+            if (not isinstance(row, dict) or row.get("kind") not in {"file", "directory", "symlink"}
                     or type(row.get("mode")) is not int or not 0 <= row["mode"] <= 0o777):
                 raise E2EError("ARCHIVE_ENTRY_INVALID")
-            if row["kind"] == "file" and (type(row.get("size")) is not int or row["size"] < 0
+            if row["kind"] in {'file', 'symlink'} and (type(row.get("size")) is not int or row["size"] < 0
                     or not re.fullmatch(r"[0-9a-f]{64}", str(row.get("sha256")))):
                 raise E2EError("ARCHIVE_ENTRY_CONTENT_INVALID")
         if len({row["path"] for row in entries}) != len(entries):
@@ -215,7 +261,12 @@ def _verify_archive(path: Path, expected_seal_sha: str | None = None) -> dict:
             info = members[row["path"]]
             if info.is_dir() != (row["kind"] == "directory"):
                 raise E2EError("ARCHIVE_MEMBER_TYPE_MISMATCH")
-            if row["kind"] == "file":
+            is_link = stat.S_IFMT(info.external_attr >> 16) == stat.S_IFLNK
+            if is_link != (row['kind'] == 'symlink'):
+                raise E2EError('ARCHIVE_MEMBER_TYPE_MISMATCH')
+            if row['kind'] == 'symlink' and archive.read(info).decode('utf-8') != row.get('target'):
+                raise E2EError('ARCHIVE_LINK_TARGET_MISMATCH')
+            if row["kind"] in {'file', 'symlink'}:
                 if info.file_size != row["size"]:
                     raise E2EError("ARCHIVE_MEMBER_SIZE_MISMATCH")
                 h = hashlib.sha256()
@@ -227,17 +278,19 @@ def _verify_archive(path: Path, expected_seal_sha: str | None = None) -> dict:
         return manifest
 
 
-def extract_zip(archive_path: Path, destination: Path, *, strip_root: bool = False, readonly_data: bool = False):
+def extract_zip(archive_path: Path, destination: Path, *, strip_root: bool = False, readonly_data: bool = False, allow_symlinks=False):
     if destination.exists():
         raise E2EError("EXTRACT_DESTINATION_EXISTS")
     destination.mkdir(parents=True)
     try:
         with zipfile.ZipFile(archive_path) as archive:
-            members = _members(archive)
+            members = _members(archive, allow_symlinks=allow_symlinks)
             roots = {relative_path(name).parts[0] for name in members}
             if strip_root and len(roots) != 1:
                 raise E2EError("ARCHIVE_ROOT_AMBIGUOUS")
             for name, info in members.items():
+                if stat.S_IFMT(info.external_attr >> 16) == stat.S_IFLNK:
+                    continue
                 parts = relative_path(name).parts[1:] if strip_root else relative_path(name).parts
                 if not parts:
                     continue
@@ -255,6 +308,8 @@ def extract_zip(archive_path: Path, destination: Path, *, strip_root: bool = Fal
                         with archive.open(info) as source, path.open("xb") as output:
                             shutil.copyfileobj(source, output)
                         path.chmod(mode | 0o600)
+            if allow_symlinks:
+                materialize_zip_links(archive, members, destination, strip_root=strip_root)
     except BaseException:
         remove_temporary_tree(destination)
         raise
@@ -269,27 +324,29 @@ def seal_execution(execution_root: Path, identity: dict) -> dict:
         receipt = verify_execution(execution_root)
         if receipt["identity"] != identity:
             raise E2EError("EXECUTION_IDENTITY_CONFLICT")
-        _protect(original)
+        _protect(original, allow_symlinks=True)
         return receipt
     if not original.exists():
         if not staging.is_dir():
             raise E2EError("EXECUTION_STAGING_MISSING")
         freeze_metadata_files(staging)
-        manifest = {"schema": "wildclawbench.execution-original/v1", "identity": identity,
-                    "created_at": utc_now(), "entries": inventory(staging)}
+        rows = inventory(staging, allow_symlinks=True)
+        version = 2 if any(row['kind'] == 'symlink' for row in rows) else 1
+        manifest = {"schema": "wildclawbench.execution-original/v" + str(version), "identity": identity,
+                    "created_at": utc_now(), "entries": rows}
         atomic_json(staging / SEAL, manifest, create=True)
         staging.rename(original)
     manifest = read_json(original / SEAL)
     if manifest["identity"] != identity:
         raise E2EError("EXECUTION_IDENTITY_CONFLICT")
-    _protect(original)
+    _protect(original, allow_symlinks=True)
     _verify_tree(original, manifest)
     backups.mkdir(exist_ok=True)
     temporary = backups / (".execution-" + uuid.uuid4().hex + ".zip")
     try:
         with zipfile.ZipFile(temporary, "x", compression=zipfile.ZIP_DEFLATED, allowZip64=True) as archive:
             for row in manifest["entries"]:
-                archive.write(inside(original, row["path"]), row["path"])
+                write_zip_member(archive, original, row)
             archive.write(original / SEAL, SEAL)
         seal_sha = file_sha256(original / SEAL)
         _verify_archive(temporary, seal_sha)
@@ -358,6 +415,8 @@ def restore_execution(execution_root: Path, destination: Path) -> dict:
     try:
         with zipfile.ZipFile(inside(execution_root, receipt["archive"])) as archive:
             for row in manifest["entries"]:
+                if row["kind"] == "symlink":
+                    continue
                 path = inside(temporary, row["path"])
                 if row["kind"] == "directory":
                     path.mkdir(parents=True, exist_ok=True)
@@ -365,11 +424,12 @@ def restore_execution(execution_root: Path, destination: Path) -> dict:
                     path.parent.mkdir(parents=True, exist_ok=True)
                     with archive.open(row["path"]) as source:
                         copy_stream_readonly(source, path, row["mode"])
+            materialize_zip_links(archive, _members(archive, allow_symlinks=True), temporary)
             with archive.open(SEAL) as source:
                 copy_stream_readonly(source, temporary / SEAL)
-        _protect(temporary)
+        _protect(temporary, allow_symlinks=True)
         expected_files = {row["path"] for row in manifest["entries"] if row["kind"] == "file"} | {SEAL}
-        quarantine_local_metadata(temporary, expected_files, destination.parent / ".local-metadata" / uuid.uuid4().hex)
+        quarantine_local_metadata(temporary, expected_files, destination.parent / ".local-metadata" / uuid.uuid4().hex, allow_symlinks=True)
         _verify_tree(temporary, manifest)
         temporary.rename(destination)
     finally:
@@ -413,7 +473,7 @@ def import_execution(archive_path: Path, receipt_path: Path, destination: Path) 
         imported = {**receipt, "archive": "backups/execution-original.zip"}
         atomic_json(temporary / "backups/backup-receipt.json", imported)
         restore_execution(temporary, temporary / "original")
-        _protect(temporary / "original")
+        _protect(temporary / "original", allow_symlinks=True)
         temporary.rename(destination)
     finally:
         if temporary.exists():
