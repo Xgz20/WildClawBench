@@ -1,13 +1,11 @@
 from __future__ import annotations
 
-import importlib.util
 import json
 import os
 from pathlib import Path
 import subprocess
 import tempfile
 import unittest
-from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -51,6 +49,8 @@ class HeadlessScorerBuildTests(unittest.TestCase):
                                     env={**environment, 'FAIL_VALIDATION': '7'}, capture_output=True)
             self.assertNotEqual(result.returncode, 0)
             self.assertNotIn('image inspect', (root / 'calls').read_text())
+            self.assertFalse((root / 'runtime-validation.json').exists())
+            self.assertFalse((root / 'image-receipt.txt').exists())
 
     def test_version_labels_follow_build_args(self):
         dockerfile = (ROOT / 'docker/e2e-scorer/Dockerfile').read_text()

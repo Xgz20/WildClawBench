@@ -3,6 +3,8 @@
 set -euo pipefail
 CONTEXT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${CONTEXT_DIR}/build-inputs.env"
+# A failed rebuild must not leave a previous success receipt looking current.
+rm -f "${CONTEXT_DIR}/runtime-validation.json" "${CONTEXT_DIR}/image-receipt.txt"
 DOCKER=(docker --context "${DOCKER_CONTEXT}")
 BUILD_ARGS=()
 for key in EVAL_BASE_IMAGE NODE_RUNTIME_IMAGE CODEX_VERSION DSH_VERSION NPM_REGISTRY PIP_INDEX_URL; do

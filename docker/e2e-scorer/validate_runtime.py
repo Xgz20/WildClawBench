@@ -5,7 +5,6 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
-import os
 from pathlib import Path
 import subprocess
 import sys
@@ -26,7 +25,8 @@ def office_smoke(root: Path) -> dict:
     import fitz
 
     # Match the minimal environment used by rule workers (no inherited keys).
-    env = {'PATH': str(RUNTIME / 'bin'), 'PYTHONUTF8': '1', 'LANG': 'C.UTF-8', 'LC_ALL': 'C.UTF-8'}
+    env = {'PATH': str(RUNTIME / 'bin'), 'PYTHONNOUSERSITE': '1', 'PYTHONDONTWRITEBYTECODE': '1',
+           'PYTHONUTF8': '1', 'LANG': 'C.UTF-8', 'LC_ALL': 'C.UTF-8'}
     office = str(RUNTIME / 'bin/soffice')
     document = Document()
     document.add_paragraph('SCORER_WORD_SMOKE 中文办公验证')
@@ -63,13 +63,13 @@ def office_smoke(root: Path) -> dict:
         pdf = source.with_suffix('.pdf')
         with fitz.open(pdf) as rendered:
             text = ''.join(page.get_text() for page in rendered)
-            if rendered.page_count < 1 or marker not in text:
+            if rendered.page_count < 1 or marker not in text or '中文' not in text:
                 raise RuntimeError(f'OFFICE_RENDER_INVALID: {name}')
             if name == 'calc.xlsx' and '42' not in text:
                 raise RuntimeError('OFFICE_CALC_FORMULA_NOT_RECALCULATED')
             for index, page in enumerate(rendered):
                 page.get_pixmap().save(root / f'{source.stem}-{index + 1}.png')
-            rows[name] = {'pages': rendered.page_count, 'marker_found': True,
+            rows[name] = {'pages': rendered.page_count, 'marker_found': True, 'chinese_text_found': True,
                           'source_sha256': before, 'pdf_sha256': hashlib.sha256(pdf.read_bytes()).hexdigest()}
         if hashlib.sha256(source.read_bytes()).hexdigest() != before:
             raise RuntimeError(f'OFFICE_SOURCE_CHANGED: {name}')
