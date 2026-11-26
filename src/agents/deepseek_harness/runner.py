@@ -702,13 +702,9 @@ class DeepSeekHarnessAgent(BaseAgent):
                 f"DSH session export failed: {completed.stderr.strip()}"
             )
 
-        if not any(destination.rglob("session.jsonl")):
-            DeepSeekHarnessAgent._write_zero_usage(output_dir)
-            raise DshSessionFormatError(
-                f"no session.jsonl found below {destination}"
-            )
-
         try:
+            # The converter owns file/version discovery for both legacy and v4
+            # sessions; do not pre-filter by the retired unversioned filename.
             write_conversion(destination, output_dir)
         except Exception:
             DeepSeekHarnessAgent._write_zero_usage(output_dir)

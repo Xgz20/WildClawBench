@@ -17,6 +17,7 @@ from src.utils.model_limits import (
     prepare_maas_max_tokens_resolution,
     resolve_maas_max_tokens,
     resolve_maas_max_tokens_details,
+    resolve_opencode_model_limits,
 )
 
 
@@ -266,6 +267,160 @@ class ModelLimitTests(unittest.TestCase):
         )
         for secret in ("user", "password", "query-secret"):
             self.assertNotIn(secret, serialized)
+
+    def test_opencode_freezes_catalog_context_and_output_for_resume(self) -> None:
+        payload = self._payload({
+            "slug": "spark-x2.6", "context_window": 1048576,
+            "max_output_tokens": 100000,
+        })
+        with tempfile.TemporaryDirectory() as temp_dir, patch(
+            "src.utils.model_limits.urlopen", return_value=_Response(payload)
+        ) as request:
+            first = prepare_maas_max_tokens_resolution(
+                "openrouter/spark-x2.6", "https://maas.example/v2", Path(temp_dir),
+                environ=self.environ, require_context_window=True,
+            )
+            self.assertEqual(first["context_window"], 1048576)
+            self.assertEqual(first["max_tokens"], 100000)
+            self.assertEqual(first["context_source"], "astron_model_catalog")
+            self.assertEqual(request.call_count, 1)
+            clear_model_limit_caches()
+            with patch("src.utils.model_limits.urlopen") as resumed_request:
+                resumed = prepare_maas_max_tokens_resolution(
+                    "openrouter/spark-x2.6", "https://maas.example/v2", Path(temp_dir),
+                    environ={**self.environ, "OPENCODE_CONTEXT_WINDOW": "32768"},
+                    resume=True, require_context_window=True,
+                )
+            self.assertEqual(resumed["context_window"], 1048576)
+            self.assertTrue(resumed["reused_from_snapshot"])
+            resumed_request.assert_not_called()
+            with patch("src.utils.model_limits.urlopen") as worker_request:
+                worker = resolve_opencode_model_limits(
+                    "spark-x2.6", "https://maas.example/v2", environ={})
+            self.assertEqual(worker["context_window"], 1048576)
+            self.assertEqual(worker["max_tokens"], 100000)
+            worker_request.assert_not_called()
+
+    def test_opencode_uses_explicit_context_without_catalog(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir, patch("src.utils.model_limits.urlopen") as request:
+            details = prepare_maas_max_tokens_resolution(
+                "spark-x2.6", "https://maas.example/v2", Path(temp_dir),
+                environ={**self.environ, "MAAS_MAX_TOKENS": "8192",
+                         "OPENCODE_CONTEXT_WINDOW": "65536"},
+                require_context_window=True,
+            )
+        self.assertEqual(details["max_tokens"], 8192)
+        self.assertEqual(details["context_window"], 65536)
+        self.assertEqual(details["context_source"], "explicit_env")
+        request.assert_not_called()
+
+    def test_opencode_explicit_output_can_resolve_context_from_catalog(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir, patch(
+            "src.utils.model_limits.urlopen",
+            return_value=_Response(self._payload({
+                "slug": "spark-x2.6", "context_window": 1048576,
+                "max_output_tokens": 100000,
+            })),
+        ):
+            details = prepare_maas_max_tokens_resolution(
+                "spark-x2.6", "https://maas.example/v2", Path(temp_dir),
+                environ={**self.environ, "MAAS_MAX_TOKENS": "8192"},
+                require_context_window=True,
+            )
+        self.assertEqual(details["source"], "explicit_env")
+        self.assertEqual(details["max_tokens"], 8192)
+        self.assertEqual(details["context_window"], 1048576)
+        self.assertTrue(details["context_catalog_sha256"])
+
+    def test_opencode_rejects_missing_invalid_or_too_small_context(self) -> None:
+        for context in (None, "", "invalid", "0", "-1", "512"):
+            with self.subTest(context=context), tempfile.TemporaryDirectory() as temp_dir:
+                clear_model_limit_caches()
+                environ = {"WILDCLAW_MAAS_MAX_TOKENS_ENABLED": "true", "MAAS_MAX_TOKENS": "1024"}
+                if context is not None: environ["OPENCODE_CONTEXT_WINDOW"] = context
+                with self.assertRaisesRegex(ValueError, "context|OPENCODE_CONTEXT_WINDOW"):
+                    prepare_maas_max_tokens_resolution(
+                        "spark-x2.6", "https://maas.example/v2", Path(temp_dir),
+                        environ=environ, require_context_window=True,
+                    )
+                self.assertFalse((Path(temp_dir) / MODEL_LIMIT_RESOLUTION_FILENAME).exists())
+
+    def test_opencode_does_not_enrich_legacy_resume_snapshot_silently(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            output = Path(temp_dir)
+            prepare_maas_max_tokens_resolution(
+                "spark-x2.6", "https://maas.example/v2", output,
+                environ={**self.environ, "MAAS_MAX_TOKENS": "8192"},
+            )
+            before = (output / MODEL_LIMIT_RESOLUTION_FILENAME).read_bytes()
+            clear_model_limit_caches()
+            with self.assertRaisesRegex(ValueError, "snapshot.*context_window|context_window.*snapshot"):
+                prepare_maas_max_tokens_resolution(
+                    "spark-x2.6", "https://maas.example/v2", output, resume=True,
+                    environ={**self.environ, "MAAS_MAX_TOKENS": "8192",
+                             "OPENCODE_CONTEXT_WINDOW": "65536"},
+                    require_context_window=True,
+                )
+            self.assertEqual(before, (output / MODEL_LIMIT_RESOLUTION_FILENAME).read_bytes())
+
+    def test_opencode_missing_model_or_context_in_catalog_is_rejected(self) -> None:
+        for entry, reason in (
+            ({"slug": "other", "context_window": 65536}, "model_not_found"),
+            ({"slug": "spark-x2.6", "max_output_tokens": 8192}, "context_window_missing"),
+            ({"slug": "spark-x2.6", "context_window": 0}, "context_window_missing"),
+        ):
+            with self.subTest(reason=reason):
+                clear_model_limit_caches()
+                with patch("src.utils.model_limits.urlopen", return_value=_Response(self._payload(entry))):
+                    with self.assertRaisesRegex(ValueError, reason):
+                        resolve_opencode_model_limits(
+                            "spark-x2.6", "https://maas.example/v2",
+                            environ={**self.environ, "MAAS_MAX_TOKENS": "8192"},
+                        )
+
+    def test_opencode_catalog_outage_does_not_fabricate_context(self) -> None:
+        with patch("src.utils.model_limits.urlopen", side_effect=URLError("unavailable")):
+            with self.assertRaisesRegex(ValueError, "catalog_unavailable"):
+                resolve_opencode_model_limits(
+                    "spark-x2.6", "https://maas.example/v2",
+                    environ={**self.environ, "MAAS_MAX_TOKENS": "8192"},
+                )
+
+    def test_opencode_large_explicit_output_warns_without_clamping(self) -> None:
+        with patch("src.utils.model_limits.urlopen", return_value=_Response(self._payload({
+            "slug": "spark-x2.6", "context_window": 1048576, "max_output_tokens": 100000,
+        }))), self.assertLogs("src.utils.model_limits", level="WARNING") as logs:
+            details = resolve_opencode_model_limits(
+                "spark-x2.6", "https://maas.example/v2",
+                environ={**self.environ, "MAAS_MAX_TOKENS": "256000"},
+            )
+        self.assertEqual(details["max_tokens"], 256000)
+        self.assertEqual(details["catalog_max_output_tokens"], 100000)
+        self.assertIn("exceeds catalog", " ".join(logs.output))
+
+    def test_opencode_non_maas_model_does_not_gain_a_limit(self) -> None:
+        with patch("src.utils.model_limits.urlopen") as request:
+            details = resolve_opencode_model_limits(
+                "openrouter/gpt-5.5", "https://one.iflytek.com/v1",
+                environ={**self.environ, "MAAS_MAX_TOKENS": "8192",
+                         "OPENCODE_CONTEXT_WINDOW": "65536"},
+            )
+        self.assertIsNone(details["max_tokens"])
+        self.assertNotIn("context_window", details)
+        request.assert_not_called()
+
+    def test_opencode_context_provenance_is_redacted(self) -> None:
+        with patch("src.utils.model_limits.urlopen", return_value=_Response(self._payload({
+            "slug": "spark-x2.6", "context_window": 1048576,
+        }))):
+            details = resolve_opencode_model_limits(
+                "spark-x2.6", "https://maas.example/v2",
+                environ={**self.environ, "MAAS_MAX_TOKENS": "8192",
+                         "ASTRON_MODELS_BASE_URL": "https://user:password@catalog.example?token=secret"},
+            )
+        self.assertEqual(details["context_catalog_url"], "https://catalog.example/models")
+        for secret in ("user", "password", "secret", "catalog-test-token"):
+            self.assertNotIn(secret, json.dumps(details))
 
     def test_non_maas_model_is_unchanged(self) -> None:
         self.assertFalse(is_maas_model("openrouter/gpt-5.5", "https://openrouter.ai/api/v1"))

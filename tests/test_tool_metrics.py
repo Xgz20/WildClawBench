@@ -5,6 +5,8 @@
 from __future__ import annotations
 
 import json
+import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -51,6 +53,22 @@ def _tool_result(
     if is_error is not None:
         block["is_error"] = is_error
     return block
+
+
+class ToolMetricsImportCompatibilityTests(unittest.TestCase):
+    def test_framework_and_platform_namespace_imports_are_supported(self):
+        root = Path(__file__).resolve().parents[1]
+        for path, module in [(root, "src.utils.tool_metrics"), (root / "src", "utils.tool_metrics")]:
+            with self.subTest(module=module), tempfile.TemporaryDirectory() as cwd:
+                code = (
+                    "import importlib,sys; "
+                    f"sys.path.insert(0, {str(path)!r}); "
+                    f"m=importlib.import_module({module!r}); "
+                    "assert callable(m.parse_tool_metrics); assert callable(m.parse_report_tool_metrics)"
+                )
+                result = subprocess.run([sys.executable, "-I", "-c", code],
+                                        cwd=cwd, text=True, capture_output=True, check=False)
+                self.assertEqual(result.returncode, 0, result.stderr)
 
 
 class CodexClassifierTest(unittest.TestCase):
@@ -731,11 +749,17 @@ class ParseIntegrationTest(unittest.TestCase):
         self.assertEqual(metrics["failure"], 1)
 
     def test_deepseek_report_format_uses_native_request_schema(self):
+        self._assert_deepseek_native_schema("session.jsonl", 0)
+
+    def test_deepseek_report_format_reads_versioned_v4_session(self):
+        self._assert_deepseek_native_schema("session.v4.jsonl", 4)
+
+    def _assert_deepseek_native_schema(self, filename, version):
         run_dir = Path(self.tmp.name) / "run"
         session_dir = run_dir / "dsh_sessions" / "session-1"
         session_dir.mkdir(parents=True)
         events = [
-            {"type": "session", "version": 0, "id": "session-1"},
+            {"type": "session", "version": version, "id": "session-1", "createdAt": 1},
             {
                 "type": "request/header",
                 "data": {
@@ -767,7 +791,7 @@ class ParseIntegrationTest(unittest.TestCase):
                 "data": {"callId": "d2", "name": "bash", "arguments": "{}"},
             },
         ]
-        (session_dir / "session.jsonl").write_text(
+        (session_dir / filename).write_text(
             "\n".join(json.dumps(event) for event in events) + "\n",
             encoding="utf-8",
         )

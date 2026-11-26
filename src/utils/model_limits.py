@@ -3,7 +3,8 @@
 The formal Judge has its own ``JUDGE_MAX_TOKENS`` setting and must not use
 this module. This module only resolves the output limit for MaaS candidate
 models. Unless an explicit ``MAAS_MAX_TOKENS`` override is present, the
-limit is read from the same Astron model catalog used by AstronCode.
+limit is read from the same Astron model catalog used by AstronCode. OpenCode
+also requires a trusted context window when its model limit is configured.
 """
 
 from __future__ import annotations
@@ -25,6 +26,7 @@ logger = logging.getLogger(__name__)
 
 MAAS_MAX_TOKENS_ENV = "MAAS_MAX_TOKENS"
 MAAS_MAX_TOKENS_ENABLED_ENV = "WILDCLAW_MAAS_MAX_TOKENS_ENABLED"
+OPENCODE_CONTEXT_WINDOW_ENV = "OPENCODE_CONTEXT_WINDOW"
 ASTRON_MODELS_API_KEY_ENV = "ASTRON_MODELS_API_KEY"
 ASTRON_MODELS_BASE_URL_ENV = "ASTRON_MODELS_BASE_URL"
 DEFAULT_ASTRON_MODELS_BASE_URL = (
@@ -226,7 +228,7 @@ def _fetch_model_catalog(environ: Mapping[str, str]) -> dict[str, Any]:
             }
             logger.warning(
                 "Astron model catalog lookup failed (%s); "
-                "MaaS max token injection is disabled for this run",
+                "catalog-backed model limits are unavailable",
                 type(exc).__name__,
             )
         _catalog_cache[cache_key] = result
@@ -365,6 +367,73 @@ def resolve_maas_max_tokens_details(
     )
 
 
+def _complete_opencode_limits(
+    resolution: Mapping[str, Any], environ: Mapping[str, str],
+) -> dict[str, Any]:
+    """Complete OpenCode's required limit pair without inventing a context size."""
+    result = dict(resolution)
+    output = parse_positive_int(result.get("max_tokens"))
+    if result.get("max_tokens") is not None and output is None:
+        raise ValueError("OpenCode model-limit snapshot contains invalid max_tokens")
+    if output is None:
+        return result
+    context = parse_positive_int(result.get("context_window"))
+    if context is None:
+        raw = str(environ.get(OPENCODE_CONTEXT_WINDOW_ENV, "")).strip()
+        if raw:
+            context = parse_positive_int(raw)
+            if context is None:
+                raise ValueError(f"{OPENCODE_CONTEXT_WINDOW_ENV} must be a positive integer")
+            result["context_source"] = "explicit_env"
+        else:
+            catalog = _fetch_model_catalog(environ)
+            matched = next(
+                (entry for entry in catalog["models"]
+                 if str(entry.get("slug", "")).strip().lower() == result["model"]),
+                None,
+            )
+            context = parse_positive_int((matched or {}).get("context_window"))
+            if context is None:
+                reason = catalog["status"] if catalog["status"] != "catalog_loaded" else (
+                    "model_not_found" if matched is None else "context_window_missing")
+                raise ValueError(
+                    "OpenCode MaaS limit injection requires a trusted context_window "
+                    f"({reason}); set {OPENCODE_CONTEXT_WINDOW_ENV} from verified model "
+                    "metadata, or disable WILDCLAW_MAAS_MAX_TOKENS_ENABLED in a new output directory"
+                )
+            result.update(
+                context_source="astron_model_catalog",
+                context_catalog_url=catalog.get("catalog_url"),
+                context_catalog_sha256=catalog.get("catalog_sha256"),
+                context_catalog_credential_env=catalog.get("credential_env"),
+            )
+            catalog_output = parse_positive_int((matched or {}).get("max_output_tokens"))
+            if catalog_output is not None:
+                result["catalog_max_output_tokens"] = catalog_output
+                if output > catalog_output:
+                    logger.warning(
+                        "OpenCode output override %s exceeds catalog max_output_tokens=%s; "
+                        "retaining the explicit override, verify upstream support", output, catalog_output,
+                    )
+        result["context_window"] = context
+    if output > context:
+        raise ValueError(
+            f"OpenCode output limit {output} exceeds context_window {context}; "
+            "verify MAAS_MAX_TOKENS and OPENCODE_CONTEXT_WINDOW"
+        )
+    return result
+
+
+def resolve_opencode_model_limits(
+    model: str, base_url: str = "", *, environ: Mapping[str, str] | None = None,
+) -> dict[str, Any]:
+    """Return an atomic output/context pair, or no limit when injection is off."""
+    env = environ if environ is not None else os.environ
+    return _complete_opencode_limits(
+        resolve_maas_max_tokens_details(model, base_url, environ=env), env,
+    )
+
+
 def resolve_maas_max_tokens(
     model: str,
     base_url: str = "",
@@ -391,6 +460,7 @@ def prepare_maas_max_tokens_resolution(
     environ: Mapping[str, str] | None = None,
     respect_enabled_switch: bool = True,
     native_managed: bool = False,
+    require_context_window: bool = False,
 ) -> dict[str, Any]:
     """Resolve once for a run, persist provenance and prime all worker threads."""
 
@@ -428,6 +498,16 @@ def prepare_maas_max_tokens_resolution(
                 respect_enabled_switch=respect_enabled_switch,
             )
         resolution["reused_from_snapshot"] = False
+
+    if require_context_window:
+        if (resolution.get("reused_from_snapshot")
+                and parse_positive_int(resolution.get("max_tokens")) is not None
+                and parse_positive_int(resolution.get("context_window")) is None):
+            raise ValueError(
+                "OpenCode model-limit snapshot lacks a valid context_window; "
+                "use a new output directory to resolve complete model limits"
+            )
+        resolution = _complete_opencode_limits(resolution, env)
 
     resolution["enabled_switch_applies"] = respect_enabled_switch
     resolution["catalog_url"] = resolution.get("catalog_url") or _safe_url(

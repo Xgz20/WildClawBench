@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import json
+import hashlib
+import shutil
 import tempfile
 import unittest
 from pathlib import Path
@@ -13,9 +15,93 @@ from src.agents.deepseek_harness.transcript import (
 
 
 FIXTURE_ROOT = Path(__file__).parent / "fixtures" / "deepseek_harness"
+V4_FIXTURE_ROOT = Path(__file__).parent / "fixtures" / "deepseek_harness_v4"
 
 
 class DeepSeekHarnessTranscriptTests(unittest.TestCase):
+    def test_v4_directory_and_direct_file_convert_messages_and_usage(self) -> None:
+        result = convert_sessions(V4_FIXTURE_ROOT)
+        self.assertEqual([s["id"] for s in result.sessions], ["v4-root-session", "v4-child-session"])
+        self.assertEqual([s["version"] for s in result.sessions], [4, 4])
+        self.assertEqual(result.usage["input_tokens"], 15)
+        self.assertEqual(result.usage["output_tokens"], 6)
+        self.assertEqual(result.usage["cache_read_tokens"], 4)
+        self.assertEqual(result.usage["cache_write_tokens"], 1)
+        self.assertEqual(result.usage["total_tokens"], 26)
+        self.assertEqual(result.usage["request_count"], 3)
+        self.assertEqual(len(result.messages), 6)
+        direct = convert_sessions(V4_FIXTURE_ROOT / "session.v4.jsonl")
+        self.assertEqual(direct.usage["total_tokens"], 22)
+        blocks = [b for m in direct.messages for b in m["message"]["content"]]
+        self.assertEqual(sum(b["type"] == "tool_use" for b in blocks), 1)
+        self.assertEqual(sum(b["type"] == "tool_result" for b in blocks), 1)
+
+    def test_mixed_legacy_and_v4_sessions_are_preserved(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            shutil.copytree(FIXTURE_ROOT, root, dirs_exist_ok=True)
+            shutil.copytree(V4_FIXTURE_ROOT, root / "v4")
+            result = convert_sessions(root)
+        self.assertEqual(len(result.sessions), 4)
+        self.assertEqual(result.usage["request_count"], 6)
+        self.assertEqual(result.usage["total_tokens"], 57)
+
+    def test_identical_session_aliases_do_not_double_count_tokens(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            shutil.copytree(V4_FIXTURE_ROOT, root, dirs_exist_ok=True)
+            shutil.copyfile(root / "session.v4.jsonl", root / "session.jsonl")
+            before = {str(p): hashlib.sha256(p.read_bytes()).hexdigest() for p in root.rglob("*.jsonl")}
+            result = convert_sessions(root)
+            after = {str(p): hashlib.sha256(p.read_bytes()).hexdigest() for p in root.rglob("*.jsonl")}
+        self.assertEqual(before, after)
+        self.assertEqual(len(result.sessions), 2)
+        self.assertEqual(result.usage["request_count"], 3)
+        self.assertEqual(result.usage["total_tokens"], 26)
+        self.assertEqual(result.sessions[0]["duplicate_paths"], ["session.v4.jsonl"])
+
+    def test_conflicting_session_aliases_fail_before_writing_conversion(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp) / "sessions"
+            shutil.copytree(V4_FIXTURE_ROOT, root)
+            changed = (root / "session.v4.jsonl").read_text().replace('"inputTokens":10', '"inputTokens":11')
+            (root / "session.jsonl").write_text(changed)
+            output = Path(temp) / "conversion"
+            with self.assertRaisesRegex(DshSessionFormatError, "conflicting.*session"):
+                write_conversion(root, output)
+            self.assertFalse((output / "usage.json").exists())
+
+    def test_versioned_name_must_match_header_and_supported_version(self) -> None:
+        for filename, version, message in [
+            ("session.v4.jsonl", 0, "version"),
+            ("session.v5.jsonl", 5, "unsupported.*session"),
+        ]:
+            with self.subTest(filename=filename), tempfile.TemporaryDirectory() as temp:
+                path = Path(temp) / filename
+                path.write_text(json.dumps({"type":"session", "version":version, "id":"test", "createdAt":1}) + "\n")
+                for source in (path, path.parent):
+                    with self.assertRaisesRegex(DshSessionFormatError, message):
+                        convert_sessions(source)
+
+    def test_compressed_legacy_and_v4_artifacts_fail_explicitly(self) -> None:
+        for basename in ("session.jsonl", "session.v4.jsonl"):
+            for suffix in (".gz", ".zst", ".zstd"):
+                with self.subTest(name=basename+suffix), tempfile.TemporaryDirectory() as temp:
+                    path = Path(temp) / (basename+suffix)
+                    path.write_bytes(b"not decompressed")
+                    for source in (path, path.parent):
+                        with self.assertRaisesRegex(DshSessionFormatError, "compressed session"):
+                            convert_sessions(source)
+
+    def test_unrelated_jsonl_and_temp_files_are_not_session_candidates(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root=Path(temp)
+            shutil.copytree(V4_FIXTURE_ROOT, root, dirs_exist_ok=True)
+            (root / "session.v4.jsonl.tmp").write_text("not complete")
+            (root / "notes.jsonl").write_text("not a session")
+            result = convert_sessions(root)
+        self.assertEqual(result.usage["total_tokens"], 26)
+
     def test_convert_sessions_maps_messages_tools_and_usage(self) -> None:
         result = convert_sessions(FIXTURE_ROOT)
 

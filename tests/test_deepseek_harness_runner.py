@@ -692,6 +692,41 @@ class DeepSeekHarnessArtifactTests(unittest.TestCase):
             openrouter_base_url="https://maas.example/v2",
         )
 
+    def test_export_v4_sessions_converts_usage_and_installs_transcript(self) -> None:
+        fixture = Path(__file__).parent / "fixtures" / "deepseek_harness_v4"
+        with tempfile.TemporaryDirectory() as temp_dir:
+            output = Path(temp_dir)
+            commands = []
+            def fake_run(command, **_kwargs):
+                commands.append(command)
+                if command[:2] == ["docker", "cp"] and command[2].endswith(":/root/.dsh/sessions/."):
+                    shutil.copytree(fixture, Path(command[3]), dirs_exist_ok=True)
+                return subprocess.CompletedProcess(command, 0, "", "")
+            with patch("src.agents.deepseek_harness.runner.subprocess.run", side_effect=fake_run):
+                self._agent()._export_sessions("dsh-v4", output)
+            self.assertTrue((output / "dsh_sessions/session.v4.jsonl").is_file())
+            self.assertFalse((output / "dsh_sessions/session.jsonl").exists())
+            usage = json.loads((output / "usage.json").read_text())
+            self.assertEqual(usage["total_tokens"], 26)
+            self.assertEqual(usage["request_count"], 3)
+            manifest = json.loads((output / "conversion_manifest.json").read_text())
+            self.assertEqual(manifest["message_count"], 6)
+            self.assertEqual(len(manifest["source_sessions"]), 2)
+            self.assertIn(["docker", "cp", str(output / "chat.jsonl"),
+                           "dsh-v4:/root/.openclaw/agents/main/sessions/chat.jsonl"], commands)
+
+    def test_export_empty_session_directory_records_unavailable_usage(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir, patch(
+            "src.agents.deepseek_harness.runner.subprocess.run",
+            return_value=subprocess.CompletedProcess([], 0, "", ""),
+        ):
+            output = Path(temp_dir)
+            with self.assertRaises(DshSessionFormatError):
+                self._agent()._export_sessions("dsh-empty", output)
+            usage = json.loads((output / "usage.json").read_text())
+            self.assertEqual(usage["cost_status"], "unavailable")
+            self.assertFalse((output / "chat.jsonl").exists())
+
     def test_export_sessions_preserves_raw_converts_and_installs_transcript(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
             output_dir = Path(temp_dir)
