@@ -4,6 +4,7 @@ from __future__ import annotations
 from collections import Counter
 from concurrent.futures import FIRST_COMPLETED, ThreadPoolExecutor, wait
 from pathlib import Path
+import re
 import threading
 import time
 
@@ -18,6 +19,20 @@ from .retention import execution_held, retained, preserve_failure, reap
 
 READY_SCHEMA = "wildclawbench.task-execution-handoff/v1"
 HEARTBEAT_INTERVAL_SECONDS = 5
+
+
+def _error_record(error):
+    value = {"code": type(error).__name__, "message": str(error)}
+    if str(error) == 'EXECUTION_RUNTIME_CONFIGURATION_DRIFT':
+        value['fault_scope'] = 'batch'
+    if isinstance(error, PlatformError):
+        value["fault_domain"] = "agentcube"
+        if error.platform_code:
+            value["platform_code"] = error.platform_code
+        if (error.platform_code == "USER_QUOTA_NOT_ACTIVE"
+                or re.fullmatch(r"[A-Z_]+_HTTP_(401|403)", str(error).split(":", 1)[0])):
+            value["fault_scope"] = "batch"
+    return value
 
 
 def load_batch(root: Path) -> dict:
@@ -214,7 +229,7 @@ def _worker(root: Path, store: BatchStore, item: dict, manifest: dict, unit: dic
         if uncertain:
             phase = "NEEDS_ATTENTION" if row.get("creation_intent_at") else "PENDING"
             store.update(item["key"], phase, resource_held=row["resource_held"] if row.get("creation_intent_at") else False,
-                         error={"code": type(error).__name__, "message": str(error)},
+                         error=_error_record(error),
                          observer_paused=isinstance(error, ObservationPaused))
         else:
             _failure(root, store, item, driver, error)
@@ -229,17 +244,34 @@ def _worker(root: Path, store: BatchStore, item: dict, manifest: dict, unit: dic
             # Any incomplete salvage still becomes NEEDS_ATTENTION below.
             _failure(root, store, item, driver, error)
         elif row.get("report", {}).get("status") == "completed":
-            store.update(item["key"], "NEEDS_ATTENTION", error={"code": type(error).__name__, "message": str(error)})
+            store.update(item["key"], "NEEDS_ATTENTION", error=_error_record(error))
         else:
             _failure(root, store, item, driver, error)
     finally:
+        _reconcile_attention_resource(store, item['key'], driver)
         driver.client.close()
+
+
+def _reconcile_attention_resource(store, key, driver):
+    row = store.get(key)
+    confirm = getattr(driver.client, 'confirm_session_absent', None)
+    if (row['phase'] != 'NEEDS_ATTENTION' or not row['resource_held'] or not row.get('session_id')
+            or row.get('runtime') != driver.config.public() or not callable(confirm)):
+        return
+    try:
+        proof = confirm(row['session_id'])
+        if (isinstance(proof, dict) and proof.get('confirmed') is True
+                and proof.get('session_id') == row['session_id']):
+            store.update(key, 'NEEDS_ATTENTION', resource_held=False, cleanup=proof)
+    except (PlatformError, OSError, ValueError):
+        # A missing file, timeout or rejected lookup is not proof of absence.
+        pass
 
 
 def _failure(root, store, item, driver, error, *, final_phase="FAILED"):
     row = store.get(item["key"])
     message = str(redact(str(error), driver.config.auth_token))
-    failure = {"code": type(error).__name__, "message": message, "report_status": row.get("report", {}).get("status")}
+    failure = {**_error_record(error), "message": message, "report_status": row.get("report", {}).get("status")}
     if failure["report_status"] == "completed" and message.split(":", 1)[0] == "TASK_NATIVE_BINDING_AMBIGUOUS":
         failure["failure_stage"] = "native_trace_validation"
     if isinstance(error,PlatformError):
@@ -277,7 +309,7 @@ def _failure(root, store, item, driver, error, *, final_phase="FAILED"):
 
 def run_batch(root: Path, config: AgentCubeConfig, *, unit_ids: list[str] | None = None,
               task_ids: list[str] | None = None, driver_factory=None, progress=None, rerun_case: dict | None = None,
-              cancel_before_dispatch: bool = False) -> dict:
+              cancel_before_dispatch: bool = False, recovery: dict | None = None) -> dict:
     manifest = load_batch(root)
     store = BatchStore(root)
     units = {unit["unit_id"]: unit for unit in manifest["units"]}
@@ -295,6 +327,12 @@ def run_batch(root: Path, config: AgentCubeConfig, *, unit_ids: list[str] | None
                 and (not selected_keys or row['key'] in selected_keys))
     stop = threading.Event()
     with controller_lock(root) as owner:
+        if recovery is not None:
+            if rerun_case is not None or unit_ids or task_ids:
+                raise E2EError("RECOVERY_MUST_PRESERVE_BATCH_SCOPE")
+            from .recovery import register_recovery
+            with controller_lock(root, "scoring-queue"):
+                register_recovery(root, recovery)
         if rerun_case is not None:
             with controller_lock(root, "scoring-queue"):
                 receipt = store.rerun_case(**rerun_case)
@@ -345,9 +383,13 @@ def run_batch(root: Path, config: AgentCubeConfig, *, unit_ids: list[str] | None
                 try:
                     heartbeat()
                     rows = store.rows()
-                    attention = any(row["phase"] == "NEEDS_ATTENTION" and (not selected_tasks or selected_row(row)) for row in rows)
+                    # Unknown jobs retain their own resource reservation. They
+                    # must not block unrelated cases with available capacity.
+                    batch_blocked = any(row["key"] in seen and (row.get("error") or {}).get("fault_scope") == "batch"
+                                        for row in rows)
                     held = sum(execution_held(row) for row in rows)
                     active_units = Counter(unit for _, unit in futures.values())
+                    held_units = Counter(row["unit_id"] for row in rows if execution_held(row))
                     for row in rows:
                         key, unit_id = row["key"], row["unit_id"]
                         if not selected_row(row) or key in seen or stop.is_set():
@@ -357,12 +399,14 @@ def run_batch(root: Path, config: AgentCubeConfig, *, unit_ids: list[str] | None
                             continue
                         if len(futures) >= capacity or active_units[unit_id] >= units[unit_id]["max_concurrency"]:
                             continue
-                        if row["phase"] == "PENDING" and (attention or held >= capacity):
+                        if row["phase"] == "PENDING" and (batch_blocked or held >= capacity
+                                or held_units[unit_id] >= units[unit_id]["max_concurrency"]):
                             continue
                         seen.add(key)
                         if row["phase"] == "PENDING":
                             row = store.update(key, "RESERVED", resource_held=True)
                             held += 1
+                            held_units[unit_id] += 1
                         future = pool.submit(_worker, root, store, row, manifest, units[unit_id], tasks[row["task_id"]], config, stop, driver_factory)
                         futures[future] = (key, unit_id)
                         active_units[unit_id] += 1

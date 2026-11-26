@@ -138,11 +138,13 @@ def test_completed_native_binding_rejection_seals_before_releasing_its_slot(fixt
         assert store.versions(row['key'])[0]['attempt_id'] == old_attempt
     else:
         assert row['phase'] == 'NEEDS_ATTENTION' and row['resource_held']
-        assert result['execution_resources_held'] == 1 and result['retained_sandboxes_held'] == 0
+        assert result['execution_resources_held'] == 0 and result['retained_sandboxes_held'] == 0
         assert not (execution / 'backups/backup-receipt.json').exists()
-        assert result['phase_counts'].get('PENDING', 0) > 0
-        with pytest.raises(E2EError, match='RERUN_REQUIRES_RELEASED'):
+        assert result['phase_counts'] == {'NEEDS_ATTENTION': 1, 'COMPLETED': 9}
+        assert snapshot(fixture.root)['terminal']
+        with pytest.raises(E2EError, match='RERUN_REQUIRES_RECONCILED'):
             store.rerun_case('unit', 't0', 'unsafe-rerun')
+        store.rerun_case('unit', 't1', 'rerun-other-case')
 
 
 def test_restart_reaper_waits_until_deadline_and_does_not_inflate_duration(fixture):

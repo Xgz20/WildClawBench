@@ -208,7 +208,7 @@ def score_one(batch: Path, item: dict, manifest: dict, config: dict, root: Path,
     if not state:
         state = {'schema': SCHEMA, 'job_id': job_id, 'container_name': name,
                  'request_sha256': request_hash, 'phase': 'preparing', 'container_released': False}
-        if item['phase'] in {'FAILED', 'CANCELLED'} and not (inside(batch, item['execution_root']) / 'execution-ready.json').exists():
+        if item['phase'] in {'FAILED', 'CANCELLED', 'NEEDS_ATTENTION'} and not (inside(batch, item['execution_root']) / 'execution-ready.json').exists():
             failure = item.get('error') or {}
             state.update(phase='execution_unscored', container_released=True,
                          error=failure.get('message') or failure.get('code') or 'EXECUTION_' + item['phase'])

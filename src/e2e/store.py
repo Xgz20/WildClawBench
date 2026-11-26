@@ -250,12 +250,14 @@ class BatchStore:
                 return {**receipt, "reused": True}
             from .retention import execution_held
             rows = [self._with_retention(db, row) for row in rows]
-            if any(execution_held(row) or row["phase"] not in {"COMPLETED", "FAILED", "CANCELLED"} for row in rows):
+            if any(execution_held(row) or row["phase"] not in {"COMPLETED", "FAILED", "CANCELLED", "NEEDS_ATTENTION"} for row in rows):
                 raise E2EError("RERUN_REQUIRES_RELEASED_EXECUTIONS")
             case = [row for row in rows if row["unit_id"] == unit_id and row["task_id"] == task_id]
             if not case or set(rounds) - {row["run_index"] for row in case}:
                 raise E2EError("RERUN_CASE_OR_ROUND_UNKNOWN")
             selected = [row for row in case if not rounds or row["run_index"] in rounds]
+            if any(row["phase"] == "NEEDS_ATTENTION" and row["resource_held"] for row in selected):
+                raise E2EError("RERUN_REQUIRES_RECONCILED_ATTENTION_EXECUTION")
             keys = {row["key"] for row in selected}
             if not isinstance(expected, dict) or set(expected) - keys:
                 raise E2EError("RERUN_EXPECTED_ATTEMPTS_INVALID")
@@ -423,6 +425,7 @@ class BatchStore:
         return {"schema": "wildclawbench.e2e-batch-summary/v1", "executions": rows,
                 "phase_counts": counts, "resource_held": held,
                 "execution_resources_held": sum(execution_held(row) for row in rows),
+                "attention_resources_held": sum(row['phase'] == 'NEEDS_ATTENTION' and row['resource_held'] for row in rows),
                 "retained_sandboxes_held": len(retained),
                 "retained_sandboxes": [public_record(value) for value in self.retentions()],
                 "scoring": self.scoring_rows(), "observed_at": utc_now(),

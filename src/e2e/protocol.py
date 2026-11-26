@@ -24,7 +24,7 @@ from .preparation import (
 )
 
 API_VERSION = 1
-TERMINAL_PHASES = {"COMPLETED", "FAILED", "CANCELLED"}
+TERMINAL_PHASES = {"COMPLETED", "FAILED", "CANCELLED", "NEEDS_ATTENTION"}
 
 
 def envelope(kind: str, data: dict) -> dict:
@@ -92,6 +92,8 @@ def describe(repo: Path) -> dict:
             "managed-preprocess-validation-template-v1",
             "execution",
             "case-round-rerun-v1",
+            "case-attention-isolation-v1",
+            "execution-recovery-upgrade-v1",
             "failed-sandbox-retention-v1",
             "execution-version-history-v1",
             "versioned-result-export-v1",
@@ -512,11 +514,13 @@ def snapshot(batch: Path, *, execution_rows=None) -> dict:
                 "history_count": history_counts.get(row["key"], 0),
                 "is_final": row.get("is_final", True),
                 "executor_revision": row.get("executor_revision") or manifest.get("source_revision"),
+                **({"collector_revision": row["collector_revision"], "recovery_id": row["recovery_id"]}
+                   if row.get("recovery_id") else {}),
                 "previous_attempt_id": row.get("previous_attempt_id"),
                 "started_at": start, "finished_at": finish, "duration_seconds": duration,
                 "stage": row["phase"],
                 "terminal": row["phase"] in TERMINAL_PHASES
-                and (not row["resource_held"] or retained(row)),
+                and (row["phase"] == "NEEDS_ATTENTION" or not row["resource_held"] or retained(row)),
                 "resource_held": row["resource_held"],
                 **({"sandbox_retention": row["sandbox_retention"]} if row.get("sandbox_retention") else {}),
                 "session_id": row.get("session_id"),
@@ -551,8 +555,9 @@ def snapshot(batch: Path, *, execution_rows=None) -> dict:
     terminal = all(row["terminal"] for row in executions)
     held = sum(row["resource_held"] for row in executions)
     execution_held = raw.get("execution_resources_held", held)
+    lease = raw.get("controllers", {}).get("execution") or {}
     state = "running"
-    if counts.get("NEEDS_ATTENTION") or (
+    if (counts.get("NEEDS_ATTENTION") and (terminal or lease.get('lease_status') != 'fresh')) or (
         execution_held and all(row["stage"] in TERMINAL_PHASES for row in executions)
     ):
         state = "needs_attention"
@@ -568,7 +573,6 @@ def snapshot(batch: Path, *, execution_rows=None) -> dict:
     actions = (
         ["export"] if terminal or any(row["exportable"] for row in executions) else []
     )
-    lease = raw.get("controllers", {}).get("execution") or {}
     if lease.get("lease_status") != "fresh":
         if not terminal:
             actions.append("resume")
@@ -598,6 +602,7 @@ def snapshot(batch: Path, *, execution_rows=None) -> dict:
         "finished": sum(row["terminal"] for row in executions),
         "resource_held": raw["resource_held"],
         "execution_resources_held": execution_held,
+        "attention_resources_held": raw.get('attention_resources_held', 0),
         "retained_sandboxes_held": raw.get("retained_sandboxes_held", 0),
         "retained_sandboxes": raw.get("retained_sandboxes", []),
         "allowed_actions": actions,

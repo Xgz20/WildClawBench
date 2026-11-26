@@ -106,6 +106,9 @@ def build_parser() -> argparse.ArgumentParser:
     resume.add_argument("--unit-id", action="append", default=[])
     resume.add_argument('--task-id', action='append', default=[], help='显式仅恢复所选题；未选资源继续计入全局占用')
     resume.add_argument("--jsonl", action="store_true")
+    resume.add_argument("--recovery-receipt", type=Path, help="按已确认的原批次状态登记执行器恢复升级")
+    recovery_check = commands.add_parser("recovery-check", help="只读预检原批次的执行器恢复升级")
+    _batch(recovery_check)
     rerun = commands.add_parser("rerun-case", help="仅为一个用例的所选轮次创建新执行版本")
     _batch(rerun)
     _agentcube(rerun)
@@ -266,7 +269,8 @@ def _resume(args):
     from .engine import run_batch
     progress = (lambda event: _print_event(args, args.batch_id, event)) if args.jsonl else None
     return run_batch(_batch_root(args), AgentCubeConfig.load(args.agentcube_config), unit_ids=args.unit_id,
-                     task_ids=args.task_id, progress=progress)
+                     task_ids=args.task_id, progress=progress,
+                     recovery=read_json(args.recovery_receipt) if args.recovery_receipt else None)
 
 
 def _rerun_case(args):
@@ -472,6 +476,9 @@ def _public_command(args):
         return inspect_asset(args.file, args.kind, args.name)
     if args.command == "describe":
         return protocol.describe(args.repo_root)
+    if args.command == "recovery-check":
+        from .recovery import inspect_recovery
+        return inspect_recovery(_batch_root(args))
     if args.command == "catalog":
         return protocol.catalog(args.repo_root, args.scenario, args.dataset, args.library_dataset)
     if args.command == "environment-status":
@@ -499,7 +506,7 @@ def main(argv=None) -> int:
                 "recover-native-terminal": _recover_native_terminal, "status": _status, "cleanup": _cleanup, "retention-reap": _retention_reap,
                 "reconcile-absent-creation": _reconcile_absent_creation, "validate-preprocess": _validate_preprocess,
                 "restore": _restore, "export": _export, "import": _import, "pipeline": _pipeline, "headless-score": _headless_score, "desktop-score": _desktop_score, "general-report": _general_report,
-                **{name: _public_command for name in ("describe", "catalog", "preflight", "events", "artifacts", "environment-status", "inspect-preprocess-asset")}}
+                **{name: _public_command for name in ("describe", "catalog", "preflight", "events", "artifacts", "environment-status", "inspect-preprocess-asset", "recovery-check")}}
     try:
         result = handlers[args.command](args)
         if args.api_version:

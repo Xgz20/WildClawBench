@@ -159,8 +159,10 @@ class SchedulerTests(unittest.TestCase):
         result = run_batch(self.root, self.config, task_ids=['t1', 't2', 't3'], driver_factory=self.factory)
         self.assertEqual(store.get(item['key']), before)
         self.assertEqual({row['task_id'] for row in store.rows() if row['phase'] == 'COMPLETED'}, {'t1', 't2', 't3'})
-        self.assertLessEqual(self.provider.max_active, 3)
+        self.assertLessEqual(self.provider.max_active, 4)
         self.assertEqual(self.provider.active, {'preserved-session'})
+        self.assertEqual(result['execution_resources_held'], 0)
+        self.assertEqual(result['resource_held'], 1)
         self.assertEqual(len(result['executions']), 10)
         self.assertFalse(any('t0-' in call for call in self.provider.calls))
 

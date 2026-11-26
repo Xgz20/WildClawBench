@@ -25,7 +25,9 @@ def retained(row):
 
 
 def execution_held(row):
-    return bool(row["resource_held"] and not retained(row))
+    # An attention row has no automatic worker. Its VM/job may still need
+    # reconciliation, but that is a physical resource, not an execution slot.
+    return bool(row["resource_held"] and row.get("phase", row.get("stage")) != "NEEDS_ATTENTION" and not retained(row))
 
 
 def preserve_failure(store, key, runtime, seconds, *, failure, preservation, screenshot=None, now=None):

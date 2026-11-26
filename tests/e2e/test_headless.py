@@ -77,21 +77,22 @@ class HeadlessContractTests(unittest.TestCase):
 
     @patch('src.e2e.headless.docker')
     def test_unready_terminal_execution_keeps_its_failure_without_a_worker(self, docker):
-        with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
-            (root / 'batch/execution').mkdir(parents=True)
-            reason = 'CONTROLLER_EXECUTION_INCOMPLETE: task_timeout'
-            item = {'key': 'k', 'task_id': 't', 'unit_id': 'u', 'run_index': 1, 'attempt_id': 'original',
-                    'phase': 'FAILED', 'execution_root': 'execution', 'error': {'message': reason}}
-            args = (root / 'batch', item, {}, self.config(), root / 'job', 'job', 'synthetic-key')
-            result = score_one(*args)
-            self.assertEqual(result['status'], 'unscored')
-            self.assertEqual(result['error'], reason)
-            self.assertTrue(result['execution_not_ready'])
-            self.assertTrue(result['container_released'])
-            self.assertIsNone(result['total_score'])
-            self.assertEqual(score_one(*args), result)
-            docker.assert_not_called()
+        for phase in ('FAILED', 'CANCELLED', 'NEEDS_ATTENTION'):
+            with tempfile.TemporaryDirectory() as directory:
+                root = Path(directory)
+                (root / 'batch/execution').mkdir(parents=True)
+                reason = 'CONTROLLER_EXECUTION_INCOMPLETE: task_timeout'
+                item = {'key': 'k', 'task_id': 't', 'unit_id': 'u', 'run_index': 1, 'attempt_id': 'original',
+                        'phase': phase, 'execution_root': 'execution', 'error': {'message': reason}}
+                args = (root / 'batch', item, {}, self.config(), root / 'job', 'job', 'synthetic-key')
+                result = score_one(*args)
+                self.assertEqual(result['status'], 'unscored')
+                self.assertEqual(result['error'], reason)
+                self.assertTrue(result['execution_not_ready'])
+                self.assertTrue(result['container_released'])
+                self.assertIsNone(result['total_score'])
+                self.assertEqual(score_one(*args), result)
+                docker.assert_not_called()
 
     def test_explicit_score_skill_freezes_complete_inventory_and_rejects_drift(self):
         with tempfile.TemporaryDirectory() as directory:
