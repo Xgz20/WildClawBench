@@ -6,5 +6,6 @@ RUN apt-get update \
  libreoffice-impress libreoffice-writer libreoffice-calc poppler-utils fonts-noto-cjk fonts-liberation \
  && rm -rf /var/lib/apt/lists/*
 COPY configure_linux_office.py /opt/configure-linux-office.py
-RUN /opt/scoring-runtime/bin/python /opt/configure-linux-office.py
+RUN /opt/scoring-runtime/bin/python /opt/configure-linux-office.py \
+ && /opt/scoring-runtime/bin/python /opt/validate-scorer-runtime.py --office --output /opt/scorer-office-preflight.json
 LABEL org.astron.eval.native-office="libreoffice"
