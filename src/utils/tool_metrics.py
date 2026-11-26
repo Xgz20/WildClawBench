@@ -30,6 +30,8 @@ from collections import defaultdict, deque
 from pathlib import Path
 from typing import Callable
 
+from src.utils.dsh_session_files import DshSessionFormatError, discover_session_files
+
 CATEGORIES = ("success", "failure", "format_error", "unclear")
 REPORT_FORMAT_HARNESSES = frozenset(
     {"opencode", "deepseek-harness", "hermesagent", "minimax-code", "zcode", "mimocode"}
@@ -361,7 +363,12 @@ def _deepseek_format_decisions(run_dir: Path | None) -> dict[str, bool]:
         return {}
 
     decisions: dict[str, bool] = {}
-    for session_path in sorted(session_root.rglob("session.jsonl")):
+    try:
+        session_files = discover_session_files(session_root)
+    except DshSessionFormatError:
+        # The native schema is unavailable, not proof of a valid tool argument.
+        return {}
+    for session_path in session_files:
         schemas: dict[str, dict] = {}
         try:
             lines = session_path.read_text(encoding="utf-8", errors="ignore").splitlines()

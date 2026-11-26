@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import shutil
 import sqlite3
 import subprocess
 import sys
@@ -289,6 +290,27 @@ class AnalysisPipelineTest(unittest.TestCase):
                 report_entities.RequestUsage(5, 0, 1, 3),
             ],
         )
+
+    def test_deepseek_harness_extractor_reads_v4_native_usage(self) -> None:
+        report_entities = load_module("report_entities_deepseek_v4", REPORT_ENTITIES_SCRIPT)
+        fixture = DEEPSEEK_FIXTURE.parent / "deepseek_harness_v4"
+        requests = report_entities.extract_deepseek_harness_requests(fixture)
+        self.assertCountEqual(requests, [
+            report_entities.RequestUsage(10, 4, 3, 0),
+            report_entities.RequestUsage(2, 0, 2, 1),
+            report_entities.RequestUsage(3, 0, 1, 0),
+        ])
+
+    def test_deepseek_harness_cost_extractor_deduplicates_copies(self) -> None:
+        report_entities = load_module("report_entities_deepseek_duplicates", REPORT_ENTITIES_SCRIPT)
+        with tempfile.TemporaryDirectory() as temp:
+            run = Path(temp)
+            source = run / "dsh_sessions"
+            shutil.copytree(DEEPSEEK_FIXTURE.parent / "deepseek_harness_v4", source)
+            shutil.copyfile(source / "session.v4.jsonl", source / "session.jsonl")
+            requests = report_entities.extract_deepseek_harness_requests(run)
+        self.assertEqual(len(requests), 3)
+        self.assertEqual(sum(r.total_input_tokens + r.output_tokens for r in requests), 26)
 
     def test_deepseek_harness_report_cost_uses_model_tiers(self) -> None:
         report_entities = load_module("report_entities_deepseek_cost", REPORT_ENTITIES_SCRIPT)

@@ -93,6 +93,28 @@ The backend exports raw sessions to `dsh_sessions`, converts them into
 normalized transcript at the OpenClaw-compatible path expected by WCB graders.
 `run_batch.py` removes the container after grading and output collection.
 
+### Native Session Formats
+
+Directory discovery accepts both legacy `session.jsonl` and DSH 0.2.2's
+`session.v4.jsonl`, including nested child sessions. The export runner delegates
+discovery to the converter rather than checking one filename separately.
+Versioned v4 filenames must contain a version-4 header; unknown versioned files
+and compressed `.gz`, `.zst`, or `.zstd` artifacts fail explicitly rather than
+silently dropping their messages or usage. No source files are renamed or edited.
+
+Copies with the same session ID and identical parsed contents are counted once;
+their additional paths are recorded in `conversion_manifest.json` as
+`duplicate_paths`. Conflicting copies of one session ID are rejected instead of
+guessing which transcript or usage is authoritative. A conversion failure still
+marks the run invalid and records unavailable usage; a full task score does not
+override that failure.
+
+This compatibility fix is in the host runner/converter. It does not require a
+new CLI image or modify historical score, execution status, or usage artifacts.
+To inspect an existing v4 session without changing the original run, use the
+standalone converter with a separate output directory; recovering a historical
+run's formal validity requires an explicit, audited action.
+
 ## Cost Observation
 
 DSH session events expose uncached input, output, cache-read, and cache-write

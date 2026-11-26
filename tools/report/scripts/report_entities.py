@@ -14,6 +14,8 @@ from typing import Any, Mapping, Sequence
 
 import yaml
 
+from src.utils.dsh_session_files import load_session_records
+
 
 LOGGER = logging.getLogger(__name__)
 SUPPORTED_SCHEMA_VERSION = 1
@@ -422,31 +424,22 @@ def _dsh_usage_int(value: Any, source: str) -> int:
 
 def extract_deepseek_harness_requests(run_dir: Path) -> list[RequestUsage]:
     session_root = run_dir / "dsh_sessions"
-    if not session_root.is_dir() and (run_dir / "session.jsonl").is_file():
+    if not session_root.is_dir() and any(
+        (run_dir / name).is_file() for name in ("session.jsonl", "session.v4.jsonl")
+    ):
         session_root = run_dir
-    session_files = sorted(session_root.rglob("session.jsonl"))
-    if not session_files:
-        raise FileNotFoundError(f"DeepSeek Harness run 缺少 dsh_sessions/session.jsonl: {run_dir}")
 
     requests: list[RequestUsage] = []
-    for session_file in session_files:
-        for line_number, line in enumerate(
-            session_file.read_text(encoding="utf-8", errors="replace").splitlines(),
-            start=1,
-        ):
-            if not line.strip():
-                continue
-            try:
-                event = json.loads(line)
-            except json.JSONDecodeError as exc:
-                raise ValueError(f"{session_file}:{line_number} 不是合法 JSON") from exc
+    for metadata, events in load_session_records(session_root):
+        session_file = session_root / metadata["path"]
+        for index, event in enumerate(events):
             if not isinstance(event, dict) or event.get("type") != "assistant/message":
                 continue
             data = event.get("data")
             usage = data.get("usage") if isinstance(data, dict) else None
             if not isinstance(usage, dict):
                 continue
-            source = f"{session_file}:{line_number}"
+            source = f"{session_file}:event {index}"
             requests.append(RequestUsage(
                 _dsh_usage_int(usage.get("inputTokens"), f"{source}.inputTokens"),
                 _dsh_usage_int(usage.get("cacheReadTokens"), f"{source}.cacheReadTokens"),

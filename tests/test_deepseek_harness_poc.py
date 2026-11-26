@@ -57,6 +57,16 @@ class DeepSeekHarnessPocCliTests(unittest.TestCase):
             self.assertTrue((output_dir / "usage.json").is_file())
             self.assertTrue((output_dir / "conversion_manifest.json").is_file())
 
+    def test_convert_command_discovers_versioned_v4_sessions(self) -> None:
+        fixture = FIXTURE_ROOT.parent / "deepseek_harness_v4"
+        with tempfile.TemporaryDirectory() as temp:
+            output = Path(temp) / "converted"
+            result = main(["convert", "--sessions", str(fixture), "--output", str(output)])
+            self.assertEqual(result, 0)
+            usage = json.loads((output / "usage.json").read_text())
+            self.assertEqual(usage["request_count"], 3)
+            self.assertEqual(usage["total_tokens"], 26)
+
     def test_build_docker_command_mounts_inputs_and_inherits_credentials(self) -> None:
         command = build_docker_command(
             image="wildclawbench-deepseek-harness-poc:test",

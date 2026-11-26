@@ -7,9 +7,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Iterable
 
-
-class DshSessionFormatError(ValueError):
-    """Raised when a DSH session artifact cannot be converted safely."""
+from src.utils.dsh_session_files import DshSessionFormatError, load_session_records
 
 
 @dataclass(frozen=True)
@@ -176,66 +174,6 @@ def _tool_result_entry(data: dict[str, Any]) -> dict[str, Any]:
     return {"type": "message", "message": {"role": "user", "content": [tool_result]}}
 
 
-def _iter_session_files(session_root: Path) -> list[Path]:
-    if not session_root.exists():
-        raise DshSessionFormatError(f"session root does not exist: {session_root}")
-    if session_root.is_file():
-        if session_root.name.endswith((".jsonl.zst", ".jsonl.gz")):
-            raise DshSessionFormatError(
-                f"compressed session artifact is unsupported: {session_root}"
-            )
-        candidates = [session_root]
-    else:
-        compressed = sorted(
-            path
-            for path in session_root.rglob("session.jsonl.*")
-            if path.is_file() and path.suffix in {".zst", ".gz"}
-        )
-        if compressed:
-            raise DshSessionFormatError(f"compressed session artifact is unsupported: {compressed[0]}")
-        candidates = sorted(
-            path for path in session_root.rglob("session.jsonl") if path.is_file()
-        )
-    if not candidates:
-        raise DshSessionFormatError(f"no session.jsonl found below {session_root}")
-    return sorted(candidates, key=lambda path: (len(path.relative_to(session_root).parts), str(path)))
-
-
-def _read_session(path: Path) -> tuple[dict[str, Any], list[dict[str, Any]]]:
-    try:
-        lines = path.read_text(encoding="utf-8").splitlines()
-    except OSError as exc:
-        raise DshSessionFormatError(f"cannot read session {path}: {exc}") from exc
-
-    rows: list[dict[str, Any]] = []
-    for line_number, raw in enumerate(lines, start=1):
-        if not raw.strip():
-            continue
-        try:
-            value = json.loads(raw)
-        except json.JSONDecodeError as exc:
-            raise DshSessionFormatError(f"invalid JSON in {path} line {line_number}") from exc
-        if not isinstance(value, dict):
-            raise DshSessionFormatError(f"session row in {path} line {line_number} is not an object")
-        rows.append(value)
-
-    if not rows or rows[0].get("type") != "session":
-        raise DshSessionFormatError(f"session header missing in {path}")
-    header = rows[0]
-    if not isinstance(header.get("version"), int) or isinstance(header.get("version"), bool):
-        raise DshSessionFormatError(f"invalid session header version in {path}")
-    if not isinstance(header.get("id"), str) or not header["id"]:
-        raise DshSessionFormatError(f"invalid session header id in {path}")
-    created_at = header.get("createdAt")
-    if (
-        not isinstance(created_at, int)
-        or isinstance(created_at, bool)
-        or created_at < 0
-    ):
-        raise DshSessionFormatError(f"invalid session header createdAt in {path}")
-    return header, rows[1:]
-
-
 def _convert_events(
     events: Iterable[dict[str, Any]],
     usage: dict[str, Any],
@@ -296,10 +234,7 @@ def convert_sessions(session_root: Path) -> ConversionResult:
     aggregate = _empty_usage()
     messages: list[dict[str, Any]] = []
     sessions: list[dict[str, Any]] = []
-    for path in _iter_session_files(session_root):
-        header, events = _read_session(path)
-        metadata = dict(header)
-        metadata["path"] = str(path.relative_to(session_root)) if session_root.is_dir() else path.name
+    for metadata, events in load_session_records(session_root):
         sessions.append(metadata)
         messages.extend(_convert_events(events, aggregate))
     aggregate["total_tokens"] = sum(
