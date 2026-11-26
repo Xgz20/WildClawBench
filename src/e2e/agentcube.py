@@ -2,9 +2,11 @@
 from __future__ import annotations
 
 import base64
+import json
 from dataclasses import asdict, dataclass, field
 import os
 from pathlib import Path
+import re
 import shlex
 import time
 import uuid
@@ -120,6 +122,40 @@ class AgentCubeClient:
     def close(self):
         self.http.close()
 
+    def _rejected(self, payload, action):
+        code = payload.get("code") if isinstance(payload, dict) else None
+        labels = {20002: "AGENTCUBE_SESSION_NOT_FOUND", 20007: "AGENTCUBE_SANDBOX_UNREACHABLE",
+                  20008: "AGENTCUBE_SANDBOX_TIMEOUT"}
+        message = labels.get(code) if type(code) is int else None
+        return PlatformError(message or f"{action}_REJECTED: " + str(redact(payload, self.config.auth_token)),
+                             uncertain=type(code) is int and 20000 <= code < 20100,
+                             platform_code=str(code) if type(code) is int else None)
+
+    @staticmethod
+    def _control_json(response):
+        content_type = response.headers.get("Content-Type", "")
+        disposition = response.headers.get("Content-Disposition", "")
+        return (isinstance(content_type, str) and "application/json" in content_type.lower()
+                and not (isinstance(disposition, str) and "attachment" in disposition.lower()))
+
+    def _check_file_envelope(self, response, action, remote, body=None):
+        # Successful PicoD downloads identify attachments, including JSON
+        # documents. Router errors instead use HTTP 200 with a JSON envelope.
+        if not self._control_json(response):
+            return
+        try:
+            if body is not None and len(body) > 65536:
+                return
+            payload = json.loads(body) if body is not None else response.json()
+        except ValueError:
+            return
+        if (not isinstance(payload, dict) or set(payload) != {"code", "msg", "data"}
+                or type(payload["code"]) is not int or payload["code"] == 0 or payload["data"] is not None):
+            return
+        if payload["code"] == 10005:
+            raise FileNotFoundError(remote)
+        raise self._rejected(payload, action)
+
     def _request(self, method: str, url: str, *, sid: str | None = None, timeout=60, **kwargs):
         headers = {"x-agentcube-session-id": sid} if sid else {}
         try:
@@ -143,7 +179,7 @@ class AgentCubeClient:
         if not isinstance(payload, dict) or payload.get("code", 0) != 0:
             if action=="CREATE_SESSION" and "USER_QUOTA_NOT_ACTIVE" in str(payload):
                 raise PlatformError("AgentCube 沙箱配额未生效（USER_QUOTA_NOT_ACTIVE）；请检查当前调用身份的有效配额规则。",platform_code="USER_QUOTA_NOT_ACTIVE")
-            raise PlatformError(f"{action}_REJECTED: " + str(redact(payload, self.config.auth_token)))
+            raise self._rejected(payload, action)
         data = payload.get("data")
         if not isinstance(data, dict):
             raise PlatformError(f"{action}_DATA_INVALID", uncertain=True)
@@ -226,6 +262,7 @@ class AgentCubeClient:
             raise FileNotFoundError(remote)
         if response.status_code != 200:
             raise PlatformError(f"DOWNLOAD_HTTP_{response.status_code}")
+        self._check_file_envelope(response, "DOWNLOAD", remote, response.content)
         return response.content
 
     def download_to(self, sid: str, remote: str, destination: Path):
@@ -235,8 +272,20 @@ class AgentCubeClient:
         try:
             if response.status_code != 200:
                 raise PlatformError(f"DOWNLOAD_HTTP_{response.status_code}")
+            chunks = iter(response.iter_content(chunk_size=1024 * 1024))
+            prefix = bytearray()
+            if self._control_json(response):
+                # Probe only a bounded prefix. Large JSON attachments still
+                # stream, and error envelopes are never published as files.
+                for chunk in chunks:
+                    prefix.extend(chunk)
+                    if len(prefix) > 65536:
+                        break
+                else:
+                    self._check_file_envelope(response, "DOWNLOAD", remote, bytes(prefix))
             with temporary.open("xb") as output:
-                for chunk in response.iter_content(chunk_size=1024 * 1024):
+                output.write(prefix)
+                for chunk in chunks:
                     output.write(chunk)
             temporary.replace(destination)
         finally:
@@ -257,12 +306,7 @@ class AgentCubeClient:
             raise FileNotFoundError(path)
         if response.status_code != 200:
             raise PlatformError(f"WINDOWS_DOWNLOAD_HTTP_{response.status_code}")
-        if response.headers.get("Content-Type", "").startswith("application/json"):
-            payload = response.json()
-            if isinstance(payload, dict) and payload.get("code") == 10005:
-                raise FileNotFoundError(path)
-            if isinstance(payload, dict) and payload.get("code", 0) != 0:
-                raise PlatformError("WINDOWS_DOWNLOAD_REJECTED: " + str(redact(payload, self.config.auth_token)))
+        self._check_file_envelope(response, "WINDOWS_DOWNLOAD", path)
         return response.content
 
     def submit_job(self, sid: str, job_id: str, command: str) -> dict:
@@ -280,9 +324,22 @@ class AgentCubeClient:
     def poll_job(self, sid: str, job: dict) -> dict | None:
         root = job["remote_directory"]
         try:
-            code = int(self.download(sid, root + "/exit_code").decode().strip())
+            raw = self.download(sid, root + "/exit_code")
         except FileNotFoundError:
+            try:
+                self.download(sid, root + "/pid")
+            except FileNotFoundError as error:
+                raise PlatformError("REMOTE_JOB_STATE_MISSING", uncertain=True) from error
             return None
+        try:
+            text = raw.decode("ascii").strip()
+            if not re.fullmatch(r"[+-]?[0-9]{1,10}", text):
+                raise ValueError("invalid exit code")
+            code = int(text)
+            if not -(2 ** 31) <= code < 2 ** 31:
+                raise ValueError("invalid exit code")
+        except (UnicodeError, ValueError) as error:
+            raise PlatformError("REMOTE_JOB_EXIT_CODE_INVALID", uncertain=True) from error
         return {"exit_code": code, "stdout": self.download(sid, root + "/stdout").decode("utf-8", errors="replace"),
                 "stderr": self.download(sid, root + "/stderr").decode("utf-8", errors="replace")}
 
@@ -297,7 +354,8 @@ class AgentCubeClient:
             except PlatformError as error:
                 read_failures += 1
                 if read_failures >= 5:
-                    raise PlatformError("REMOTE_JOB_OBSERVATION_UNAVAILABLE: " + str(error), uncertain=True) from error
+                    raise PlatformError("REMOTE_JOB_OBSERVATION_UNAVAILABLE: " + str(error), uncertain=True,
+                                        platform_code=error.platform_code) from error
                 result = None
             if result is not None:
                 return result
