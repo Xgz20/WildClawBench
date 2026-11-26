@@ -59,3 +59,6 @@ WCB_E2E_SCORING_DOCKER_CONTEXT=default
 
 需在后端使用的 Docker daemon 上构建。修改 `.env` 后，经现有 CICD 重建后端
 容器生效；不覆盖框架执行源码或冻结的批次。镜像构建与后端部署分开进行。
+
+Chromium 由 Skill 的 bootstrap 安装一次到受管环境；`/opt/scoring-browsers`
+链接到该缓存，规则 Worker 与语义取证共用同一版本，不重复下载浏览器。

@@ -17,7 +17,7 @@ RUN ln -sf ../lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm \
  && rm -rf /var/lib/apt/lists/*
 COPY runtime-skill /opt/runtime-score-skill
 RUN python /opt/runtime-score-skill/scripts/score_general_e2e.py bootstrap-runtime --venv-root /opt/scoring-runtime \
- && /opt/scoring-runtime/bin/python -m playwright install chromium \
+ && ln -s /opt/scoring-runtime/playwright-browsers /opt/scoring-browsers \
  && /opt/scoring-runtime/bin/python /opt/runtime-score-skill/scripts/offline_browser_validate.py --probe --output-dir /opt/scoring-browser-preflight
 COPY wcb-dsh /usr/local/bin/wcb-dsh
 RUN chmod 755 /usr/local/bin/wcb-dsh \
