@@ -30,7 +30,7 @@ from collections import defaultdict, deque
 from pathlib import Path
 from typing import Callable
 
-from src.utils.dsh_session_files import DshSessionFormatError, discover_session_files
+from .dsh_session_files import DshSessionFormatError, discover_session_files
 
 CATEGORIES = ("success", "failure", "format_error", "unclear")
 REPORT_FORMAT_HARNESSES = frozenset(

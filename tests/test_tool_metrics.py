@@ -5,6 +5,8 @@
 from __future__ import annotations
 
 import json
+import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -51,6 +53,22 @@ def _tool_result(
     if is_error is not None:
         block["is_error"] = is_error
     return block
+
+
+class ToolMetricsImportCompatibilityTests(unittest.TestCase):
+    def test_framework_and_platform_namespace_imports_are_supported(self):
+        root = Path(__file__).resolve().parents[1]
+        for path, module in [(root, "src.utils.tool_metrics"), (root / "src", "utils.tool_metrics")]:
+            with self.subTest(module=module), tempfile.TemporaryDirectory() as cwd:
+                code = (
+                    "import importlib,sys; "
+                    f"sys.path.insert(0, {str(path)!r}); "
+                    f"m=importlib.import_module({module!r}); "
+                    "assert callable(m.parse_tool_metrics); assert callable(m.parse_report_tool_metrics)"
+                )
+                result = subprocess.run([sys.executable, "-I", "-c", code],
+                                        cwd=cwd, text=True, capture_output=True, check=False)
+                self.assertEqual(result.returncode, 0, result.stderr)
 
 
 class CodexClassifierTest(unittest.TestCase):

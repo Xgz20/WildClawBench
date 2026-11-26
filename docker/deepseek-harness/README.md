@@ -111,6 +111,9 @@ override that failure.
 
 This compatibility fix is in the host runner/converter. It does not require a
 new CLI image or modify historical score, execution status, or usage artifacts.
+The shared tool audit supports both `src.utils.tool_metrics` and the platform's
+`utils.tool_metrics` import paths; restart a long-lived platform worker after
+updating the framework to invalidate its cached parser or failed import.
 To inspect an existing v4 session without changing the original run, use the
 standalone converter with a separate output directory; recovering a historical
 run's formal validity requires an explicit, audited action.
