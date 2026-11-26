@@ -47,6 +47,8 @@ def prepare(args: argparse.Namespace) -> dict:
         'DSH_VERSION': args.dsh_version,
         'NPM_REGISTRY': args.npm_registry,
         'PIP_INDEX_URL': args.pip_index_url,
+        'DEBIAN_MIRROR': args.debian_mirror,
+        'DEBIAN_SECURITY_MIRROR': args.debian_security_mirror,
         'WITH_OFFICE': '1' if args.with_office else '0',
     }
     (target / 'build-inputs.env').write_text(
@@ -69,6 +71,8 @@ def main() -> None:
     parser.add_argument('--dsh-version', default='0.1.2-rc.1')
     parser.add_argument('--npm-registry', default='https://registry.npmmirror.com')
     parser.add_argument('--pip-index-url', default='https://pypi.org/simple')
+    parser.add_argument('--debian-mirror', default='https://mirrors.tuna.tsinghua.edu.cn/debian')
+    parser.add_argument('--debian-security-mirror', default='https://mirrors.tuna.tsinghua.edu.cn/debian-security')
     parser.add_argument('--http-proxy')
     parser.add_argument('--with-office', action='store_true')
     parser.add_argument('--prepare-only', action='store_true', help='Package on one machine, build on another without host Python')

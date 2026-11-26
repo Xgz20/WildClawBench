@@ -7,12 +7,17 @@ ARG CODEX_VERSION=0.171.0
 ARG DSH_VERSION=0.1.2-rc.1
 ARG NPM_REGISTRY=https://registry.npmmirror.com
 ARG PIP_INDEX_URL=https://pypi.org/simple
+ARG DEBIAN_MIRROR=https://mirrors.tuna.tsinghua.edu.cn/debian
+ARG DEBIAN_SECURITY_MIRROR=https://mirrors.tuna.tsinghua.edu.cn/debian-security
 COPY --from=node-runtime /usr/local/bin/node /usr/local/bin/node
 COPY --from=node-runtime /usr/local/lib/node_modules/npm /usr/local/lib/node_modules/npm
 ENV PLAYWRIGHT_BROWSERS_PATH=/opt/scoring-browsers
 RUN ln -sf ../lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm \
  && ln -sf ../lib/node_modules/npm/bin/npx-cli.js /usr/local/bin/npx \
- && pip install --no-cache-dir uv==0.13.6 pyyaml==6.0.3 jsonschema==4.26.0 openpyxl==3.1.5 playwright==1.55.0 \
+ && pip install --no-cache-dir uv==0.13.6 pyyaml==6.0.3 jsonschema==4.26.0 openpyxl==3.1.5 playwright==1.55.0
+RUN if [ -f /etc/apt/sources.list.d/debian.sources ]; then \
+      sed -i "s|http://deb.debian.org/debian-security|${DEBIAN_SECURITY_MIRROR}|g; s|http://deb.debian.org/debian|${DEBIAN_MIRROR}|g" /etc/apt/sources.list.d/debian.sources; \
+    fi \
  && python -m playwright install-deps chromium \
  && rm -rf /var/lib/apt/lists/*
 COPY runtime-skill /opt/runtime-score-skill

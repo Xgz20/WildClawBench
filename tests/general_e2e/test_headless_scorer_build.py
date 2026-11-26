@@ -31,7 +31,8 @@ class HeadlessScorerBuildTests(unittest.TestCase):
             (root / 'build-prepared.sh').write_bytes((ROOT / 'docker/e2e-scorer/build-prepared.sh').read_bytes())
             (root / 'build-inputs.env').write_text('IMAGE_TAG=test:office\nDOCKER_CONTEXT=default\nWITH_OFFICE=1\n' +
                 ''.join(key + '=test\n' for key in ('EVAL_BASE_IMAGE', 'NODE_RUNTIME_IMAGE', 'CODEX_VERSION',
-                                                  'DSH_VERSION', 'NPM_REGISTRY', 'PIP_INDEX_URL')))
+                                                  'DSH_VERSION', 'NPM_REGISTRY', 'PIP_INDEX_URL',
+                                                  'DEBIAN_MIRROR', 'DEBIAN_SECURITY_MIRROR')))
             docker = root / 'docker'
             docker.write_text('#!/bin/sh\nprintf "%s\\n" "$*" >> "$CALLS"\n'
                               'case "$*" in *" run "*) exit "${FAIL_VALIDATION:-0}" ;; esac\n')

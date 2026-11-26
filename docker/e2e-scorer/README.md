@@ -62,3 +62,7 @@ WCB_E2E_SCORING_DOCKER_CONTEXT=default
 
 Chromium 由 Skill 的 bootstrap 安装一次到受管环境；`/opt/scoring-browsers`
 链接到该缓存，规则 Worker 与语义取证共用同一版本，不重复下载浏览器。
+
+Debian 默认使用清华镜像源，仍执行 Debian GPG 签名校验；可通过
+`--debian-mirror` / `--debian-security-mirror` 覆盖。`--pip-index-url` 控制
+外层工具的 pip 源；Skill 内部依赖仍由原锁定 bootstrap 安装。

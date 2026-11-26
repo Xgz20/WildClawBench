@@ -7,7 +7,7 @@ source "${CONTEXT_DIR}/build-inputs.env"
 rm -f "${CONTEXT_DIR}/runtime-validation.json" "${CONTEXT_DIR}/image-receipt.txt"
 DOCKER=(docker --context "${DOCKER_CONTEXT}")
 BUILD_ARGS=()
-for key in EVAL_BASE_IMAGE NODE_RUNTIME_IMAGE CODEX_VERSION DSH_VERSION NPM_REGISTRY PIP_INDEX_URL; do
+for key in EVAL_BASE_IMAGE NODE_RUNTIME_IMAGE CODEX_VERSION DSH_VERSION NPM_REGISTRY PIP_INDEX_URL DEBIAN_MIRROR DEBIAN_SECURITY_MIRROR; do
   BUILD_ARGS+=(--build-arg "${key}=${!key}")
 done
 # Proxy values are supplied at invocation, never persisted to the prepared context.
