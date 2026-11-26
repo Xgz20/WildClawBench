@@ -390,6 +390,7 @@ def _prepare_model_limit_resolution(
         # AstronCode has its own native/proxy compatibility mode.
         respect_enabled_switch=not is_astroncode,
         native_managed=native_managed,
+        require_context_window=isinstance(backend, OpenCodeAgent),
     )
     log_model_limit = (
         logger.warning

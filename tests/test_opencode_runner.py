@@ -9,14 +9,19 @@ from unittest.mock import patch
 
 from src.agents.base import AgentTaskSpec
 from src.agents.opencode.runner import OpenCodeAgent
+from src.utils.model_limits import clear_model_limit_caches
 
 
 class OpenCodeRunnerTests(unittest.TestCase):
     def setUp(self) -> None:
+        clear_model_limit_caches()
         self.agent = OpenCodeAgent(
             openrouter_api_key="test-key",
             openrouter_base_url="https://openrouter.example/api/v1",
         )
+
+    def tearDown(self) -> None:
+        clear_model_limit_caches()
 
     def test_build_exec_command_maps_thinking_to_variant(self) -> None:
         parameters = inspect.signature(self.agent._build_exec_command).parameters
@@ -63,8 +68,9 @@ class OpenCodeRunnerTests(unittest.TestCase):
             {
                 "WILDCLAW_MAAS_MAX_TOKENS_ENABLED": "true",
                 "MAAS_MAX_TOKENS": "3072",
+                "OPENCODE_CONTEXT_WINDOW": "65536",
             },
-            clear=False,
+            clear=True,
         ):
             config = json.loads(
                 agent._render_opencode_config(
@@ -73,7 +79,33 @@ class OpenCodeRunnerTests(unittest.TestCase):
             )
 
         model = config["provider"]["openrouter"]["models"]["xopglm52"]
-        self.assertEqual(model["limit"]["output"], 3072)
+        self.assertEqual(model["limit"], {"context": 65536, "output": 3072})
+
+    def test_enabled_limit_without_trusted_context_fails_before_cli(self) -> None:
+        agent = OpenCodeAgent(
+            openrouter_api_key="test-key",
+            openrouter_base_url="https://maas-api.example/v2",
+        )
+        with patch.dict("os.environ", {
+            "WILDCLAW_MAAS_MAX_TOKENS_ENABLED": "true",
+            "MAAS_MAX_TOKENS": "3072",
+        }, clear=True):
+            with self.assertRaisesRegex(ValueError, "OPENCODE_CONTEXT_WINDOW"):
+                agent._render_opencode_config("openrouter/spark-x2.6", redact_secrets=True)
+
+    def test_disabled_limit_does_not_need_context_or_catalog(self) -> None:
+        agent = OpenCodeAgent(
+            openrouter_api_key="test-key",
+            openrouter_base_url="https://maas-api.example/v2",
+        )
+        with patch.dict("os.environ", {
+            "WILDCLAW_MAAS_MAX_TOKENS_ENABLED": "false",
+            "MAAS_MAX_TOKENS": "3072",
+        }, clear=True), patch("src.utils.model_limits.urlopen") as request:
+            config = json.loads(agent._render_opencode_config(
+                "openrouter/spark-x2.6", redact_secrets=True))
+        self.assertNotIn("limit", config["provider"]["openrouter"]["models"]["spark-x2.6"])
+        request.assert_not_called()
 
     def test_run_task_forwards_thinking_to_prompt_runner(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:

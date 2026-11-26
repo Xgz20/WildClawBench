@@ -206,6 +206,34 @@ class RunConfigurationLoggingTests(unittest.TestCase):
         self.assertIsNone(resolution["max_tokens"])
         self.assertFalse(resolution["enabled_switch_applies"])
 
+    def test_opencode_preflight_requires_and_persists_complete_limit_pair(self) -> None:
+        backend = object.__new__(run_batch.OpenCodeAgent)
+        backend.openrouter_base_url = "https://maas.example/v2"
+        with tempfile.TemporaryDirectory() as temp_dir, patch.dict(
+            run_batch.os.environ, {
+                "WILDCLAW_MAAS_MAX_TOKENS_ENABLED": "true", "MAAS_MAX_TOKENS": "8192",
+                "OPENCODE_CONTEXT_WINDOW": "65536",
+            }, clear=True,
+        ):
+            resolution = run_batch._prepare_model_limit_resolution(
+                self.args(), backend, Path(temp_dir))
+            snapshot = json.loads((Path(temp_dir) / MODEL_LIMIT_RESOLUTION_FILENAME).read_text())
+        self.assertEqual(resolution["context_window"], 65536)
+        self.assertEqual(resolution["max_tokens"], 8192)
+        self.assertEqual(snapshot, resolution)
+
+    def test_opencode_preflight_missing_context_fails_without_snapshot(self) -> None:
+        backend = object.__new__(run_batch.OpenCodeAgent)
+        backend.openrouter_base_url = "https://maas.example/v2"
+        with tempfile.TemporaryDirectory() as temp_dir, patch.dict(
+            run_batch.os.environ, {
+                "WILDCLAW_MAAS_MAX_TOKENS_ENABLED": "true", "MAAS_MAX_TOKENS": "8192",
+            }, clear=True,
+        ):
+            with self.assertRaisesRegex(ValueError, "OPENCODE_CONTEXT_WINDOW"):
+                run_batch._prepare_model_limit_resolution(self.args(), backend, Path(temp_dir))
+            self.assertFalse((Path(temp_dir) / MODEL_LIMIT_RESOLUTION_FILENAME).exists())
+
 
 if __name__ == "__main__":
     unittest.main()
