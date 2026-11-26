@@ -159,6 +159,9 @@ class AnalysisPipelineTest(unittest.TestCase):
             "astroncode": "AstronCode",
             "opencode": "OpenCode",
             "deepseek-harness": "DeepSeek Harness",
+            "minimax-code": "MiniMax Code",
+            "zcode": "ZCode",
+            "mimocode": "MiMoCode",
         }
 
         self.assertTrue(set(backend_action.choices).issubset(registry.harnesses))
