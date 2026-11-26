@@ -509,7 +509,7 @@ class ResearchSourceTests(unittest.TestCase):
         self.assertEqual(completed.returncode, 0, completed.stdout + completed.stderr)
         result = json.loads(completed.stdout)
         self.assertEqual((result["fresh_get_count"], result["reused_snapshot_count"]), (0, 1))
-        self.assertEqual(SOURCES.read(REPO_ROOT / "tools/report/skills/general-e2e/score-general-e2e/skill-metadata.json")["version"], "0.29.5")
+        self.assertEqual(SOURCES.read(REPO_ROOT / "tools/report/skills/general-e2e/score-general-e2e/skill-metadata.json")["version"], "0.29.6")
 
     def test_reuse_archive_is_self_contained_and_capsule_tampering_fails(self):
         prior = self.public_attempt("prior")

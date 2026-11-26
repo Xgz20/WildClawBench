@@ -3,6 +3,8 @@ name: score-general-e2e
 description: 对一个冻结的 General E2E 任务运行自动规则与指定语义裁判，生成证据可追溯的标准评分；不负责批量调度、执行 Harness 或报告汇总。
 ---
 
+`0.29.6` 补齐 AgentCube 原生 `list_mcp_resource_templates` 工具名回放，与 Python 执行器一致；调用参数、来源身份、原始轨迹及评分规则保持严格核验。
+
 `0.29.5` 为报销政策题的精确规则源码登记 UTF-8 BOM 读取兼容 Profile。新评分尝试冻结 Profile 与原始/有效源码摘要，只改变候选 JSON 的文本解码；原候选、输入文件摘要、业务判定、容差和权重保持。历史未启用的尝试按原源码回放；本地桌面、沙箱桌面与 CLI 沿用同一共享修复。
 
 `0.29.4` 同步 Loomy 资源合同修复依赖，Rubric、权重和分数不变。

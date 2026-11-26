@@ -137,6 +137,31 @@ class BackendTests(unittest.TestCase):
             self.assertEqual(local.read_bytes(), raw)
             self.assertTrue(binding["verified"])
 
+    def test_native_binding_failure_keeps_parser_cause_in_public_error_and_diagnostics(self):
+        for count, outcomes, reason in (
+            (0, [], "NO_CHANGED_NATIVE_ROLLOUTS"),
+            (1, [E2EError("NATIVE_MCP_INVOCATION_MISMATCH")], "NATIVE_MCP_INVOCATION_MISMATCH"),
+            (2, [{"verified": True}, {"verified": True}], "MULTIPLE_MATCHING_NATIVE_ROLLOUTS"),
+        ):
+            with self.subTest(reason=reason), tempfile.TemporaryDirectory() as directory:
+                raw = b'{"type":"test"}\n'
+                driver = object.__new__(AStudioSandboxDriver)
+                driver.staging = Path(directory)
+                driver.unit = {"model": "spark-x2.6", "reasoning_effort": "high"}
+                driver.client = Mock()
+                driver.client.windows_download.return_value = raw
+                driver._inventory_native = Mock(return_value={NATIVE_ROOT + rf"\rollout-{i}.jsonl": {
+                    "Length": len(raw), "Sha256": hashlib.sha256(raw).hexdigest()} for i in range(count)})
+                with patch("src.e2e.backend.normalize_rollout", side_effect=outcomes):
+                    with self.assertRaisesRegex(E2EError, "TASK_NATIVE_BINDING_AMBIGUOUS: " + reason):
+                        driver._bound_native("sid", {}, {}, {}, "prompt", "before-cleanup")
+                diagnostic = json.loads((driver.staging / "metadata/native-binding-before-cleanup.json").read_text())
+                self.assertEqual(diagnostic["changed_count"], count)
+                self.assertEqual(diagnostic["reasons"], [reason])
+                if count == 1:
+                    self.assertEqual(diagnostic["failures"], [{"file": "rollout-0.jsonl", "error": reason}])
+                    self.assertTrue((driver.staging / "native/before-cleanup/rollout-0.jsonl").is_file())
+
     def test_cleanup_discovery_can_resume_when_no_mutation_proof_exists(self):
         for driver_type in (AStudioSandboxDriver, ChatGPTDesktopSandboxDriver):
             with self.subTest(driver=driver_type), tempfile.TemporaryDirectory() as directory:

@@ -19,7 +19,7 @@ const sha = bytes => createHash('sha256').update(bytes).digest('hex');
 
 export function mcpCallableMatches(name, server, tool) {
   if (![name, server, tool].every(value => typeof value === 'string' && value.length)) return false;
-  if (server === 'acode' && name === tool && (tool === 'list_mcp_resources' || /^astron_browser_[a-z_]+$/.test(tool))) return true;
+  if (server === 'acode' && name === tool && (['list_mcp_resources', 'list_mcp_resource_templates'].includes(tool) || /^astron_browser_[a-z_]+$/.test(tool))) return true;
   if (name.startsWith(`mcp__${server}__`) && name.endsWith(`__${tool}`)) return true;
   if (server !== 'acode_apps' || name.length !== 64 || !/^[A-Za-z0-9_]+$/.test(tool)) return false;
   const match = /^mcp__acode_apps__(connector_[A-Za-z0-9_]+)__(.+)$/.exec(name);

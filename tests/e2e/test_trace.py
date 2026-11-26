@@ -201,6 +201,21 @@ class NativeMcpTests(unittest.TestCase):
         with self.assertRaisesRegex(E2EError, "MCP_INVOCATION_MISMATCH"):
             self.normalize()
 
+    def test_builtin_resource_templates_require_the_same_name_server_and_arguments(self):
+        name = "list_mcp_resource_templates"
+        call = self.rows[3]["payload"]
+        call.update(name=name, arguments='{"server":"sites"}')
+        self.end["invocation"] = {"server": "acode", "tool": name, "arguments": {"server": "sites"}}
+        self.assertEqual(self.normalize()["missing"], [])
+        for field, value in (("server", "other"), ("tool", "list_mcp_resources"),
+                             ("arguments", {"server": "different"})):
+            with self.subTest(field=field):
+                saved = self.end["invocation"][field]
+                self.end["invocation"][field] = value
+                with self.assertRaisesRegex(E2EError, "NATIVE_MCP_INVOCATION_MISMATCH"):
+                    self.normalize()
+                self.end["invocation"][field] = saved
+
     def test_hashed_connector_alias_preserves_raw_name_and_rejects_tampering(self):
         alias = "mcp__acode_apps__connector_image_understanding__ima_e439a9fe053a"
         call = self.rows[3]["payload"]
@@ -226,13 +241,23 @@ class NativeMcpTests(unittest.TestCase):
                  ("list_mcp_resources", "acode", "list_mcp_resources"),
                  ("list_mcp_resources", "acode_apps", "list_mcp_resources"),
                  ("astron_browser_screenshot", "acode", "astron_browser_screenshot"),
-                 ("mcp__acode_apps__connector_sites__manage_site", "acode_apps", "manage_site")]
+                 ("mcp__acode_apps__connector_sites__manage_site", "acode_apps", "manage_site"),
+                 ("list_mcp_resource_templates", "acode", "list_mcp_resource_templates"),
+                 ("list_mcp_resource_templates", "acode_apps", "list_mcp_resource_templates"),
+                 ("list_mcp_resource_templates", "acode", "list_mcp_resources"),
+                 ("unknown_tool", "acode", "unknown_tool")]
         module = Path(__file__).resolve().parents[2] / "tools/report/skills/general-e2e/collect-general-e2e/scripts/lib/agentcube-native-verification.mjs"
         code = "const {mcpCallableMatches:f}=await import(process.argv[1]);process.stdout.write(JSON.stringify(JSON.parse(process.argv[2]).map(x=>f(...x))));"
         result = subprocess.run(["node", "--input-type=module", "-e", code, module.as_uri(), json.dumps(cases)],
                                 capture_output=True, text=True, check=True)
-        self.assertEqual(json.loads(result.stdout), [True, False, False, False, True, False, True, True])
+        self.assertEqual(json.loads(result.stdout), [True, False, False, False, True, False, True, True,
+                                                   True, False, False, False])
         self.assertEqual(json.loads(result.stdout), [mcp_callable_matches(*case) for case in cases])
+        canonical = Path(__file__).resolve().parents[2] / "tools/report/e2e-shared/general-resource-supplements/agentcube-native-binding.mjs"
+        for skill in ("collect-general-e2e", "score-general-e2e", "report-general-e2e"):
+            mirror = canonical.parents[2] / "skills/general-e2e" / skill / "vendor/e2e-shared/general-resource-supplements/agentcube-native-binding.mjs"
+            with self.subTest(skill=skill):
+                self.assertEqual(mirror.read_bytes(), canonical.read_bytes())
 
     def test_mcp_end_without_canonical_pair_marks_trace_incomplete(self):
         self.end["call_id"] = "unbound-call"

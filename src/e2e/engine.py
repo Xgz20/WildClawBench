@@ -220,7 +220,15 @@ def _worker(root: Path, store: BatchStore, item: dict, manifest: dict, unit: dic
             _failure(root, store, item, driver, error)
     except Exception as error:
         row = store.get(item["key"])
-        if row.get("report", {}).get("status") == "completed":
+        binding_failure = (isinstance(error, E2EError)
+                           and str(error).split(":", 1)[0] == "TASK_NATIVE_BINDING_AMBIGUOUS")
+        if row.get("report", {}).get("status") == "completed" and binding_failure:
+            # A deterministic parser rejection is not an unknown remote job.
+            # The failure path must stop the owned processes, collect and seal
+            # diagnostic evidence before retention can free the execution slot.
+            # Any incomplete salvage still becomes NEEDS_ATTENTION below.
+            _failure(root, store, item, driver, error)
+        elif row.get("report", {}).get("status") == "completed":
             store.update(item["key"], "NEEDS_ATTENTION", error={"code": type(error).__name__, "message": str(error)})
         else:
             _failure(root, store, item, driver, error)
@@ -232,6 +240,8 @@ def _failure(root, store, item, driver, error, *, final_phase="FAILED"):
     row = store.get(item["key"])
     message = str(redact(str(error), driver.config.auth_token))
     failure = {"code": type(error).__name__, "message": message, "report_status": row.get("report", {}).get("status")}
+    if failure["report_status"] == "completed" and message.split(":", 1)[0] == "TASK_NATIVE_BINDING_AMBIGUOUS":
+        failure["failure_stage"] = "native_trace_validation"
     if isinstance(error,PlatformError):
         failure["fault_domain"]="agentcube"
         if error.platform_code:failure["platform_code"]=error.platform_code

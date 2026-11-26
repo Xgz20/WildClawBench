@@ -29,6 +29,24 @@ NATIVE_ROOT = r"C:\Users\Docker\AppData\Local\Programs\AStudio Data\acode-home-o
 ASTUDIO_CATALOG_MODELS = {"spark-x2.6-preview", "glm-5.3", "glm-5.3-flash", "deepseek-v4.1-flash"}
 
 
+def _check_native_binding(staging, stage, changed, bound, failures):
+    if len(bound) == 1:
+        return
+    if not changed:
+        reasons = ["NO_CHANGED_NATIVE_ROLLOUTS"]
+    elif bound:
+        reasons = ["MULTIPLE_MATCHING_NATIVE_ROLLOUTS"]
+    else:
+        reasons = sorted({item["error"] for item in failures})
+    atomic_json(staging / "metadata" / ("native-binding-" + stage + ".json"), {
+        "stage": stage, "changed_count": len(changed), "matched_count": len(bound),
+        "failures": failures, "reasons": reasons,
+    })
+    # Keep the existing outer code, but preserve the parser cause in public
+    # errors instead of making one rejected rollout look like multiple matches.
+    raise E2EError("TASK_NATIVE_BINDING_AMBIGUOUS: " + ", ".join(reasons))
+
+
 def astudio_model_from_catalog(catalog, model):
     rows = catalog.get("models", []) if isinstance(catalog, dict) else []
     if not isinstance(rows, list) or any(not isinstance(row, dict) for row in rows):
@@ -517,6 +535,7 @@ try {
         native_dir = self.staging / "native" / stage
         native_dir.mkdir(parents=True, exist_ok=True)
         bound = []
+        failures = []
         for path in changed:
             if not path.casefold().startswith(self.native_root.casefold() + "\\"):
                 raise E2EError("NATIVE_PATH_OUTSIDE_ROOT")
@@ -534,8 +553,8 @@ try {
                 bound.append((local, binding))
             except E2EError as error:
                 atomic_json(self.staging / "metadata" / (stage + "-" + name + ".binding-error.json"), {"error": str(error)})
-        if len(bound) != 1:
-            raise E2EError("TASK_NATIVE_BINDING_AMBIGUOUS")
+                failures.append({"file": name, "error": str(error)})
+        _check_native_binding(self.staging, stage, changed, bound, failures)
         if len(changed) != 1:
             raise E2EError("ADDITIONAL_NATIVE_ROLLOUTS_NEED_BINDING")
         return bound[0]
@@ -767,6 +786,7 @@ print(json.dumps({
         atomic_json(self.staging/'metadata/workbuddy-product-report.json',product)
         atomic_json(self.staging/'metadata/workbuddy-diagnostics.json',diagnostics)
         bound=[]
+        failures=[]
         for path in changed:
             if not path.casefold().startswith(self.native_root.casefold()+'\\'):raise E2EError('NATIVE_PATH_OUTSIDE_ROOT')
             data=self.client.windows_download(sid,path)
@@ -775,8 +795,10 @@ print(json.dumps({
             try:
                 binding=normalize_workbuddy(local,identity=identity,prompt=prompt,guest_cwd=GUEST_WORKSPACE,requested_model=self.unit['model'],requested_max_mode=self.unit.get('max_mode',False),report=report,product_report=product,diagnostics=diagnostics)
                 bound.append((local,binding))
-            except E2EError as error:atomic_json(self.staging/'metadata'/(stage+'-'+name+'.binding-error.json'),{'error':str(error)})
-        if len(bound)!=1:raise E2EError('TASK_NATIVE_BINDING_AMBIGUOUS')
+            except E2EError as error:
+                atomic_json(self.staging/'metadata'/(stage+'-'+name+'.binding-error.json'),{'error':str(error)})
+                failures.append({'file':name,'error':str(error)})
+        _check_native_binding(self.staging, stage, changed, bound, failures)
         if len(changed)!=1:raise E2EError('WORKBUDDY_ADDITIONAL_NATIVE_SESSIONS_NEED_BINDING')
         return bound[0]
 

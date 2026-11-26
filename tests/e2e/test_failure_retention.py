@@ -87,6 +87,64 @@ def test_retained_failure_does_not_block_other_execution_slots(fixture):
     assert view["resource_held"] == 1 and view["execution_resources_held"] == 0
 
 
+@pytest.mark.parametrize('preserved', [True, False])
+def test_completed_native_binding_rejection_seals_before_releasing_its_slot(fixture, preserved):
+    fixture.manifest['plan']['execution_concurrency'] = 2
+    fixture.manifest['units'][0]['max_concurrency'] = 2
+    atomic_json(fixture.root / 'batch.json', fixture.manifest)
+    store = BatchStore(fixture.root)
+    with store.transaction() as db:
+        db.execute("UPDATE metadata SET value=? WHERE key='plan_sha256'", (digest(fixture.manifest),))
+    provider = fixture.provider
+    provider.executing = provider.peak_after_retention = 0
+
+    class Driver(fixtures.FakeDriver):
+        def execute(self):
+            with provider.lock:
+                provider.executing += 1
+                if self.store.retentions():
+                    provider.peak_after_retention = max(provider.peak_after_retention, provider.executing)
+            try:
+                if self.item['task_id'] == 't0':
+                    self.store.update(self.item['key'], 'COLLECTING', session_id='completed-session',
+                        report={'status': 'completed'}, runtime=self.config.public(),
+                        dispatch_armed_at='2026-11-25T00:00:00+00:00')
+                    atomic_json(self.staging / 'metadata/report.json', {'status': 'completed'})
+                    raise E2EError('TASK_NATIVE_BINDING_AMBIGUOUS: NATIVE_MCP_INVOCATION_MISMATCH')
+                return super().execute()
+            finally:
+                with provider.lock:
+                    provider.executing -= 1
+
+        def salvage(self):
+            return {'complete': preserved, 'components': {'process_cleanup': preserved}}
+
+    result = run_batch(fixture.root, fixture.config, driver_factory=lambda **kw: Driver(**kw, provider=provider))
+    row = store.rows()[0]
+    assert row['error']['report_status'] == 'completed'
+    assert row['error']['failure_stage'] == 'native_trace_validation'
+    execution = fixture.root / row['execution_root']
+    if preserved:
+        assert result['phase_counts'] == {'FAILED': 1, 'COMPLETED': 9}
+        assert result['execution_resources_held'] == 0 and result['retained_sandboxes_held'] == 1
+        assert provider.peak_after_retention == 2
+        assert row['sandbox_retention']['evidence_sealed'] and row['resource_held']
+        assert (execution / 'original/metadata/report.json').is_file()
+        assert not (execution / 'execution-ready.json').exists()
+        # Rerun only this round with the new reader, retaining the failed attempt.
+        old_attempt = row['attempt_id']
+        store.rerun_case('unit', 't0', 'fixed-native-reader', run_indices=[1], executor_revision='fixed')
+        assert store.rows()[0]['attempt_id'] != old_attempt
+        assert store.versions(row['key'])[0]['attempt_id'] == old_attempt
+    else:
+        assert row['phase'] == 'NEEDS_ATTENTION' and row['resource_held']
+        assert result['execution_resources_held'] == 1 and result['retained_sandboxes_held'] == 0
+        assert not (execution / 'backups/backup-receipt.json').exists()
+        assert result['phase_counts'].get('PENDING', 0) > 0
+        with pytest.raises(E2EError, match='RERUN_REQUIRES_RELEASED'):
+            store.rerun_case('unit', 't0', 'unsafe-rerun')
+
+
 def test_restart_reaper_waits_until_deadline_and_does_not_inflate_duration(fixture):
     store, row, _ = failed(fixture)
     original = next(value for value in snapshot(fixture.root)["executions"] if value["execution_key"] == row["key"])
