@@ -52,7 +52,7 @@ from src.utils.grading import (
     write_error_score as write_error_score_file,
 )
 
-from src.utils.anomalies import RULESET_VERSION, SCHEMA_VERSION, scan_run_dir
+from src.utils.anomalies import RULESET_VERSION, SCHEMA_VERSION, scan_run_dir, has_deferred_scoring
 from src.utils.eval_provenance import (
     TASK_PROVENANCE_CACHE_KEY,
     get_or_build_task_provenance,
@@ -309,7 +309,8 @@ def _build_run_configuration(
         "backend_endpoints": backend_endpoints,
         "environment_endpoints": endpoint_env,
         "judge": {
-            "model": str(env.get("JUDGE_MODEL", "")).strip() or "openai/gpt-5.4",
+            "mode": "independent" if env.get("WCB_DEFER_SCORING") == "1" else "inline",
+            "model": None if env.get("WCB_DEFER_SCORING") == "1" else str(env.get("JUDGE_MODEL", "")).strip() or "openai/gpt-5.4",
             "anthropic_base_url": endpoint_env["ANTHROPIC_BASE_URL"],
         },
         "model_limits": {
@@ -746,6 +747,8 @@ def grade_the_task(
     if os.environ.get("WCB_DEFER_SCORING") == "1":
         from src.cli_scoring import freeze_input
         freeze_input(task_id, output_dir, task, transcript_container_path)
+        result["scoring_status"] = "pending"
+        logger.info("[%s] Execution finished; frozen inputs are ready, waiting for independent scoring", task_id)
         return result
 
     # v2: a task is gradable if it has rule checks OR a declarative rubric.
@@ -867,11 +870,14 @@ def _load_resume_result(
     try:
         scores = json.loads((latest / "score.json").read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError):
-        task["_reliability_rerun"] = {
-            "supersedes_run": str(latest),
-            "trigger": "missing_or_invalid_score",
-        }
-        return None
+        if not (latest / "score.json").exists() and has_deferred_scoring(latest):
+            scores = {}
+        else:
+            task["_reliability_rerun"] = {
+                "supersedes_run": str(latest),
+                "trigger": "missing_or_invalid_score",
+            }
+            return None
     anomalies = None
     anomalies_file = latest / "anomalies.json"
     if anomalies_file.exists():
@@ -928,6 +934,7 @@ def _load_resume_result(
         "usage": usage,
         "anomalies": anomalies,
         "_resumed_from": str(latest),
+        **({"scoring_status": "pending"} if not scores and has_deferred_scoring(latest) else {}),
     }
 
 

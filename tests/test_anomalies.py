@@ -14,6 +14,22 @@ from src.utils.anomalies import (
 
 
 class AnomalyDetectionTest(unittest.TestCase):
+    def test_sealed_independent_scoring_inputs_wait_without_score_missing_failure(self):
+        temp, root = self.make_run()
+        self.addCleanup(temp.cleanup)
+        (root / 'score.json').unlink()
+        inputs = root / 'scoring-input'
+        inputs.mkdir()
+        self.write_json(inputs / 'manifest.json', {'schema': 'wildclawbench.cli-scoring-input/v1', 'files': [], 'image': 'frozen'})
+        report = scan_run_dir(root)
+        self.assertEqual(report['scoring_status'], 'pending')
+        self.assertEqual(report['validity_verdict'], 'PENDING')
+        self.assertFalse(report['needs_rerun'])
+        self.assertNotIn('SCORE_MISSING', [item['id'] for item in report['items']])
+        (root / 'score.json').write_text('broken score')
+        broken = scan_run_dir(root)
+        self.assertIn('SCORE_MISSING', [item['id'] for item in broken['items']])
+
     def make_run(
         self,
         agent_log: str = "",
