@@ -57,6 +57,12 @@ class RunConfigurationLoggingTests(unittest.TestCase):
             ),
         )
 
+    def test_independent_scoring_does_not_claim_an_unused_inline_judge(self) -> None:
+        config = run_batch._build_run_configuration(self.args(), self.backend(), Path('/tmp/output'),
+            environ={'WCB_DEFER_SCORING': '1', 'JUDGE_MODEL': 'unused-default'}, model_limit_resolution={})
+        self.assertEqual(config['judge']['mode'], 'independent')
+        self.assertIsNone(config['judge']['model'])
+
     def test_effective_configuration_is_complete_and_redacted(self) -> None:
         environment = {
             "OPENROUTER_API_KEY": "candidate-secret",

@@ -11,7 +11,7 @@ import time
 import uuid
 
 from .e2e.artifacts import inventory
-from .e2e.common import atomic_json, digest, read_json
+from .e2e.common import atomic_json, digest, read_json, file_sha256
 
 
 def docker(*args, timeout=300):
@@ -106,7 +106,9 @@ def desktop_judge(work, config, agentcube_config):
     driver_type = CliChatGPTDriver if config['harness'] == 'chatgpt-desktop' else AStudioSandboxDriver
     # AStudio uses the regular native driver. No General-E2E grading contract is substituted.
     driver = driver_type(batch_root=work, store=state, item=item,
-        task={'task_id': 'judge', 'input_root': 'input'}, unit=unit,
+        task={'task_id': 'judge', 'input_root': 'input', 'scene': 'general', 'requirements': {},
+              'prompt_sha256': file_sha256(task_root / 'PROMPT.md'),
+              'definition_inventory': inventory(work / 'input')}, unit=unit,
         config=AgentCubeConfig.load(agentcube_config),
         stop_event=Stop(work.parent.parent / 'cancel.json', time.time() + config['timeout_seconds']))
     try:
@@ -185,8 +187,13 @@ def score(input_root, output, config, agentcube_config=None):
                     atomic_json(request_file.with_name(request_file.name.replace('.request.', '.response.')), result)
                 time.sleep(0.1)
             result = future.result()
+        scoring = {'transport': config['transport'], 'harness': config.get('harness'),
+                   'rule_execution': 'docker',
+                   'method': ('rules' if not handled else 'agent') if config['transport'] != 'api' else 'api'}
+        if config['transport'] != 'api':
+            scoring['judge_call_count'] = len(handled)
         atomic_json(output / 'result.json', {'schema': 'wildclawbench.cli-score/v1',
-                    'scores': result, 'config': config, 'source_manifest_sha256': digest(manifest)})
+                    'scores': result, 'scoring': scoring, 'config': config, 'source_manifest_sha256': digest(manifest)})
         return result
     finally:
         docker('rm', '-f', name)

@@ -1503,6 +1503,8 @@ def print_summary(results: list[dict], category: str, output_dir: Path, model_na
         if not scores:
             if r.get("error"):
                 print(f"  ✗ {task_id}: {r['error']}")
+            elif r.get("scoring_status") == "pending":
+                print(f"  - {task_id}: 等待独立评分（执行已结束）")
             else:
                 print(f"  - {task_id}: No scores")
             continue
@@ -1647,12 +1649,16 @@ def print_global_summary(
     validity_failure_runs = 0
     validity_failure_tasks: set[str] = set()
     unresolved_score_tasks: set[str] = set()
+    pending_score_tasks: set[str] = set()
+    pending_unscored_tasks: set[str] = set()
 
     # 多轮统计（runs > 1 时）
     per_task_stats: dict[str, dict] = {}
     runs_per_task = max((len(runs) for runs in grouped.values()), default=1)
 
     for tid_ori, runs in grouped.items():
+        if any(r.get("scoring_status") == "pending" or (r.get("anomalies") or {}).get("scoring_status") == "pending" for r in runs):
+            pending_score_tasks.add(tid_ori)
         # 收集可解析的 overall_score；validity 失败分数仍保留在总平均中。
         scores_list = []
         valid_scores_list = []
@@ -1687,7 +1693,10 @@ def print_global_summary(
                 validity_failure_tasks.add(tid_ori)
 
         if not scores_list:
-            missing_score_tasks += 1
+            if tid_ori in pending_score_tasks:
+                pending_unscored_tasks.add(tid_ori)
+            else:
+                missing_score_tasks += 1
             if any((r.get('scores') or {}).get('_grading',{}).get('mode') == EVIDENCE_STATUS_PROFILE
                    and (r.get('scores') or {}).get('overall_score') is None for r in runs):
                 unresolved_score_tasks.add(tid_ori)
@@ -1711,7 +1720,7 @@ def print_global_summary(
                 valid_total_score += valid_scores_list[0]
                 valid_scored_tasks += 1
 
-    global_denominator = total_tasks - len(unresolved_score_tasks)
+    global_denominator = total_tasks - len(unresolved_score_tasks | pending_unscored_tasks)
     global_avg = total_score / global_denominator if global_denominator else None
     if global_avg is not None:
         bar = "█" * int(global_avg * 10) + "░" * (10 - int(global_avg * 10))
@@ -1733,8 +1742,13 @@ def print_global_summary(
         )
         if runs_per_task > 1:
             print(f"  Runs per task: {runs_per_task}")
+    elif total_tasks and pending_score_tasks:
+        print(f"  Completed tasks: {scored_tasks} / {total_tasks}")
+        print("  Global average: unavailable (waiting for independent scoring)")
     else:
         print("  No tasks found")
+    if pending_score_tasks:
+        print(f"  等待独立评分: {len(pending_score_tasks)} tasks; 执行阶段不补零、不判为评分失败")
 
     total_out_tok = sum(r.get("usage", {}).get("output_tokens", 0) for r in results)
     usage_statuses = {
@@ -1766,6 +1780,7 @@ def print_global_summary(
         "task_count": total_tasks,
         "scored_task_count": scored_tasks,
         "missing_score_task_count": missing_score_tasks,
+        "pending_scoring_task_count": len(pending_score_tasks),
         "unresolved_score_task_count": len(unresolved_score_tasks),
         "global_avg_denominator": global_denominator,
         "valid_scored_task_count": valid_scored_tasks,

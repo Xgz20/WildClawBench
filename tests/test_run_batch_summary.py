@@ -10,6 +10,17 @@ from eval import run_batch
 
 
 class BatchSummaryLoggingTests(unittest.TestCase):
+    def test_waiting_independent_scoring_is_not_a_zero_or_a_missing_score_failure(self):
+        import contextlib
+        import io
+        from src.utils.grading import print_global_summary
+        with tempfile.TemporaryDirectory() as directory, contextlib.redirect_stdout(io.StringIO()) as printed:
+            summary = print_global_summary([{'task_id': 'case', 'scores': {}, 'scoring_status': 'pending'}], Path(directory), 'model')
+            self.assertIsNone(summary['global_avg'])
+            self.assertEqual(summary['pending_scoring_task_count'], 1)
+            self.assertEqual(summary['missing_score_task_count'], 0)
+            self.assertIn('等待独立评分', printed.getvalue())
+
     @staticmethod
     def write_rerun_record(
         root: Path,

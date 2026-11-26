@@ -15,7 +15,7 @@ from typing import Any, Iterable
 from src.utils.transcript_loader import parse_transcript_text
 
 SCHEMA_VERSION = 2
-RULESET_VERSION = "2026-09-07.1"
+RULESET_VERSION = "2026-11-26.1"
 
 ERROR = "error"
 WARNING = "warning"
@@ -838,12 +838,20 @@ def _judge_audit_items(run_dir: Path, score: dict | None) -> list[dict[str, Any]
     return result
 
 
+def has_deferred_scoring(run_dir: Path) -> bool:
+    """The controller seals these inputs only for independent CLI scoring."""
+    manifest = _load_json(Path(run_dir) / "scoring-input/manifest.json")
+    return (isinstance(manifest, dict) and manifest.get("schema") == "wildclawbench.cli-scoring-input/v1"
+            and isinstance(manifest.get("files"), list) and bool(manifest.get("image")))
+
+
 def scan_run_dir(run_dir: Path) -> dict[str, Any]:
     """检测单个 run 目录，返回 anomalies v2 dict（不落盘）。"""
     run_dir = Path(run_dir)
     status = _load_json(run_dir / "execution_status.json") or {}
     usage = _load_json(run_dir / "usage.json") or {}
     score = _load_json(run_dir / "score.json")
+    pending_scoring = score is None and not (run_dir / "score.json").exists() and has_deferred_scoring(run_dir)
     events, transcript_path = _transcript_events(run_dir)
     raw_sessions = [path for path in _raw_session_files(run_dir) if path.stat().st_size > 0]
     model_turns, tool_attempts = _interaction_counts(events, usage)
@@ -1015,7 +1023,7 @@ def scan_run_dir(run_dir: Path) -> dict[str, Any]:
                            "total_tokens": total_tokens, "observed_model_turns": model_turns}],
             ))
 
-    if score is None and not pre_grading_failure:
+    if score is None and not pre_grading_failure and not pending_scoring:
         if execution_item and execution_item["attribution"] in {"model", "harness"}:
             attribution, impact, reliability, action = (
                 execution_item["attribution"], "none", "valid_capability_outcome", "do_not_rerun"
@@ -1038,7 +1046,7 @@ def scan_run_dir(run_dir: Path) -> dict[str, Any]:
             validity_impact=impact, score_reliability=reliability, rerun_action=action,
             evidence=[{"file": "score.json", "state": "missing_or_invalid"}],
         ))
-    else:
+    elif score is not None:
         grading_error_field = ""
         grading_error = ""
         if score.get("error"):
@@ -1119,7 +1127,12 @@ def scan_run_dir(run_dir: Path) -> dict[str, Any]:
         events, transcript_path, subject_model=status.get("model", "")
     ))
     items.extend(api_items)
-    return _finalize(items)
+    report = _finalize(items)
+    if pending_scoring:
+        report["scoring_status"] = "pending"
+        if not report["has_validity_failure"] and not report["needs_review"]:
+            report["validity_verdict"] = "PENDING"
+    return report
 
 
 def iter_run_dirs(output_root: Path):
@@ -1147,6 +1160,7 @@ def scan_batch(output_root: Path) -> dict[str, Any]:
         if len(tasks) <= 1:
             continue
         for rel in rels:
+            pending = runs[rel].get("scoring_status")
             duplicate = _item(
                 "DUPLICATE_TRANSCRIPT",
                 f"轨迹 md5 {digest[:8]} 被不同任务共享：{sorted(tasks)}",
@@ -1157,6 +1171,8 @@ def scan_batch(output_root: Path) -> dict[str, Any]:
                            "tasks": sorted(tasks)}],
             )
             runs[rel] = _finalize([*runs[rel]["items"], duplicate])
+            if pending:
+                runs[rel]["scoring_status"] = pending
     anomalous = {key: value for key, value in runs.items() if value["is_anomalous"]}
     validity_failures = sum(1 for value in runs.values() if value["has_validity_failure"])
     return {
@@ -1168,6 +1184,7 @@ def scan_batch(output_root: Path) -> dict[str, Any]:
         "error_runs": validity_failures,
         "validity_failure_runs": validity_failures,
         "review_runs": sum(1 for value in runs.values() if value["needs_review"]),
+        "pending_scoring_runs": sum(1 for value in runs.values() if value.get("scoring_status") == "pending"),
         "model_or_harness_issue_runs": sum(
             1 for value in runs.values() if value["has_model_or_harness_issue"]
         ),
