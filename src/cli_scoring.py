@@ -85,6 +85,22 @@ def docker_judge(work, config):
         secret.unlink(missing_ok=True)
 
 
+def verify_desktop_candidate(original, returned, receipt):
+    # Windows collection deliberately removes write permissions. POSIX mode is
+    # not portable across that transport; paths, types, sizes and bytes are.
+    before, after = inventory(original), inventory(returned)
+    def content(rows):
+        return [{k: v for k, v in row.items() if k != 'mode'} for row in rows]
+    matches = content(before) == content(after)
+    atomic_json(receipt, {
+        'schema': 'wildclawbench.cli-desktop-candidate-integrity/v1',
+        'comparison': 'path-kind-size-sha256', 'valid': matches,
+        'expected': before, 'observed': after,
+    })
+    if not matches:
+        raise RuntimeError('CLI_JUDGE_CANDIDATE_DRIFT')
+
+
 def desktop_judge(work, config, agentcube_config):
     from .e2e.agentcube import AgentCubeConfig
     from .e2e.backend import AStudioSandboxDriver
@@ -117,8 +133,7 @@ def desktop_judge(work, config, agentcube_config):
         shutil.copyfile(driver.staging / response['native_path'], work / 'judge-native.jsonl')
         atomic_json(work / 'scorer-trace.json', response['binding']['events'])
         returned = driver.staging / response['workspace'] / 'candidate'
-        if digest(inventory(returned)) != digest(inventory(work / 'candidate')):
-            raise RuntimeError('CLI_JUDGE_CANDIDATE_DRIFT')
+        verify_desktop_candidate(work / 'candidate', returned, work / 'candidate-integrity.json')
         return response['binding']['final_response']
     finally:
         sid = state.data.get('session_id')

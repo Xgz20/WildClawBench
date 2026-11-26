@@ -7,7 +7,7 @@ import unittest
 from unittest.mock import patch
 
 from src.utils import judge_shim
-from src.cli_scoring import score, desktop_judge
+from src.cli_scoring import score, desktop_judge, verify_desktop_candidate
 from src.e2e.artifacts import inventory
 from src.e2e.common import atomic_json
 
@@ -43,6 +43,7 @@ class CliScoringTests(unittest.TestCase):
                 (self.staging / 'native.jsonl').write_text('fixture native trace')
                 returned = self.staging / 'returned'
                 shutil.copytree(self.batch / 'candidate', returned / 'candidate')
+                (returned / 'candidate/answer.txt').chmod(0o444)
                 return {'binding': {'events': [], 'final_response': '{"scores":{"C1":1}}'},
                         'native_path': 'native.jsonl', 'workspace': 'returned'}
 
@@ -58,6 +59,30 @@ class CliScoringTests(unittest.TestCase):
                     'timeout_seconds': 60, 'reasoning_effort': 'high'}, None)
             self.assertEqual(json.loads(response)['scores']['C1'], 1)
             self.assertTrue((work / 'judge-native.jsonl').is_file())
+            self.assertTrue(json.loads((work / 'candidate-integrity.json').read_text())['valid'])
+
+    def test_desktop_candidate_integrity_still_rejects_content_and_file_set_changes(self):
+        import shutil
+        for mutation in ('edit', 'add', 'delete', 'rename', 'type'):
+            with self.subTest(mutation=mutation), tempfile.TemporaryDirectory() as directory:
+                work = Path(directory)
+                (work / 'original/nested').mkdir(parents=True)
+                (work / 'original/nested/answer.txt').write_text('original')
+                shutil.copytree(work / 'original', work / 'returned')
+                file = work / 'returned/nested/answer.txt'
+                if mutation == 'edit':
+                    file.write_text('modified')  # Same size, different bytes.
+                elif mutation == 'add':
+                    (work / 'returned/extra.txt').write_text('extra')
+                elif mutation == 'rename':
+                    file.rename(file.with_name('renamed.txt'))
+                else:
+                    file.unlink()
+                    if mutation == 'type':
+                        file.mkdir()
+                with self.assertRaisesRegex(RuntimeError, 'CLI_JUDGE_CANDIDATE_DRIFT'):
+                    verify_desktop_candidate(work / 'original', work / 'returned', work / 'integrity.json')
+                self.assertFalse(json.loads((work / 'integrity.json').read_text())['valid'])
 
     def test_judge_channel_roundtrips_original_messages_and_response(self):
         with tempfile.TemporaryDirectory() as directory:
