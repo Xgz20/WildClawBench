@@ -205,13 +205,18 @@ def _write_general(task: dict, members: dict, destination: Path, prepare) -> dic
     if links:
         from .workspace_links import install
         install(workspace, links)
+    from src.wildclawbench_workspace import environment_note, PROFILE
     prompt, mapping = prepare.map_prompt_workspace(contract["prompt"])
     entries = [prepare.ZipEntry("workspace/" + p.relative_to(workspace).as_posix(), p.read_bytes())
                for p in sorted(workspace.iterdir()) if p.is_file() and not p.is_symlink()]
     prompt, public_context = prepare.inline_public_context(prompt, entries, workspace_prefix="workspace/")
+    note = environment_note("windows")
+    if public_context:
+        public_context = [{**row, "char_offset": row["char_offset"] + len(note)} for row in public_context]
+    prompt = note + prompt
     (destination / "execution/PROMPT.md").write_bytes(prompt.encode("utf-8"))
     shutil.copyfile(destination / "task.md", destination / "private-scoring/task.md")
-    return {"prompt_mapping": mapping, "public_context_delivery": public_context,
+    return {"prompt_mapping": mapping, "public_context_delivery": public_context, "workspace_path_profile": PROFILE,
             **({'workspace_links': links} if links else {}),
             "requirements": {key: contract.get(key, "") for key in ("env", "skills", "warmup")}}
 
@@ -229,8 +234,9 @@ def _write_web(task: dict, destination: Path, repo: Path, web) -> dict:
     inventory(public / "workspace")
     # The remote client's cwd is the uploaded workspace itself. The scoring
     # contract keeps its own task-root -> ./workspace mapping.
-    prompt = re.sub(r"/tmp_workspace\b", ".", parsed["prompt"])
-    mapping = {"/tmp_workspace": "."} if prompt != parsed["prompt"] else {}
+    from src.wildclawbench_workspace import environment_note, rewrite_root, PROFILE
+    prompt, mapping = rewrite_root(parsed["prompt"], ".")
+    prompt = environment_note("windows") + prompt
     (public / "PROMPT.md").write_bytes(prompt.encode("utf-8"))
     private = destination / "private-scoring"
     private.mkdir()
@@ -238,7 +244,8 @@ def _write_web(task: dict, destination: Path, repo: Path, web) -> dict:
                "llm_judge_rubric", "criteria", "metric_profile", "scoring", "task_source", "task_sha256", "workspace_sha256")}
     atomic_json(private / "web-task-source.json", neutral)
     web.copy_referenced_fixtures(parsed, private / "fixtures")
-    return {"prompt_mapping": mapping, "requirements": {"env": "", "skills": "", "warmup": ""}}
+    return {"prompt_mapping": mapping, "workspace_path_profile": PROFILE,
+            "requirements": {"env": "", "skills": "", "warmup": ""}}
 
 
 def normalize_template_binding(binding: object) -> dict:

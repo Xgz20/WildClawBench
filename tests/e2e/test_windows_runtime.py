@@ -74,7 +74,7 @@ class WindowsRuntimeTests(unittest.TestCase):
             prepare_runtime(driver, "sid", "wgui", lambda s: s)
             raw = driver.client.upload.call_args.args[2]
             self.assertTrue(raw.startswith(b"\xef\xbb\xbf"))
-            self.assertIn("原合同", raw.decode("utf-8-sig"))
+            self.assertIn("目录预热", raw.decode("utf-8-sig"))
 
     def test_installer_is_verified_before_execution_and_uses_private_backup(self):
         script = installer_script(specification())

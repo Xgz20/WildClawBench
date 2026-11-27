@@ -33,7 +33,7 @@ REPORT_CONFIG_SCHEMA = "wildclawbench.web-e2e-report-config/v1"
 SKILLS_MANIFEST_SCHEMA = "wildclawbench.web-e2e-skills-manifest/v1"
 SKILL_METADATA_SCHEMA = "wildclawbench.web-e2e-skill/v1"
 SCORE_SKILL_METADATA_SCHEMA = "wildclawbench.web-e2e-score-skill/v1"
-SKILL_VERSION = "4.4.1"
+SKILL_VERSION = "4.4.2"
 SKILL_SET_HASH_ALGORITHM = "wildclawbench.e2e-skill-set-sha256/v1"
 SKILL_INSTALL_CONTENT_HASH_ALGORITHM = "wildclawbench.skill-install-content-sha256/v1"
 SKILL_IDENTITY_FIELDS = ("name", "version", "content_sha256")
@@ -81,20 +81,31 @@ def find_repo_root(start: Path) -> Path:
     raise FileNotFoundError(f"无法从 {start} 定位 WildClawBench 仓库根目录")
 
 
+
+def _workspace_paths():
+    import importlib.util
+    root = Path(__file__).resolve().parents[1]
+    candidates = [root / "vendor/e2e-shared/workspace-paths/__init__.py"]
+    candidates.extend(parent / "src/wildclawbench_workspace/__init__.py" for parent in root.parents)
+    for candidate in candidates:
+        if candidate.is_file():
+            spec = importlib.util.spec_from_file_location("_wcb_workspace_paths", candidate)
+            module = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(module)
+            return module
+    raise RuntimeError("WORKSPACE_PATH_HELPER_UNAVAILABLE")
+
+
 def rewrite_execution_text(value: str) -> tuple[str, dict[str, str]]:
     """Resolve the container workspace inside a single-task execution root."""
-    rewritten = value.replace("/tmp_workspace/", "./workspace/")
-    rewritten = re.sub(r"/tmp_workspace\b", "./workspace", rewritten)
-    mapping = {"/tmp_workspace": "./workspace"} if rewritten != value else {}
-    return rewritten, mapping
+    return _workspace_paths().rewrite_root(value, "./workspace")
 
 
 def rewrite_scoring_text(value: str) -> str:
-    """Resolve task and private fixture paths inside a single-task score root."""
-    rewritten = value.replace("/tmp_workspace_eval/", "./private-scoring/fixtures/")
-    rewritten = re.sub(r"/tmp_workspace_eval\b", "./private-scoring/fixtures", rewritten)
-    rewritten = rewritten.replace("/tmp_workspace/", "./workspace/")
-    return re.sub(r"/tmp_workspace\b", "./workspace", rewritten)
+    """Resolve only complete logical task/private fixture roots."""
+    paths = _workspace_paths()
+    rewritten, _ = paths.rewrite_root(value, "./private-scoring/fixtures", source="/tmp_workspace_eval")
+    return paths.rewrite_root(rewritten, "./workspace")[0]
 
 
 def referenced_scoring_fixtures(task: dict) -> list[PurePosixPath]:

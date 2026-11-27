@@ -28,7 +28,6 @@ CATALOG_DIGEST_ALGORITHM = "wildclawbench.release-catalog-sha256/v1"
 FIXED_ZIP_TIMESTAMP = (1980, 1, 1, 0, 0, 0)
 ID_RE = re.compile(r"^[a-z0-9][a-z0-9._-]*$")
 PROMPT_WORKSPACE = "/tmp_workspace"
-PROMPT_WORKSPACE_RE = re.compile(re.escape(PROMPT_WORKSPACE) + r"(?![\w-])")
 DEFAULT_CODEX_JUDGE = {
     "protocol": "codex-agent-judge-v1",
     "model": "gpt-6.1-sol",
@@ -586,10 +585,25 @@ def _required_skill_rows(catalog: Mapping[str, Any], names: Sequence[str]) -> li
     ]
 
 
+
+def _workspace_paths():
+    import importlib.util
+    root = Path(__file__).resolve().parents[1]
+    candidates = [root / "vendor/e2e-shared/workspace-paths/__init__.py"]
+    candidates.extend(parent / "src/wildclawbench_workspace/__init__.py" for parent in root.parents)
+    for candidate in candidates:
+        if candidate.is_file():
+            spec = importlib.util.spec_from_file_location("_wcb_workspace_paths", candidate)
+            module = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(module)
+            return module
+    raise RuntimeError("WORKSPACE_PATH_HELPER_UNAVAILABLE")
+
+
 def map_prompt_workspace(prompt: str) -> tuple[str, list[dict[str, str]]]:
     # The desktop client's cwd is already execution/tasks/<task>/workspace.
-    mapped, count = PROMPT_WORKSPACE_RE.subn(".", prompt)
-    mapping = [{"from": PROMPT_WORKSPACE, "to": "."}] if count else []
+    mapped, roots = _workspace_paths().rewrite_root(prompt, ".")
+    mapping = [{"from": source, "to": target} for source, target in roots.items()]
     return mapped, mapping
 
 
@@ -996,7 +1010,14 @@ def _verify_execution_archive(path: Path, batch_manifest: Mapping[str, Any]) -> 
             raise PrepareError(f"EXECUTION_PROMPT_UTF8_INVALID: {task_id}") from exc
         workspace = task["workspace"]
         workspace_root = _safe_relative(workspace["path"], label="workspace path").as_posix()
-        mapped_task = sent_prompt
+        paths = _workspace_paths()
+        profile = prompt.get('workspace_path_profile')
+        if profile not in (None, paths.PROFILE):
+            raise PrepareError(f'WORKSPACE_PATH_PROFILE_INVALID: {task_id}')
+        note = paths.environment_note('windows') if profile else ''
+        if note and not sent_prompt.startswith(note):
+            raise PrepareError(f'WORKSPACE_ENVIRONMENT_NOTE_DRIFT: {task_id}')
+        mapped_task = sent_prompt[len(note):]
         if 'public_context_delivery' in prompt:
             delivery = prompt['public_context_delivery']
             public = members.get(workspace_root + '/AGENTS.md')
@@ -1009,9 +1030,11 @@ def _verify_execution_archive(path: Path, batch_manifest: Mapping[str, Any]) -> 
             mapped_task = sent_prompt[end + len('\n\n任务：\n\n'):]
             rebuilt, proof = inline_public_context(mapped_task,
                 [ZipEntry('AGENTS.md', public.data, public.kind)], workspace_prefix='')
-            if rebuilt != sent_prompt or delivery != proof:
+            if note:
+                proof = [{**row, 'char_offset': row['char_offset'] + len(note)} for row in proof]
+            if note + rebuilt != sent_prompt or delivery != proof:
                 raise PrepareError(f'PUBLIC_CONTEXT_DELIVERY_MISMATCH: {task_id}')
-        if PROMPT_WORKSPACE_RE.search(mapped_task):
+        if _workspace_paths().rewrite_root(mapped_task, ".")[1]:
             raise PrepareError(f"EXECUTION_PROMPT_MAPPING_INCOMPLETE: {task_id}")
         tree_entries = []
         for entry in workspace["entries"]:

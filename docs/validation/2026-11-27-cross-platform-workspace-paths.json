@@ -1,0 +1,187 @@
+{
+  "date": "2026-11-27",
+  "base_commit": "68331c30",
+  "branch": "feat/cross-platform-workspace-paths-20261127",
+  "tests": {
+    "execution_and_packages": 137,
+    "scoring_runtime": 39
+  },
+  "prompt_audit": {
+    "general-regression": {
+      "tasks": 60,
+      "rewritten": 48,
+      "unmapped": []
+    },
+    "general-work": {
+      "tasks": 116,
+      "rewritten": 97,
+      "unmapped": []
+    },
+    "general-challenge": {
+      "tasks": 60,
+      "rewritten": 60,
+      "unmapped": []
+    },
+    "web-custom": {
+      "tasks": 40,
+      "rewritten": 40,
+      "unmapped": []
+    }
+  },
+  "prepare60": {
+    "status": "PASS",
+    "task_count": 60,
+    "link_task_count": 1,
+    "dispatched": false
+  },
+  "static_challenge": {
+    "tasks": 60,
+    "issues": 0
+  },
+  "linux": {
+    "profile": "wildclawbench.frozen-rule-path-aliases/v1",
+    "parsers": [
+      {
+        "helper_sha256": "a5af7b92e4de64e499cf398dbd747778db5091234c684705ddb25630e666f5ea",
+        "parser": "relative",
+        "adapted_calls": 3
+      }
+    ],
+    "status": "PASS",
+    "platform": "Linux",
+    "image": "python:3.11-bookworm",
+    "actual_cli_grading_runner": true
+  },
+  "standalone_skills": {
+    "status": "PASS",
+    "checkout_independent": true,
+    "versions": {
+      "prepare-general-e2e-workspaces": "0.3.7",
+      "prepare-web-e2e-workspaces": "4.4.2",
+      "score-general-e2e": "0.29.8"
+    }
+  },
+  "formal_evaluation_dispatched": false,
+  "service_deployed": false,
+  "windows_core_verification": {
+    "template": "winarena-pc-20261125-a",
+    "session_id": "681b8cd0-bdff-48cc-ae35-a63f51e9780f",
+    "environment": {
+      "python": {
+        "executable": "C:\\Users\\Docker\\AppData\\Local\\Programs\\Python\\Python312\\python.exe",
+        "version": [
+          3,
+          12,
+          10
+        ]
+      },
+      "alias": "C:\\tmp_workspace",
+      "profile": "wildclawbench.workspace-paths/v1",
+      "platform": "windows",
+      "workspace": "C:\\ProgramData\\WGUI\\workspace\\project",
+      "alias_verified": true
+    },
+    "probe": {
+      "status": "PASS",
+      "python": "3.12.10 (tags/v3.12.10:0cc8128, Apr  8 2025, 12:21:36) [MSC v.1943 64 bit (AMD64)]",
+      "parsers": [
+        {
+          "helper_sha256": "a5af7b92e4de64e499cf398dbd747778db5091234c684705ddb25630e666f5ea",
+          "parser": "relative",
+          "adapted_calls": 3
+        }
+      ],
+      "helper_unchanged": true,
+      "alias_read_write": true
+    },
+    "release": {
+      "http_status": 200,
+      "response": {
+        "code": 0,
+        "msg": "",
+        "data": {
+          "sessionId": "681b8cd0-bdff-48cc-ae35-a63f51e9780f",
+          "status": "released"
+        }
+      },
+      "confirmed": true
+    },
+    "absence": {
+      "confirmed": true,
+      "session_id": "681b8cd0-bdff-48cc-ae35-a63f51e9780f",
+      "http_status": 200,
+      "platform_code": 10001,
+      "disposition": "already_absent"
+    },
+    "auxiliary_identity_probe": "first extra capabilities CLI call unsupported; functional path checks passed"
+  },
+  "windows_identity_verification": {
+    "purpose": "workspace-path-compatibility-only",
+    "created_at": "2026-11-27T01:34:50.389279+00:00",
+    "template": "winarena-pc-20261125-a",
+    "status": "passed",
+    "session_id": "659a1860-971c-49bf-9a3b-e045c62f9a92",
+    "environment": {
+      "python": {
+        "executable": "C:\\Users\\Docker\\AppData\\Local\\Programs\\Python\\Python312\\python.exe",
+        "version": [
+          3,
+          12,
+          10
+        ]
+      },
+      "alias": "C:\\tmp_workspace",
+      "profile": "wildclawbench.workspace-paths/v1",
+      "platform": "windows",
+      "workspace": "C:\\ProgramData\\WGUI\\workspace\\project",
+      "alias_verified": true
+    },
+    "probe": {
+      "status": "PASS",
+      "python": "3.12.10 (tags/v3.12.10:0cc8128, Apr  8 2025, 12:21:36) [MSC v.1943 64 bit (AMD64)]",
+      "parsers": [
+        {
+          "helper_sha256": "a5af7b92e4de64e499cf398dbd747778db5091234c684705ddb25630e666f5ea",
+          "parser": "relative",
+          "adapted_calls": 3
+        }
+      ],
+      "helper_unchanged": true,
+      "alias_read_write": true
+    },
+    "health": {
+      "schema_version": 1,
+      "status": "healthy",
+      "protocol_version": "wgui.v2",
+      "capabilities": [
+        "upload",
+        "run",
+        "collect",
+        "download"
+      ]
+    },
+    "controller": {
+      "module": "/wgui/controller/cli/main.py",
+      "sha256": "72f60da243063b34df10ce966ec65cd585adb904d31dc880fd777bf190e70403"
+    },
+    "release": {
+      "http_status": 200,
+      "response": {
+        "code": 0,
+        "msg": "",
+        "data": {
+          "sessionId": "659a1860-971c-49bf-9a3b-e045c62f9a92",
+          "status": "released"
+        }
+      },
+      "confirmed": true
+    },
+    "absence": {
+      "confirmed": true,
+      "session_id": "659a1860-971c-49bf-9a3b-e045c62f9a92",
+      "http_status": 200,
+      "platform_code": 10001,
+      "disposition": "already_absent"
+    }
+  }
+}

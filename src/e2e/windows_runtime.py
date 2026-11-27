@@ -97,10 +97,6 @@ try{
   # 没有显式请求账号覆盖时，旧暂存文件不得改变模板账号。
   Remove-Item "$dir\session.json" -Force
  }
- # 原合同中的 /tmp_workspace 在 Windows 中解析到 C:\tmp_workspace；只建立受控别名，不覆盖已有目录。
- $workspace='C:\ProgramData\WGUI\workspace\project';New-Item -ItemType Directory -Force $workspace|Out-Null
- $alias='C:\tmp_workspace'
- if(Test-Path $alias){$link=Get-Item -Force $alias;if($link.LinkType -ne 'Junction' -or (@($link.Target)[0]).TrimEnd([char]92) -ine $workspace){throw 'WINDOWS_WORKSPACE_ALIAS_CONFLICT'}}else{New-Item -ItemType Junction -Path $alias -Target $workspace|Out-Null}
  if(Test-Path "$data\userdata\provider-model-catalog-v1.json"){Move-Item "$data\userdata\provider-model-catalog-v1.json" "$dir\previous-provider-model-catalog.json" -Force}
  State 'warming-model-catalog' @{model='__MODEL__'}
  $started=[DateTimeOffset]::UtcNow
@@ -123,7 +119,7 @@ try{
  $p=Start-Process $exe -ArgumentList '--shutdown-for-uninstall' -PassThru -Wait
  for($i=0;$i -lt 30;$i++){if(!(Get-CimInstance Win32_Process|Where-Object{$_.ExecutablePath -eq $exe})){break};Start-Sleep -Seconds 1}
  if(Get-CimInstance Win32_Process|Where-Object{$_.ExecutablePath -eq $exe}){throw 'ASTUDIO_WARMUP_STILL_RUNNING'}
- State 'ready' @{before=$before;after=$after;installerSha512='__SHA__';model='__MODEL__';catalogCount=@($catalog.models).Count;catalogAccountMatched=$true;catalogFetchedAt=$catalog.fetchedAt;workspaceAlias=$alias;workspaceTarget=$workspace;warmupStopped=$true;sessionRestored=$restoreSession;loginSource=$(if($restoreSession){'explicit_snapshot'}else{'template'})}
+ State 'ready' @{before=$before;after=$after;installerSha512='__SHA__';model='__MODEL__';catalogCount=@($catalog.models).Count;catalogAccountMatched=$true;catalogFetchedAt=$catalog.fetchedAt;warmupStopped=$true;sessionRestored=$restoreSession;loginSource=$(if($restoreSession){'explicit_snapshot'}else{'template'})}
 }catch{State 'failed' @{error=$_.Exception.Message;errorType=$_.Exception.GetType().FullName;errorId=$_.FullyQualifiedErrorId};exit 1}
 '''
     for key, value in values.items():

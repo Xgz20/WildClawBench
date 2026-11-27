@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+import hashlib
 import math
 import os
 import re
@@ -36,6 +37,7 @@ from src.utils.endpoint_utils import (
     normalize_openrouter_base_url_for_openclaw,
 )
 from src.utils.task_parser import parse_task_md
+from src.wildclawbench_workspace import PROFILE as WORKSPACE_PATH_PROFILE, environment_note, rewrite_root
 from src.utils.docker_utils import (
     remove_container,
     close_proc_log,
@@ -824,6 +826,10 @@ def collect_task_output(
             output_dir,
             include_workspace_changes=include_workspace_changes,
         )
+        subprocess.run(
+            ["docker", "cp", f"{task_id}:/tmp/workspace-path-aliases.json", str(output_dir / "workspace-path-aliases.json")],
+            capture_output=True, text=True, timeout=30,
+        )
     except Exception as exc:
         logger.warning("[%s] Failed to collect task output: %s", task_id, exc)
 
@@ -1240,13 +1246,13 @@ def run_single_task(
     """
     task_id_ori     = task["task_id"]
     workspace_path  = task["workspace_path"]
-    prompt          = task["prompt"]
+    prompt, prompt_mapping = rewrite_root(task["prompt"], TMP_WORKSPACE)
     if TIMEOUT_OVERRIDE is not None:
         timeout_seconds = TIMEOUT_OVERRIDE
     else:
         timeout_seconds = max(1, int(round(task["timeout_seconds"] * TIMEOUT_MULTIPLIER)))
     system_prompt = f"You are an expert in a restricted, non-interactive environment. Solve the task efficiently before the timeout ({timeout_seconds}s). Run all processes in the foreground without user input or background services. Provide a complete, functional solution in a single pass with no placeholders. \n"
-    prompt = system_prompt + prompt
+    prompt = system_prompt + environment_note("linux", workspace=TMP_WORKSPACE) + prompt
 
     timestamp = datetime.now().strftime("%Y%m%d_%H%M")
     run_id = uuid.uuid4().hex[:6]
@@ -1259,6 +1265,14 @@ def run_single_task(
 
     output_dir = output_root / task["category"] / f"{task_id_ori}" / f"{suffix}"
     output_dir.mkdir(parents=True, exist_ok=True)
+    # Freeze the exact execution input separately from the canonical task.
+    (output_dir / "effective-prompt.md").write_text(prompt, encoding="utf-8")
+    (output_dir / "prompt.json").write_text(json.dumps({
+        "profile": WORKSPACE_PATH_PROFILE, "platform": "linux", "workspace": TMP_WORKSPACE,
+        "mapping": prompt_mapping,
+        "base_prompt_sha256": hashlib.sha256(task["prompt"].encode("utf-8")).hexdigest(),
+        "effective_prompt_sha256": hashlib.sha256(prompt.encode("utf-8")).hexdigest(),
+    }, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     provenance = _task_provenance_or_unavailable(task)
     try:
         write_provenance_file(output_dir / "provenance.json", provenance)

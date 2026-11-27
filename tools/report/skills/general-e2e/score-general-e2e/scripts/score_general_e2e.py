@@ -2099,6 +2099,7 @@ def prepare_attempt(
                 "kind": "local-managed-python-worker",
                 **({'post_rule_office_guard_profile':'completed-runtime-office-byte-guard/v1'} if sys.platform=='darwin' else {}),
                 "logical_workspace_root": "/tmp_workspace",
+                "workspace_path_profile": "wildclawbench.frozen-rule-path-aliases/v1",
                 "workspace_argument": path_resolution["workspace_argument"],
                 "path_resolution": path_resolution,
                 "gt_injected_after_execution": True,
@@ -2491,6 +2492,10 @@ def verify_attempt(attempt_root: Path, *, require_runtime: bool = True) -> dict[
             if _required_generated_evidence(contract, extended=_extended_evaluator_inputs(manifest), manifest=manifest):
                 _generated_evidence_files(root, manifest, contract, absences=conditional_absences)
     _verify_rule_input_context(root, manifest)
+    if (root / 'worker/request.json').exists():
+        path_request = _read_json(root / 'worker/request.json')
+        if path_request.get('workspace_path_profile') != manifest.get('runtime', {}).get('workspace_path_profile'):
+            raise ScoringRuntimeError('WORKSPACE_PATH_PROFILE_DRIFT')
     contract = _read_json(root / paths['contract'])
     adapter_profile=any(manifest.get('runtime',{}).get(k) for k in ['typed_rule_diagnostics_profile','work_order_final_total_policy_profile','domain_details_diagnostics_profile'])
     if adapter_profile and (root/'worker/request.json').exists():
@@ -2836,6 +2841,7 @@ class _WorkerExecutor:
         office_render_runtime: dict | None = None,
         html_runtime: dict | None = None,
         research_source_binding: dict | None = None,
+        workspace_path_profile: str | None = None,
     ) -> None:
         self.attempt_root = attempt_root
         self.runtime_python = runtime_python
@@ -2846,6 +2852,7 @@ class _WorkerExecutor:
         self.office_render_runtime = office_render_runtime
         self.html_runtime = html_runtime
         self.research_source_binding = research_source_binding
+        self.workspace_path_profile = workspace_path_profile
         if office_render_runtime is not None and (office_runtime is None or office_render_runtime.get("office_runtime") != office_runtime):
             raise ScoringRuntimeError("OFFICE_RENDER_RUNTIME_CONFLICT")
         self.audit: dict[str, Any] = {}
@@ -2881,6 +2888,7 @@ class _WorkerExecutor:
             "workspace_path": context["workspace_path"],
             "transcript": context["transcript"],
             "rule_result_adapter": self.rule_result_adapter,
+            **({"workspace_path_profile": self.workspace_path_profile} if self.workspace_path_profile else {}),
             **({'rule_review':self.rule_review_configuration} if self.rule_review_configuration is not None else {}),
         }
         request_path.write_bytes(_pretty_json_bytes(request))
@@ -3970,6 +3978,7 @@ def run_rules_attempt(
         office_render_runtime=render_runtime,
         html_runtime=html_runtime,
         research_source_binding=research_binding,
+        workspace_path_profile=manifest.get("runtime", {}).get("workspace_path_profile"),
     )
     run_rules, grading_error_type = _import_grading_core()
     transcript_relative = manifest["paths"].get("transcript")
@@ -6882,6 +6891,8 @@ def _verify_rule_source_correction(root: Path, manifest: Mapping[str, Any]) -> N
     request = _read_json(root / "worker/request.json", code="RULE_WORKER_REQUEST_INVALID")
     if request.get("automated_checks") != effective:
         raise ScoringRuntimeError("RULE_SOURCE_CORRECTION_INVALID", "worker source")
+    if request.get("workspace_path_profile") != manifest.get("runtime", {}).get("workspace_path_profile"):
+        raise ScoringRuntimeError("RULE_SOURCE_CORRECTION_INVALID", "workspace path profile")
     expected_adapter = _effective_worker_adapter(manifest,contract)
     if request.get("rule_result_adapter") != expected_adapter:
         raise ScoringRuntimeError("RULE_SOURCE_CORRECTION_INVALID", "worker result adapter")
