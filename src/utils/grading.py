@@ -874,11 +874,13 @@ def _legacy_workspace_reader_code(
 ) -> str:
     """Build prioritized, auditable workspace evidence for non-website tasks."""
     return (
+        "from _grading_runtime import prepare_pdf_runtime\n"
+        "prepare_pdf_runtime(%s)\n"
         "from _workspace_evidence import collect_workspace_evidence\n"
         "_workspace_bundle = collect_workspace_evidence(%s, %s)\n"
         "_ws_text = _workspace_bundle['text']\n"
         "_workspace_evidence = _workspace_bundle['metadata']\n"
-    ) % (json.dumps(workspace_path), json.dumps(judge_evidence or {}))
+    ) % (json.dumps(workspace_path), json.dumps(workspace_path), json.dumps(judge_evidence or {}))
 
 
 def _exec_container_python(
@@ -894,6 +896,7 @@ def _exec_container_python(
     shim_src = Path(__file__).with_name("judge_shim.py")
     workspace_evidence_src = Path(__file__).with_name("workspace_evidence.py")
     native_evidence_src = Path(__file__).resolve().parents[1] / "wildclawbench_grading_core/native_text.py"
+    runtime_src = Path(__file__).with_name("grading_runtime.py")
     with tempfile.NamedTemporaryFile(
         mode="w", suffix=".py", delete=False, encoding="utf-8"
     ) as f:
@@ -938,6 +941,12 @@ def _exec_container_python(
         )
         if r_native.returncode != 0:
             return None, f"docker cp native evidence module failed: {r_native.stderr}"
+        r_runtime = subprocess.run(
+            ["docker", "cp", str(runtime_src), f"{task_id}:/tmp/_grading_runtime.py"],
+            capture_output=True, text=True,
+        )
+        if r_runtime.returncode != 0:
+            return None, f"docker cp grading runtime module failed: {r_runtime.stderr}"
         r = subprocess.run(
             ["docker", "cp", runner_host, f"{task_id}:/tmp/_judge_runner.py"],
             capture_output=True, text=True,
