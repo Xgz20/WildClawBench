@@ -1,0 +1,2975 @@
+{
+  "bundle_protocol": "general-e2e-package-v1",
+  "contract_version": "general-e2e-contract-v1",
+  "created_at": "2026-11-27T00:00:00+08:00",
+  "dataset_digest": "aef6b95c0d6b84a0bfbb3cd96f7cb6c412b5eda38b1ee1a8effcdab3340b9045",
+  "dataset_id": "xiaofa-legal30-v1",
+  "digest_algorithm": "wildclawbench.dataset-manifest-sha256/v1",
+  "generated_by": "eval_general_e2e.datasets.bundle/1",
+  "schema": {
+    "path": "schemas/dataset-manifest-v1.schema.json",
+    "sha256": "af5682fdcab3a2a82f68e39ce631facc29f227e18d28e888014981169edf4bf2"
+  },
+  "schema_id": "urn:wildclawbench:schema:general-e2e:dataset-manifest:v1",
+  "schema_version": 1,
+  "selection": {
+    "exclude_tags": [
+      "invalid"
+    ],
+    "include_tags": [
+      "custom",
+      "xiaofa-legal"
+    ],
+    "ordering": "source_path_posix_ascending",
+    "task_root": "tasks/legal/xiaofa"
+  },
+  "source": {
+    "revision": "sha256:55e2af87e2e1260ec88686456771215ba75a1eb06f898cf69d55f2687a916568",
+    "revision_scope": [
+      "tasks/legal/xiaofa",
+      "workspace/legal/xiaofa",
+      "datasets/legal/xiaofa/task_sources.yaml",
+      "datasets/legal/xiaofa/checkpoint_capability_map7.yaml",
+      "datasets/legal/xiaofa/dataset.yaml"
+    ],
+    "task_registry_path": "provenance/task_sources.yaml",
+    "task_registry_sha256": "f67dcbe428bebb55caa7b3da87072056b8ca9041ff3a56289a9f594de5b12389"
+  },
+  "statistics": {
+    "category_counts": {
+      "legal_analysis": 5,
+      "legal_contracts": 5,
+      "legal_delivery": 5,
+      "legal_drafting": 5,
+      "legal_evidence": 5,
+      "legal_intake": 5
+    },
+    "difficulty_counts": {
+      "L2": 13,
+      "L3": 11,
+      "L4": 6
+    },
+    "grading_type_counts": {
+      "hybrid": 30
+    },
+    "task_count": 30,
+    "timeout_counts": {
+      "1200": 6,
+      "900": 24
+    }
+  },
+  "task_count": 30,
+  "tasks": [
+    {
+      "bundle": {
+        "execution_contract_path": "tasks/01_Legal_Intake_task_001_case_registration/execution/contract.json",
+        "scoring_contract_path": "tasks/01_Legal_Intake_task_001_case_registration/private-scoring/contract.json",
+        "task_path": "tasks/01_Legal_Intake_task_001_case_registration/task.md"
+      },
+      "category": "legal_intake",
+      "difficulty": "L2",
+      "digests": {
+        "execution_contract_sha256": "b9c06feecc296ece7777132c08990bfcbd9f93c77a1820a850a3d2f2a7203a57",
+        "private_scoring_sha256": "6986338797c6abdade98ff4fb811753c35a2c36404f5d957ca0250b202112b26",
+        "prompt_sha256": "ff5c155c716d75781364b2d017387a17e326f96dec9272660cfa3b561a45a4cc",
+        "scoring_contract_sha256": "6a3dcbe7229183b6228b1993977018a30ee49f0f39a66839d6fd616781044277",
+        "task_sha256": "ce6f8686d40e8df98e2d67f40c00828df8ababb4a4332d9b22ac884885c932d5",
+        "workspace_exec_sha256": "a6f8d4c27634905ba493239220f545476e876658cdab370cc4eb1eb30af4b4c7"
+      },
+      "grading_type": "hybrid",
+      "grading_weights": {
+        "automated": 0.4,
+        "llm_judge": 0.6
+      },
+      "materials": {
+        "execution": {
+          "algorithm": "wildclawbench.dataset-tree-sha256/v1",
+          "entries": [
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "answer_schema.json",
+              "sha256": "62e610fd50fb6b48828ea6448b86049e58516c627e9e2d0b96041a93fab54b1e",
+              "size": 906
+            },
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "materials.md",
+              "sha256": "98cd0be49ee3367e6224d9b4f6a555a20dbc6cc5f9a6960f0020fc1d8f32d5e8",
+              "size": 525
+            },
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "scan.png",
+              "sha256": "5d06d518d9572c5575f4459cefc6eab6faf4a3f08be2130a4d2279fe2ab7adea",
+              "size": 45488
+            }
+          ],
+          "root": "tasks/01_Legal_Intake_task_001_case_registration/execution/exec",
+          "sha256": "a6f8d4c27634905ba493239220f545476e876658cdab370cc4eb1eb30af4b4c7"
+        },
+        "private_scoring": {
+          "algorithm": "wildclawbench.dataset-tree-sha256/v1",
+          "entries": [
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "grader.py",
+              "sha256": "40796e4ccbd6f53f3adcb7ae6b4d282c106e45636f26a449253b121d008bc4f6",
+              "size": 8391
+            },
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "oracle.json",
+              "sha256": "8e09b58945a398593a46b9827dfea4452dc641486c9fc8224bf0467f632dcd4d",
+              "size": 1637
+            },
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "reference.md",
+              "sha256": "5b764928fe42198701647604853c66bcc7d40fee5ed9e4242c4e5b7e1b41fd83",
+              "size": 446
+            }
+          ],
+          "root": "tasks/01_Legal_Intake_task_001_case_registration/private-scoring/gt",
+          "sha256": "6986338797c6abdade98ff4fb811753c35a2c36404f5d957ca0250b202112b26"
+        }
+      },
+      "modality": "multimodal",
+      "name": "扫描材料与台账交叉登记",
+      "order": 1,
+      "source": {
+        "task_path": "tasks/legal/xiaofa/01_Legal_Intake/01_Legal_Intake_task_001_case_registration.md",
+        "workspace_path": "workspace/legal/xiaofa/01_Legal_Intake/01_Legal_Intake_task_001_case_registration"
+      },
+      "tags": [
+        "custom",
+        "xiaofa-legal"
+      ],
+      "task_id": "01_Legal_Intake_task_001_case_registration",
+      "timeout_seconds": 900
+    },
+    {
+      "bundle": {
+        "execution_contract_path": "tasks/01_Legal_Intake_task_002_dossier_versions/execution/contract.json",
+        "scoring_contract_path": "tasks/01_Legal_Intake_task_002_dossier_versions/private-scoring/contract.json",
+        "task_path": "tasks/01_Legal_Intake_task_002_dossier_versions/task.md"
+      },
+      "category": "legal_intake",
+      "difficulty": "L2",
+      "digests": {
+        "execution_contract_sha256": "21831cf69a7c687c5342debc0baf74c69d5981f70c3d168b320e99edf658c980",
+        "private_scoring_sha256": "2c5e781cd5914372c56377ebb3fc9b31ae4846aa0353de569dde2c6b7dfc6776",
+        "prompt_sha256": "44e3702389131c5195df83d47f9a7f6f73a0e5d40f10309077528819947edebd",
+        "scoring_contract_sha256": "a3300f1bd99ae8c60a5f1e8ae3dd6dbfc1188ff8f3b49c56d7a216b230c41774",
+        "task_sha256": "0198c8fadf0d9173d0ec70944eabd0e8e1186cfc05bb21c7aec0dfa70a3b8269",
+        "workspace_exec_sha256": "22efc778108582171b32254a7f0e5c7b3f8cdd00e7d744c61b6d53566fb01371"
+      },
+      "grading_type": "hybrid",
+      "grading_weights": {
+        "automated": 0.4,
+        "llm_judge": 0.6
+      },
+      "materials": {
+        "execution": {
+          "algorithm": "wildclawbench.dataset-tree-sha256/v1",
+          "entries": [
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "answer_schema.json",
+              "sha256": "cb8b2cb331d328aca6dcece0277c519ae2ea395efb2b7d3ff6149410902c9d75",
+              "size": 817
+            },
+            {
+              "kind": "directory",
+              "mode": "0755",
+              "path": "incoming"
+            },
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "incoming/1.txt",
+              "sha256": "cc0b0bb1985616fa2b8d48090ceb6c93f2f34174e8555878ea6218bce5767c43",
+              "size": 46
+            },
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "incoming/回款.txt",
+              "sha256": "d32eebde8b07ae14a81963ba6b47a4e33469818ea9569eb4aebecf19ba24e1a9",
+              "size": 31
+            },
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "incoming/复印.txt",
+              "sha256": "cc0b0bb1985616fa2b8d48090ceb6c93f2f34174e8555878ea6218bce5767c43",
+              "size": 46
+            },
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "incoming/草稿.txt",
+              "sha256": "61e1a61879acca42fc2106f916da4edeae9b5cf9b7fe1e69f1e8dfeefe84667e",
+              "size": 43
+            },
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "incoming/补充.txt",
+              "sha256": "63e9cbd3b1102cc1b9cdbf13c4e1ce6cd8b2b118c98fff679fbec9b2f3be53b2",
+              "size": 62
+            },
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "incoming/送达.txt",
+              "sha256": "ff7234aebd151cc4fb2ab3eddc1a3f0b7db0ce65754061b5800dd4b1ec72204f",
+              "size": 38
+            },
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "materials.md",
+              "sha256": "b10493b4076d04cb4f9e973cc5c86ff90df43d74d6e8c8cdaa674c0308cc9997",
+              "size": 540
+            }
+          ],
+          "root": "tasks/01_Legal_Intake_task_002_dossier_versions/execution/exec",
+          "sha256": "22efc778108582171b32254a7f0e5c7b3f8cdd00e7d744c61b6d53566fb01371"
+        },
+        "private_scoring": {
+          "algorithm": "wildclawbench.dataset-tree-sha256/v1",
+          "entries": [
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "grader.py",
+              "sha256": "40796e4ccbd6f53f3adcb7ae6b4d282c106e45636f26a449253b121d008bc4f6",
+              "size": 8391
+            },
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "oracle.json",
+              "sha256": "3a51699c869177eb1b91143bf1514554f6f8fc845204055a58d45aa73907a73d",
+              "size": 2255
+            },
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "reference.md",
+              "sha256": "a28083a1914189d9cf2d4d424a40fa8986b83d8e7c5e50c59af8d32496ec5758",
+              "size": 364
+            }
+          ],
+          "root": "tasks/01_Legal_Intake_task_002_dossier_versions/private-scoring/gt",
+          "sha256": "2c5e781cd5914372c56377ebb3fc9b31ae4846aa0353de569dde2c6b7dfc6776"
+        }
+      },
+      "modality": "pure-text",
+      "name": "杂乱卷宗的版本识别与分卷",
+      "order": 2,
+      "source": {
+        "task_path": "tasks/legal/xiaofa/01_Legal_Intake/01_Legal_Intake_task_002_dossier_versions.md",
+        "workspace_path": "workspace/legal/xiaofa/01_Legal_Intake/01_Legal_Intake_task_002_dossier_versions"
+      },
+      "tags": [
+        "custom",
+        "xiaofa-legal"
+      ],
+      "task_id": "01_Legal_Intake_task_002_dossier_versions",
+      "timeout_seconds": 900
+    },
+    {
+      "bundle": {
+        "execution_contract_path": "tasks/01_Legal_Intake_task_003_evidence_purpose/execution/contract.json",
+        "scoring_contract_path": "tasks/01_Legal_Intake_task_003_evidence_purpose/private-scoring/contract.json",
+        "task_path": "tasks/01_Legal_Intake_task_003_evidence_purpose/task.md"
+      },
+      "category": "legal_intake",
+      "difficulty": "L2",
+      "digests": {
+        "execution_contract_sha256": "41672682adb725930d9ac0a1ac7924de222482c1a5b184d155201a48bcbdf50b",
+        "private_scoring_sha256": "9a703e3dfdb6eb41cbc6ff0d0636cea166e06f95201e748f02cff6d80d254705",
+        "prompt_sha256": "af27baa658a223ab3a71c0d9c746a75b9688d02118af9423fb8c75a5c589e053",
+        "scoring_contract_sha256": "44cc068c601d82a13bc373b3733918b69b885d42d0baaff6df942c1bd0d3ebfa",
+        "task_sha256": "854ad252bc83486f73d8b9213ec4b94dd908e0f6ce28aa9708c2df2b8cbe7809",
+        "workspace_exec_sha256": "0dc6b4e1c76f1e9a526bf764f481a72bb1dc4f7aa8ffd3669584ea6daffb77e4"
+      },
+      "grading_type": "hybrid",
+      "grading_weights": {
+        "automated": 0.4,
+        "llm_judge": 0.6
+      },
+      "materials": {
+        "execution": {
+          "algorithm": "wildclawbench.dataset-tree-sha256/v1",
+          "entries": [
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "answer_schema.json",
+              "sha256": "cfff7e7570b5ff29a39040cff92ff217f2dd5ff4987ab5c5fdd86c0dba006699",
+              "size": 822
+            },
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "materials.md",
+              "sha256": "e4db091405a0c36ece65491477456f7ed1452795a13d44c68b676a0ac26d7870",
+              "size": 563
+            }
+          ],
+          "root": "tasks/01_Legal_Intake_task_003_evidence_purpose/execution/exec",
+          "sha256": "0dc6b4e1c76f1e9a526bf764f481a72bb1dc4f7aa8ffd3669584ea6daffb77e4"
+        },
+        "private_scoring": {
+          "algorithm": "wildclawbench.dataset-tree-sha256/v1",
+          "entries": [
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "grader.py",
+              "sha256": "40796e4ccbd6f53f3adcb7ae6b4d282c106e45636f26a449253b121d008bc4f6",
+              "size": 8391
+            },
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "oracle.json",
+              "sha256": "0e7826b52549f92d04b8afd25dbb4026967115eff234b3ff0e8b057a383b600b",
+              "size": 1465
+            },
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "reference.md",
+              "sha256": "375ad906286ae07d14484d0d2f9e376963dbdd3d1b9f65b757985dfec809db17",
+              "size": 427
+            }
+          ],
+          "root": "tasks/01_Legal_Intake_task_003_evidence_purpose/private-scoring/gt",
+          "sha256": "9a703e3dfdb6eb41cbc6ff0d0636cea166e06f95201e748f02cff6d80d254705"
+        }
+      },
+      "modality": "pure-text",
+      "name": "劳动争议证据目录与证明目的",
+      "order": 3,
+      "source": {
+        "task_path": "tasks/legal/xiaofa/01_Legal_Intake/01_Legal_Intake_task_003_evidence_purpose.md",
+        "workspace_path": "workspace/legal/xiaofa/01_Legal_Intake/01_Legal_Intake_task_003_evidence_purpose"
+      },
+      "tags": [
+        "custom",
+        "xiaofa-legal"
+      ],
+      "task_id": "01_Legal_Intake_task_003_evidence_purpose",
+      "timeout_seconds": 900
+    },
+    {
+      "bundle": {
+        "execution_contract_path": "tasks/01_Legal_Intake_task_004_dual_timelines/execution/contract.json",
+        "scoring_contract_path": "tasks/01_Legal_Intake_task_004_dual_timelines/private-scoring/contract.json",
+        "task_path": "tasks/01_Legal_Intake_task_004_dual_timelines/task.md"
+      },
+      "category": "legal_intake",
+      "difficulty": "L2",
+      "digests": {
+        "execution_contract_sha256": "0ef0614fa6b31e23da1c4d3a32a89a21d9e87b89e1c00906d41282fc1784977b",
+        "private_scoring_sha256": "9e2244a5859670b832ef06b1dd5f40bdb396d45faaedfc691d4640b4253fa553",
+        "prompt_sha256": "e14b5692ce93018f60e871ebdc949dd8eda5c32be355249f1932e37989f0b9c1",
+        "scoring_contract_sha256": "f845b50e71793660f83f03692628fd8f1c9e6b8dbc008a91a80f9b9465b71303",
+        "task_sha256": "8ec7fd83ec33c2273684e6d41870c49f16dc16f8aa5585d39a6856f7e33f9f7c",
+        "workspace_exec_sha256": "9691e544e49b99e2713049f4f44526daeea35a6ce557e924853f2eb28ab7bc30"
+      },
+      "grading_type": "hybrid",
+      "grading_weights": {
+        "automated": 0.4,
+        "llm_judge": 0.6
+      },
+      "materials": {
+        "execution": {
+          "algorithm": "wildclawbench.dataset-tree-sha256/v1",
+          "entries": [
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "answer_schema.json",
+              "sha256": "fe855a9dc799c8244def24c08b788433c87d4be7976a222435f9ced8ad3393a9",
+              "size": 866
+            },
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "materials.md",
+              "sha256": "7eefe85822d880ad36b083cc3b60839ef224dc30335a855fbae4861e1ab116d4",
+              "size": 472
+            }
+          ],
+          "root": "tasks/01_Legal_Intake_task_004_dual_timelines/execution/exec",
+          "sha256": "9691e544e49b99e2713049f4f44526daeea35a6ce557e924853f2eb28ab7bc30"
+        },
+        "private_scoring": {
+          "algorithm": "wildclawbench.dataset-tree-sha256/v1",
+          "entries": [
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "grader.py",
+              "sha256": "40796e4ccbd6f53f3adcb7ae6b4d282c106e45636f26a449253b121d008bc4f6",
+              "size": 8391
+            },
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "oracle.json",
+              "sha256": "e3f56bcbdb6f734d4758d66b82595a657bd335d591556ffbaa1feb3092e653cb",
+              "size": 1429
+            },
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "reference.md",
+              "sha256": "0f301cd55b456ab591a8ca5da441d6fe05fe8dc0177d222b2326744b65a76e1c",
+              "size": 340
+            }
+          ],
+          "root": "tasks/01_Legal_Intake_task_004_dual_timelines/private-scoring/gt",
+          "sha256": "9e2244a5859670b832ef06b1dd5f40bdb396d45faaedfc691d4640b4253fa553"
+        }
+      },
+      "modality": "pure-text",
+      "name": "案情事实与法院程序双时间线",
+      "order": 4,
+      "source": {
+        "task_path": "tasks/legal/xiaofa/01_Legal_Intake/01_Legal_Intake_task_004_dual_timelines.md",
+        "workspace_path": "workspace/legal/xiaofa/01_Legal_Intake/01_Legal_Intake_task_004_dual_timelines"
+      },
+      "tags": [
+        "custom",
+        "xiaofa-legal"
+      ],
+      "task_id": "01_Legal_Intake_task_004_dual_timelines",
+      "timeout_seconds": 900
+    },
+    {
+      "bundle": {
+        "execution_contract_path": "tasks/01_Legal_Intake_task_005_case_isolation/execution/contract.json",
+        "scoring_contract_path": "tasks/01_Legal_Intake_task_005_case_isolation/private-scoring/contract.json",
+        "task_path": "tasks/01_Legal_Intake_task_005_case_isolation/task.md"
+      },
+      "category": "legal_intake",
+      "difficulty": "L2",
+      "digests": {
+        "execution_contract_sha256": "3bebef58203a3c87650536e7a450b970606b7ec860b5aaca562221fb5afda102",
+        "private_scoring_sha256": "9eb021be46a73a6fa6f0e55dae33251a7e151285420c2f5fb39037077d10705e",
+        "prompt_sha256": "da49c4dcb0363ee7b8136419d74c7333b11041239f55a4554853c95b60a68894",
+        "scoring_contract_sha256": "2409eca3b11e43d2f066adebe5f12787d5a3c7fbac672786c6497f3ec90b1463",
+        "task_sha256": "35e84236e2f42c522a5c6aa1b2848a830b32b4c23f45696bb4f2b814efd4836e",
+        "workspace_exec_sha256": "72a8e71eb3b8573fa25a05f6838e9cde3ffdc4f0fb9f34da19af70585a7c2043"
+      },
+      "grading_type": "hybrid",
+      "grading_weights": {
+        "automated": 0.4,
+        "llm_judge": 0.6
+      },
+      "materials": {
+        "execution": {
+          "algorithm": "wildclawbench.dataset-tree-sha256/v1",
+          "entries": [
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "answer_schema.json",
+              "sha256": "38fb2661e907264ba922215c007cba73e25ecd0acbd27b4d8fe00fd37c701372",
+              "size": 878
+            },
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "materials.md",
+              "sha256": "e1dfa894a992a806242dbe73c491ef42dba8f2b8c229778ca1b9d1e71479dac9",
+              "size": 602
+            }
+          ],
+          "root": "tasks/01_Legal_Intake_task_005_case_isolation/execution/exec",
+          "sha256": "72a8e71eb3b8573fa25a05f6838e9cde3ffdc4f0fb9f34da19af70585a7c2043"
+        },
+        "private_scoring": {
+          "algorithm": "wildclawbench.dataset-tree-sha256/v1",
+          "entries": [
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "grader.py",
+              "sha256": "40796e4ccbd6f53f3adcb7ae6b4d282c106e45636f26a449253b121d008bc4f6",
+              "size": 8391
+            },
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "oracle.json",
+              "sha256": "030e712dec715420682ce67164d880a7b73030c3cf5ff8af854a9c16ebbca2ed",
+              "size": 1381
+            },
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "reference.md",
+              "sha256": "2a5bc047e2835a2df111121ffb7835236e110fb4e60d7e6c36e41cb711a2dd17",
+              "size": 348
+            }
+          ],
+          "root": "tasks/01_Legal_Intake_task_005_case_isolation/private-scoring/gt",
+          "sha256": "9eb021be46a73a6fa6f0e55dae33251a7e151285420c2f5fb39037077d10705e"
+        }
+      },
+      "modality": "pure-text",
+      "name": "相似主体案件隔离与余额核对",
+      "order": 5,
+      "source": {
+        "task_path": "tasks/legal/xiaofa/01_Legal_Intake/01_Legal_Intake_task_005_case_isolation.md",
+        "workspace_path": "workspace/legal/xiaofa/01_Legal_Intake/01_Legal_Intake_task_005_case_isolation"
+      },
+      "tags": [
+        "custom",
+        "xiaofa-legal"
+      ],
+      "task_id": "01_Legal_Intake_task_005_case_isolation",
+      "timeout_seconds": 900
+    },
+    {
+      "bundle": {
+        "execution_contract_path": "tasks/02_Legal_Analysis_task_001_clarify_before_advice/execution/contract.json",
+        "scoring_contract_path": "tasks/02_Legal_Analysis_task_001_clarify_before_advice/private-scoring/contract.json",
+        "task_path": "tasks/02_Legal_Analysis_task_001_clarify_before_advice/task.md"
+      },
+      "category": "legal_analysis",
+      "difficulty": "L3",
+      "digests": {
+        "execution_contract_sha256": "229c0aa1e1a14377cd2df55805a850f54391689fdf60b1aef7a895951208f21a",
+        "private_scoring_sha256": "7171e18cfa117cca8567a1647efa9fc96828d4dd346b00e3761fc9078c02feaa",
+        "prompt_sha256": "8ec28085e60ea764eaed1d9a3ad476865755aa9660be13d9b094beea924bf8c1",
+        "scoring_contract_sha256": "a76649b582d520b7dcec2966009b4c7480980af0210d82f01b2152d9a578dd02",
+        "task_sha256": "18c4e02c6675415710d96e4cb4b70b8e65cb904c575c222683a9ed64ce30595e",
+        "workspace_exec_sha256": "3df2f6fae7d800d8eb7d98ba5a14d2198e0f0ed7847272489c63328bc2be72d7"
+      },
+      "grading_type": "hybrid",
+      "grading_weights": {
+        "automated": 0.4,
+        "llm_judge": 0.6
+      },
+      "materials": {
+        "execution": {
+          "algorithm": "wildclawbench.dataset-tree-sha256/v1",
+          "entries": [
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "answer_schema.json",
+              "sha256": "c433822a35cf4b61f504664298ad2deb58edbf9928a175494329448cf5562e4d",
+              "size": 860
+            },
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "materials.md",
+              "sha256": "987d5e6275a9510d223954303671e2cadcd4ef2c346ecc4280f2b246b3f9682e",
+              "size": 736
+            }
+          ],
+          "root": "tasks/02_Legal_Analysis_task_001_clarify_before_advice/execution/exec",
+          "sha256": "3df2f6fae7d800d8eb7d98ba5a14d2198e0f0ed7847272489c63328bc2be72d7"
+        },
+        "private_scoring": {
+          "algorithm": "wildclawbench.dataset-tree-sha256/v1",
+          "entries": [
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "grader.py",
+              "sha256": "40796e4ccbd6f53f3adcb7ae6b4d282c106e45636f26a449253b121d008bc4f6",
+              "size": 8391
+            },
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "oracle.json",
+              "sha256": "efae19689de435b2864e3f7640dbaca7a778ba750b9f9637567e1cdf0790771b",
+              "size": 1466
+            },
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "reference.md",
+              "sha256": "34f65324ca4f14f8527332ca76ceff6cf19a4c88e243fa9447b5b8f8f4f79c38",
+              "size": 450
+            }
+          ],
+          "root": "tasks/02_Legal_Analysis_task_001_clarify_before_advice/private-scoring/gt",
+          "sha256": "7171e18cfa117cca8567a1647efa9fc96828d4dd346b00e3761fc9078c02feaa"
+        }
+      },
+      "modality": "pure-text",
+      "name": "合作投标替换产品的澄清与应对",
+      "order": 6,
+      "source": {
+        "task_path": "tasks/legal/xiaofa/02_Legal_Analysis/02_Legal_Analysis_task_001_clarify_before_advice.md",
+        "workspace_path": "workspace/legal/xiaofa/02_Legal_Analysis/02_Legal_Analysis_task_001_clarify_before_advice"
+      },
+      "tags": [
+        "custom",
+        "xiaofa-legal"
+      ],
+      "task_id": "02_Legal_Analysis_task_001_clarify_before_advice",
+      "timeout_seconds": 900
+    },
+    {
+      "bundle": {
+        "execution_contract_path": "tasks/02_Legal_Analysis_task_002_payee_direction/execution/contract.json",
+        "scoring_contract_path": "tasks/02_Legal_Analysis_task_002_payee_direction/private-scoring/contract.json",
+        "task_path": "tasks/02_Legal_Analysis_task_002_payee_direction/task.md"
+      },
+      "category": "legal_analysis",
+      "difficulty": "L4",
+      "digests": {
+        "execution_contract_sha256": "e86aaedba0b70a61f96fb1dda234d92d79ddd8c956768d42fe835c4589815031",
+        "private_scoring_sha256": "250c10c7664dc048ffa37298bb6294b5d9bd9e5cdc74379ed6ee520b7dd94fc6",
+        "prompt_sha256": "e930e6881204f2716185aa6cd025ae1f36158ff7f3829594278a0e52461fff87",
+        "scoring_contract_sha256": "389b3900e724af1958aa19e6f5eb09953f11554024de7a7fcf149af1ebe5e18a",
+        "task_sha256": "c563dbdef017900514202c7fb6119e333a1d67b0ab6a802d9c09821587ec04a0",
+        "workspace_exec_sha256": "0126945a8110d188bca0217e3fa43435ee321acae5f1f68770b5b9aca305acf4"
+      },
+      "grading_type": "hybrid",
+      "grading_weights": {
+        "automated": 0.4,
+        "llm_judge": 0.6
+      },
+      "materials": {
+        "execution": {
+          "algorithm": "wildclawbench.dataset-tree-sha256/v1",
+          "entries": [
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "answer_schema.json",
+              "sha256": "b4f88c66188b9c36eb47baa89bd9d9a85151a728c942f8fccba61f30ec1a922e",
+              "size": 957
+            },
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "materials.md",
+              "sha256": "03e1bafd6905f2d08f459874d6777ae429880491864bf4df55d391bdfd2f7aad",
+              "size": 762
+            }
+          ],
+          "root": "tasks/02_Legal_Analysis_task_002_payee_direction/execution/exec",
+          "sha256": "0126945a8110d188bca0217e3fa43435ee321acae5f1f68770b5b9aca305acf4"
+        },
+        "private_scoring": {
+          "algorithm": "wildclawbench.dataset-tree-sha256/v1",
+          "entries": [
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "grader.py",
+              "sha256": "40796e4ccbd6f53f3adcb7ae6b4d282c106e45636f26a449253b121d008bc4f6",
+              "size": 8391
+            },
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "oracle.json",
+              "sha256": "2ded663501093088d17219fb65096e77b028b78044a7874c029b12bc0459b2ef",
+              "size": 1729
+            },
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "reference.md",
+              "sha256": "fe4577d9c5ab4f2592d20ad2551844ae2c1162860ef8a3b25f034e7b2b01f1de",
+              "size": 532
+            }
+          ],
+          "root": "tasks/02_Legal_Analysis_task_002_payee_direction/private-scoring/gt",
+          "sha256": "250c10c7664dc048ffa37298bb6294b5d9bd9e5cdc74379ed6ee520b7dd94fc6"
+        }
+      },
+      "modality": "pure-text",
+      "name": "收款方向反转的被告抗辩分析",
+      "order": 7,
+      "source": {
+        "task_path": "tasks/legal/xiaofa/02_Legal_Analysis/02_Legal_Analysis_task_002_payee_direction.md",
+        "workspace_path": "workspace/legal/xiaofa/02_Legal_Analysis/02_Legal_Analysis_task_002_payee_direction"
+      },
+      "tags": [
+        "custom",
+        "xiaofa-legal"
+      ],
+      "task_id": "02_Legal_Analysis_task_002_payee_direction",
+      "timeout_seconds": 1200
+    },
+    {
+      "bundle": {
+        "execution_contract_path": "tasks/02_Legal_Analysis_task_003_citation_verification/execution/contract.json",
+        "scoring_contract_path": "tasks/02_Legal_Analysis_task_003_citation_verification/private-scoring/contract.json",
+        "task_path": "tasks/02_Legal_Analysis_task_003_citation_verification/task.md"
+      },
+      "category": "legal_analysis",
+      "difficulty": "L3",
+      "digests": {
+        "execution_contract_sha256": "10d9c9a9617f3e3e19f364503b1317c7a032171051c01f752df0187be0e7b73f",
+        "private_scoring_sha256": "a52ebfffd0c854b2396d3c341e3b6046e26a88ea92a3e766cd2a671294e38b24",
+        "prompt_sha256": "66e0b244ffab751659ba99bec78d278889c8d752743c2fde15911c37129e4ca8",
+        "scoring_contract_sha256": "408c5726855794aa7cdc92a28f550a135a988ccacf520e8cf1e125919e989bf9",
+        "task_sha256": "e123d6914b0e4cb54113ec8f89f3bd35fbcf1b8d7946d9de3bf8ab3162985fcc",
+        "workspace_exec_sha256": "b8beb49459bb54e1f37bcfec7312feb1a183bf08b13a93fc3e2a084a22066d6d"
+      },
+      "grading_type": "hybrid",
+      "grading_weights": {
+        "automated": 0.4,
+        "llm_judge": 0.6
+      },
+      "materials": {
+        "execution": {
+          "algorithm": "wildclawbench.dataset-tree-sha256/v1",
+          "entries": [
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "answer_schema.json",
+              "sha256": "251968d473b6562cb8796f14bb5948e90fe0eab029c6ceffc7cec15d42c59542",
+              "size": 857
+            },
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "law_packet.md",
+              "sha256": "ab2aa8d8c29de05ff4682e04f39cdd66f41007c3aa718493e43a272e49e43f1c",
+              "size": 1938
+            },
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "materials.md",
+              "sha256": "86c3dbba51091f0fa39b1fabce4f99f5a3f7913ac07cb447b1d055a0e723caa6",
+              "size": 626
+            }
+          ],
+          "root": "tasks/02_Legal_Analysis_task_003_citation_verification/execution/exec",
+          "sha256": "b8beb49459bb54e1f37bcfec7312feb1a183bf08b13a93fc3e2a084a22066d6d"
+        },
+        "private_scoring": {
+          "algorithm": "wildclawbench.dataset-tree-sha256/v1",
+          "entries": [
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "grader.py",
+              "sha256": "40796e4ccbd6f53f3adcb7ae6b4d282c106e45636f26a449253b121d008bc4f6",
+              "size": 8391
+            },
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "oracle.json",
+              "sha256": "8683f88c9abd87d3b3a1b7ab18760b2746e4febcdb6c5834da0c2a6b481acb55",
+              "size": 1636
+            },
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "reference.md",
+              "sha256": "4ec785a379a6ba451dc1244c61b18683fa4c4a0feb09ac97c83a0abd21bc16c7",
+              "size": 463
+            }
+          ],
+          "root": "tasks/02_Legal_Analysis_task_003_citation_verification/private-scoring/gt",
+          "sha256": "a52ebfffd0c854b2396d3c341e3b6046e26a88ea92a3e766cd2a671294e38b24"
+        }
+      },
+      "modality": "pure-text",
+      "name": "法条与类案真实性及适配核验",
+      "order": 8,
+      "source": {
+        "task_path": "tasks/legal/xiaofa/02_Legal_Analysis/02_Legal_Analysis_task_003_citation_verification.md",
+        "workspace_path": "workspace/legal/xiaofa/02_Legal_Analysis/02_Legal_Analysis_task_003_citation_verification"
+      },
+      "tags": [
+        "custom",
+        "xiaofa-legal"
+      ],
+      "task_id": "02_Legal_Analysis_task_003_citation_verification",
+      "timeout_seconds": 900
+    },
+    {
+      "bundle": {
+        "execution_contract_path": "tasks/02_Legal_Analysis_task_004_labor_risk/execution/contract.json",
+        "scoring_contract_path": "tasks/02_Legal_Analysis_task_004_labor_risk/private-scoring/contract.json",
+        "task_path": "tasks/02_Legal_Analysis_task_004_labor_risk/task.md"
+      },
+      "category": "legal_analysis",
+      "difficulty": "L3",
+      "digests": {
+        "execution_contract_sha256": "438d9c6351f825182081172f5ed3754f8b998e03c443ea98df9e88468eac34cc",
+        "private_scoring_sha256": "1f28239f57ca70b60307c4c911d9e681728a8c849ac0212625c3b1b538490593",
+        "prompt_sha256": "c7b929ce9974f7a3fdddd92ef7ffcfaff1cf0b95ff94e4902d4f665d7f0cf05d",
+        "scoring_contract_sha256": "927dc211dbd62abd79689874f10091fe3485180ae713f89e2517f04e49c31266",
+        "task_sha256": "014c0db532466c838b78957bec2af2da38ccde6dc06f42d6e211b2facd11c84a",
+        "workspace_exec_sha256": "0d194e440e0e4499c394ea5290501e5c894a45de914ed04d6fca23409f28f39c"
+      },
+      "grading_type": "hybrid",
+      "grading_weights": {
+        "automated": 0.4,
+        "llm_judge": 0.6
+      },
+      "materials": {
+        "execution": {
+          "algorithm": "wildclawbench.dataset-tree-sha256/v1",
+          "entries": [
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "answer_schema.json",
+              "sha256": "20c529a43f933f69449c2016f65cb30448aae1ae26e25afd4adcaff389ba814d",
+              "size": 909
+            },
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "law_packet.md",
+              "sha256": "ab2aa8d8c29de05ff4682e04f39cdd66f41007c3aa718493e43a272e49e43f1c",
+              "size": 1938
+            },
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "materials.md",
+              "sha256": "cfddee6dedf6bbdc34023d4febd6150d05176f05a2248e125d0fa3ff717633f9",
+              "size": 567
+            }
+          ],
+          "root": "tasks/02_Legal_Analysis_task_004_labor_risk/execution/exec",
+          "sha256": "0d194e440e0e4499c394ea5290501e5c894a45de914ed04d6fca23409f28f39c"
+        },
+        "private_scoring": {
+          "algorithm": "wildclawbench.dataset-tree-sha256/v1",
+          "entries": [
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "grader.py",
+              "sha256": "40796e4ccbd6f53f3adcb7ae6b4d282c106e45636f26a449253b121d008bc4f6",
+              "size": 8391
+            },
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "oracle.json",
+              "sha256": "308caa7b8988fd0d7e9d514edeee8eb40a36052cddc9d42af3ba4c62d42869b5",
+              "size": 1607
+            },
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "reference.md",
+              "sha256": "63d3c9129a41e48fd503bd69d1943b7c94b1bcc4f79b114248324eefcbf5befe",
+              "size": 427
+            }
+          ],
+          "root": "tasks/02_Legal_Analysis_task_004_labor_risk/private-scoring/gt",
+          "sha256": "1f28239f57ca70b60307c4c911d9e681728a8c849ac0212625c3b1b538490593"
+        }
+      },
+      "modality": "pure-text",
+      "name": "解除劳动合同证据缺口评估",
+      "order": 9,
+      "source": {
+        "task_path": "tasks/legal/xiaofa/02_Legal_Analysis/02_Legal_Analysis_task_004_labor_risk.md",
+        "workspace_path": "workspace/legal/xiaofa/02_Legal_Analysis/02_Legal_Analysis_task_004_labor_risk"
+      },
+      "tags": [
+        "custom",
+        "xiaofa-legal"
+      ],
+      "task_id": "02_Legal_Analysis_task_004_labor_risk",
+      "timeout_seconds": 900
+    },
+    {
+      "bundle": {
+        "execution_contract_path": "tasks/02_Legal_Analysis_task_005_revise_with_evidence/execution/contract.json",
+        "scoring_contract_path": "tasks/02_Legal_Analysis_task_005_revise_with_evidence/private-scoring/contract.json",
+        "task_path": "tasks/02_Legal_Analysis_task_005_revise_with_evidence/task.md"
+      },
+      "category": "legal_analysis",
+      "difficulty": "L3",
+      "digests": {
+        "execution_contract_sha256": "9e1dcb03e4a81985386df3516b6cbe6b71a4c46ed0e9bc0d47cb8da82b4d70c1",
+        "private_scoring_sha256": "e6d3bf7c2536987b95b5478101a5b8a7331b2565a9d8dade9c268b1e9b283c3c",
+        "prompt_sha256": "447d4401e43c4f95053a12488fc6fb147d055163f9a5cf9522fe381416b421f4",
+        "scoring_contract_sha256": "d0516786228dd04a0c9c30c693f17155ba8e896f074449c850ea05c5cff844d2",
+        "task_sha256": "05a4babf26198485de460bc5d4664c198a13cf877cd128f2822898c84c87ec37",
+        "workspace_exec_sha256": "16f906073670dc162b71e3e6b189d5c9170e21a8da16810ee6bf7526e9ccf39d"
+      },
+      "grading_type": "hybrid",
+      "grading_weights": {
+        "automated": 0.4,
+        "llm_judge": 0.6
+      },
+      "materials": {
+        "execution": {
+          "algorithm": "wildclawbench.dataset-tree-sha256/v1",
+          "entries": [
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "answer_schema.json",
+              "sha256": "05dd23a7bbcc50fdfcde339c27c68d54a70389f524b1a22e2362c363d74f0a71",
+              "size": 938
+            },
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "materials.md",
+              "sha256": "6494c5fadfaf0804e06edcf778d00fc7e16f9a9ff7fb734189366af21cecf6ff",
+              "size": 524
+            }
+          ],
+          "root": "tasks/02_Legal_Analysis_task_005_revise_with_evidence/execution/exec",
+          "sha256": "16f906073670dc162b71e3e6b189d5c9170e21a8da16810ee6bf7526e9ccf39d"
+        },
+        "private_scoring": {
+          "algorithm": "wildclawbench.dataset-tree-sha256/v1",
+          "entries": [
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "grader.py",
+              "sha256": "40796e4ccbd6f53f3adcb7ae6b4d282c106e45636f26a449253b121d008bc4f6",
+              "size": 8391
+            },
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "oracle.json",
+              "sha256": "8d167978592e20d7fe2394a29c6e0265147920b422b3990698cec4f91e7094d3",
+              "size": 1515
+            },
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "reference.md",
+              "sha256": "75880edae2a2580c089efba6fa27684107c5dc7421902ae600eb91044b599604",
+              "size": 388
+            }
+          ],
+          "root": "tasks/02_Legal_Analysis_task_005_revise_with_evidence/private-scoring/gt",
+          "sha256": "e6d3bf7c2536987b95b5478101a5b8a7331b2565a9d8dade9c268b1e9b283c3c"
+        }
+      },
+      "modality": "pure-text",
+      "name": "新增流水后的诉讼意见修正",
+      "order": 10,
+      "source": {
+        "task_path": "tasks/legal/xiaofa/02_Legal_Analysis/02_Legal_Analysis_task_005_revise_with_evidence.md",
+        "workspace_path": "workspace/legal/xiaofa/02_Legal_Analysis/02_Legal_Analysis_task_005_revise_with_evidence"
+      },
+      "tags": [
+        "custom",
+        "xiaofa-legal"
+      ],
+      "task_id": "02_Legal_Analysis_task_005_revise_with_evidence",
+      "timeout_seconds": 900
+    },
+    {
+      "bundle": {
+        "execution_contract_path": "tasks/03_Legal_Drafting_task_001_complaint/execution/contract.json",
+        "scoring_contract_path": "tasks/03_Legal_Drafting_task_001_complaint/private-scoring/contract.json",
+        "task_path": "tasks/03_Legal_Drafting_task_001_complaint/task.md"
+      },
+      "category": "legal_drafting",
+      "difficulty": "L2",
+      "digests": {
+        "execution_contract_sha256": "563a0287a7d8448c5b2003db92b815cc1a874f4ada2311a189edda42686ba101",
+        "private_scoring_sha256": "5d3cac55f81a415dc365de9193bed744aff98ca7a6822b6b7c607ccd996baf1c",
+        "prompt_sha256": "fb5463033b48462b5ce5ff68127c8c03bb17239c0cf6f04fc1c688cfbe799afc",
+        "scoring_contract_sha256": "7aadcd111043995848136d2d144ba448f3d2c851a771753137bb540e1099a61f",
+        "task_sha256": "fe50e3ba224d515a0c2c1077a8e150b1955462a04c18b1aecece401772e31260",
+        "workspace_exec_sha256": "043110341c17d32ee888aa3740087c13f808251e654ed8031e131bd0ad745d8f"
+      },
+      "grading_type": "hybrid",
+      "grading_weights": {
+        "automated": 0.4,
+        "llm_judge": 0.6
+      },
+      "materials": {
+        "execution": {
+          "algorithm": "wildclawbench.dataset-tree-sha256/v1",
+          "entries": [
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "answer_schema.json",
+              "sha256": "bb71f6cb5b046e2e024230f23d8921348f87e63cd4a4953b742a390cbefaee75",
+              "size": 814
+            },
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "materials.md",
+              "sha256": "9f74935510424cd14057c9e6cc4bdbdd920aa9e4a3718f8ffedb78aff27f0ec6",
+              "size": 489
+            },
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "template.docx",
+              "sha256": "de3433390e9232b444cde77ee397eb5a6c6c29000c052601b1249ae6ddf21166",
+              "size": 37027
+            }
+          ],
+          "root": "tasks/03_Legal_Drafting_task_001_complaint/execution/exec",
+          "sha256": "043110341c17d32ee888aa3740087c13f808251e654ed8031e131bd0ad745d8f"
+        },
+        "private_scoring": {
+          "algorithm": "wildclawbench.dataset-tree-sha256/v1",
+          "entries": [
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "grader.py",
+              "sha256": "40796e4ccbd6f53f3adcb7ae6b4d282c106e45636f26a449253b121d008bc4f6",
+              "size": 8391
+            },
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "oracle.json",
+              "sha256": "a85c2f6634ae10d711acdd1b98a2aab48cac29313c6a7b34317bdf480e9f06a2",
+              "size": 1560
+            },
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "reference.md",
+              "sha256": "f40ab26219380b74ea3a32dbe220eedf36f80b107486a0a2e5bb6665000e8991",
+              "size": 380
+            }
+          ],
+          "root": "tasks/03_Legal_Drafting_task_001_complaint/private-scoring/gt",
+          "sha256": "5d3cac55f81a415dc365de9193bed744aff98ca7a6822b6b7c607ccd996baf1c"
+        }
+      },
+      "modality": "pure-text",
+      "name": "货款纠纷起诉状及证据目录",
+      "order": 11,
+      "source": {
+        "task_path": "tasks/legal/xiaofa/03_Legal_Drafting/03_Legal_Drafting_task_001_complaint.md",
+        "workspace_path": "workspace/legal/xiaofa/03_Legal_Drafting/03_Legal_Drafting_task_001_complaint"
+      },
+      "tags": [
+        "custom",
+        "xiaofa-legal"
+      ],
+      "task_id": "03_Legal_Drafting_task_001_complaint",
+      "timeout_seconds": 900
+    },
+    {
+      "bundle": {
+        "execution_contract_path": "tasks/03_Legal_Drafting_task_002_labor_defense/execution/contract.json",
+        "scoring_contract_path": "tasks/03_Legal_Drafting_task_002_labor_defense/private-scoring/contract.json",
+        "task_path": "tasks/03_Legal_Drafting_task_002_labor_defense/task.md"
+      },
+      "category": "legal_drafting",
+      "difficulty": "L3",
+      "digests": {
+        "execution_contract_sha256": "83ab8228cfb710554d72c57727de691ea38a27d9c2c1c00c3e821bbf0e6f7974",
+        "private_scoring_sha256": "5c56e19cd04a86e9d8ec16f306ee7fbff3cfa9674b030c4547269583fe943509",
+        "prompt_sha256": "78aa097e82b2f8d09dce5541aa3387e8cfb9655aa55bf48457353a0d4c20fb9f",
+        "scoring_contract_sha256": "450915802789bb0114e73819eb07b1cff0261d1a7149f1ae71e2df8c235f174f",
+        "task_sha256": "0616be4604aa011e58e1a7361d2d60deec0671b98b55c70c4dee4d625fe78aa3",
+        "workspace_exec_sha256": "553b6b49f50f06e870e3e73a0406a521456e06942b9d62d38b821fc015bcb29b"
+      },
+      "grading_type": "hybrid",
+      "grading_weights": {
+        "automated": 0.4,
+        "llm_judge": 0.6
+      },
+      "materials": {
+        "execution": {
+          "algorithm": "wildclawbench.dataset-tree-sha256/v1",
+          "entries": [
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "answer_schema.json",
+              "sha256": "b345c5b8e7a07d8ab888a37c9b0ce9ab70da5a1c1ee76281d141b36e8c3a1087",
+              "size": 833
+            },
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "draft.docx",
+              "sha256": "a16446e6a16904f409f130dde90b4cb4ca8886b9fc8da731135eaa46d7b93e37",
+              "size": 36885
+            },
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "law_packet.md",
+              "sha256": "ab2aa8d8c29de05ff4682e04f39cdd66f41007c3aa718493e43a272e49e43f1c",
+              "size": 1938
+            },
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "materials.md",
+              "sha256": "d7209f434b5641116a58accdc0f602d5dbbf963166f02ba79a3713fc6d423bcc",
+              "size": 453
+            }
+          ],
+          "root": "tasks/03_Legal_Drafting_task_002_labor_defense/execution/exec",
+          "sha256": "553b6b49f50f06e870e3e73a0406a521456e06942b9d62d38b821fc015bcb29b"
+        },
+        "private_scoring": {
+          "algorithm": "wildclawbench.dataset-tree-sha256/v1",
+          "entries": [
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "grader.py",
+              "sha256": "40796e4ccbd6f53f3adcb7ae6b4d282c106e45636f26a449253b121d008bc4f6",
+              "size": 8391
+            },
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "oracle.json",
+              "sha256": "798931489d8560db3bd0ca86340c5036489cbcdd228d3d255bd8409003805426",
+              "size": 1638
+            },
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "reference.md",
+              "sha256": "a8c61af978539804e3690225b97cea208377c6804d4fb1f0bc2395c40a54b040",
+              "size": 392
+            }
+          ],
+          "root": "tasks/03_Legal_Drafting_task_002_labor_defense/private-scoring/gt",
+          "sha256": "5c56e19cd04a86e9d8ec16f306ee7fbff3cfa9674b030c4547269583fe943509"
+        }
+      },
+      "modality": "pure-text",
+      "name": "劳动争议答辩状事实与排版修复",
+      "order": 12,
+      "source": {
+        "task_path": "tasks/legal/xiaofa/03_Legal_Drafting/03_Legal_Drafting_task_002_labor_defense.md",
+        "workspace_path": "workspace/legal/xiaofa/03_Legal_Drafting/03_Legal_Drafting_task_002_labor_defense"
+      },
+      "tags": [
+        "custom",
+        "xiaofa-legal"
+      ],
+      "task_id": "03_Legal_Drafting_task_002_labor_defense",
+      "timeout_seconds": 900
+    },
+    {
+      "bundle": {
+        "execution_contract_path": "tasks/03_Legal_Drafting_task_003_advocacy_memo/execution/contract.json",
+        "scoring_contract_path": "tasks/03_Legal_Drafting_task_003_advocacy_memo/private-scoring/contract.json",
+        "task_path": "tasks/03_Legal_Drafting_task_003_advocacy_memo/task.md"
+      },
+      "category": "legal_drafting",
+      "difficulty": "L3",
+      "digests": {
+        "execution_contract_sha256": "9d066885946eeea7cb9769fe8bd4a6e9edde20f88fbf0b4a05281dc1f7106538",
+        "private_scoring_sha256": "1977166e44753bedca758ea6beee902daeeb4431bbcb082bfb9b8519343edbaf",
+        "prompt_sha256": "868c74f112a4bb35daa5ebe013b1a9a461ed05f7c75b323a6e2128cc5e1ed831",
+        "scoring_contract_sha256": "4a75acce986726f7049caef03b713e32fa18b4726250c5933a02e1007df0cecb",
+        "task_sha256": "27befc1719864f2226eb7e769d84932c5bf7f32f34f348a60c87552690a8b38e",
+        "workspace_exec_sha256": "cd08a6d0bea0ce6ba895bd4dfe4707108b7e731c710eb93e7adc269c5de540cb"
+      },
+      "grading_type": "hybrid",
+      "grading_weights": {
+        "automated": 0.4,
+        "llm_judge": 0.6
+      },
+      "materials": {
+        "execution": {
+          "algorithm": "wildclawbench.dataset-tree-sha256/v1",
+          "entries": [
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "answer_schema.json",
+              "sha256": "1212753b35910e7dc2ae39f6addde16392b4bb82a17be514c60549159fc7a280",
+              "size": 939
+            },
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "materials.md",
+              "sha256": "d362038fc1c3f4dddecaf2cf0a568db444b89141adaacb3dede49f5f56e9c0ea",
+              "size": 510
+            }
+          ],
+          "root": "tasks/03_Legal_Drafting_task_003_advocacy_memo/execution/exec",
+          "sha256": "cd08a6d0bea0ce6ba895bd4dfe4707108b7e731c710eb93e7adc269c5de540cb"
+        },
+        "private_scoring": {
+          "algorithm": "wildclawbench.dataset-tree-sha256/v1",
+          "entries": [
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "grader.py",
+              "sha256": "40796e4ccbd6f53f3adcb7ae6b4d282c106e45636f26a449253b121d008bc4f6",
+              "size": 8391
+            },
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "oracle.json",
+              "sha256": "3f71ab5bb0872e5d2eb0c81eb3e7d1f90abd5e5161cce99a9c333ca862958d10",
+              "size": 1633
+            },
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "reference.md",
+              "sha256": "57ed73459b3843a445bfaba57bbe5384898ee8412a4aa87c1d70d12503eb72b8",
+              "size": 425
+            }
+          ],
+          "root": "tasks/03_Legal_Drafting_task_003_advocacy_memo/private-scoring/gt",
+          "sha256": "1977166e44753bedca758ea6beee902daeeb4431bbcb082bfb9b8519343edbaf"
+        }
+      },
+      "modality": "pure-text",
+      "name": "代理意见中的反证和举证风险",
+      "order": 13,
+      "source": {
+        "task_path": "tasks/legal/xiaofa/03_Legal_Drafting/03_Legal_Drafting_task_003_advocacy_memo.md",
+        "workspace_path": "workspace/legal/xiaofa/03_Legal_Drafting/03_Legal_Drafting_task_003_advocacy_memo"
+      },
+      "tags": [
+        "custom",
+        "xiaofa-legal"
+      ],
+      "task_id": "03_Legal_Drafting_task_003_advocacy_memo",
+      "timeout_seconds": 900
+    },
+    {
+      "bundle": {
+        "execution_contract_path": "tasks/03_Legal_Drafting_task_004_batch_five_documents/execution/contract.json",
+        "scoring_contract_path": "tasks/03_Legal_Drafting_task_004_batch_five_documents/private-scoring/contract.json",
+        "task_path": "tasks/03_Legal_Drafting_task_004_batch_five_documents/task.md"
+      },
+      "category": "legal_drafting",
+      "difficulty": "L4",
+      "digests": {
+        "execution_contract_sha256": "a72712bf6610c44dc3727d403120f97fc58a943e4009f4544994b8ac1b911c44",
+        "private_scoring_sha256": "234d18e407c74f9ac19c2ab4d52af56f9323765d0018730247db7ef85f206cb7",
+        "prompt_sha256": "9690ba53f654615cbff61769e17e8977734575389eb102dddc6f3336b371fc04",
+        "scoring_contract_sha256": "b32e93ef0a348c0f371f6d5122aa52eb7a977cd1b2747600d294c5ba8ccc9d86",
+        "task_sha256": "81a4bbccf7eae5de962a7968f209d786ff162abd305b0e054fdbb84d79cd732b",
+        "workspace_exec_sha256": "093190063995593081ad83d9b0ffed1b4c3e6c64eaa503f0251aaee996a02d11"
+      },
+      "grading_type": "hybrid",
+      "grading_weights": {
+        "automated": 0.4,
+        "llm_judge": 0.6
+      },
+      "materials": {
+        "execution": {
+          "algorithm": "wildclawbench.dataset-tree-sha256/v1",
+          "entries": [
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "answer_schema.json",
+              "sha256": "a2774760c59fa961c8a5aae818d0e7295711a78a9354d38abea30dbccf53365a",
+              "size": 922
+            },
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "materials.md",
+              "sha256": "685a62ccce569c2d5843aadf1168ca7fd9618de64c9f482698d26feeead2e041",
+              "size": 838
+            },
+            {
+              "kind": "directory",
+              "mode": "0755",
+              "path": "templates"
+            },
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "templates/授权委托书.docx",
+              "sha256": "592b99e9720b7212b585ae23b28c6871d9369eb94ac8fd2c85398a2294da5916",
+              "size": 37002
+            },
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "templates/要素表.docx",
+              "sha256": "71ad44b08bd98cbe037297ba9e2b1d8197ec6b577a70f0bb1833db5c5fa30af1",
+              "size": 36999
+            },
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "templates/证据目录.docx",
+              "sha256": "438888f4e88cec2e371a45de9e476fe4a35de26818fb184c757119312dd67bc0",
+              "size": 36998
+            },
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "templates/起诉状.docx",
+              "sha256": "2235c15622291d35bab27b436c748f35f3c09cd036c6cb682245c2930bccc5ed",
+              "size": 36998
+            },
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "templates/身份证明.docx",
+              "sha256": "4441603e6381fa7e68b08e6f633e50765a5e219213f444f89192abe3f64bd8b2",
+              "size": 37000
+            }
+          ],
+          "root": "tasks/03_Legal_Drafting_task_004_batch_five_documents/execution/exec",
+          "sha256": "093190063995593081ad83d9b0ffed1b4c3e6c64eaa503f0251aaee996a02d11"
+        },
+        "private_scoring": {
+          "algorithm": "wildclawbench.dataset-tree-sha256/v1",
+          "entries": [
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "grader.py",
+              "sha256": "40796e4ccbd6f53f3adcb7ae6b4d282c106e45636f26a449253b121d008bc4f6",
+              "size": 8391
+            },
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "oracle.json",
+              "sha256": "eeee3408843c634737ffde651b6e5c831c1fc62427e98795522be03eb2fe6fb5",
+              "size": 3803
+            },
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "reference.md",
+              "sha256": "d24a3987c2f18c5dd202aa99d46d0e07812946903ff8cfc6ae6dca1bf94a3289",
+              "size": 447
+            }
+          ],
+          "root": "tasks/03_Legal_Drafting_task_004_batch_five_documents/private-scoring/gt",
+          "sha256": "234d18e407c74f9ac19c2ab4d52af56f9323765d0018730247db7ef85f206cb7"
+        }
+      },
+      "modality": "pure-text",
+      "name": "三案五类诉讼文书批量仿写",
+      "order": 14,
+      "source": {
+        "task_path": "tasks/legal/xiaofa/03_Legal_Drafting/03_Legal_Drafting_task_004_batch_five_documents.md",
+        "workspace_path": "workspace/legal/xiaofa/03_Legal_Drafting/03_Legal_Drafting_task_004_batch_five_documents"
+      },
+      "tags": [
+        "custom",
+        "xiaofa-legal"
+      ],
+      "task_id": "03_Legal_Drafting_task_004_batch_five_documents",
+      "timeout_seconds": 1200
+    },
+    {
+      "bundle": {
+        "execution_contract_path": "tasks/03_Legal_Drafting_task_005_structured_complaint/execution/contract.json",
+        "scoring_contract_path": "tasks/03_Legal_Drafting_task_005_structured_complaint/private-scoring/contract.json",
+        "task_path": "tasks/03_Legal_Drafting_task_005_structured_complaint/task.md"
+      },
+      "category": "legal_drafting",
+      "difficulty": "L2",
+      "digests": {
+        "execution_contract_sha256": "375304a42179196bf4de78991b7d6138233e69e9763b8221eef859e38d4a4063",
+        "private_scoring_sha256": "02f6e56958f2893bd45ea400791d1b71fda8f82af1fddb456bf8f62faf30329e",
+        "prompt_sha256": "5ccd161029e272aacb2bb373f3109bf5243b5517b06383dbe1560ccf716048ac",
+        "scoring_contract_sha256": "f45a38a6a56cc7ab2db20d2dd687a7d652fd3685e02c9f65067a00eda8699121",
+        "task_sha256": "6aff3cc5126f5f6cd092a812b1007cd23c1f3c403a874d2d900a06afe8e0daa4",
+        "workspace_exec_sha256": "3de4df0c56d678f72e35b7f4adec81a63b5bfc8f0b0ed7d41d7f30e17672d309"
+      },
+      "grading_type": "hybrid",
+      "grading_weights": {
+        "automated": 0.4,
+        "llm_judge": 0.6
+      },
+      "materials": {
+        "execution": {
+          "algorithm": "wildclawbench.dataset-tree-sha256/v1",
+          "entries": [
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "answer_schema.json",
+              "sha256": "987d9caaf025062bc36142e48ae82eace5f1e3beb9e271c5fa2c4609839d5197",
+              "size": 863
+            },
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "form.docx",
+              "sha256": "4670d5c9891b007ca5c37d55887899c3e26e38abd51c366b1e28a937513b8938",
+              "size": 37043
+            },
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "materials.md",
+              "sha256": "e17b5a3fba5185af06cdf8cfdd812edc56e6604cbb231fba322984ed8a032124",
+              "size": 499
+            }
+          ],
+          "root": "tasks/03_Legal_Drafting_task_005_structured_complaint/execution/exec",
+          "sha256": "3de4df0c56d678f72e35b7f4adec81a63b5bfc8f0b0ed7d41d7f30e17672d309"
+        },
+        "private_scoring": {
+          "algorithm": "wildclawbench.dataset-tree-sha256/v1",
+          "entries": [
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "grader.py",
+              "sha256": "40796e4ccbd6f53f3adcb7ae6b4d282c106e45636f26a449253b121d008bc4f6",
+              "size": 8391
+            },
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "oracle.json",
+              "sha256": "ea95b37749056b8e8c4410b000e270fef7e28c03453506dba7a100e5a4759e14",
+              "size": 1611
+            },
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "reference.md",
+              "sha256": "7f63ef274a6d2eae2d14589b443f312db05951101dbdee9742330bb3d648ff2c",
+              "size": 400
+            }
+          ],
+          "root": "tasks/03_Legal_Drafting_task_005_structured_complaint/private-scoring/gt",
+          "sha256": "02f6e56958f2893bd45ea400791d1b71fda8f82af1fddb456bf8f62faf30329e"
+        }
+      },
+      "modality": "pure-text",
+      "name": "普通起诉材料转要素式表单",
+      "order": 15,
+      "source": {
+        "task_path": "tasks/legal/xiaofa/03_Legal_Drafting/03_Legal_Drafting_task_005_structured_complaint.md",
+        "workspace_path": "workspace/legal/xiaofa/03_Legal_Drafting/03_Legal_Drafting_task_005_structured_complaint"
+      },
+      "tags": [
+        "custom",
+        "xiaofa-legal"
+      ],
+      "task_id": "03_Legal_Drafting_task_005_structured_complaint",
+      "timeout_seconds": 900
+    },
+    {
+      "bundle": {
+        "execution_contract_path": "tasks/04_Legal_Contracts_task_001_editable_comments/execution/contract.json",
+        "scoring_contract_path": "tasks/04_Legal_Contracts_task_001_editable_comments/private-scoring/contract.json",
+        "task_path": "tasks/04_Legal_Contracts_task_001_editable_comments/task.md"
+      },
+      "category": "legal_contracts",
+      "difficulty": "L3",
+      "digests": {
+        "execution_contract_sha256": "ae1a743ad82fc87890eb1b15a5099ff9b376c08f7875349b6443bfb70cb1d424",
+        "private_scoring_sha256": "61e412615bc34af367716b91a9ca477a5308cc875cdcf7cf9abc568927b79923",
+        "prompt_sha256": "868e4d29ec4304973b153469f3da055c4f3517c6801d51ba5b5662f528981511",
+        "scoring_contract_sha256": "f8b098692e59f12dac10d9205a5925f25023f714becce3a0a73cde8a0fb7597a",
+        "task_sha256": "fce62961f979cfbc6bc608f1ae8bc7c4426b339308226ceda1001e342ba2b2cd",
+        "workspace_exec_sha256": "15b167700bfcc4d13dcf516338de057d386daa0c1f9aa62a21e1c5188b2139e0"
+      },
+      "grading_type": "hybrid",
+      "grading_weights": {
+        "automated": 0.4,
+        "llm_judge": 0.6
+      },
+      "materials": {
+        "execution": {
+          "algorithm": "wildclawbench.dataset-tree-sha256/v1",
+          "entries": [
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "answer_schema.json",
+              "sha256": "8f82bbe4b8c29b78671809283877797e4b4141c54c64ebff9cf69f665e59e7c1",
+              "size": 881
+            },
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "contract.docx",
+              "sha256": "2f8efef82cf50e91e6b1b72c48258f1e422836acd3ecc2b6a19565153cb6dfbf",
+              "size": 37029
+            },
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "materials.md",
+              "sha256": "bf65f81487e400bbd6fcb535c5618baf1984fdb642575fda1539268aa3be5a75",
+              "size": 355
+            }
+          ],
+          "root": "tasks/04_Legal_Contracts_task_001_editable_comments/execution/exec",
+          "sha256": "15b167700bfcc4d13dcf516338de057d386daa0c1f9aa62a21e1c5188b2139e0"
+        },
+        "private_scoring": {
+          "algorithm": "wildclawbench.dataset-tree-sha256/v1",
+          "entries": [
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "grader.py",
+              "sha256": "40796e4ccbd6f53f3adcb7ae6b4d282c106e45636f26a449253b121d008bc4f6",
+              "size": 8391
+            },
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "oracle.json",
+              "sha256": "c2413e71796f992d4ee49ddc72841b5fb970e9be048e0972dda43a4e46d3d61c",
+              "size": 1818
+            },
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "reference.md",
+              "sha256": "898ea91bf8296ae9fd4ab9e15d1ffc396b69494b54681bf31d64649fad94ea6e",
+              "size": 479
+            }
+          ],
+          "root": "tasks/04_Legal_Contracts_task_001_editable_comments/private-scoring/gt",
+          "sha256": "61e412615bc34af367716b91a9ca477a5308cc875cdcf7cf9abc568927b79923"
+        }
+      },
+      "modality": "pure-text",
+      "name": "采购合同风险审查与原生批注",
+      "order": 16,
+      "source": {
+        "task_path": "tasks/legal/xiaofa/04_Legal_Contracts/04_Legal_Contracts_task_001_editable_comments.md",
+        "workspace_path": "workspace/legal/xiaofa/04_Legal_Contracts/04_Legal_Contracts_task_001_editable_comments"
+      },
+      "tags": [
+        "custom",
+        "xiaofa-legal"
+      ],
+      "task_id": "04_Legal_Contracts_task_001_editable_comments",
+      "timeout_seconds": 900
+    },
+    {
+      "bundle": {
+        "execution_contract_path": "tasks/04_Legal_Contracts_task_002_english_license/execution/contract.json",
+        "scoring_contract_path": "tasks/04_Legal_Contracts_task_002_english_license/private-scoring/contract.json",
+        "task_path": "tasks/04_Legal_Contracts_task_002_english_license/task.md"
+      },
+      "category": "legal_contracts",
+      "difficulty": "L4",
+      "digests": {
+        "execution_contract_sha256": "036dccafd4d4f40732ea63aae8744b3a056636681903f6a034ed1578feeea288",
+        "private_scoring_sha256": "bac1866357341f55d2effe3cc63d19881f2919d93b0a807ec336b76e1b341d23",
+        "prompt_sha256": "551436c7df08680d0d95ec85a727191ddfeeb7cc855db6dd2c238cd0ccfcec46",
+        "scoring_contract_sha256": "319b1e33f9c9eb13f88f4e2e6e80709ea3ae397188cf686b6caf68e1b6d84d15",
+        "task_sha256": "a40ab7a9a159c3335e672f9afbadbc33215429967ad0b33125dce11134033226",
+        "workspace_exec_sha256": "c5a11b375b2836b2cdfa9997b1747e75de52c97df51ed4be3b1782a23f6fe735"
+      },
+      "grading_type": "hybrid",
+      "grading_weights": {
+        "automated": 0.4,
+        "llm_judge": 0.6
+      },
+      "materials": {
+        "execution": {
+          "algorithm": "wildclawbench.dataset-tree-sha256/v1",
+          "entries": [
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "answer_schema.json",
+              "sha256": "67744bac8c3c78f02798ae791ee3abb0dc560114536c60b007feeecc665771ea",
+              "size": 856
+            },
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "license.docx",
+              "sha256": "851360a3bdd24a04cb07f2ed7f855c901f8726d406cc2cb763a171e1728a858c",
+              "size": 36908
+            },
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "materials.md",
+              "sha256": "4c04f00cf1602b64304e8d3bf7259c9f392a23239df032c112566bbb092f7f9c",
+              "size": 671
+            }
+          ],
+          "root": "tasks/04_Legal_Contracts_task_002_english_license/execution/exec",
+          "sha256": "c5a11b375b2836b2cdfa9997b1747e75de52c97df51ed4be3b1782a23f6fe735"
+        },
+        "private_scoring": {
+          "algorithm": "wildclawbench.dataset-tree-sha256/v1",
+          "entries": [
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "grader.py",
+              "sha256": "40796e4ccbd6f53f3adcb7ae6b4d282c106e45636f26a449253b121d008bc4f6",
+              "size": 8391
+            },
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "oracle.json",
+              "sha256": "55d09dcdaaaeaa86f2199f280420b13410b072a9ff7fc06b3b0ad368119dc11c",
+              "size": 1843
+            },
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "reference.md",
+              "sha256": "e4ad3658c4049cbe66ca4e13e0d1fe3a09f4808c03ed5d818d19dfb4a9a9998a",
+              "size": 500
+            }
+          ],
+          "root": "tasks/04_Legal_Contracts_task_002_english_license/private-scoring/gt",
+          "sha256": "bac1866357341f55d2effe3cc63d19881f2919d93b0a807ec336b76e1b341d23"
+        }
+      },
+      "modality": "pure-text",
+      "name": "英文软件许可合同措辞修订",
+      "order": 17,
+      "source": {
+        "task_path": "tasks/legal/xiaofa/04_Legal_Contracts/04_Legal_Contracts_task_002_english_license.md",
+        "workspace_path": "workspace/legal/xiaofa/04_Legal_Contracts/04_Legal_Contracts_task_002_english_license"
+      },
+      "tags": [
+        "custom",
+        "xiaofa-legal"
+      ],
+      "task_id": "04_Legal_Contracts_task_002_english_license",
+      "timeout_seconds": 1200
+    },
+    {
+      "bundle": {
+        "execution_contract_path": "tasks/04_Legal_Contracts_task_003_contract_diff/execution/contract.json",
+        "scoring_contract_path": "tasks/04_Legal_Contracts_task_003_contract_diff/private-scoring/contract.json",
+        "task_path": "tasks/04_Legal_Contracts_task_003_contract_diff/task.md"
+      },
+      "category": "legal_contracts",
+      "difficulty": "L3",
+      "digests": {
+        "execution_contract_sha256": "b3ce038686c99db6b2e5a8ac23e12c1313e9d8776e800b6c3c85e9ca54fef6ce",
+        "private_scoring_sha256": "691bd58800f7a4845c3f7e6e0fcdb6851ebbcffb3ee968d6aa6e6380babcf156",
+        "prompt_sha256": "2ead87fb7bd40e80c535fa5e4ef523591ca770bacf8e9b757ec11e2ae81008eb",
+        "scoring_contract_sha256": "b4217803c728743e745d31f3cbe95bb7bc07514cce313d1a1b62e417ccbf123c",
+        "task_sha256": "742c5c7eff09230b5ba7997a9f085f511017aa1c1d8e06a113113a1eaec5d581",
+        "workspace_exec_sha256": "275cc18266864dfd1575b45605af66b8e166d8a8b7270d96bb7f9b2137f1be33"
+      },
+      "grading_type": "hybrid",
+      "grading_weights": {
+        "automated": 0.4,
+        "llm_judge": 0.6
+      },
+      "materials": {
+        "execution": {
+          "algorithm": "wildclawbench.dataset-tree-sha256/v1",
+          "entries": [
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "answer_schema.json",
+              "sha256": "f8a963beb2ace4b97782361480b5e10e3c0897788cc26a3610cce2d5155bf680",
+              "size": 845
+            },
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "base.docx",
+              "sha256": "f3235fa08e08a48fcd37b60a0e109c9555e0b1401df35c409d7a29887dc78f38",
+              "size": 36861
+            },
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "materials.md",
+              "sha256": "76830ded73f5c6e097ab8971297a5525a3e73e39adfc5940100327fce31faf2c",
+              "size": 436
+            },
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "supplement.docx",
+              "sha256": "76300f4d7d6dbfd8988c4345e050e037d0d462d40cc40a3c0410140836f8832b",
+              "size": 36910
+            }
+          ],
+          "root": "tasks/04_Legal_Contracts_task_003_contract_diff/execution/exec",
+          "sha256": "275cc18266864dfd1575b45605af66b8e166d8a8b7270d96bb7f9b2137f1be33"
+        },
+        "private_scoring": {
+          "algorithm": "wildclawbench.dataset-tree-sha256/v1",
+          "entries": [
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "grader.py",
+              "sha256": "40796e4ccbd6f53f3adcb7ae6b4d282c106e45636f26a449253b121d008bc4f6",
+              "size": 8391
+            },
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "oracle.json",
+              "sha256": "7a6f268b39be46f404d4d9a4dd9bb4973974c074174b2f2a615ba01f7cb04e56",
+              "size": 1940
+            },
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "reference.md",
+              "sha256": "63f7cb7e2f27931dd6659cfe10c73d8e8f3fd24c26e3d2d3b1825482da0bb973",
+              "size": 439
+            }
+          ],
+          "root": "tasks/04_Legal_Contracts_task_003_contract_diff/private-scoring/gt",
+          "sha256": "691bd58800f7a4845c3f7e6e0fcdb6851ebbcffb3ee968d6aa6e6380babcf156"
+        }
+      },
+      "modality": "pure-text",
+      "name": "补充协议与原合同冲突定位",
+      "order": 18,
+      "source": {
+        "task_path": "tasks/legal/xiaofa/04_Legal_Contracts/04_Legal_Contracts_task_003_contract_diff.md",
+        "workspace_path": "workspace/legal/xiaofa/04_Legal_Contracts/04_Legal_Contracts_task_003_contract_diff"
+      },
+      "tags": [
+        "custom",
+        "xiaofa-legal"
+      ],
+      "task_id": "04_Legal_Contracts_task_003_contract_diff",
+      "timeout_seconds": 900
+    },
+    {
+      "bundle": {
+        "execution_contract_path": "tasks/04_Legal_Contracts_task_004_role_priorities/execution/contract.json",
+        "scoring_contract_path": "tasks/04_Legal_Contracts_task_004_role_priorities/private-scoring/contract.json",
+        "task_path": "tasks/04_Legal_Contracts_task_004_role_priorities/task.md"
+      },
+      "category": "legal_contracts",
+      "difficulty": "L3",
+      "digests": {
+        "execution_contract_sha256": "6af5a1fe749c6af90b19fe3ded88a12c7d915954ee42d3fb033fcc4003636f6c",
+        "private_scoring_sha256": "bd16c2b8366ea2bea05bd07f1a2b4ac9c174ac87b5917522b1e11673f286dce5",
+        "prompt_sha256": "fe576c9163b156d97fff6198cbe477e69ee60bbf9ff721f920d2266ecdff9df9",
+        "scoring_contract_sha256": "c854aecdb660b771058971c4544666a015ea2371bfa34582675c15c0d8d5ebf2",
+        "task_sha256": "0cefbd3af3b24543be9a8cadc620e63e1ae8987c66ee3d40e0d617f4aec31bca",
+        "workspace_exec_sha256": "2384b0691dd0ef82d3e5e0c9b14b7f6acdae6d7733d38c584c2369762fff12fc"
+      },
+      "grading_type": "hybrid",
+      "grading_weights": {
+        "automated": 0.4,
+        "llm_judge": 0.6
+      },
+      "materials": {
+        "execution": {
+          "algorithm": "wildclawbench.dataset-tree-sha256/v1",
+          "entries": [
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "answer_schema.json",
+              "sha256": "ce7f9dcfccbfb2ef611c90f1c96034779113f9922b5eafd61bce71198151fd43",
+              "size": 911
+            },
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "materials.md",
+              "sha256": "c277a444cbc14b9dedaa86746100c464d85f06956180285ecc84338b65dfb604",
+              "size": 672
+            }
+          ],
+          "root": "tasks/04_Legal_Contracts_task_004_role_priorities/execution/exec",
+          "sha256": "2384b0691dd0ef82d3e5e0c9b14b7f6acdae6d7733d38c584c2369762fff12fc"
+        },
+        "private_scoring": {
+          "algorithm": "wildclawbench.dataset-tree-sha256/v1",
+          "entries": [
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "grader.py",
+              "sha256": "40796e4ccbd6f53f3adcb7ae6b4d282c106e45636f26a449253b121d008bc4f6",
+              "size": 8391
+            },
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "oracle.json",
+              "sha256": "15eeaf3bfaec37b70c41f880d4949b5458a453309678172eb79e03cccc4ad53a",
+              "size": 1577
+            },
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "reference.md",
+              "sha256": "23190ad24b28042a4e83ff486770554d28de168cc09d0425b93efd57603b5992",
+              "size": 471
+            }
+          ],
+          "root": "tasks/04_Legal_Contracts_task_004_role_priorities/private-scoring/gt",
+          "sha256": "bd16c2b8366ea2bea05bd07f1a2b4ac9c174ac87b5917522b1e11673f286dce5"
+        }
+      },
+      "modality": "pure-text",
+      "name": "同一服务合同的委托方审查优先级",
+      "order": 19,
+      "source": {
+        "task_path": "tasks/legal/xiaofa/04_Legal_Contracts/04_Legal_Contracts_task_004_role_priorities.md",
+        "workspace_path": "workspace/legal/xiaofa/04_Legal_Contracts/04_Legal_Contracts_task_004_role_priorities"
+      },
+      "tags": [
+        "custom",
+        "xiaofa-legal"
+      ],
+      "task_id": "04_Legal_Contracts_task_004_role_priorities",
+      "timeout_seconds": 900
+    },
+    {
+      "bundle": {
+        "execution_contract_path": "tasks/04_Legal_Contracts_task_005_comment_revision/execution/contract.json",
+        "scoring_contract_path": "tasks/04_Legal_Contracts_task_005_comment_revision/private-scoring/contract.json",
+        "task_path": "tasks/04_Legal_Contracts_task_005_comment_revision/task.md"
+      },
+      "category": "legal_contracts",
+      "difficulty": "L2",
+      "digests": {
+        "execution_contract_sha256": "11938adb022976e1e263af1317acd52a6b05247ae9033119fc373ea704539de6",
+        "private_scoring_sha256": "5069a40b0ba262396037f5d0c64aa3d84642f79004262054be5259090b546b38",
+        "prompt_sha256": "9af64fa41560c965b6fc82e2cecde8d01ce6b98d9b931da1e963e21fbbbc39a8",
+        "scoring_contract_sha256": "4ba86f0c5c729f706fa7c3f15e01957c041eb3b3b9391cd0552505226723dc2b",
+        "task_sha256": "ea3ac65709c6d87afefbb50aca3817ba9f668ed7a030d6baf0fc31770b5f190f",
+        "workspace_exec_sha256": "a8a2b627f185e07e08a35c4f377d1b6801d03ef6eb79eb50b8c84c809b7706df"
+      },
+      "grading_type": "hybrid",
+      "grading_weights": {
+        "automated": 0.4,
+        "llm_judge": 0.6
+      },
+      "materials": {
+        "execution": {
+          "algorithm": "wildclawbench.dataset-tree-sha256/v1",
+          "entries": [
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "answer_schema.json",
+              "sha256": "37d8e0dff1b4cedd1de2a0514b5bc2d8f0c9353358f4b9ea315fd6e42514f160",
+              "size": 871
+            },
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "materials.md",
+              "sha256": "144cd82d65e2cf9796a5d160c2c3e01caebbefe704af2df9e4088c5bd59e0de1",
+              "size": 411
+            },
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "reviewed.docx",
+              "sha256": "7fa9764add7edcce837b27d307ae621d21b5bb9ecec9891c2b4b85b09b39dec9",
+              "size": 37600
+            }
+          ],
+          "root": "tasks/04_Legal_Contracts_task_005_comment_revision/execution/exec",
+          "sha256": "a8a2b627f185e07e08a35c4f377d1b6801d03ef6eb79eb50b8c84c809b7706df"
+        },
+        "private_scoring": {
+          "algorithm": "wildclawbench.dataset-tree-sha256/v1",
+          "entries": [
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "grader.py",
+              "sha256": "40796e4ccbd6f53f3adcb7ae6b4d282c106e45636f26a449253b121d008bc4f6",
+              "size": 8391
+            },
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "oracle.json",
+              "sha256": "1c5a79aa549d5230967bc0504f3c14c40dfe68c35ddd1c744f9f8e903a44dc40",
+              "size": 1939
+            },
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "reference.md",
+              "sha256": "bc08afcdbfdd3e2c7b40ecb1f7407bc197c772eebc1b5a8bb1cc38c66ac11d16",
+              "size": 388
+            }
+          ],
+          "root": "tasks/04_Legal_Contracts_task_005_comment_revision/private-scoring/gt",
+          "sha256": "5069a40b0ba262396037f5d0c64aa3d84642f79004262054be5259090b546b38"
+        }
+      },
+      "modality": "pure-text",
+      "name": "保留批注链的局部审查反馈更新",
+      "order": 20,
+      "source": {
+        "task_path": "tasks/legal/xiaofa/04_Legal_Contracts/04_Legal_Contracts_task_005_comment_revision.md",
+        "workspace_path": "workspace/legal/xiaofa/04_Legal_Contracts/04_Legal_Contracts_task_005_comment_revision"
+      },
+      "tags": [
+        "custom",
+        "xiaofa-legal"
+      ],
+      "task_id": "04_Legal_Contracts_task_005_comment_revision",
+      "timeout_seconds": 900
+    },
+    {
+      "bundle": {
+        "execution_contract_path": "tasks/05_Legal_Evidence_task_001_ecommerce_capture/execution/contract.json",
+        "scoring_contract_path": "tasks/05_Legal_Evidence_task_001_ecommerce_capture/private-scoring/contract.json",
+        "task_path": "tasks/05_Legal_Evidence_task_001_ecommerce_capture/task.md"
+      },
+      "category": "legal_evidence",
+      "difficulty": "L3",
+      "digests": {
+        "execution_contract_sha256": "f9de7eb0bec46d16aa3c6d898fe0ec6c267b34a0ba7d956a330d66e16f43e714",
+        "private_scoring_sha256": "e7504cbe14c66fa1fe52dc206a19e57a667d3a11de6d09689d121853fbcc4e53",
+        "prompt_sha256": "8f5b04a4e7acc69b03a720e5d1abc5cfffd599bd057782bce5763b4a8fa19225",
+        "scoring_contract_sha256": "27e2f865ab82c30f7d6f7fd62d2141ff90363550cd39e6fe1b0674d6477f1580",
+        "task_sha256": "b98ce92567ef83de79694f1c5d1e7e7ee1fbd06428386abcbbc44cecdfcd5374",
+        "workspace_exec_sha256": "d3dbfe0bf32b03571fd910cf07d5f695b574433fba5c7f2cd530e4d3731b3fb3"
+      },
+      "grading_type": "hybrid",
+      "grading_weights": {
+        "automated": 0.4,
+        "llm_judge": 0.6
+      },
+      "materials": {
+        "execution": {
+          "algorithm": "wildclawbench.dataset-tree-sha256/v1",
+          "entries": [
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "answer_schema.json",
+              "sha256": "b7cf2547ffd2c7ca666409f76c796ee643cc496d7be230e56df9b12996aa1455",
+              "size": 921
+            },
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "materials.md",
+              "sha256": "5f4cf9b5b1fc8c756e201d407d78e2a5885b3fc129f0b5bfd716c6a477812f9d",
+              "size": 516
+            },
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "page.html",
+              "sha256": "731421beaabda3e763d7366ebc25e1ec5e67cbb26b13f57322295cb22bb85436",
+              "size": 298
+            },
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "scan.png",
+              "sha256": "c552151474eb1d1fbc3e2c48e6f0ab7491d65175b2798bf2627d793bc87a7642",
+              "size": 42574
+            }
+          ],
+          "root": "tasks/05_Legal_Evidence_task_001_ecommerce_capture/execution/exec",
+          "sha256": "d3dbfe0bf32b03571fd910cf07d5f695b574433fba5c7f2cd530e4d3731b3fb3"
+        },
+        "private_scoring": {
+          "algorithm": "wildclawbench.dataset-tree-sha256/v1",
+          "entries": [
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "grader.py",
+              "sha256": "40796e4ccbd6f53f3adcb7ae6b4d282c106e45636f26a449253b121d008bc4f6",
+              "size": 8391
+            },
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "oracle.json",
+              "sha256": "edd207fce0b7e30c50b899501ef4ffb7454a479789cc8ae9743712dfba6940d9",
+              "size": 1919
+            },
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "reference.md",
+              "sha256": "c62109e2e6b5b7966a28af5c8ed221b6994db1a20fe689f04aa38c4097a8b754",
+              "size": 459
+            }
+          ],
+          "root": "tasks/05_Legal_Evidence_task_001_ecommerce_capture/private-scoring/gt",
+          "sha256": "e7504cbe14c66fa1fe52dc206a19e57a667d3a11de6d09689d121853fbcc4e53"
+        }
+      },
+      "modality": "multimodal",
+      "name": "电商页面取证与事实边界",
+      "order": 21,
+      "source": {
+        "task_path": "tasks/legal/xiaofa/05_Legal_Evidence/05_Legal_Evidence_task_001_ecommerce_capture.md",
+        "workspace_path": "workspace/legal/xiaofa/05_Legal_Evidence/05_Legal_Evidence_task_001_ecommerce_capture"
+      },
+      "tags": [
+        "custom",
+        "xiaofa-legal"
+      ],
+      "task_id": "05_Legal_Evidence_task_001_ecommerce_capture",
+      "timeout_seconds": 900
+    },
+    {
+      "bundle": {
+        "execution_contract_path": "tasks/05_Legal_Evidence_task_002_livestream_segments/execution/contract.json",
+        "scoring_contract_path": "tasks/05_Legal_Evidence_task_002_livestream_segments/private-scoring/contract.json",
+        "task_path": "tasks/05_Legal_Evidence_task_002_livestream_segments/task.md"
+      },
+      "category": "legal_evidence",
+      "difficulty": "L4",
+      "digests": {
+        "execution_contract_sha256": "945aa972619227630e2352e640d9a943eb002e3bc7784f20c08a716b2654dc44",
+        "private_scoring_sha256": "6116073cb225ec5c4a14e6a75702032afa66cfdd38786250c00b28c7987a12e2",
+        "prompt_sha256": "2899aeeab22dba0afdd72aaef5e5df842532229ee166bafc083efd1f8e53e7e3",
+        "scoring_contract_sha256": "effeb93de036a99f8d7b6d464d64936cecdb777ad5e900214afa10279037e18b",
+        "task_sha256": "11dee5fbd96c101a88b2f4add3d7431a3836464d0d65d5c475e0e43acc7d0210",
+        "workspace_exec_sha256": "2613eca8a3bd5a742ac581f4e90be64d4a35b6fe5425ec9e391788776c4bfa77"
+      },
+      "grading_type": "hybrid",
+      "grading_weights": {
+        "automated": 0.4,
+        "llm_judge": 0.6
+      },
+      "materials": {
+        "execution": {
+          "algorithm": "wildclawbench.dataset-tree-sha256/v1",
+          "entries": [
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "answer_schema.json",
+              "sha256": "1f1123781b54bed7f2e930cca7a61615a4a78d094a6c552e7252885c08235333",
+              "size": 837
+            },
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "materials.md",
+              "sha256": "02ee22e2c465f73f7cff8b3a5f50643f6d5b695210a420131cbba708f5b42ee4",
+              "size": 498
+            },
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "recording.mp4",
+              "sha256": "ad7ee0b6987b489a42956e5565379c8159ba70ab584ce04f5897d2dde2d348bd",
+              "size": 35177
+            }
+          ],
+          "root": "tasks/05_Legal_Evidence_task_002_livestream_segments/execution/exec",
+          "sha256": "2613eca8a3bd5a742ac581f4e90be64d4a35b6fe5425ec9e391788776c4bfa77"
+        },
+        "private_scoring": {
+          "algorithm": "wildclawbench.dataset-tree-sha256/v1",
+          "entries": [
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "grader.py",
+              "sha256": "40796e4ccbd6f53f3adcb7ae6b4d282c106e45636f26a449253b121d008bc4f6",
+              "size": 8391
+            },
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "oracle.json",
+              "sha256": "36932a0cfe2546da6c9cf17d634267312673efee689324b48710be562d704e76",
+              "size": 1743
+            },
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "reference.md",
+              "sha256": "742cdf17b3a9347b73966a78ebe9ca4436a85fecf5b357cf41659a9cae0b65d0",
+              "size": 434
+            }
+          ],
+          "root": "tasks/05_Legal_Evidence_task_002_livestream_segments/private-scoring/gt",
+          "sha256": "6116073cb225ec5c4a14e6a75702032afa66cfdd38786250c00b28c7987a12e2"
+        }
+      },
+      "modality": "multimodal",
+      "name": "直播录屏争议言论定位",
+      "order": 22,
+      "source": {
+        "task_path": "tasks/legal/xiaofa/05_Legal_Evidence/05_Legal_Evidence_task_002_livestream_segments.md",
+        "workspace_path": "workspace/legal/xiaofa/05_Legal_Evidence/05_Legal_Evidence_task_002_livestream_segments"
+      },
+      "tags": [
+        "custom",
+        "xiaofa-legal"
+      ],
+      "task_id": "05_Legal_Evidence_task_002_livestream_segments",
+      "timeout_seconds": 1200
+    },
+    {
+      "bundle": {
+        "execution_contract_path": "tasks/05_Legal_Evidence_task_003_chat_continuity/execution/contract.json",
+        "scoring_contract_path": "tasks/05_Legal_Evidence_task_003_chat_continuity/private-scoring/contract.json",
+        "task_path": "tasks/05_Legal_Evidence_task_003_chat_continuity/task.md"
+      },
+      "category": "legal_evidence",
+      "difficulty": "L4",
+      "digests": {
+        "execution_contract_sha256": "b5e35c63a688f0182976efe1b791b0c53dd5d426b54f8fafd28a2318fbab23d6",
+        "private_scoring_sha256": "4a3bfd7266cff2ad10df1e16771b1f7fce5dbe7eea47cd53552a2f7a2e9a0b11",
+        "prompt_sha256": "e89e2cbbcd0983ba24814126f49082ece9deb210187006cf75ceb9c5b517ef67",
+        "scoring_contract_sha256": "968a3079f27997dc19c4506535597be085eb6562c7a8cd03d46126a2bfdf3269",
+        "task_sha256": "edc20181c9b4d8ef849314fa2f4ea5bbb059777dc17391cd4f708a633d5d22f7",
+        "workspace_exec_sha256": "edfa4e81531a4f2756699d2cd53aa329678ab8497f10598c02c0957070b14a24"
+      },
+      "grading_type": "hybrid",
+      "grading_weights": {
+        "automated": 0.4,
+        "llm_judge": 0.6
+      },
+      "materials": {
+        "execution": {
+          "algorithm": "wildclawbench.dataset-tree-sha256/v1",
+          "entries": [
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "answer_schema.json",
+              "sha256": "2c22f672343e3456c3c649ffd48f8d8aea1d73dce8bb0a133989fefa9d63f095",
+              "size": 855
+            },
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "chat.mp4",
+              "sha256": "00f1997f83b168030e2486709d908359c327aecfbb94c0a1b560f92042051076",
+              "size": 52149
+            },
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "materials.md",
+              "sha256": "91f6bd7fb53906f05f355f582e2916839167088795679dc0541a72b8500a1995",
+              "size": 472
+            }
+          ],
+          "root": "tasks/05_Legal_Evidence_task_003_chat_continuity/execution/exec",
+          "sha256": "edfa4e81531a4f2756699d2cd53aa329678ab8497f10598c02c0957070b14a24"
+        },
+        "private_scoring": {
+          "algorithm": "wildclawbench.dataset-tree-sha256/v1",
+          "entries": [
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "grader.py",
+              "sha256": "40796e4ccbd6f53f3adcb7ae6b4d282c106e45636f26a449253b121d008bc4f6",
+              "size": 8391
+            },
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "oracle.json",
+              "sha256": "7e3c592c76943ef6084a1ddb437d38ad639f3852624a251ee0ebd3022fd372c3",
+              "size": 1726
+            },
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "reference.md",
+              "sha256": "f51dc18bcea5356ba845b795d13d358ff7a264a3b6eebb790383a07807734131",
+              "size": 428
+            }
+          ],
+          "root": "tasks/05_Legal_Evidence_task_003_chat_continuity/private-scoring/gt",
+          "sha256": "4a3bfd7266cff2ad10df1e16771b1f7fce5dbe7eea47cd53552a2f7a2e9a0b11"
+        }
+      },
+      "modality": "multimodal",
+      "name": "聊天录屏中的完整语境与反证",
+      "order": 23,
+      "source": {
+        "task_path": "tasks/legal/xiaofa/05_Legal_Evidence/05_Legal_Evidence_task_003_chat_continuity.md",
+        "workspace_path": "workspace/legal/xiaofa/05_Legal_Evidence/05_Legal_Evidence_task_003_chat_continuity"
+      },
+      "tags": [
+        "custom",
+        "xiaofa-legal"
+      ],
+      "task_id": "05_Legal_Evidence_task_003_chat_continuity",
+      "timeout_seconds": 1200
+    },
+    {
+      "bundle": {
+        "execution_contract_path": "tasks/05_Legal_Evidence_task_004_qr_source/execution/contract.json",
+        "scoring_contract_path": "tasks/05_Legal_Evidence_task_004_qr_source/private-scoring/contract.json",
+        "task_path": "tasks/05_Legal_Evidence_task_004_qr_source/task.md"
+      },
+      "category": "legal_evidence",
+      "difficulty": "L3",
+      "digests": {
+        "execution_contract_sha256": "f46a8edfe387461d2f1924e43479d9ed36902fc33a66943c2de890b28304a1a1",
+        "private_scoring_sha256": "5290e18e882f856cec82930be97413588aa1e751f0dd269e1fa57de1a52883a7",
+        "prompt_sha256": "b3d3c6b7f7fb1f24d14d2661901bc49d7973e10ba9716c4bbae2e8afa4e45d09",
+        "scoring_contract_sha256": "ae93aee7855058b7f9b68d9dcb469bd7d108b35dc81971db8ee5905d78ca5be4",
+        "task_sha256": "d853c3c4cb03ebf70c5411fb85110588106b03b5aea13c1f0b843d3c566e3b0b",
+        "workspace_exec_sha256": "a357ed90da4cdef02c11a32f20ef5bdcbd3660ea3767dbdea7d1fdb0deb76878"
+      },
+      "grading_type": "hybrid",
+      "grading_weights": {
+        "automated": 0.4,
+        "llm_judge": 0.6
+      },
+      "materials": {
+        "execution": {
+          "algorithm": "wildclawbench.dataset-tree-sha256/v1",
+          "entries": [
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "answer_schema.json",
+              "sha256": "77ce97d7c8cde13fcde8157b82395f4f7264823358a4014eb70de72226ece6c0",
+              "size": 829
+            },
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "authorized_page.html",
+              "sha256": "ef25778af499f2312c971fe640cc65bc73321ce2920f03e2c60c888852220759",
+              "size": 135
+            },
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "materials.md",
+              "sha256": "e601862d68a50a7ac12328dcb94ed247b9112d6d7e0446eb58104098cf5a16b8",
+              "size": 479
+            },
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "qr_A.png",
+              "sha256": "3e157b5cc2a9c4b0b9a51126a933e5ec87de8cb7b13f17f05171e974babe6897",
+              "size": 773
+            },
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "qr_B.png",
+              "sha256": "17c58419a9625037e1d4994ff96975cb12dc1ebd31fbe40a44f1f89ff883e897",
+              "size": 753
+            }
+          ],
+          "root": "tasks/05_Legal_Evidence_task_004_qr_source/execution/exec",
+          "sha256": "a357ed90da4cdef02c11a32f20ef5bdcbd3660ea3767dbdea7d1fdb0deb76878"
+        },
+        "private_scoring": {
+          "algorithm": "wildclawbench.dataset-tree-sha256/v1",
+          "entries": [
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "grader.py",
+              "sha256": "40796e4ccbd6f53f3adcb7ae6b4d282c106e45636f26a449253b121d008bc4f6",
+              "size": 8391
+            },
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "oracle.json",
+              "sha256": "51c6797ed968ddea896666cdf06e3417666f5c250fe006a8d3262fc2da20e859",
+              "size": 1870
+            },
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "reference.md",
+              "sha256": "430f8d8ef5f6b5df3a6eae25c273c1c7d0b49312c265205fd63d4efcaf590b12",
+              "size": 428
+            }
+          ],
+          "root": "tasks/05_Legal_Evidence_task_004_qr_source/private-scoring/gt",
+          "sha256": "5290e18e882f856cec82930be97413588aa1e751f0dd269e1fa57de1a52883a7"
+        }
+      },
+      "modality": "multimodal",
+      "name": "二维码取证入口解析与域名校验",
+      "order": 24,
+      "source": {
+        "task_path": "tasks/legal/xiaofa/05_Legal_Evidence/05_Legal_Evidence_task_004_qr_source.md",
+        "workspace_path": "workspace/legal/xiaofa/05_Legal_Evidence/05_Legal_Evidence_task_004_qr_source"
+      },
+      "tags": [
+        "custom",
+        "xiaofa-legal"
+      ],
+      "task_id": "05_Legal_Evidence_task_004_qr_source",
+      "timeout_seconds": 900
+    },
+    {
+      "bundle": {
+        "execution_contract_path": "tasks/05_Legal_Evidence_task_005_custody_manifest/execution/contract.json",
+        "scoring_contract_path": "tasks/05_Legal_Evidence_task_005_custody_manifest/private-scoring/contract.json",
+        "task_path": "tasks/05_Legal_Evidence_task_005_custody_manifest/task.md"
+      },
+      "category": "legal_evidence",
+      "difficulty": "L2",
+      "digests": {
+        "execution_contract_sha256": "56ab7fe19e95c6193cc30d73b208bec7cd36dea8d9a107fcce3347e2ac74f210",
+        "private_scoring_sha256": "ee88225aed6612b09a9e2fa9eec9144f9e54efc94709bda489373b5bdae11552",
+        "prompt_sha256": "9abde6f94db11d28b46698249d0af2c516c88b7a42e9765a208a5e1c79e42b8a",
+        "scoring_contract_sha256": "4e626e5ad01c46fd87fa618474a886d620fac861eb0198f456953fb4c2430d20",
+        "task_sha256": "2ad8958f16fa53d9b8ea6ecc83c23d8d8a27e5df7553bd36d1342983fc46ca70",
+        "workspace_exec_sha256": "882abfd7de272a611db3203c2f9c3285e3f963d1ad181758763ab6b3842d51f9"
+      },
+      "grading_type": "hybrid",
+      "grading_weights": {
+        "automated": 0.4,
+        "llm_judge": 0.6
+      },
+      "materials": {
+        "execution": {
+          "algorithm": "wildclawbench.dataset-tree-sha256/v1",
+          "entries": [
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "answer_schema.json",
+              "sha256": "96b849cdfd0e3dd25af46a03a71285d146ae566ae3c3c2980fb35f9d7a6bc29c",
+              "size": 855
+            },
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "chat.json",
+              "sha256": "d98578c728fe1c58f2b623891d37ac8dda72234dd1bf5767d9fffd050c8e058f",
+              "size": 107
+            },
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "crop.png",
+              "sha256": "e39b1388303fa02eccb660ca37d2e2c91735089f7b7f1ad405c3f49196cc377b",
+              "size": 31125
+            },
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "mail.eml",
+              "sha256": "5e7353b4f583ae9b766c8313d269c3d212c0fbd89b295dcd1648d7736a26f640",
+              "size": 121
+            },
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "materials.md",
+              "sha256": "a7e06dd1fd8a0f79da2779279f505248b7c1d6d2d59687458c0f3f0b6d60ccb5",
+              "size": 490
+            }
+          ],
+          "root": "tasks/05_Legal_Evidence_task_005_custody_manifest/execution/exec",
+          "sha256": "882abfd7de272a611db3203c2f9c3285e3f963d1ad181758763ab6b3842d51f9"
+        },
+        "private_scoring": {
+          "algorithm": "wildclawbench.dataset-tree-sha256/v1",
+          "entries": [
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "grader.py",
+              "sha256": "40796e4ccbd6f53f3adcb7ae6b4d282c106e45636f26a449253b121d008bc4f6",
+              "size": 8391
+            },
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "oracle.json",
+              "sha256": "ca96c6dd545ef94ac3b3f6650e4db6cae0f60400d13d1c79d901fb6c8848f6db",
+              "size": 1916
+            },
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "reference.md",
+              "sha256": "98a2ddf62e58c01e01f9f151fced8ec016d4808dc99419c3f92895055558ae87",
+              "size": 446
+            }
+          ],
+          "root": "tasks/05_Legal_Evidence_task_005_custody_manifest/private-scoring/gt",
+          "sha256": "ee88225aed6612b09a9e2fa9eec9144f9e54efc94709bda489373b5bdae11552"
+        }
+      },
+      "modality": "multimodal",
+      "name": "电子材料原件与衍生件证据链",
+      "order": 25,
+      "source": {
+        "task_path": "tasks/legal/xiaofa/05_Legal_Evidence/05_Legal_Evidence_task_005_custody_manifest.md",
+        "workspace_path": "workspace/legal/xiaofa/05_Legal_Evidence/05_Legal_Evidence_task_005_custody_manifest"
+      },
+      "tags": [
+        "custom",
+        "xiaofa-legal"
+      ],
+      "task_id": "05_Legal_Evidence_task_005_custody_manifest",
+      "timeout_seconds": 900
+    },
+    {
+      "bundle": {
+        "execution_contract_path": "tasks/06_Legal_Delivery_task_001_court_download/execution/contract.json",
+        "scoring_contract_path": "tasks/06_Legal_Delivery_task_001_court_download/private-scoring/contract.json",
+        "task_path": "tasks/06_Legal_Delivery_task_001_court_download/task.md"
+      },
+      "category": "legal_delivery",
+      "difficulty": "L2",
+      "digests": {
+        "execution_contract_sha256": "7bfff9898f681df87b1827b4d4cb6a6aafdf7f3d58315d2a987576e9b82cbe55",
+        "private_scoring_sha256": "f61dadf834fafac97a51f4565f22b7ef6653b25a5a69bbda17a81d78f35f45ab",
+        "prompt_sha256": "3c5e62ae223a0428c0c11ff4efa944f0480b1da44bf9e07cfc6da7dda6ae095c",
+        "scoring_contract_sha256": "a8a0844c9a9260605a17cc38e5f6b74e9ff489cdfaac39d9b7751b01e336db4a",
+        "task_sha256": "4a6e6144c33898d7af5802488dc5f5707ad4e06888cd40ad84841d380d12792c",
+        "workspace_exec_sha256": "a5666c362e1de7bf4efac3536261f0fe0fc6f062a095f483f12983ef6f58837d"
+      },
+      "grading_type": "hybrid",
+      "grading_weights": {
+        "automated": 0.4,
+        "llm_judge": 0.6
+      },
+      "materials": {
+        "execution": {
+          "algorithm": "wildclawbench.dataset-tree-sha256/v1",
+          "entries": [
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "answer_schema.json",
+              "sha256": "405435595ea69fe6a324103d59fc8e0b06bf96e73bbf9ed3e7e3ec3b2860685d",
+              "size": 824
+            },
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "materials.md",
+              "sha256": "f171772080abb734fb7d50733fe0af4d7a7d6a6a0096e519bcb0be21b8455670",
+              "size": 675
+            },
+            {
+              "kind": "directory",
+              "mode": "0755",
+              "path": "portal"
+            },
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "portal/A.pdf",
+              "sha256": "9fca89c37353823ad63ed43619ba60730e1aeb323fba38bf63c6485e28f43c64",
+              "size": 2470
+            },
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "portal/B.pdf",
+              "sha256": "3b863a8fb7dd624cd1d19de00c83d99e046a7d78458319ebb5cf982dc71f30d6",
+              "size": 2484
+            },
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "portal/C.pdf",
+              "sha256": "e619decb2c41394c27068b05031d75e02b7cbcb2a99ef2d260c3ac86732e792c",
+              "size": 2481
+            },
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "portal.json",
+              "sha256": "3cdf55982104d0c9406c9ff83912692ba2f2d610295d309bcb83485cd6cf78d0",
+              "size": 557
+            }
+          ],
+          "root": "tasks/06_Legal_Delivery_task_001_court_download/execution/exec",
+          "sha256": "a5666c362e1de7bf4efac3536261f0fe0fc6f062a095f483f12983ef6f58837d"
+        },
+        "private_scoring": {
+          "algorithm": "wildclawbench.dataset-tree-sha256/v1",
+          "entries": [
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "grader.py",
+              "sha256": "40796e4ccbd6f53f3adcb7ae6b4d282c106e45636f26a449253b121d008bc4f6",
+              "size": 8391
+            },
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "oracle.json",
+              "sha256": "9757dbb59283b064d3de78fdcc47ed875200900a3f06a6937a998936e0082e52",
+              "size": 1960
+            },
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "reference.md",
+              "sha256": "33cb56aa3978f120cb5b8a6376b7cc92415d08f57453dcbf9b9622c1a35dbe2b",
+              "size": 406
+            }
+          ],
+          "root": "tasks/06_Legal_Delivery_task_001_court_download/private-scoring/gt",
+          "sha256": "f61dadf834fafac97a51f4565f22b7ef6653b25a5a69bbda17a81d78f35f45ab"
+        }
+      },
+      "modality": "pure-text",
+      "name": "法院短信批量领取与权限边界",
+      "order": 26,
+      "source": {
+        "task_path": "tasks/legal/xiaofa/06_Legal_Delivery/06_Legal_Delivery_task_001_court_download.md",
+        "workspace_path": "workspace/legal/xiaofa/06_Legal_Delivery/06_Legal_Delivery_task_001_court_download"
+      },
+      "tags": [
+        "custom",
+        "xiaofa-legal"
+      ],
+      "task_id": "06_Legal_Delivery_task_001_court_download",
+      "timeout_seconds": 900
+    },
+    {
+      "bundle": {
+        "execution_contract_path": "tasks/06_Legal_Delivery_task_002_handoff_archive/execution/contract.json",
+        "scoring_contract_path": "tasks/06_Legal_Delivery_task_002_handoff_archive/private-scoring/contract.json",
+        "task_path": "tasks/06_Legal_Delivery_task_002_handoff_archive/task.md"
+      },
+      "category": "legal_delivery",
+      "difficulty": "L2",
+      "digests": {
+        "execution_contract_sha256": "4d308ebd497a0f54d36e1f2a9d62db5f60036b81b74645907b20e635a86b35d8",
+        "private_scoring_sha256": "b631d8d40e31c447b61621cdd206771f3239d65d175247e1848849c293cb10fe",
+        "prompt_sha256": "b8561866278172f930ee4cb732a3c2cab0eba148656a7ccff1813d05bd5c851b",
+        "scoring_contract_sha256": "ba50011a15101bf7445dd089d77201d0fdbc0fcfc466c1139bc02af7f1216825",
+        "task_sha256": "9e83b42aaeb1ad8e9550874c116b01568f669524f59dc7ce836ed3066581b69b",
+        "workspace_exec_sha256": "b37922aad483dbf5d18dda9ee4f199bc428d28f62f63dbe118df7cdf45ea03ff"
+      },
+      "grading_type": "hybrid",
+      "grading_weights": {
+        "automated": 0.4,
+        "llm_judge": 0.6
+      },
+      "materials": {
+        "execution": {
+          "algorithm": "wildclawbench.dataset-tree-sha256/v1",
+          "entries": [
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "answer_schema.json",
+              "sha256": "f53e72eaa98b9524568090a6077b05385b50b7fbe4ee32b7d3651b27139460c2",
+              "size": 875
+            },
+            {
+              "kind": "directory",
+              "mode": "0755",
+              "path": "incoming"
+            },
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "incoming/note.txt",
+              "sha256": "bbce87893916db95fa043e893328b2f434ad8f957d3708ad9601b8a670d0be01",
+              "size": 45
+            },
+            {
+              "kind": "directory",
+              "mode": "0755",
+              "path": "incoming/source1"
+            },
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "incoming/source1/合同.txt",
+              "sha256": "e386206568eb889da86fc909fea9b7e1b1c6aa8b5441a07aacdcae23ae193ca2",
+              "size": 52
+            },
+            {
+              "kind": "directory",
+              "mode": "0755",
+              "path": "incoming/source2"
+            },
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "incoming/source2/合同.txt",
+              "sha256": "3b99c676354d05dfe024aae686d64abed287991a7d731560ce580c97eee4bab0",
+              "size": 52
+            },
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "materials.md",
+              "sha256": "2c4df41e9615852116d4e06ec4635303c48dabe3b0200e43473873c48dba983b",
+              "size": 624
+            }
+          ],
+          "root": "tasks/06_Legal_Delivery_task_002_handoff_archive/execution/exec",
+          "sha256": "b37922aad483dbf5d18dda9ee4f199bc428d28f62f63dbe118df7cdf45ea03ff"
+        },
+        "private_scoring": {
+          "algorithm": "wildclawbench.dataset-tree-sha256/v1",
+          "entries": [
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "grader.py",
+              "sha256": "40796e4ccbd6f53f3adcb7ae6b4d282c106e45636f26a449253b121d008bc4f6",
+              "size": 8391
+            },
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "oracle.json",
+              "sha256": "0f90aac7c94fcbdbe59d8d79e77ab559ec7b51d15543ded7b4de8355d5309b98",
+              "size": 1956
+            },
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "reference.md",
+              "sha256": "ac5789c85bac2f8ddb9deeb11cc998cc069755ae53d34524066354cb943ced05",
+              "size": 381
+            }
+          ],
+          "root": "tasks/06_Legal_Delivery_task_002_handoff_archive/private-scoring/gt",
+          "sha256": "b631d8d40e31c447b61621cdd206771f3239d65d175247e1848849c293cb10fe"
+        }
+      },
+      "modality": "pure-text",
+      "name": "跨案件材料交接与检索索引",
+      "order": 27,
+      "source": {
+        "task_path": "tasks/legal/xiaofa/06_Legal_Delivery/06_Legal_Delivery_task_002_handoff_archive.md",
+        "workspace_path": "workspace/legal/xiaofa/06_Legal_Delivery/06_Legal_Delivery_task_002_handoff_archive"
+      },
+      "tags": [
+        "custom",
+        "xiaofa-legal"
+      ],
+      "task_id": "06_Legal_Delivery_task_002_handoff_archive",
+      "timeout_seconds": 900
+    },
+    {
+      "bundle": {
+        "execution_contract_path": "tasks/06_Legal_Delivery_task_003_redacted_handoff/execution/contract.json",
+        "scoring_contract_path": "tasks/06_Legal_Delivery_task_003_redacted_handoff/private-scoring/contract.json",
+        "task_path": "tasks/06_Legal_Delivery_task_003_redacted_handoff/task.md"
+      },
+      "category": "legal_delivery",
+      "difficulty": "L4",
+      "digests": {
+        "execution_contract_sha256": "664479b187f6994a282d12534e0de0a578530229acbff46f451b880e1b9aa52f",
+        "private_scoring_sha256": "a7e71e4a69ef22c0486c931d8ac61eea84b4968368031bbda9f6d0e7386ca4bc",
+        "prompt_sha256": "2fb9dbf21a12fd23073411584b2a0f0e89717eb0297cdc67def305700178da59",
+        "scoring_contract_sha256": "9ffebacc8f96529d6eb11294340fbf8d6e225f52d73e6cc68d2bfeb59a3c5bc8",
+        "task_sha256": "f75a6dd2129c184085a56432ce6ce4287e1032064dc29adee382f72eda626b87",
+        "workspace_exec_sha256": "b3d2b0767447a69342d6738a8f99b73680dc89c9a45d45d5e746b5e6efe8e146"
+      },
+      "grading_type": "hybrid",
+      "grading_weights": {
+        "automated": 0.4,
+        "llm_judge": 0.6
+      },
+      "materials": {
+        "execution": {
+          "algorithm": "wildclawbench.dataset-tree-sha256/v1",
+          "entries": [
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "answer_schema.json",
+              "sha256": "cec778776bbc8a22160f3209918f0535945c313fbfe2598184e8d5ece95503ee",
+              "size": 824
+            },
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "materials.md",
+              "sha256": "d91cdbb12510a9aa1e444ea5095a65a6bb6de6cdade456c515efdee4ae6f8c40",
+              "size": 556
+            },
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "private.docx",
+              "sha256": "58b70e7799649b594748745bd3c0c286067659cc8cfbb6afa76f70c4e60629d6",
+              "size": 36958
+            },
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "scan.png",
+              "sha256": "4a6c653423e7bbe7620ad9b1249d3c1babbb46b9135612270f5063b5e49b151e",
+              "size": 70881
+            }
+          ],
+          "root": "tasks/06_Legal_Delivery_task_003_redacted_handoff/execution/exec",
+          "sha256": "b3d2b0767447a69342d6738a8f99b73680dc89c9a45d45d5e746b5e6efe8e146"
+        },
+        "private_scoring": {
+          "algorithm": "wildclawbench.dataset-tree-sha256/v1",
+          "entries": [
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "grader.py",
+              "sha256": "40796e4ccbd6f53f3adcb7ae6b4d282c106e45636f26a449253b121d008bc4f6",
+              "size": 8391
+            },
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "oracle.json",
+              "sha256": "051763a885e31622c53a56af5947f8a69d3bc47a6a98d6918152c56477124fde",
+              "size": 2077
+            },
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "reference.md",
+              "sha256": "e3549b3f99535f1de536364332a8fcb933bea363723097474f813f42c43d9380",
+              "size": 443
+            }
+          ],
+          "root": "tasks/06_Legal_Delivery_task_003_redacted_handoff/private-scoring/gt",
+          "sha256": "a7e71e4a69ef22c0486c931d8ac61eea84b4968368031bbda9f6d0e7386ca4bc"
+        }
+      },
+      "modality": "multimodal",
+      "name": "对外协作材料脱敏与嵌入指令隔离",
+      "order": 28,
+      "source": {
+        "task_path": "tasks/legal/xiaofa/06_Legal_Delivery/06_Legal_Delivery_task_003_redacted_handoff.md",
+        "workspace_path": "workspace/legal/xiaofa/06_Legal_Delivery/06_Legal_Delivery_task_003_redacted_handoff"
+      },
+      "tags": [
+        "custom",
+        "xiaofa-legal"
+      ],
+      "task_id": "06_Legal_Delivery_task_003_redacted_handoff",
+      "timeout_seconds": 1200
+    },
+    {
+      "bundle": {
+        "execution_contract_path": "tasks/06_Legal_Delivery_task_004_efficiency_accounting/execution/contract.json",
+        "scoring_contract_path": "tasks/06_Legal_Delivery_task_004_efficiency_accounting/private-scoring/contract.json",
+        "task_path": "tasks/06_Legal_Delivery_task_004_efficiency_accounting/task.md"
+      },
+      "category": "legal_delivery",
+      "difficulty": "L2",
+      "digests": {
+        "execution_contract_sha256": "ab59b9758a6c9086ad2c002cd32dc393b2ad9ff3b9ce3c50161041c22f60ffdd",
+        "private_scoring_sha256": "1678a6be567c05c7c1fbc1201843e2045d10fcfa6d2c9513ed2a2c538cf94176",
+        "prompt_sha256": "ce3aee6b162b62a452ca54739a2e5b0f0006f1c8330163936bbcf50362d53952",
+        "scoring_contract_sha256": "ba5a090f8ba400836e9a4110ff34453a2dad5273cb7455df83554cc389c90e6a",
+        "task_sha256": "b4dc33464627174956a2fb38908b7d437b4c41dd9ffc70011f58dbe621f4830f",
+        "workspace_exec_sha256": "6e36d2ff9bbe5b0b0ff9730feed09c88e1b9fa2801704d97e97073b7346a36c6"
+      },
+      "grading_type": "hybrid",
+      "grading_weights": {
+        "automated": 0.4,
+        "llm_judge": 0.6
+      },
+      "materials": {
+        "execution": {
+          "algorithm": "wildclawbench.dataset-tree-sha256/v1",
+          "entries": [
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "answer_schema.json",
+              "sha256": "55ab53c13753103b66fe3d100ed16b94d9f9ebe58513ef991df20cc5a3500852",
+              "size": 1119
+            },
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "materials.md",
+              "sha256": "16f56e23a9e5ccfa0bab058460bc9f63ce82f6e0c9823c06bc47c7d3f87164d6",
+              "size": 827
+            }
+          ],
+          "root": "tasks/06_Legal_Delivery_task_004_efficiency_accounting/execution/exec",
+          "sha256": "6e36d2ff9bbe5b0b0ff9730feed09c88e1b9fa2801704d97e97073b7346a36c6"
+        },
+        "private_scoring": {
+          "algorithm": "wildclawbench.dataset-tree-sha256/v1",
+          "entries": [
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "grader.py",
+              "sha256": "40796e4ccbd6f53f3adcb7ae6b4d282c106e45636f26a449253b121d008bc4f6",
+              "size": 8391
+            },
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "oracle.json",
+              "sha256": "fb80fb5f5a539b1e1274c921a61d12b819ec6e2bb79fa0c0b1c9cf8e8b8b6dc6",
+              "size": 1834
+            },
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "reference.md",
+              "sha256": "4a4a4933c7eab104ca1e2f86e1d09de7a7ddb48ee0b109565fe11f8fc162d0e2",
+              "size": 440
+            }
+          ],
+          "root": "tasks/06_Legal_Delivery_task_004_efficiency_accounting/private-scoring/gt",
+          "sha256": "1678a6be567c05c7c1fbc1201843e2045d10fcfa6d2c9513ed2a2c538cf94176"
+        }
+      },
+      "modality": "pure-text",
+      "name": "人工复核计入后的效率与费用核算",
+      "order": 29,
+      "source": {
+        "task_path": "tasks/legal/xiaofa/06_Legal_Delivery/06_Legal_Delivery_task_004_efficiency_accounting.md",
+        "workspace_path": "workspace/legal/xiaofa/06_Legal_Delivery/06_Legal_Delivery_task_004_efficiency_accounting"
+      },
+      "tags": [
+        "custom",
+        "xiaofa-legal"
+      ],
+      "task_id": "06_Legal_Delivery_task_004_efficiency_accounting",
+      "timeout_seconds": 900
+    },
+    {
+      "bundle": {
+        "execution_contract_path": "tasks/06_Legal_Delivery_task_005_source_bound_brief/execution/contract.json",
+        "scoring_contract_path": "tasks/06_Legal_Delivery_task_005_source_bound_brief/private-scoring/contract.json",
+        "task_path": "tasks/06_Legal_Delivery_task_005_source_bound_brief/task.md"
+      },
+      "category": "legal_delivery",
+      "difficulty": "L2",
+      "digests": {
+        "execution_contract_sha256": "97e05435ee7556aa860f5c928454dbd4cb495d451a7d7097eb6aeb053c4932de",
+        "private_scoring_sha256": "0d5e479aad54922e5c4c1de0ba6bb51ffe1525bf46768ee8d2a0261a74ee8eb0",
+        "prompt_sha256": "9f2939d5312a78bc13cae7814326e0b0b9e203188d8d4d6733a49910d3d52ca4",
+        "scoring_contract_sha256": "68ff581581120624f0294e657e10887bf335dd4218d6d3671a9ba90b4da13bff",
+        "task_sha256": "aaa29529ecb9bcfb62dbce6b5ac7b8f3db9b04eaea8671b1fa3c8b1d34fb29a2",
+        "workspace_exec_sha256": "0be82b01bb12d762c14d42e7a9f17c5199b995d4743db86341d7a1cadc310725"
+      },
+      "grading_type": "hybrid",
+      "grading_weights": {
+        "automated": 0.4,
+        "llm_judge": 0.6
+      },
+      "materials": {
+        "execution": {
+          "algorithm": "wildclawbench.dataset-tree-sha256/v1",
+          "entries": [
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "answer_schema.json",
+              "sha256": "9b3df722e9413605e1cff3d03f8b5ce7178b8dd73be4eea76a5c25ca3dc723e9",
+              "size": 974
+            },
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "draft.docx",
+              "sha256": "a5fbcca6b2472d1fdce0fc87bc1b35f215f5d7c3bf5a6cdd38a6d7092d61ca06",
+              "size": 36986
+            },
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "materials.md",
+              "sha256": "32b6e4d372ebf3ddff6c5ebd5a7952c1a6b2d706dcb03008b326d209f6f5e8dd",
+              "size": 755
+            }
+          ],
+          "root": "tasks/06_Legal_Delivery_task_005_source_bound_brief/execution/exec",
+          "sha256": "0be82b01bb12d762c14d42e7a9f17c5199b995d4743db86341d7a1cadc310725"
+        },
+        "private_scoring": {
+          "algorithm": "wildclawbench.dataset-tree-sha256/v1",
+          "entries": [
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "grader.py",
+              "sha256": "40796e4ccbd6f53f3adcb7ae6b4d282c106e45636f26a449253b121d008bc4f6",
+              "size": 8391
+            },
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "oracle.json",
+              "sha256": "31778ecf6f68475c5efaa6452a26e855a44532f16cb9c8de942af5a95da4fb03",
+              "size": 1809
+            },
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "reference.md",
+              "sha256": "18b1211690860ab08da525e54c3cef4744a6bc5b44dcac8d3bbe4395c5984299",
+              "size": 474
+            }
+          ],
+          "root": "tasks/06_Legal_Delivery_task_005_source_bound_brief/private-scoring/gt",
+          "sha256": "0d5e479aad54922e5c4c1de0ba6bb51ffe1525bf46768ee8d2a0261a74ee8eb0"
+        }
+      },
+      "modality": "pure-text",
+      "name": "法律产品试点复盘正式汇报稿",
+      "order": 30,
+      "source": {
+        "task_path": "tasks/legal/xiaofa/06_Legal_Delivery/06_Legal_Delivery_task_005_source_bound_brief.md",
+        "workspace_path": "workspace/legal/xiaofa/06_Legal_Delivery/06_Legal_Delivery_task_005_source_bound_brief"
+      },
+      "tags": [
+        "custom",
+        "xiaofa-legal"
+      ],
+      "task_id": "06_Legal_Delivery_task_005_source_bound_brief",
+      "timeout_seconds": 900
+    }
+  ]
+}

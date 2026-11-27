@@ -1,0 +1,11 @@
+{
+  "status": "passed",
+  "dataset_id": "xiaofa-legal30-v1",
+  "task_count": 30,
+  "dataset_digest": "aef6b95c0d6b84a0bfbb3cd96f7cb6c412b5eda38b1ee1a8effcdab3340b9045",
+  "bundle_sha256": "5ead9be73e49e71965345b96372a779a26aa0ed25bd6a0980f14971e4eabee2c",
+  "source_revision": "sha256:55e2af87e2e1260ec88686456771215ba75a1eb06f898cf69d55f2687a916568",
+  "execution_file_count": 133,
+  "private_scoring_file_count": 120,
+  "execution_contains_private_gt": false
+}
