@@ -219,7 +219,7 @@ def score_one(batch: Path, item: dict, manifest: dict, config: dict, root: Path,
         return _result_row(item, state, work)
     if state.get('phase') == 'completed' and state.get('container_released'):
         verify_ready(batch, item, manifest)
-        if digest(inventory(work / 'context')) != state['source_context_sha256'] or digest(inventory(work / 'skills')) != state['skills_sha256']:
+        if digest(inventory(work / 'context', allow_symlinks=True)) != state['source_context_sha256'] or digest(inventory(work / 'skills')) != state['skills_sha256']:
             raise E2EError('SCORING_SOURCE_CONTEXT_DRIFT')
         _check_files(work, state['immutable'])
         result = _result_row(item, state, work)
@@ -258,10 +258,10 @@ def score_one(batch: Path, item: dict, manifest: dict, config: dict, root: Path,
             request = {**config, 'task_id': item['task_id'], 'scene': 'general',
                        'scoring_attempt_id': 'headless-' + job_id[-32:]}
             atomic_json(work / 'request.json', request, create=True)
-            state['source_context_sha256'] = digest(inventory(work / 'context'))
+            state['source_context_sha256'] = digest(inventory(work / 'context', allow_symlinks=True))
             state['skills_sha256'] = digest(inventory(work / 'skills'))
             atomic_json(state_file, state)
-        if digest(inventory(work / 'context')) != state['source_context_sha256'] or digest(inventory(work / 'skills')) != state['skills_sha256']:
+        if digest(inventory(work / 'context', allow_symlinks=True)) != state['source_context_sha256'] or digest(inventory(work / 'skills')) != state['skills_sha256']:
             raise E2EError('SCORING_SOURCE_CONTEXT_DRIFT')
         if not state.get('worker_completed'):
             info = owned(config, name, job_id)

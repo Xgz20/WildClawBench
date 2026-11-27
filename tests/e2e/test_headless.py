@@ -8,10 +8,10 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
-from src.e2e.common import E2EError, file_sha256
+from src.e2e.common import E2EError, file_sha256, digest
 from src.e2e.headless import normalize_config, inspect_container, owned, _private_environment, _check_files, _result_row
 from src.e2e.headless import _admit_immutable_inputs, score_one
-from src.e2e.artifacts import remove_temporary_tree
+from src.e2e.artifacts import remove_temporary_tree, inventory
 
 
 class HeadlessContractTests(unittest.TestCase):
@@ -93,6 +93,40 @@ class HeadlessContractTests(unittest.TestCase):
                 self.assertIsNone(result['total_score'])
                 self.assertEqual(score_one(*args), result)
                 docker.assert_not_called()
+
+    def test_context_keeps_relative_links_and_rejects_link_target_drift(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / 'batch').mkdir()
+            item = {'key': 'k', 'task_id': 't', 'unit_id': 'u', 'run_index': 1,
+                    'attempt_id': 'original', 'phase': 'COMPLETED', 'execution_root': 'execution'}
+            def materialize(batch, key, target, **kwargs):
+                (target / 'workspace/cache').mkdir(parents=True)
+                (target / 'workspace/guard.txt').write_text('sealed original')
+                (target / 'workspace/other.txt').write_text('other original')
+                (target / 'workspace/cache/link').symlink_to('../guard.txt')
+                (target / 'installed').mkdir()
+                (target / 'installed/skill.txt').write_text('frozen skill')
+                (target / 'handoff.json').write_text('{}')
+                return {'installed_skills': str(target / 'installed')}
+            args = (root / 'batch', item, {'tasks': [{'task_id': 't', 'scene': 'general'}]},
+                    self.config(), root / 'job', 'job', 'synthetic-key')
+            with patch('src.e2e.headless.verify_ready'), patch('src.e2e.headless.BatchStore') as store, \
+                 patch('src.e2e.headless.export_scoring_context', side_effect=materialize), \
+                 patch('src.e2e.headless.owned', return_value=None), \
+                 patch('src.e2e.headless.docker', side_effect=E2EError('FIXTURE_STOP_BEFORE_CREATE')):
+                store.return_value.scoring_rows.return_value = []
+                result = score_one(*args)
+                self.assertEqual(result['error'], 'FIXTURE_STOP_BEFORE_CREATE')
+                context = root / 'job/work/context'
+                link = context / 'workspace/cache/link'
+                self.assertTrue(link.is_symlink())
+                state = json.loads((root / 'job/control/state.json').read_text())
+                self.assertEqual(state['source_context_sha256'], digest(inventory(context, allow_symlinks=True)))
+                link.unlink();link.symlink_to('../other.txt')
+                self.assertEqual(score_one(*args)['error'], 'SCORING_SOURCE_CONTEXT_DRIFT')
+                link.unlink();link.symlink_to('../../../../outside')
+                self.assertIn('WORKSPACE_LINK_TARGET_OUTSIDE', score_one(*args)['error'])
 
     def test_explicit_score_skill_freezes_complete_inventory_and_rejects_drift(self):
         with tempfile.TemporaryDirectory() as directory:

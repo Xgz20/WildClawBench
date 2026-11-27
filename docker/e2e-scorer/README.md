@@ -23,7 +23,7 @@ Office 能力由 native-office.Dockerfile 单独提供；正式评分仍执行�
 bash docker/e2e-scorer/build.sh
 ```
 
-最终标签 `wildclawbench-e2e-scorer:codex-0.171.0-office-v1`；中间标签追加
+最终标签 `wildclawbench-e2e-scorer:codex-0.171.0-office-v2`；中间标签追加
 `-runtime`。原执行镜像不变。`--tag` 可指定新发行标签，CLI 版本可用
 `--codex-version` / `--dsh-version` 显式指定，标签记录真实构建版本。
 底座支持 `--eval-base-image` / `--node-runtime-image`；跨机器时按目标架构构建，
@@ -53,15 +53,18 @@ Skill 来源及 SHA、运行时实测和镜像 ID/架构/标签。此为公共�
 平台后端 `.env` 绑定（已有其他 Harness 的映射需保留）：
 
 ```dotenv
-WCB_E2E_SCORING_IMAGES={"codex":"wildclawbench-e2e-scorer:codex-0.171.0-office-v1"}
+WCB_E2E_SCORING_IMAGES={"codex":"wildclawbench-e2e-scorer:codex-0.171.0-office-v2"}
 WCB_E2E_SCORING_DOCKER_CONTEXT=default
 ```
 
 需在后端使用的 Docker daemon 上构建。修改 `.env` 后，经现有 CICD 重建后端
 容器生效；不覆盖框架执行源码或冻结的批次。镜像构建与后端部署分开进行。
 
-Chromium 由 Skill 的 bootstrap 安装一次到受管环境；`/opt/scoring-browsers`
-链接到该缓存，规则 Worker 与语义取证共用同一版本，不重复下载浏览器。
+Chromium 由 Skill 的 bootstrap 安装一次到受管环境；新镜像的
+`PLAYWRIGHT_BROWSERS_PATH` 直接指向真实目录 `/opt/scoring-runtime/playwright-browsers`。
+镜像离线验收会拒绝缺失、非目录及符号链接配置。旧镜像的 `/opt/scoring-browsers`
+别名由新版无头 Worker 先解析成真实目录，再交给冻结 Skill 的完整预检；不放宽
+候选文件、Skill 或预检结果的路径和摘要校验。规则 Worker 与语义取证共用同一版本。
 
 Debian 默认使用清华镜像源，仍执行 Debian GPG 签名校验；可通过
 `--debian-mirror` / `--debian-security-mirror` 覆盖。`--pip-index-url` 控制

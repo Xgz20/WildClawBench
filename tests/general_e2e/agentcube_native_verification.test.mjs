@@ -57,8 +57,76 @@ async function fixture(t) {
     Object.assign(index.raw_trace[0], { sha256: sha(bytes), size: bytes.length });
     await writeFile(join(traceRoot, 'raw/rollout.jsonl'), bytes);
   }
-  return { state, record, transcript, rows, rewriteRaw, verify, unitRoot, traceRoot };
+  return { state, record, transcript, rows, index, rewriteRaw, verify, unitRoot, traceRoot };
 }
+
+async function searchFixture(t, parserFailure = false) {
+  const value = await fixture(t);
+  const tools = [{ type: 'function', name: 'inspect', parameters: { type: 'object' } }];
+  const args = { query: 'inspect', limit: 20 }, metadata = { turn_id: 'turn' };
+  const call = { type: 'response_item', payload: { type: 'tool_search_call', call_id: 'search',
+    execution: 'client', arguments: args, internal_chat_message_metadata_passthrough: metadata } };
+  const result = { type: 'response_item', payload: parserFailure
+    ? { type: 'function_call_output', call_id: '', output: 'failed to parse tool_search arguments: invalid limit',
+        internal_chat_message_metadata_passthrough: metadata }
+    : { type: 'tool_search_output', call_id: 'search', execution: 'client', status: 'completed', tools } };
+  value.rows.splice(5, 0, call, result);
+  value.transcript.push({ type: 'tool_call', tool: { call_id: 'search', name: 'tool_search', arguments: args } },
+    { type: 'tool_result', tool: { call_id: 'search', result: parserFailure ? result.payload.output : { tools } } });
+  value.index.calls.push({ call_id: 'search' });
+  await value.rewriteRaw();
+  return { ...value, call, result };
+}
+
+test('client tool search is counted and its catalog is independently verified', async t => {
+  const value = await searchFixture(t);
+  assert.equal((await value.verify()).native_tool_calls, 2);
+  value.transcript[3].tool.result = { tools: [] };
+  await assert.rejects(value.verify(), /TOOL_RESULT_MISMATCH/);
+});
+
+test('missing tool search transcript events still fail coverage', async t => {
+  const value = await searchFixture(t);
+  value.transcript.splice(2);
+  await assert.rejects(value.verify(), /TOOL_COVERAGE_MISMATCH/);
+});
+
+test('client tool search arguments cannot be rewritten', async t => {
+  const value = await searchFixture(t);
+  value.transcript[2].tool.arguments = { query: 'different' };
+  await assert.rejects(value.verify(), /TOOL_CALL_MISMATCH/);
+});
+
+test('tool search rejects server execution, malformed catalogs and mismatched IDs', async t => {
+  for (const [alter, expected] of [
+    [value => { value.call.payload.execution = 'server'; }, /TOOL_SEARCH_CALL_INVALID/],
+    [value => { value.result.payload.tools[0].parameters = 'not an object'; }, /TOOL_SEARCH_OUTPUT_INVALID/],
+    [value => { value.result.payload.tools.push(value.result.payload.tools[0]); }, /TOOL_SEARCH_OUTPUT_INVALID/],
+    [value => { value.result.payload.call_id = 'call'; }, /TOOL_RESULT_ID_INVALID/],
+  ]) {
+    const value = await searchFixture(t);
+    alter(value);await value.rewriteRaw();
+    await assert.rejects(value.verify(), expected);
+  }
+});
+
+test('adjacent parser failure replays the original empty ID without changing native bytes', async t => {
+  const value = await searchFixture(t, true);
+  const before = value.state.native_binding.raw_sha256;
+  assert.equal((await value.verify()).native_tool_calls, 2);
+  assert.equal(value.result.payload.call_id, '');
+  assert.equal(value.state.native_binding.raw_sha256, before);
+});
+
+test('empty-ID parser failures cannot bind across events or native turns', async t => {
+  for (const mode of ['intervening-event', 'other-turn']) {
+    const value = await searchFixture(t, true);
+    if (mode === 'intervening-event') value.rows.splice(6, 0, { type: 'event_msg', payload: { type: 'warning' } });
+    else value.result.payload.internal_chat_message_metadata_passthrough = { turn_id: 'other' };
+    await value.rewriteRaw();
+    await assert.rejects(value.verify(), /TOOL_RESULT_ID_INVALID/);
+  }
+});
 
 test('controller-closed AStudio requires an observed quiet period', async t => {
   const value = await fixture(t);

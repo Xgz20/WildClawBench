@@ -2,15 +2,30 @@ from __future__ import annotations
 
 import json
 import os
+import runpy
 from pathlib import Path
 import subprocess
 import tempfile
 import unittest
+from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[2]
 
 
 class HeadlessScorerBuildTests(unittest.TestCase):
+    def test_image_validation_requires_a_real_browser_directory(self):
+        validate = runpy.run_path(str(ROOT / 'docker/e2e-scorer/validate_runtime.py'))['browser_directory']
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary);real = root / 'real';real.mkdir()
+            alias = root / 'alias';alias.symlink_to(real, target_is_directory=True)
+            file = root / 'file';file.write_text('not a browser directory')
+            with patch.dict(os.environ, {'PLAYWRIGHT_BROWSERS_PATH': str(real)}):
+                self.assertEqual(validate(), str(real.resolve()))
+            for value in (str(alias), str(file), str(root / 'missing'), 'relative'):
+                with self.subTest(value=value), patch.dict(os.environ, {'PLAYWRIGHT_BROWSERS_PATH': value}), \
+                     self.assertRaisesRegex(RuntimeError, 'SCORER_BROWSER_DIRECTORY_INVALID'):
+                    validate()
+
     def test_prepare_context_is_standalone_and_does_not_persist_proxy(self):
         with tempfile.TemporaryDirectory() as temporary:
             context = Path(temporary) / 'context'
@@ -20,6 +35,7 @@ class HeadlessScorerBuildTests(unittest.TestCase):
             manifest = json.loads((context / 'build-manifest.json').read_text())
             self.assertEqual(manifest['inputs']['WITH_OFFICE'], '1')
             self.assertEqual(manifest['inputs']['CODEX_VERSION'], '0.171.0')
+            self.assertEqual(manifest['inputs']['IMAGE_TAG'], 'wildclawbench-e2e-scorer:codex-0.171.0-office-v2')
             self.assertTrue((context / 'runtime-skill/bundled-components.json').is_file())
             self.assertTrue((context / 'build-prepared.sh').is_file())
             self.assertFalse(any(b'private-proxy' in path.read_bytes() for path in context.rglob('*') if path.is_file()))

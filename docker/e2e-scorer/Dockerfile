@@ -11,7 +11,7 @@ ARG DEBIAN_MIRROR=https://mirrors.tuna.tsinghua.edu.cn/debian
 ARG DEBIAN_SECURITY_MIRROR=https://mirrors.tuna.tsinghua.edu.cn/debian-security
 COPY --from=node-runtime /usr/local/bin/node /usr/local/bin/node
 COPY --from=node-runtime /usr/local/lib/node_modules/npm /usr/local/lib/node_modules/npm
-ENV PLAYWRIGHT_BROWSERS_PATH=/opt/scoring-browsers
+ENV PLAYWRIGHT_BROWSERS_PATH=/opt/scoring-runtime/playwright-browsers
 RUN ln -sf ../lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm \
  && ln -sf ../lib/node_modules/npm/bin/npx-cli.js /usr/local/bin/npx \
  && pip install --no-cache-dir uv==0.13.6 pyyaml==6.0.3 jsonschema==4.26.0 openpyxl==3.1.5 playwright==1.55.0
@@ -22,7 +22,6 @@ RUN if [ -f /etc/apt/sources.list.d/debian.sources ]; then \
  && rm -rf /var/lib/apt/lists/*
 COPY runtime-skill /opt/runtime-score-skill
 RUN python /opt/runtime-score-skill/scripts/score_general_e2e.py bootstrap-runtime --venv-root /opt/scoring-runtime \
- && ln -s /opt/scoring-runtime/playwright-browsers /opt/scoring-browsers \
  && /opt/scoring-runtime/bin/python /opt/runtime-score-skill/scripts/offline_browser_validate.py --probe --output-dir /opt/scoring-browser-preflight
 COPY wcb-dsh /usr/local/bin/wcb-dsh
 RUN chmod 755 /usr/local/bin/wcb-dsh \

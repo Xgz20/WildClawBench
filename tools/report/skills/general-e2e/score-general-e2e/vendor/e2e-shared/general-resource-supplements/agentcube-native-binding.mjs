@@ -17,6 +17,53 @@ function canonical(value) {
 const same = (left, right) => JSON.stringify(canonical(left)) === JSON.stringify(canonical(right));
 const sha = bytes => createHash('sha256').update(bytes).digest('hex');
 
+function nativeToolItems(rows, turnId) {
+  const calls = [], results = [], callIds = new Set(), resultIds = new Set();
+  let previousSearch;
+  for (const [position, row] of rows.entries()) {
+    if (row.type !== 'response_item') continue;
+    const item = row.payload || {}, kind = item.type;
+    if (['function_call', 'custom_tool_call', 'tool_search_call'].includes(kind)) {
+      requireValue(typeof item.call_id === 'string' && item.call_id && !callIds.has(item.call_id), 'AGENTCUBE_TOOL_CALL_ID_INVALID');
+      let args = item.arguments ?? item.input, name = item.name;
+      if (kind === 'tool_search_call') {
+        requireValue(item.execution === 'client' && args && typeof args === 'object' && !Array.isArray(args), 'AGENTCUBE_TOOL_SEARCH_CALL_INVALID');
+        name = 'tool_search';
+        previousSearch = { position, callId: item.call_id, turnId: item.internal_chat_message_metadata_passthrough?.turn_id };
+      }
+      if (typeof args === 'string') { try { args = JSON.parse(args); } catch {} }
+      if (typeof item.namespace === 'string' && item.namespace.startsWith('mcp__')) {
+        requireValue(/^mcp__[A-Za-z0-9_]+$/.test(item.namespace), 'AGENTCUBE_TOOL_NAMESPACE_INVALID');
+        if (typeof name === 'string' && !name.startsWith('mcp__')) name = item.namespace + '__' + name;
+      }
+      callIds.add(item.call_id);
+      calls.push({ ...item, name, arguments: args });
+    } else if (['function_call_output', 'custom_tool_call_output', 'tool_search_output'].includes(kind)) {
+      let callId = item.call_id, output = item.output;
+      // Independently replay ACode's adjacent parser failure without altering
+      // the native evidence or accepting an arbitrary unbound output.
+      if (kind === 'function_call_output' && callId === '' && previousSearch
+          && typeof output === 'string' && output.startsWith('failed to parse tool_search arguments: ')
+          && previousSearch.position + 1 === position && previousSearch.turnId === turnId
+          && item.internal_chat_message_metadata_passthrough?.turn_id === turnId) callId = previousSearch.callId;
+      requireValue(typeof callId === 'string' && callId && !resultIds.has(callId), 'AGENTCUBE_TOOL_RESULT_ID_INVALID');
+      if (kind === 'tool_search_output') {
+        const tools = item.tools;
+        requireValue(item.execution === 'client' && item.status === 'completed' && item.output == null
+          && Array.isArray(tools) && tools.every(tool => tool?.type === 'function'
+            && typeof tool.name === 'string' && tool.name && tool.parameters
+            && typeof tool.parameters === 'object' && !Array.isArray(tool.parameters))
+          && new Set(tools.map(tool => tool.name)).size === tools.length
+          && calls.some(call => call.call_id === callId && call.name === 'tool_search'), 'AGENTCUBE_TOOL_SEARCH_OUTPUT_INVALID');
+        output = { tools };
+      }
+      resultIds.add(callId);
+      results.push({ ...item, call_id: callId, output });
+    }
+  }
+  return { calls, results };
+}
+
 export function mcpCallableMatches(name, server, tool) {
   if (![name, server, tool].every(value => typeof value === 'string' && value.length)) return false;
   if (server === 'acode' && name === tool && (['list_mcp_resources', 'list_mcp_resource_templates'].includes(tool) || /^astron_browser_[a-z_]+$/.test(tool))) return true;
@@ -155,8 +202,7 @@ export async function verifyAgentCubeNative({ unitRoot, traceRoot, index, stateB
   requireValue(sha(Buffer.from(promptText, 'utf8')) === record.prompt.sha256
     && record.prompt.sha256 === state.prompt_sha256, 'AGENTCUBE_NATIVE_PROMPT_MISMATCH');
   const transcript = (await child(traceRoot, index.transcript.path)).toString('utf8').split(/\r?\n/).filter(Boolean).map(JSON.parse);
-  const calls = rows.filter(item => item.type === 'response_item' && ['function_call', 'custom_tool_call'].includes(item.payload?.type)).map(item => item.payload);
-  const results = rows.filter(item => item.type === 'response_item' && ['function_call_output', 'custom_tool_call_output'].includes(item.payload?.type)).map(item => item.payload);
+  const { calls, results } = nativeToolItems(rows, record.session.turn_id);
   const mcpEnds = rows.filter(item => item.type === 'event_msg' && item.payload?.type === 'mcp_tool_call_end').map(item => item.payload);
   for (const end of mcpEnds) {
     const call = calls.find(item => item.call_id === end.call_id);

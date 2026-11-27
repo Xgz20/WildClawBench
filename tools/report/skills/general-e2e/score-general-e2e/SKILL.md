@@ -3,6 +3,8 @@ name: score-general-e2e
 description: 对一个冻结的 General E2E 任务运行自动规则与指定语义裁判，生成证据可追溯的标准评分；不负责批量调度、执行 Harness 或报告汇总。
 ---
 
+`0.29.9` 补齐 AgentCube 原生 client `tool_search` 调用、工具目录结果及相邻解析错误的独立回放；调用 ID、参数、结果和原始轨迹仍逐项核验，旧批次与评分材料不改。
+
 `0.29.7` 支持 Windows 工作区内的相对符号链接：清单统一路径分隔符和链接权限表示，规则 Worker 只对候选工作区内的 readlink 结果做相同规范化；链接类型、实际目标和文件内容仍严格核验。原始规则、检查点和权重不变。
 
 `0.29.6` 补齐 AgentCube 原生 `list_mcp_resource_templates` 工具名回放，与 Python 执行器一致；调用参数、来源身份、原始轨迹及评分规则保持严格核验。

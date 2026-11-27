@@ -3,6 +3,8 @@ name: report-general-e2e
 description: 校验并汇总 General E2E submission 和回传包，生成同源 JSON、Markdown 与 Excel 报告；不执行用例、补评分或把评测异常计为能力零分。
 ---
 
+`0.10.8` 补齐 AgentCube 原生 client `tool_search` 调用、工具目录结果及相邻解析错误的独立回放；调用 ID、参数、结果和原始轨迹仍逐项核验，旧批次与评分材料不改。
+
 `0.10.7` 补齐 AgentCube 原生 `list_mcp_resource_templates` 工具名回放，与 Python 执行器一致；调用参数、来源身份、原始轨迹及评分规则保持严格核验。
 
 `0.10.6` 将任务耗时中位数和P50合并为“任务耗时中位数/P50(s)”一列，依次展示平均任务耗时、中位数/P50、P90，随后列模型耗时统计。数值、覆盖、Token中位数及评分不变；领导版仍兼容旧版独立P50表头，旧冻结发行保留。

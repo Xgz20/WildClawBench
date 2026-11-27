@@ -3,6 +3,8 @@ name: collect-general-e2e
 description: 收集 General E2E 执行状态、终态 Workspace、原始轨迹和资源数据并形成正式执行回执；不用于导入评分回传包或决定分数。
 ---
 
+`0.12.40` 补齐 AgentCube 原生 client `tool_search` 调用、工具目录结果及相邻解析错误的独立回放；调用 ID、参数、结果和原始轨迹仍逐项核验，旧批次与评分材料不改。
+
 `0.12.39` 补齐 AgentCube 原生 `list_mcp_resource_templates` 工具名回放，与 Python 执行器一致；调用参数、来源身份、原始轨迹及评分规则保持严格核验。
 
 `0.12.38` 修正 Loomy 资源合同：完整指标仅写 value，known_subtotals 只保存部分统计；输入、输出、缓存和请求数数值与口径不变。

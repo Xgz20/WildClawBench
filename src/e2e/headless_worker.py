@@ -50,8 +50,12 @@ def prepare_judge_input(prefix, attempt, skill, config):
     state = {'prompt_protocol': reader.PROMPT_PROTOCOL, 'score_skill': lock}
     if reader.needs_browser_preflight(attempt, state):
         browsers = os.environ.get('PLAYWRIGHT_BROWSERS_PATH')
+        # This is trusted image configuration, not a candidate path. Older
+        # images expose a symlink alias; the frozen verifier requires the
+        # canonical directory and still performs its full runtime probe.
+        browser_root = Path(browsers).resolve(strict=True) if browsers else None
         reader.prepare_browser_environment(attempt, state, {'scoring_attempt_id': config['scoring_attempt_id']},
-                                           python, Path(browsers) if browsers else None)
+                                           python, browser_root)
     prompt = reader._prompt_text(config['task_id'], config['scoring_attempt_id'],
         {'protocol': 'codex-agent-judge-v1', 'model': config['model'],
          'reasoning_effort': config.get('reasoning_effort', 'none')}, contract['grading_type'], None, lock,

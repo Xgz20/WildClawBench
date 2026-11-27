@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
 from pathlib import Path
 import subprocess
 import sys
@@ -12,6 +13,13 @@ import tempfile
 
 RUNTIME = Path('/opt/scoring-runtime')
 SKILL = Path('/opt/runtime-score-skill')
+
+
+def browser_directory() -> str:
+    path = Path(os.environ.get('PLAYWRIGHT_BROWSERS_PATH', ''))
+    if not path.is_absolute() or path.is_symlink() or not path.is_dir():
+        raise RuntimeError('SCORER_BROWSER_DIRECTORY_INVALID: ' + str(path))
+    return str(path.resolve(strict=True))
 
 
 def run(argv: list[str], *, env: dict | None = None) -> str:
@@ -90,6 +98,7 @@ def main() -> None:
     args = parser.parse_args()
     if sys.version_info[:2] != (3, 11) or sys.prefix != str(RUNTIME):
         raise RuntimeError('MANAGED_PYTHON_MISMATCH')
+    browsers = browser_directory()
     manifest = json.loads(Path('/opt/scorer-build-manifest.json').read_text())
     inputs = manifest['inputs']
     codex = run(['codex', '--version'])
@@ -107,6 +116,7 @@ def main() -> None:
         result = {'schema_version': 'wildclawbench.scorer-runtime-validation/v1', 'status': 'PASS',
                   'python': sys.version.split()[0], 'codex': codex, 'dsh': dsh,
                   'source_revision': manifest['source_revision'], 'skill': manifest['skill'],
+                  'browser_directory': browsers,
                   'browser': json.loads((browser / 'observations.json').read_text()),
                   'office': office_smoke(root) if args.office else None}
     data = json.dumps(result, ensure_ascii=False, indent=2) + '\n'
