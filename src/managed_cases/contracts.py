@@ -27,6 +27,24 @@ METADATA = ('id', 'name', 'category', 'difficulty', 'modality', 'timeout_seconds
 TRANSPORTS = ('api', 'docker-cli', 'agentcube-desktop')
 
 
+class UniqueLoader(yaml.SafeLoader):
+    pass
+
+
+def unique_mapping(loader, node, deep=False):
+    result = {}
+    for key_node, value_node in node.value:
+        key = loader.construct_object(key_node, deep=deep)
+        if not isinstance(key, str) or key in result:
+            raise ValueError('YAML 字段名必须为字符串且不能重复')
+        result[key] = loader.construct_object(value_node, deep=deep)
+    return result
+
+
+UniqueLoader.yaml_implicit_resolvers={key:[entry for entry in values if entry[0]!='tag:yaml.org,2002:timestamp'] for key,values in UniqueLoader.yaml_implicit_resolvers.items()}
+UniqueLoader.add_constructor(yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG, unique_mapping)
+
+
 def canonical(value):
     return json.dumps(value, sort_keys=True, ensure_ascii=False, separators=(',', ':')).encode('utf-8')
 
@@ -38,6 +56,7 @@ def sha(value):
 def safe_path(value):
     if not isinstance(value, str) or not value or '\\' in value or '\x00' in value or ':' in value:
         raise ValueError('素材路径必须是工作区内的相对路径')
+    if any(ord(char)<32 or char in '<>"|?*' for char in value):raise ValueError('素材路径含 Windows 不支持的字符')
     path = PurePosixPath(value)
     if path.is_absolute() or any(p in ('', '.', '..') for p in value.split('/')):
         raise ValueError('素材路径不能越过工作区')
@@ -52,7 +71,10 @@ def parse_markdown(raw):
     match = re.match(r'\A---[ \t]*\n(.*?)\n(?:---|\.\.\.)[ \t]*(?:\n|$)(.*)', text, re.S)
     if not match:
         raise ValueError('用例文档缺少 YAML frontmatter')
-    metadata = yaml.safe_load(match[1]) or {}
+    tokens=list(yaml.scan(match[1]))
+    if any(isinstance(token,(yaml.tokens.AliasToken,yaml.tokens.AnchorToken)) for token in tokens):
+        raise ValueError('用例 YAML 不支持别名或递归引用')
+    metadata = yaml.load(match[1], Loader=UniqueLoader) or {}
     if not isinstance(metadata, dict):
         raise ValueError('YAML 必须是对象')
     chunks = re.split(r'^##[ \t]+([^\n]+)\n', match[2], flags=re.M)
@@ -70,6 +92,14 @@ def document(body):
     result.setdefault('metadata', {}); result.setdefault('sections', {})
     result.setdefault('section_order', list(result['sections'])); result.setdefault('assets', [])
     result.setdefault('outputs', []); result.setdefault('rules', []); result.setdefault('scoring', {})
+    if not isinstance(result['metadata'],dict) or not isinstance(result['sections'],dict):
+        raise ValueError('metadata 和 sections 必须是对象')
+    if any(not isinstance(k,str) or not isinstance(v,str) for k,v in result['sections'].items()):
+        raise ValueError('章节标题和正文必须是字符串')
+    for field in ('assets','outputs','rules','criteria'):
+        if field in result and not isinstance(result[field],list):raise ValueError(field+' 必须是列表')
+    if not isinstance(result['scoring'],dict):raise ValueError('scoring 必须是对象')
+    json.dumps(result,allow_nan=False)
     return result
 
 
@@ -113,7 +143,9 @@ def render_template(template, transport, context):
 
 def effective_scoring(scene=None, case=None, override=None):
     """Select one template layer, never concatenate competing template versions."""
-    selected = deepcopy(override if override is not None else case if case else scene or {})
+    selected=deepcopy(scene or {})
+    selected.update(deepcopy(case or {}))
+    if override is not None:selected.update(deepcopy(override))
     validate_template(selected.get('template', {}))
     return selected
 
@@ -134,7 +166,7 @@ def compile_rules(rules):
     for row in rules:
         if row.get('kind') not in {'exists','json_equals','text_contains'}: raise ValueError('不支持的声明式检查')
         safe_path(row['path'])
-        if not IDENTIFIER.fullmatch(row['key']): raise ValueError('检查点编号无效')
+        if row['key']=='overall_score' or not IDENTIFIER.fullmatch(row['key']): raise ValueError('检查点编号无效')
     return 'def grade(**kwargs):\n    from managed_rule_checks import grade_rules\n    return grade_rules('+repr(rules)+', kwargs)\n'
 
 
@@ -149,7 +181,11 @@ def validate(body, scene=None):
     try:
         if not 1<=int(meta.get('timeout_seconds',300))<=86400:raise ValueError()
     except (ValueError,TypeError):error('metadata.timeout_seconds','执行预算必须在 1–86400 秒内')
-    paths={};input_paths=set()
+    tags=meta.get('tags',[])
+    if isinstance(tags,str):tags=[v.strip() for v in tags.split(',')]
+    if str(meta.get('metric_profile') or '').startswith(('web-','ppt-')) or 'web-site-gen' in tags:
+        error('metadata.metric_profile','旧专项评分协议与配置式 0–1 契约不同，请转换草稿或使用系统题库原入口')
+    paths={};input_paths=set();private_hashes=set();input_hashes=set()
     for i,row in enumerate(body['assets']):
         try:
             path=safe_path(row['path']);role=row['role']
@@ -161,17 +197,22 @@ def validate(body, scene=None):
             if role=='input':
                 if set(PurePosixPath(path).parts)&{'gt','private-scoring','.grading'}:raise ValueError('输入素材不能放入评分目录')
                 input_paths.add(path)
-        except (ValueError,KeyError) as exc:error(f'assets.{i}',str(exc))
+                if row.get('sha256'):input_hashes.add(row['sha256'])
+            elif row.get('sha256'):private_hashes.add(row['sha256'])
+        except (ValueError,KeyError,TypeError) as exc:error(f'assets.{i}',str(exc))
+    if input_hashes & private_hashes:error('assets','同一素材不能同时作为执行输入和私有评分文件')
     outputs=set()
     for i,value in enumerate(body['outputs']):
         try:
             path=safe_path(value)
             if set(PurePosixPath(path).parts)&{'gt','private-scoring','.grading'}:raise ValueError('输出路径不能指向评分目录')
+            if path.casefold() in {p.casefold() for p in input_paths|outputs}:raise ValueError('输出路径与输入或其它输出重名')
             outputs.add(path)
         except ValueError as exc:error(f'outputs.{i}',str(exc))
     prompt=sections.get('Prompt','')
-    for match in re.finditer(r'/tmp_workspace/([^\s`"<>，。；、)]+)',prompt):
-        path=match[1].rstrip('.,;:')
+    references=re.finditer(r'`/tmp_workspace/([^`\n]+)`|"/tmp_workspace/([^"\n]+)"|/tmp_workspace/([^\s`"<>，。；、)]+)',prompt)
+    for match in references:
+        path=next(value for value in match.groups() if value is not None).rstrip('.,;:')
         if set(PurePosixPath(path).parts)&{'gt','private-scoring','.grading'}:
             error('sections.Prompt','执行 Prompt 不得引用 GT 或私有评分素材')
         elif path not in input_paths|outputs and not any(p.startswith(path.rstrip('/')+'/') for p in input_paths|outputs):
@@ -180,7 +221,9 @@ def validate(body, scene=None):
         source=sections.get(field,'').strip()
         if field=='Automated Checks' and source:
             source=re.sub(r'^```[^\n]*\n|\n```\s*$','',source).strip()
-            try:ast.parse(source)
+            try:
+                parsed=ast.parse(source)
+                if not any(isinstance(node,ast.FunctionDef) and node.name=='grade' for node in parsed.body):error('sections.Automated Checks','检查代码必须定义 grade(**kwargs) 函数')
             except SyntaxError as exc:error('sections.'+field,'Python 语法错误：'+str(exc))
     try:
         checks=compile_rules(body.get('rules', [])) if body.get('rules') else sections.get('Automated Checks','')
@@ -189,17 +232,46 @@ def validate(body, scene=None):
         criteria=body.get('criteria',[])
         if criteria:
             keys=[r.get('key') for r in criteria]
-            if len(set(keys))!=len(keys) or any(not isinstance(k,str) or not IDENTIFIER.fullmatch(k) for k in keys):raise ValueError('评分项编号无效或重复')
+            if len(set(keys))!=len(keys) or any(not isinstance(k,str) or k=='overall_score' or not IDENTIFIER.fullmatch(k) for k in keys):raise ValueError('评分项编号无效或重复')
+            if set(keys)&{r.get('key') for r in body.get('rules',[])}:raise ValueError('规则和语义评分项编号不能重复')
             weights=[float(r['weight']) for r in criteria]
             if any(not math.isfinite(w) or w<=0 for w in weights) or abs(sum(weights)-1)>1e-6:raise ValueError('评分项权重必须为正数，合计 1')
             for r in criteria:
+                if not isinstance(r.get('description'),str) or not r['description'].strip():raise ValueError('请填写每个评分项的判分标准')
+                anchors=r.get('anchors',[])
+                if len({a.get('score') for a in anchors})!=len(anchors):raise ValueError('同一评分项不能包含重复分值锚点')
                 for anchor in r.get('anchors',[]):
                     score=anchor['score']
-                    if type(score) not in (int,float) or not 0<=score<=1:raise ValueError('分值锚点必须在 0–1 内')
+                    if type(score) not in (int,float) or not 0<=score<=1 or not anchor.get('description','').strip():raise ValueError('分值锚点必须在 0–1 内')
         if grading in {'hybrid','llm_judge'} and not rubric(body).strip():error('criteria','请填写语义评分标准')
         weights=meta.get('grading_weights') or ({'automated':1,'llm_judge':0} if grading=='automated' else {'automated':0,'llm_judge':1} if grading=='llm_judge' else {})
         if grading=='hybrid' and (set(weights)!= {'automated','llm_judge'} or abs(sum(weights.values())-1)>1e-6 or any(w<0 for w in weights.values())):error('metadata.grading_weights','混合评分需设置规则和语义权重，合计 1')
         validate_template(body.get('scoring',{}).get('template',{}))
+        if scene:
+            for path in scene.get('required_inputs',[]):
+                if safe_path(path) not in input_paths:error('assets','场景缺少必需输入：'+path)
+            for path in scene.get('required_outputs',[]):
+                if safe_path(path) not in outputs:error('outputs','场景缺少必需产物声明：'+path)
+            required=scene.get('required_capabilities',[])
+            if not isinstance(required,list) or set(required)-set().union(*CAPABILITIES.values()):error('scene','场景要求了未实现的取证能力')
         if scene and scene.get('base_contract') not in {'general','web','ppt'}:error('scene','场景基础契约不支持')
+        if body.get('missing_private_materials'):error('assets','系统私有评分材料未复制，请补齐或改用系统固定引用')
+        if body.get('dependencies') and not all(isinstance(v,str) for v in body['dependencies']):error('dependencies','依赖必须是明确的运行时能力名称列表')
     except (ValueError,TypeError,KeyError) as exc:error('scoring',str(exc))
     return {'valid':not issues,'issues':issues,'source_sha256':sha(body)}
+
+
+CAPABILITIES = {
+    'api': {'text','image','office','python_rules','static_browser'},
+    'docker-cli': {'text','image','office','python_rules','static_browser','browser_interaction'},
+    'agentcube-desktop': {'text','image','office','python_rules','static_browser','browser_interaction','native_desktop'},
+}
+
+
+def validate_capabilities(scene,transport):
+    if transport not in CAPABILITIES:raise ValueError('评分投递方式不支持')
+    required=scene.get('required_capabilities',[])
+    if not isinstance(required,list) or any(not isinstance(value,str) for value in required):raise ValueError('场景取证能力必须为名称列表')
+    missing=set(required)-CAPABILITIES[transport]
+    if missing:raise ValueError('SCENE_EVIDENCE_CAPABILITY_MISSING: '+','.join(sorted(missing)))
+    return True

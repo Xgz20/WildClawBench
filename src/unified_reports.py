@@ -155,12 +155,18 @@ def _row(source, item, core):
                     raise ValueError('REPORT_CLI_FROZEN_TASK_MISMATCH')
             scores = receipt.get('scores') if receipt.get('schema') == 'wildclawbench.cli-score/v1' else receipt
             grading = scores.get('_grading') or {}
+            if grading.get('protocol')=='managed-case-score/v1':
+                from src.managed_cases.scoring import verify_score
+                path=checked(item['score_file'],roots).parent
+                if not item.get('input_manifest'):raise ValueError('REPORT_MANAGED_INPUT_MISSING')
+                verified=verify_score(checked(item['input_manifest'],roots).parent,path)
+                if verified['total_score']!=scores['overall_score']:raise ValueError('REPORT_MANAGED_SCORE_INVALID')
             if scores.get('error') or scores.get('llm_error') or grading.get('status') in {'failed', 'evaluator_failed'}:
                 raise ValueError('REPORT_CLI_SCORE_INVALID')
             if str(grading.get('llm_notes', '')).lstrip().startswith('judge failed:'):
                 raise ValueError('REPORT_CLI_SCORE_INVALID')
             score = scores.get('overall_score')
-            judge = {'protocol': grading.get('protocol'), 'receipt_schema': receipt.get('schema', 'legacy-cli-score'),
+            judge = {'protocol':grading.get('protocol'),'template_sha256':grading.get('template_sha256'),'context_sha256':grading.get('context_sha256'), 'receipt_schema': receipt.get('schema', 'legacy-cli-score'),
                      **{key: receipt.get('config', {}).get(key) for key in ('harness', 'model', 'reasoning_effort')}}
         else:
             if (receipt.get('identity', {}).get('task_id') != item['task_id']
@@ -170,6 +176,11 @@ def _row(source, item, core):
                 raise ValueError('REPORT_E2E_SCORE_IDENTITY_MISMATCH')
             score = receipt['result'].get('total_score')
             judge = receipt.get('judge')
+            if receipt.get('schema')=='wildclawbench.managed-e2e-score/v1':
+                from src.managed_cases.scoring import verify_score
+                path=checked(item['score_file'],roots).parent
+                verified=verify_score(path/'input',path/'grading')
+                if verified['total_score']!=score:raise ValueError('REPORT_MANAGED_SCORE_INVALID')
             if item.get('scoring_attempt_id') and receipt['identity'].get('attempt_id') != item['scoring_attempt_id']:
                 raise ValueError('REPORT_E2E_SCORE_IDENTITY_MISMATCH')
             original_dataset = source['dataset'].get('original')
@@ -314,7 +325,9 @@ def build(snapshot):
         label = source['label']
         protocols = sorted({(row.get('judge') or {}).get('protocol') or '未记录' for row in source['rows'] if row['score_status'] == 'valid'})
         configurations.append([label, source['kind'], source['scorer'].get('harness'), source['scorer'].get('model'),
-            source['scorer'].get('reasoning_effort'), source['scorer'].get('transport'), ' / '.join(protocols), source['dataset'].get('release'), source['id']])
+            source['scorer'].get('reasoning_effort'),source['scorer'].get('transport'),' / '.join(protocols),
+            (source['scorer'].get('judge_template') or {}).get('template_revision_id') or '用例/场景冻结模板',
+            (source['scorer'].get('judge_template') or {}).get('template_sha256'),source['dataset'].get('release'),source['id']])
         units.append({'unit_id': source['id'], 'label': label, 'kind': source['kind'], 'harness': source['harness'],
             'model': model, 'scorer': source['scorer'], 'source': source['selection'], 'score': stats})
         tasks.extend(cases);rounds.extend(source['rows'])
@@ -345,7 +358,7 @@ def build(snapshot):
         '资源覆盖': _table(['比较对象', '指标', '完整总量', '已知小计', '状态', '完整轮次', '涉及轮次'], resources,
             notes=['只使用原执行回执中的显式字段，缺失资源与细分能力不推测、不补零。']),
         '来源索引': _table(['来源ID', '用例ID', '轮次', '原产物路径', 'SHA-256'], lineage),
-        '评分配置': _table(['比较对象', '执行方式', '评分Harness', '配置评分模型', '推理强度', '评分通道', '实际裁判协议', '数据集发行', '来源ID'], configurations,
+        '评分配置': _table(['比较对象', '执行方式', '评分Harness', '配置评分模型', '推理强度', '评分通道', '实际裁判协议','评分模板版本','模板摘要','数据集发行','来源ID'], configurations,
             notes=['此表保留评分配置，不表示纯规则任务也调用了模型；逐轮实际裁判身份保留于 JSON。']),
     }
     matrix = []
