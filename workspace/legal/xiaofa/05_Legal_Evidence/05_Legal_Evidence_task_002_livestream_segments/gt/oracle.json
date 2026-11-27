@@ -1,0 +1,65 @@
+{
+  "task_id": "05_Legal_Evidence_task_002_livestream_segments",
+  "facts": {
+    "duration_seconds": 16,
+    "claim_start_seconds": [
+      4,
+      8
+    ],
+    "clarification_start_seconds": 12,
+    "host": "主播青禾",
+    "authorization_proven": false,
+    "audio_present": false
+  },
+  "fact_sources": {
+    "duration_seconds": [
+      "recording.mp4"
+    ],
+    "claim_start_seconds": [
+      "recording.mp4"
+    ],
+    "clarification_start_seconds": [
+      "recording.mp4"
+    ],
+    "host": [
+      "recording.mp4"
+    ],
+    "authorization_proven": [
+      "materials.md"
+    ],
+    "audio_present": [
+      "recording.mp4"
+    ]
+  },
+  "input_hashes": {
+    "answer_schema.json": "1f1123781b54bed7f2e930cca7a61615a4a78d094a6c552e7252885c08235333",
+    "materials.md": "02ee22e2c465f73f7cff8b3a5f50643f6d5b695210a420131cbba708f5b42ee4",
+    "recording.mp4": "ad7ee0b6987b489a42956e5565379c8159ba70ab584ce04f5897d2dde2d348bd"
+  },
+  "deliverables": [
+    {
+      "path": "results/report.md",
+      "kind": "md",
+      "min_chars": 220
+    },
+    {
+      "path": "results/frame_04.png",
+      "kind": "png"
+    },
+    {
+      "path": "results/frame_08.png",
+      "kind": "png"
+    },
+    {
+      "path": "results/frame_12.png",
+      "kind": "png"
+    }
+  ],
+  "copies": {},
+  "semantic_anchors": [
+    "定位4秒和8秒争议语句，保留12秒“只是外观相似并非同一品牌”的澄清，不只取有利截屏。",
+    "原话与画面相符，推断与观察分开；不能把主播自述当权属或侵权认定。",
+    "索引时间码可回放定位，至少三张对应PNG且原录屏完整保留。"
+  ],
+  "critical_review": "See METRICS.md; critical error review is separate from framework numeric total."
+}

@@ -1,0 +1,57 @@
+{
+  "task_id": "02_Legal_Analysis_task_005_revise_with_evidence",
+  "facts": {
+    "contract_total": 300000,
+    "paid_total": 160000,
+    "contract_balance": 140000,
+    "delivered_units": 40,
+    "undelivered_units": 20,
+    "delivered_price": 200000,
+    "delivered_minus_paid": 40000,
+    "all_delivered": false
+  },
+  "fact_sources": {
+    "contract_total": [
+      "materials.md"
+    ],
+    "paid_total": [
+      "materials.md"
+    ],
+    "contract_balance": [
+      "materials.md"
+    ],
+    "delivered_units": [
+      "materials.md"
+    ],
+    "undelivered_units": [
+      "materials.md"
+    ],
+    "delivered_price": [
+      "materials.md"
+    ],
+    "delivered_minus_paid": [
+      "materials.md"
+    ],
+    "all_delivered": [
+      "materials.md"
+    ]
+  },
+  "input_hashes": {
+    "answer_schema.json": "05dd23a7bbcc50fdfcde339c27c68d54a70389f524b1a22e2362c363d74f0a71",
+    "materials.md": "6494c5fadfaf0804e06edcf778d00fc7e16f9a9ff7fb734189366af21cecf6ff"
+  },
+  "deliverables": [
+    {
+      "path": "results/report.md",
+      "kind": "md",
+      "min_chars": 180
+    }
+  ],
+  "copies": {},
+  "semantic_anchors": [
+    "分别列合同账面余额140000与已交付价款扣回款40000，不能混同自动可诉金额。",
+    "显式撤回全部交付/验收的原判断，逐条绑定新证据。",
+    "标明尾款支付条件、交付抗辩仍待核；新意见与变更表一致。"
+  ],
+  "critical_review": "See METRICS.md; critical error review is separate from framework numeric total."
+}

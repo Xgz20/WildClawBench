@@ -1,0 +1,99 @@
+schema_version: 1
+series_id: xiaofa-legal
+task_id_prefix: xiaofa_legal_
+layout_root: legal/xiaofa
+task_root: tasks/legal/xiaofa
+workspace_root: workspace/legal/xiaofa
+source_registry: datasets/legal/xiaofa/task_sources.yaml
+capability_map: datasets/legal/xiaofa/checkpoint_capability_map7.yaml
+required_tags:
+- custom
+- xiaofa-legal
+exclude_tags:
+- invalid
+categories:
+  legal_intake:
+    name: 案卷整理
+    description: 案卷整理专业工作交付与证据边界
+  legal_analysis:
+    name: 诉讼分析
+    description: 诉讼分析专业工作交付与证据边界
+  legal_drafting:
+    name: 文书生成
+    description: 文书生成专业工作交付与证据边界
+  legal_contracts:
+    name: 合同审查
+    description: 合同审查专业工作交付与证据边界
+  legal_evidence:
+    name: 电子取证
+    description: 电子取证专业工作交付与证据边界
+  legal_delivery:
+    name: 法律交付
+    description: 法律交付专业工作交付与证据边界
+task_id_style: category_directory
+category_directories:
+  01_Legal_Intake: legal_intake
+  02_Legal_Analysis: legal_analysis
+  03_Legal_Drafting: legal_drafting
+  04_Legal_Contracts: legal_contracts
+  05_Legal_Evidence: legal_evidence
+  06_Legal_Delivery: legal_delivery
+default_release: xiaofa-legal30-v1
+releases:
+  xiaofa-legal30-v1:
+    status: ready
+    created_at: '2026-11-27T00:00:00+08:00'
+    manifest: datasets/legal/xiaofa/manifests/xiaofa-legal30-v1.json
+    task_ids:
+    - 01_Legal_Intake_task_001_case_registration
+    - 01_Legal_Intake_task_002_dossier_versions
+    - 01_Legal_Intake_task_003_evidence_purpose
+    - 01_Legal_Intake_task_004_dual_timelines
+    - 01_Legal_Intake_task_005_case_isolation
+    - 02_Legal_Analysis_task_001_clarify_before_advice
+    - 02_Legal_Analysis_task_002_payee_direction
+    - 02_Legal_Analysis_task_003_citation_verification
+    - 02_Legal_Analysis_task_004_labor_risk
+    - 02_Legal_Analysis_task_005_revise_with_evidence
+    - 03_Legal_Drafting_task_001_complaint
+    - 03_Legal_Drafting_task_002_labor_defense
+    - 03_Legal_Drafting_task_003_advocacy_memo
+    - 03_Legal_Drafting_task_004_batch_five_documents
+    - 03_Legal_Drafting_task_005_structured_complaint
+    - 04_Legal_Contracts_task_001_editable_comments
+    - 04_Legal_Contracts_task_002_english_license
+    - 04_Legal_Contracts_task_003_contract_diff
+    - 04_Legal_Contracts_task_004_role_priorities
+    - 04_Legal_Contracts_task_005_comment_revision
+    - 05_Legal_Evidence_task_001_ecommerce_capture
+    - 05_Legal_Evidence_task_002_livestream_segments
+    - 05_Legal_Evidence_task_003_chat_continuity
+    - 05_Legal_Evidence_task_004_qr_source
+    - 05_Legal_Evidence_task_005_custody_manifest
+    - 06_Legal_Delivery_task_001_court_download
+    - 06_Legal_Delivery_task_002_handoff_archive
+    - 06_Legal_Delivery_task_003_redacted_handoff
+    - 06_Legal_Delivery_task_004_efficiency_accounting
+    - 06_Legal_Delivery_task_005_source_bound_brief
+    expected_statistics:
+      task_count: 30
+      category_counts:
+        legal_intake: 5
+        legal_analysis: 5
+        legal_drafting: 5
+        legal_contracts: 5
+        legal_evidence: 5
+        legal_delivery: 5
+      grading_type_counts:
+        hybrid: 30
+      difficulty_counts:
+        L2: 13
+        L3: 11
+        L4: 6
+      timeout_counts:
+        '900': 24
+        '1200': 6
+    constraints:
+      multimodal_exact: 7
+      coding_primary_max: 0
+      controlled_network_max: 0

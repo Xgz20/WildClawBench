@@ -1,0 +1,56 @@
+{
+  "task_id": "01_Legal_Intake_task_004_dual_timelines",
+  "facts": {
+    "contract_date": "2026-01-06",
+    "delivery_date": "2026-02-10",
+    "acceptance_candidates": [
+      "2026-02-18",
+      "2026-02-20"
+    ],
+    "filing_date": "2026-05-10",
+    "service_date": "2026-05-17",
+    "hearing_date": "2026-06-20",
+    "refund_date": null
+  },
+  "fact_sources": {
+    "contract_date": [
+      "materials.md"
+    ],
+    "delivery_date": [
+      "materials.md"
+    ],
+    "acceptance_candidates": [
+      "materials.md"
+    ],
+    "filing_date": [
+      "materials.md"
+    ],
+    "service_date": [
+      "materials.md"
+    ],
+    "hearing_date": [
+      "materials.md"
+    ],
+    "refund_date": [
+      "materials.md"
+    ]
+  },
+  "input_hashes": {
+    "answer_schema.json": "fe855a9dc799c8244def24c08b788433c87d4be7976a222435f9ced8ad3393a9",
+    "materials.md": "7eefe85822d880ad36b083cc3b60839ef224dc30335a855fbae4861e1ab116d4"
+  },
+  "deliverables": [
+    {
+      "path": "results/report.md",
+      "kind": "md",
+      "min_chars": 180
+    }
+  ],
+  "copies": {},
+  "semantic_anchors": [
+    "两张独立时间线，不把起诉状落款误作立案。",
+    "验收日期冲突并列来源，退款保持未知，不强选某一日期。",
+    "每条时间线有日期、事件、材料位置和确认状态。"
+  ],
+  "critical_review": "See METRICS.md; critical error review is separate from framework numeric total."
+}

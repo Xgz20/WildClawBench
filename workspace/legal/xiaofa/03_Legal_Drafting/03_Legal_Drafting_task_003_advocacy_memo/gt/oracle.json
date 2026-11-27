@@ -1,0 +1,62 @@
+{
+  "task_id": "03_Legal_Drafting_task_003_advocacy_memo",
+  "facts": {
+    "contract_total": 60000,
+    "paid": 20000,
+    "account_balance": 40000,
+    "claimed_defects": 30,
+    "seller_confirmed_defects": 20,
+    "untested_defects": 10,
+    "acceptance_proven": false,
+    "discount_agreed": false
+  },
+  "fact_sources": {
+    "contract_total": [
+      "materials.md"
+    ],
+    "paid": [
+      "materials.md"
+    ],
+    "account_balance": [
+      "materials.md"
+    ],
+    "claimed_defects": [
+      "materials.md"
+    ],
+    "seller_confirmed_defects": [
+      "materials.md"
+    ],
+    "untested_defects": [
+      "materials.md"
+    ],
+    "acceptance_proven": [
+      "materials.md"
+    ],
+    "discount_agreed": [
+      "materials.md"
+    ]
+  },
+  "input_hashes": {
+    "answer_schema.json": "1212753b35910e7dc2ae39f6addde16392b4bb82a17be514c60549159fc7a280",
+    "materials.md": "d362038fc1c3f4dddecaf2cf0a568db444b89141adaacb3dede49f5f56e9c0ea"
+  },
+  "deliverables": [
+    {
+      "path": "results/opinion.docx",
+      "kind": "docx",
+      "min_chars": 300
+    },
+    {
+      "path": "results/risks.md",
+      "kind": "md",
+      "min_chars": 100
+    }
+  ],
+  "copies": {},
+  "semantic_anchors": [
+    "区分签收与验收，40000为账面余额，付款条件与瑕疵责任仍须分析。",
+    "既提出催付/换货路径，也如实纳入内部20台不利检验，不把另外10台直接判无瑕疵。",
+    "代理词以主张—证据—抗辩—补证组织，可直接用于律师庭前准备。"
+  ],
+  "critical_review": "See METRICS.md; critical error review is separate from framework numeric total."
+}

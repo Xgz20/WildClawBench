@@ -1,0 +1,33 @@
+{
+  "verification_code": "1122",
+  "items": [
+    {
+      "sms": "S1",
+      "case": "N26-A",
+      "status": "available",
+      "file": "portal/A.pdf"
+    },
+    {
+      "sms": "S2",
+      "case": "N26-B",
+      "status": "available",
+      "file": "portal/B.pdf"
+    },
+    {
+      "sms": "S3",
+      "case": "N26-C",
+      "status": "available",
+      "file": "portal/C.pdf"
+    },
+    {
+      "sms": "S4",
+      "case": "N26-A",
+      "status": "expired"
+    },
+    {
+      "sms": "S5",
+      "case": "N26-X",
+      "status": "unauthorized"
+    }
+  ]
+}

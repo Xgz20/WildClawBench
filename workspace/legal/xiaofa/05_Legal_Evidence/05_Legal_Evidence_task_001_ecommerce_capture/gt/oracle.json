@@ -1,0 +1,66 @@
+{
+  "task_id": "05_Legal_Evidence_task_001_ecommerce_capture",
+  "facts": {
+    "sku": "sku-73",
+    "display_price": 79.9,
+    "shop_name": "青枝百货",
+    "display_sales": 1200,
+    "packaging_mark": "QITONG",
+    "trademark_certificate_supplied": false,
+    "display_url": "https://shop.example.invalid/item/sku-73",
+    "notarized": false
+  },
+  "fact_sources": {
+    "sku": [
+      "page.html",
+      "scan.png"
+    ],
+    "display_price": [
+      "page.html",
+      "scan.png"
+    ],
+    "shop_name": [
+      "page.html",
+      "scan.png"
+    ],
+    "display_sales": [
+      "page.html",
+      "scan.png"
+    ],
+    "packaging_mark": [
+      "scan.png"
+    ],
+    "trademark_certificate_supplied": [
+      "materials.md"
+    ],
+    "display_url": [
+      "materials.md"
+    ],
+    "notarized": [
+      "materials.md"
+    ]
+  },
+  "input_hashes": {
+    "answer_schema.json": "b7cf2547ffd2c7ca666409f76c796ee643cc496d7be230e56df9b12996aa1455",
+    "materials.md": "5f4cf9b5b1fc8c756e201d407d78e2a5885b3fc129f0b5bfd716c6a477812f9d",
+    "page.html": "731421beaabda3e763d7366ebc25e1ec5e67cbb26b13f57322295cb22bb85436",
+    "scan.png": "c552151474eb1d1fbc3e2c48e6f0ab7491d65175b2798bf2627d793bc87a7642"
+  },
+  "deliverables": [
+    {
+      "path": "results/report.md",
+      "kind": "md",
+      "min_chars": 180
+    }
+  ],
+  "copies": {
+    "results/capture/page.html": "page.html",
+    "results/capture/product.png": "scan.png"
+  },
+  "semantic_anchors": [
+    "提取价格/店铺/销量与页面来源一致，记录展示地址、题内截取时间和本次处理时间的区别。",
+    "只有疑似线索，权属、相似性和使用方式待核；不伪称完成在线取证或公证。",
+    "页面与图片副本可回查，哈希与索引一致，说明离线模拟的证据能力限制。"
+  ],
+  "critical_review": "See METRICS.md; critical error review is separate from framework numeric total."
+}

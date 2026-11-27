@@ -1,0 +1,35 @@
+{
+  "version": 1,
+  "facts_fields": {
+    "claimed_difference": {
+      "type": "number"
+    },
+    "later_contract_payer": {
+      "type": "string"
+    },
+    "later_contract_payee": {
+      "type": "string"
+    },
+    "later_contract_amount": {
+      "type": "number"
+    },
+    "written_repricing_proof": {
+      "type": "boolean"
+    },
+    "refund_date": {
+      "type": "any"
+    },
+    "guarantee_expiry_date": {
+      "type": "any"
+    },
+    "claim_total": {
+      "type": "number"
+    }
+  },
+  "conventions": "金额为元；日期YYYY-MM-DD；unknown用null；数组无序不重复；source locator须为材料段号、条款、页码、图中文字位置或视频时间码。数字容差0.005。",
+  "output": {
+    "facts": "按facts_fields逐项填入，不在此提供答案",
+    "sources": "每个fact key对应[{file:原始相对路径,locator:具体位置}]",
+    "input_sha256": "原始相对文件路径到实际SHA-256的映射"
+  }
+}

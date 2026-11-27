@@ -1,0 +1,56 @@
+{
+  "task_id": "03_Legal_Drafting_task_002_labor_defense",
+  "facts": {
+    "respondent": "澄序公司",
+    "applicant": "许某",
+    "claim_amount": 48000,
+    "receipt_date_confirmed": false,
+    "manual_receipt_proven": false,
+    "union_notice_proven": false
+  },
+  "fact_sources": {
+    "respondent": [
+      "materials.md"
+    ],
+    "applicant": [
+      "materials.md"
+    ],
+    "claim_amount": [
+      "materials.md"
+    ],
+    "receipt_date_confirmed": [
+      "materials.md"
+    ],
+    "manual_receipt_proven": [
+      "materials.md"
+    ],
+    "union_notice_proven": [
+      "materials.md"
+    ]
+  },
+  "input_hashes": {
+    "answer_schema.json": "b345c5b8e7a07d8ab888a37c9b0ce9ab70da5a1c1ee76281d141b36e8c3a1087",
+    "draft.docx": "a16446e6a16904f409f130dde90b4cb4ca8886b9fc8da731135eaa46d7b93e37",
+    "law_packet.md": "ab2aa8d8c29de05ff4682e04f39cdd66f41007c3aa718493e43a272e49e43f1c",
+    "materials.md": "d7209f434b5641116a58accdc0f602d5dbbf963166f02ba79a3713fc6d423bcc"
+  },
+  "deliverables": [
+    {
+      "path": "results/defense.docx",
+      "kind": "docx",
+      "min_chars": 200
+    },
+    {
+      "path": "results/changes.md",
+      "kind": "md",
+      "min_chars": 100
+    }
+  ],
+  "copies": {},
+  "semantic_anchors": [
+    "删去已签收手册/已通知工会等无证据断言，改为待核并具体说明。",
+    "代理立场不掩盖批准就医与送达争议，不保证胜诉。",
+    "修订稿标题、段落编号、主体和证据引用清楚，非图片文书，可继续编辑。"
+  ],
+  "critical_review": "See METRICS.md; critical error review is separate from framework numeric total."
+}

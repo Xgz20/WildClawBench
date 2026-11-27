@@ -1,0 +1,722 @@
+schema_version: 1
+registry_contract:
+  active_task_count: 30
+  category_task_counts:
+    legal_intake: 5
+    legal_analysis: 5
+    legal_drafting: 5
+    legal_contracts: 5
+    legal_evidence: 5
+    legal_delivery: 5
+tasks:
+- task_id: 01_Legal_Intake_task_001_case_registration
+  origin:
+    mode: document_feedback_adapted
+    production_refs: []
+    document_refs:
+    - url: https://yf2ljykclb.xfchat.iflytek.com/docx/doxrzMrfTQZuGPeFDbKfUQcRglf
+      locator: 案件信息登记
+      source_kind: user_feedback_or_product_value
+    - url: https://yf2ljykclb.xfchat.iflytek.com/sheets/shtrzsEQxbOLU4t0Nh9ggsiHmLf?sheet=TTcsSP
+      locator: C7
+      source_kind: user_feedback_or_product_value
+    direct_task_copy: false
+    authoring:
+      kind: synthetic_owned_fixture
+      oracle_basis: Independent declarative facts and task-specific semantic anchors;
+        not candidate outputs
+      review_status: author_controls_only_expert_review_pending
+  network:
+    mode: offline
+    allowed_urls: []
+    freeze_requirement: null
+  attributes:
+    requires_visual_input: true
+    coding_primary: false
+    difficulty_status: estimated_before_pilot
+- task_id: 01_Legal_Intake_task_002_dossier_versions
+  origin:
+    mode: document_feedback_adapted
+    production_refs: []
+    document_refs:
+    - url: https://yf2ljykclb.xfchat.iflytek.com/docx/doxrzMrfTQZuGPeFDbKfUQcRglf
+      locator: 卷宗整理
+      source_kind: user_feedback_or_product_value
+    - url: https://yf2ljykclb.xfchat.iflytek.com/sheets/shtrzsEQxbOLU4t0Nh9ggsiHmLf?sheet=3daz2t
+      locator: C2/E2
+      source_kind: user_feedback_or_product_value
+    direct_task_copy: false
+    authoring:
+      kind: synthetic_owned_fixture
+      oracle_basis: Independent declarative facts and task-specific semantic anchors;
+        not candidate outputs
+      review_status: author_controls_only_expert_review_pending
+  network:
+    mode: offline
+    allowed_urls: []
+    freeze_requirement: null
+  attributes:
+    requires_visual_input: false
+    coding_primary: false
+    difficulty_status: estimated_before_pilot
+- task_id: 01_Legal_Intake_task_003_evidence_purpose
+  origin:
+    mode: document_feedback_adapted
+    production_refs: []
+    document_refs:
+    - url: https://yf2ljykclb.xfchat.iflytek.com/sheets/shtrzsEQxbOLU4t0Nh9ggsiHmLf?sheet=TTcsSP
+      locator: C7
+      source_kind: user_feedback_or_product_value
+    - url: https://yf2ljykclb.xfchat.iflytek.com/sheets/shtrzsEQxbOLU4t0Nh9ggsiHmLf?sheet=TTcsSP
+      locator: E10
+      source_kind: user_feedback_or_product_value
+    direct_task_copy: false
+    authoring:
+      kind: synthetic_owned_fixture
+      oracle_basis: Independent declarative facts and task-specific semantic anchors;
+        not candidate outputs
+      review_status: author_controls_only_expert_review_pending
+  network:
+    mode: offline
+    allowed_urls: []
+    freeze_requirement: null
+  attributes:
+    requires_visual_input: false
+    coding_primary: false
+    difficulty_status: estimated_before_pilot
+- task_id: 01_Legal_Intake_task_004_dual_timelines
+  origin:
+    mode: document_feedback_adapted
+    production_refs: []
+    document_refs:
+    - url: https://yf2ljykclb.xfchat.iflytek.com/docx/doxrzMrfTQZuGPeFDbKfUQcRglf
+      locator: 案情分析
+      source_kind: user_feedback_or_product_value
+    - url: https://yf2ljykclb.xfchat.iflytek.com/docx/doxrzMrfTQZuGPeFDbKfUQcRglf
+      locator: doxrzWG3zqN15TGegjDudNueewc
+      source_kind: user_feedback_or_product_value
+    direct_task_copy: false
+    authoring:
+      kind: synthetic_owned_fixture
+      oracle_basis: Independent declarative facts and task-specific semantic anchors;
+        not candidate outputs
+      review_status: author_controls_only_expert_review_pending
+  network:
+    mode: offline
+    allowed_urls: []
+    freeze_requirement: null
+  attributes:
+    requires_visual_input: false
+    coding_primary: false
+    difficulty_status: estimated_before_pilot
+- task_id: 01_Legal_Intake_task_005_case_isolation
+  origin:
+    mode: document_feedback_adapted
+    production_refs: []
+    document_refs:
+    - url: https://yf2ljykclb.xfchat.iflytek.com/docx/doxrzMrfTQZuGPeFDbKfUQcRglf
+      locator: 案件信息登记
+      source_kind: user_feedback_or_product_value
+    - url: https://yf2ljykclb.xfchat.iflytek.com/sheets/shtrzsEQxbOLU4t0Nh9ggsiHmLf?sheet=3daz2t
+      locator: E2
+      source_kind: user_feedback_or_product_value
+    direct_task_copy: false
+    authoring:
+      kind: synthetic_owned_fixture
+      oracle_basis: Independent declarative facts and task-specific semantic anchors;
+        not candidate outputs
+      review_status: author_controls_only_expert_review_pending
+  network:
+    mode: offline
+    allowed_urls: []
+    freeze_requirement: null
+  attributes:
+    requires_visual_input: false
+    coding_primary: false
+    difficulty_status: estimated_before_pilot
+- task_id: 02_Legal_Analysis_task_001_clarify_before_advice
+  origin:
+    mode: document_feedback_adapted
+    production_refs: []
+    document_refs:
+    - url: https://yf2ljykclb.xfchat.iflytek.com/sheets/shtrzsEQxbOLU4t0Nh9ggsiHmLf?sheet=TTcsSP
+      locator: C2/E2/F2
+      source_kind: user_feedback_or_product_value
+    direct_task_copy: false
+    authoring:
+      kind: synthetic_owned_fixture
+      oracle_basis: Independent declarative facts and task-specific semantic anchors;
+        not candidate outputs
+      review_status: author_controls_only_expert_review_pending
+  network:
+    mode: offline
+    allowed_urls: []
+    freeze_requirement: null
+  attributes:
+    requires_visual_input: false
+    coding_primary: false
+    difficulty_status: estimated_before_pilot
+- task_id: 02_Legal_Analysis_task_002_payee_direction
+  origin:
+    mode: document_feedback_adapted
+    production_refs: []
+    document_refs:
+    - url: https://yf2ljykclb.xfchat.iflytek.com/docx/doxrzMrfTQZuGPeFDbKfUQcRglf
+      locator: doxrz69QJ5a3O0oqE7O4TqSdPdb
+      source_kind: user_feedback_or_product_value
+    - url: https://yf2ljykclb.xfchat.iflytek.com/sheets/shtrzsEQxbOLU4t0Nh9ggsiHmLf?sheet=3daz2t
+      locator: C7/H7
+      source_kind: user_feedback_or_product_value
+    direct_task_copy: false
+    authoring:
+      kind: synthetic_owned_fixture
+      oracle_basis: Independent declarative facts and task-specific semantic anchors;
+        not candidate outputs
+      review_status: author_controls_only_expert_review_pending
+  network:
+    mode: offline
+    allowed_urls: []
+    freeze_requirement: null
+  attributes:
+    requires_visual_input: false
+    coding_primary: false
+    difficulty_status: estimated_before_pilot
+- task_id: 02_Legal_Analysis_task_003_citation_verification
+  origin:
+    mode: document_feedback_adapted
+    production_refs: []
+    document_refs:
+    - url: https://yf2ljykclb.xfchat.iflytek.com/sheets/shtrzsEQxbOLU4t0Nh9ggsiHmLf?sheet=TTcsSP
+      locator: C5/C9/E9
+      source_kind: user_feedback_or_product_value
+    direct_task_copy: false
+    authoring:
+      kind: synthetic_owned_fixture
+      oracle_basis: Independent declarative facts and task-specific semantic anchors;
+        not candidate outputs
+      review_status: author_controls_only_expert_review_pending
+  network:
+    mode: offline
+    allowed_urls: []
+    freeze_requirement: null
+  attributes:
+    requires_visual_input: false
+    coding_primary: false
+    difficulty_status: estimated_before_pilot
+- task_id: 02_Legal_Analysis_task_004_labor_risk
+  origin:
+    mode: document_feedback_adapted
+    production_refs: []
+    document_refs:
+    - url: https://yf2ljykclb.xfchat.iflytek.com/sheets/shtrzsEQxbOLU4t0Nh9ggsiHmLf?sheet=TTcsSP
+      locator: C10/E10
+      source_kind: user_feedback_or_product_value
+    direct_task_copy: false
+    authoring:
+      kind: synthetic_owned_fixture
+      oracle_basis: Independent declarative facts and task-specific semantic anchors;
+        not candidate outputs
+      review_status: author_controls_only_expert_review_pending
+  network:
+    mode: offline
+    allowed_urls: []
+    freeze_requirement: null
+  attributes:
+    requires_visual_input: false
+    coding_primary: false
+    difficulty_status: estimated_before_pilot
+- task_id: 02_Legal_Analysis_task_005_revise_with_evidence
+  origin:
+    mode: document_feedback_adapted
+    production_refs: []
+    document_refs:
+    - url: https://yf2ljykclb.xfchat.iflytek.com/docx/doxrzMrfTQZuGPeFDbKfUQcRglf
+      locator: 案情分析
+      source_kind: user_feedback_or_product_value
+    - url: https://yf2ljykclb.xfchat.iflytek.com/sheets/shtrzsEQxbOLU4t0Nh9ggsiHmLf?sheet=TTcsSP
+      locator: C7
+      source_kind: user_feedback_or_product_value
+    direct_task_copy: false
+    authoring:
+      kind: synthetic_owned_fixture
+      oracle_basis: Independent declarative facts and task-specific semantic anchors;
+        not candidate outputs
+      review_status: author_controls_only_expert_review_pending
+  network:
+    mode: offline
+    allowed_urls: []
+    freeze_requirement: null
+  attributes:
+    requires_visual_input: false
+    coding_primary: false
+    difficulty_status: estimated_before_pilot
+- task_id: 03_Legal_Drafting_task_001_complaint
+  origin:
+    mode: document_feedback_adapted
+    production_refs: []
+    document_refs:
+    - url: https://yf2ljykclb.xfchat.iflytek.com/docx/doxrzMrfTQZuGPeFDbKfUQcRglf
+      locator: 文书生成
+      source_kind: user_feedback_or_product_value
+    - url: https://yf2ljykclb.xfchat.iflytek.com/sheets/shtrzsEQxbOLU4t0Nh9ggsiHmLf?sheet=3daz2t
+      locator: C3/E3/F3
+      source_kind: user_feedback_or_product_value
+    direct_task_copy: false
+    authoring:
+      kind: synthetic_owned_fixture
+      oracle_basis: Independent declarative facts and task-specific semantic anchors;
+        not candidate outputs
+      review_status: author_controls_only_expert_review_pending
+  network:
+    mode: offline
+    allowed_urls: []
+    freeze_requirement: null
+  attributes:
+    requires_visual_input: false
+    coding_primary: false
+    difficulty_status: estimated_before_pilot
+- task_id: 03_Legal_Drafting_task_002_labor_defense
+  origin:
+    mode: document_feedback_adapted
+    production_refs: []
+    document_refs:
+    - url: https://yf2ljykclb.xfchat.iflytek.com/sheets/shtrzsEQxbOLU4t0Nh9ggsiHmLf?sheet=TTcsSP
+      locator: C10/E10
+      source_kind: user_feedback_or_product_value
+    direct_task_copy: false
+    authoring:
+      kind: synthetic_owned_fixture
+      oracle_basis: Independent declarative facts and task-specific semantic anchors;
+        not candidate outputs
+      review_status: author_controls_only_expert_review_pending
+  network:
+    mode: offline
+    allowed_urls: []
+    freeze_requirement: null
+  attributes:
+    requires_visual_input: false
+    coding_primary: false
+    difficulty_status: estimated_before_pilot
+- task_id: 03_Legal_Drafting_task_003_advocacy_memo
+  origin:
+    mode: document_feedback_adapted
+    production_refs: []
+    document_refs:
+    - url: https://yf2ljykclb.xfchat.iflytek.com/docx/doxrzMrfTQZuGPeFDbKfUQcRglf
+      locator: 案情分析/文书生成
+      source_kind: user_feedback_or_product_value
+    - url: https://yf2ljykclb.xfchat.iflytek.com/sheets/shtrzsEQxbOLU4t0Nh9ggsiHmLf?sheet=3daz2t
+      locator: C7
+      source_kind: user_feedback_or_product_value
+    direct_task_copy: false
+    authoring:
+      kind: synthetic_owned_fixture
+      oracle_basis: Independent declarative facts and task-specific semantic anchors;
+        not candidate outputs
+      review_status: author_controls_only_expert_review_pending
+  network:
+    mode: offline
+    allowed_urls: []
+    freeze_requirement: null
+  attributes:
+    requires_visual_input: false
+    coding_primary: false
+    difficulty_status: estimated_before_pilot
+- task_id: 03_Legal_Drafting_task_004_batch_five_documents
+  origin:
+    mode: document_feedback_adapted
+    production_refs: []
+    document_refs:
+    - url: https://yf2ljykclb.xfchat.iflytek.com/docx/doxrzMrfTQZuGPeFDbKfUQcRglf
+      locator: 批量文书生成
+      source_kind: user_feedback_or_product_value
+    - url: https://yf2ljykclb.xfchat.iflytek.com/sheets/shtrzsEQxbOLU4t0Nh9ggsiHmLf?sheet=3daz2t
+      locator: C3/E3/F3/C6/E6
+      source_kind: user_feedback_or_product_value
+    direct_task_copy: false
+    authoring:
+      kind: synthetic_owned_fixture
+      oracle_basis: Independent declarative facts and task-specific semantic anchors;
+        not candidate outputs
+      review_status: author_controls_only_expert_review_pending
+  network:
+    mode: offline
+    allowed_urls: []
+    freeze_requirement: null
+  attributes:
+    requires_visual_input: false
+    coding_primary: false
+    difficulty_status: estimated_before_pilot
+- task_id: 03_Legal_Drafting_task_005_structured_complaint
+  origin:
+    mode: document_feedback_adapted
+    production_refs: []
+    document_refs:
+    - url: https://yf2ljykclb.xfchat.iflytek.com/docx/doxrzMrfTQZuGPeFDbKfUQcRglf
+      locator: 要素式起诉状
+      source_kind: user_feedback_or_product_value
+    - url: https://yf2ljykclb.xfchat.iflytek.com/sheets/shtrzsEQxbOLU4t0Nh9ggsiHmLf?sheet=3daz2t
+      locator: C3
+      source_kind: user_feedback_or_product_value
+    direct_task_copy: false
+    authoring:
+      kind: synthetic_owned_fixture
+      oracle_basis: Independent declarative facts and task-specific semantic anchors;
+        not candidate outputs
+      review_status: author_controls_only_expert_review_pending
+  network:
+    mode: offline
+    allowed_urls: []
+    freeze_requirement: null
+  attributes:
+    requires_visual_input: false
+    coding_primary: false
+    difficulty_status: estimated_before_pilot
+- task_id: 04_Legal_Contracts_task_001_editable_comments
+  origin:
+    mode: document_feedback_adapted
+    production_refs: []
+    document_refs:
+    - url: https://yf2ljykclb.xfchat.iflytek.com/sheets/shtrzsEQxbOLU4t0Nh9ggsiHmLf?sheet=TTcsSP
+      locator: C6/C8/E8/C12/E12
+      source_kind: user_feedback_or_product_value
+    direct_task_copy: false
+    authoring:
+      kind: synthetic_owned_fixture
+      oracle_basis: Independent declarative facts and task-specific semantic anchors;
+        not candidate outputs
+      review_status: author_controls_only_expert_review_pending
+  network:
+    mode: offline
+    allowed_urls: []
+    freeze_requirement: null
+  attributes:
+    requires_visual_input: false
+    coding_primary: false
+    difficulty_status: estimated_before_pilot
+- task_id: 04_Legal_Contracts_task_002_english_license
+  origin:
+    mode: document_feedback_adapted
+    production_refs: []
+    document_refs:
+    - url: https://yf2ljykclb.xfchat.iflytek.com/sheets/shtrzsEQxbOLU4t0Nh9ggsiHmLf?sheet=TTcsSP
+      locator: C3
+      source_kind: user_feedback_or_product_value
+    direct_task_copy: false
+    authoring:
+      kind: synthetic_owned_fixture
+      oracle_basis: Independent declarative facts and task-specific semantic anchors;
+        not candidate outputs
+      review_status: author_controls_only_expert_review_pending
+  network:
+    mode: offline
+    allowed_urls: []
+    freeze_requirement: null
+  attributes:
+    requires_visual_input: false
+    coding_primary: false
+    difficulty_status: estimated_before_pilot
+- task_id: 04_Legal_Contracts_task_003_contract_diff
+  origin:
+    mode: document_feedback_adapted
+    production_refs: []
+    document_refs:
+    - url: https://yf2ljykclb.xfchat.iflytek.com/sheets/shtrzsEQxbOLU4t0Nh9ggsiHmLf?sheet=TTcsSP
+      locator: C6/C8
+      source_kind: user_feedback_or_product_value
+    direct_task_copy: false
+    authoring:
+      kind: synthetic_owned_fixture
+      oracle_basis: Independent declarative facts and task-specific semantic anchors;
+        not candidate outputs
+      review_status: author_controls_only_expert_review_pending
+  network:
+    mode: offline
+    allowed_urls: []
+    freeze_requirement: null
+  attributes:
+    requires_visual_input: false
+    coding_primary: false
+    difficulty_status: estimated_before_pilot
+- task_id: 04_Legal_Contracts_task_004_role_priorities
+  origin:
+    mode: document_feedback_adapted
+    production_refs: []
+    document_refs:
+    - url: https://yf2ljykclb.xfchat.iflytek.com/sheets/shtrzsEQxbOLU4t0Nh9ggsiHmLf?sheet=TTcsSP
+      locator: C8/E8/C12/E12
+      source_kind: user_feedback_or_product_value
+    direct_task_copy: false
+    authoring:
+      kind: synthetic_owned_fixture
+      oracle_basis: Independent declarative facts and task-specific semantic anchors;
+        not candidate outputs
+      review_status: author_controls_only_expert_review_pending
+  network:
+    mode: offline
+    allowed_urls: []
+    freeze_requirement: null
+  attributes:
+    requires_visual_input: false
+    coding_primary: false
+    difficulty_status: estimated_before_pilot
+- task_id: 04_Legal_Contracts_task_005_comment_revision
+  origin:
+    mode: document_feedback_adapted
+    production_refs: []
+    document_refs:
+    - url: https://yf2ljykclb.xfchat.iflytek.com/sheets/shtrzsEQxbOLU4t0Nh9ggsiHmLf?sheet=TTcsSP
+      locator: C6
+      source_kind: user_feedback_or_product_value
+    direct_task_copy: false
+    authoring:
+      kind: synthetic_owned_fixture
+      oracle_basis: Independent declarative facts and task-specific semantic anchors;
+        not candidate outputs
+      review_status: author_controls_only_expert_review_pending
+  network:
+    mode: offline
+    allowed_urls: []
+    freeze_requirement: null
+  attributes:
+    requires_visual_input: false
+    coding_primary: false
+    difficulty_status: estimated_before_pilot
+- task_id: 05_Legal_Evidence_task_001_ecommerce_capture
+  origin:
+    mode: document_feedback_adapted
+    production_refs: []
+    document_refs:
+    - url: https://yf2ljykclb.xfchat.iflytek.com/docx/doxrzMrfTQZuGPeFDbKfUQcRglf
+      locator: 电商网站侵权取证
+      source_kind: user_feedback_or_product_value
+    direct_task_copy: false
+    authoring:
+      kind: synthetic_owned_fixture
+      oracle_basis: Independent declarative facts and task-specific semantic anchors;
+        not candidate outputs
+      review_status: author_controls_only_expert_review_pending
+  network:
+    mode: offline
+    allowed_urls: []
+    freeze_requirement: null
+  attributes:
+    requires_visual_input: true
+    coding_primary: false
+    difficulty_status: estimated_before_pilot
+- task_id: 05_Legal_Evidence_task_002_livestream_segments
+  origin:
+    mode: document_feedback_adapted
+    production_refs: []
+    document_refs:
+    - url: https://yf2ljykclb.xfchat.iflytek.com/docx/doxrzMrfTQZuGPeFDbKfUQcRglf
+      locator: 直播视频侵权取证
+      source_kind: user_feedback_or_product_value
+    - url: https://yf2ljykclb.xfchat.iflytek.com/docx/doxrzMrfTQZuGPeFDbKfUQcRglf
+      locator: doxrzRKmI1jkKkv9fGLkv7X2Ogh
+      source_kind: user_feedback_or_product_value
+    direct_task_copy: false
+    authoring:
+      kind: synthetic_owned_fixture
+      oracle_basis: Independent declarative facts and task-specific semantic anchors;
+        not candidate outputs
+      review_status: author_controls_only_expert_review_pending
+  network:
+    mode: offline
+    allowed_urls: []
+    freeze_requirement: null
+  attributes:
+    requires_visual_input: true
+    coding_primary: false
+    difficulty_status: estimated_before_pilot
+- task_id: 05_Legal_Evidence_task_003_chat_continuity
+  origin:
+    mode: document_feedback_adapted
+    production_refs: []
+    document_refs:
+    - url: https://yf2ljykclb.xfchat.iflytek.com/docx/doxrzMrfTQZuGPeFDbKfUQcRglf
+      locator: 微信聊天记录取证
+      source_kind: user_feedback_or_product_value
+    direct_task_copy: false
+    authoring:
+      kind: synthetic_owned_fixture
+      oracle_basis: Independent declarative facts and task-specific semantic anchors;
+        not candidate outputs
+      review_status: author_controls_only_expert_review_pending
+  network:
+    mode: offline
+    allowed_urls: []
+    freeze_requirement: null
+  attributes:
+    requires_visual_input: true
+    coding_primary: false
+    difficulty_status: estimated_before_pilot
+- task_id: 05_Legal_Evidence_task_004_qr_source
+  origin:
+    mode: document_feedback_adapted
+    production_refs: []
+    document_refs:
+    - url: https://yf2ljykclb.xfchat.iflytek.com/docx/doxrzMrfTQZuGPeFDbKfUQcRglf
+      locator: 电商网站侵权取证/二维码入口
+      source_kind: user_feedback_or_product_value
+    direct_task_copy: false
+    authoring:
+      kind: synthetic_owned_fixture
+      oracle_basis: Independent declarative facts and task-specific semantic anchors;
+        not candidate outputs
+      review_status: author_controls_only_expert_review_pending
+  network:
+    mode: offline
+    allowed_urls: []
+    freeze_requirement: null
+  attributes:
+    requires_visual_input: true
+    coding_primary: false
+    difficulty_status: estimated_before_pilot
+- task_id: 05_Legal_Evidence_task_005_custody_manifest
+  origin:
+    mode: document_feedback_adapted
+    production_refs: []
+    document_refs:
+    - url: https://yf2ljykclb.xfchat.iflytek.com/docx/doxrzMrfTQZuGPeFDbKfUQcRglf
+      locator: 电子取证/聊天记录取证
+      source_kind: user_feedback_or_product_value
+    direct_task_copy: false
+    authoring:
+      kind: synthetic_owned_fixture
+      oracle_basis: Independent declarative facts and task-specific semantic anchors;
+        not candidate outputs
+      review_status: author_controls_only_expert_review_pending
+  network:
+    mode: offline
+    allowed_urls: []
+    freeze_requirement: null
+  attributes:
+    requires_visual_input: true
+    coding_primary: false
+    difficulty_status: estimated_before_pilot
+- task_id: 06_Legal_Delivery_task_001_court_download
+  origin:
+    mode: document_feedback_adapted
+    production_refs: []
+    document_refs:
+    - url: https://yf2ljykclb.xfchat.iflytek.com/docx/doxrzMrfTQZuGPeFDbKfUQcRglf
+      locator: 法院文书领取
+      source_kind: user_feedback_or_product_value
+    - url: https://yf2ljykclb.xfchat.iflytek.com/sheets/shtrzsEQxbOLU4t0Nh9ggsiHmLf?sheet=TTcsSP
+      locator: C11/E11
+      source_kind: user_feedback_or_product_value
+    direct_task_copy: false
+    authoring:
+      kind: synthetic_owned_fixture
+      oracle_basis: Independent declarative facts and task-specific semantic anchors;
+        not candidate outputs
+      review_status: author_controls_only_expert_review_pending
+  network:
+    mode: offline
+    allowed_urls: []
+    freeze_requirement: null
+  attributes:
+    requires_visual_input: false
+    coding_primary: false
+    difficulty_status: estimated_before_pilot
+- task_id: 06_Legal_Delivery_task_002_handoff_archive
+  origin:
+    mode: document_feedback_adapted
+    production_refs: []
+    document_refs:
+    - url: https://yf2ljykclb.xfchat.iflytek.com/sheets/shtrzsEQxbOLU4t0Nh9ggsiHmLf?sheet=3daz2t
+      locator: C2/E2/F2
+      source_kind: user_feedback_or_product_value
+    - url: https://yf2ljykclb.xfchat.iflytek.com/docx/doxrzMrfTQZuGPeFDbKfUQcRglf
+      locator: 卷宗整理
+      source_kind: user_feedback_or_product_value
+    direct_task_copy: false
+    authoring:
+      kind: synthetic_owned_fixture
+      oracle_basis: Independent declarative facts and task-specific semantic anchors;
+        not candidate outputs
+      review_status: author_controls_only_expert_review_pending
+  network:
+    mode: offline
+    allowed_urls: []
+    freeze_requirement: null
+  attributes:
+    requires_visual_input: false
+    coding_primary: false
+    difficulty_status: estimated_before_pilot
+- task_id: 06_Legal_Delivery_task_003_redacted_handoff
+  origin:
+    mode: document_feedback_adapted
+    production_refs: []
+    document_refs:
+    - url: https://yf2ljykclb.xfchat.iflytek.com/sheets/shtrzsEQxbOLU4t0Nh9ggsiHmLf?sheet=3daz2t
+      locator: F2
+      source_kind: user_feedback_or_product_value
+    direct_task_copy: false
+    authoring:
+      kind: synthetic_owned_fixture
+      oracle_basis: Independent declarative facts and task-specific semantic anchors;
+        not candidate outputs
+      review_status: author_controls_only_expert_review_pending
+  network:
+    mode: offline
+    allowed_urls: []
+    freeze_requirement: null
+  attributes:
+    requires_visual_input: true
+    coding_primary: false
+    difficulty_status: estimated_before_pilot
+- task_id: 06_Legal_Delivery_task_004_efficiency_accounting
+  origin:
+    mode: document_feedback_adapted
+    production_refs: []
+    document_refs:
+    - url: https://yf2ljykclb.xfchat.iflytek.com/docx/doxrzMrfTQZuGPeFDbKfUQcRglf
+      locator: 效率指标/批量文书生成
+      source_kind: user_feedback_or_product_value
+    - url: https://yf2ljykclb.xfchat.iflytek.com/sheets/shtrzsEQxbOLU4t0Nh9ggsiHmLf?sheet=3daz2t
+      locator: F3/C6/E6/E5
+      source_kind: user_feedback_or_product_value
+    - url: https://yf2ljykclb.xfchat.iflytek.com/sheets/shtrzsEQxbOLU4t0Nh9ggsiHmLf?sheet=TTcsSP
+      locator: C10/D10/E10
+      source_kind: user_feedback_or_product_value
+    direct_task_copy: false
+    authoring:
+      kind: synthetic_owned_fixture
+      oracle_basis: Independent declarative facts and task-specific semantic anchors;
+        not candidate outputs
+      review_status: author_controls_only_expert_review_pending
+  network:
+    mode: offline
+    allowed_urls: []
+    freeze_requirement: null
+  attributes:
+    requires_visual_input: false
+    coding_primary: false
+    difficulty_status: estimated_before_pilot
+- task_id: 06_Legal_Delivery_task_005_source_bound_brief
+  origin:
+    mode: document_feedback_adapted
+    production_refs: []
+    document_refs:
+    - url: https://yf2ljykclb.xfchat.iflytek.com/sheets/shtrzsEQxbOLU4t0Nh9ggsiHmLf?sheet=TTcsSP
+      locator: C4
+      source_kind: user_feedback_or_product_value
+    - url: https://yf2ljykclb.xfchat.iflytek.com/docx/doxrzMrfTQZuGPeFDbKfUQcRglf
+      locator: 整体价值/量化指标
+      source_kind: user_feedback_or_product_value
+    direct_task_copy: false
+    authoring:
+      kind: synthetic_owned_fixture
+      oracle_basis: Independent declarative facts and task-specific semantic anchors;
+        not candidate outputs
+      review_status: author_controls_only_expert_review_pending
+  network:
+    mode: offline
+    allowed_urls: []
+    freeze_requirement: null
+  attributes:
+    requires_visual_input: false
+    coding_primary: false
+    difficulty_status: estimated_before_pilot

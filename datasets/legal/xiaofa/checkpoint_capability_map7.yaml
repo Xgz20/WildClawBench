@@ -1,0 +1,44 @@
+01_Legal_Intake_task_001_case_registration: &id001
+  automated.fact_accuracy:
+  - data_processing
+  automated.delivery_integrity:
+  - verification_delivery
+  automated.evidence_binding:
+  - information_retrieval
+  automated.input_preservation:
+  - verification_delivery
+  llm_judge.professional_quality:
+  - reasoning_planning
+  llm_judge.evidence_boundaries:
+  - information_retrieval
+  llm_judge.usable_handoff:
+  - verification_delivery
+01_Legal_Intake_task_002_dossier_versions: *id001
+01_Legal_Intake_task_003_evidence_purpose: *id001
+01_Legal_Intake_task_004_dual_timelines: *id001
+01_Legal_Intake_task_005_case_isolation: *id001
+02_Legal_Analysis_task_001_clarify_before_advice: *id001
+02_Legal_Analysis_task_002_payee_direction: *id001
+02_Legal_Analysis_task_003_citation_verification: *id001
+02_Legal_Analysis_task_004_labor_risk: *id001
+02_Legal_Analysis_task_005_revise_with_evidence: *id001
+03_Legal_Drafting_task_001_complaint: *id001
+03_Legal_Drafting_task_002_labor_defense: *id001
+03_Legal_Drafting_task_003_advocacy_memo: *id001
+03_Legal_Drafting_task_004_batch_five_documents: *id001
+03_Legal_Drafting_task_005_structured_complaint: *id001
+04_Legal_Contracts_task_001_editable_comments: *id001
+04_Legal_Contracts_task_002_english_license: *id001
+04_Legal_Contracts_task_003_contract_diff: *id001
+04_Legal_Contracts_task_004_role_priorities: *id001
+04_Legal_Contracts_task_005_comment_revision: *id001
+05_Legal_Evidence_task_001_ecommerce_capture: *id001
+05_Legal_Evidence_task_002_livestream_segments: *id001
+05_Legal_Evidence_task_003_chat_continuity: *id001
+05_Legal_Evidence_task_004_qr_source: *id001
+05_Legal_Evidence_task_005_custody_manifest: *id001
+06_Legal_Delivery_task_001_court_download: *id001
+06_Legal_Delivery_task_002_handoff_archive: *id001
+06_Legal_Delivery_task_003_redacted_handoff: *id001
+06_Legal_Delivery_task_004_efficiency_accounting: *id001
+06_Legal_Delivery_task_005_source_bound_brief: *id001

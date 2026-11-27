@@ -1,0 +1,63 @@
+{
+  "task_id": "04_Legal_Contracts_task_001_editable_comments",
+  "facts": {
+    "buyer": "云栖公司",
+    "supplier": "景榆公司",
+    "total_price": 200000,
+    "advance_percent": 100,
+    "deemed_acceptance_hours": 24,
+    "supplier_cap": 1000,
+    "arbitration_institution_named": false
+  },
+  "fact_sources": {
+    "buyer": [
+      "materials.md"
+    ],
+    "supplier": [
+      "materials.md"
+    ],
+    "total_price": [
+      "materials.md"
+    ],
+    "advance_percent": [
+      "contract.docx"
+    ],
+    "deemed_acceptance_hours": [
+      "contract.docx"
+    ],
+    "supplier_cap": [
+      "contract.docx"
+    ],
+    "arbitration_institution_named": [
+      "contract.docx"
+    ]
+  },
+  "input_hashes": {
+    "answer_schema.json": "8f82bbe4b8c29b78671809283877797e4b4141c54c64ebff9cf69f665e59e7c1",
+    "contract.docx": "2f8efef82cf50e91e6b1b72c48258f1e422836acd3ecc2b6a19565153cb6dfbf",
+    "materials.md": "bf65f81487e400bbd6fcb535c5618baf1984fdb642575fda1539268aa3be5a75"
+  },
+  "deliverables": [
+    {
+      "path": "results/reviewed.docx",
+      "kind": "docx",
+      "comments": 4,
+      "min_chars": 100
+    },
+    {
+      "path": "results/risks.md",
+      "kind": "md",
+      "min_chars": 220
+    }
+  ],
+  "copies": {},
+  "semantic_anchors": [
+    "针对100%预付、24小时默认验收、1000元单方责任上限及未指明仲裁机构识别风险，优先级符合买方背景。",
+    "建议可谈判且不一概宣布条款无效；事实、法律判断、商业偏好分开。",
+    "至少四处原生批注锚定相应正文，文字可编辑，正文完整保留，清单与批注相互对应。"
+  ],
+  "critical_review": "See METRICS.md; critical error review is separate from framework numeric total.",
+  "unchanged_doc_body": {
+    "results/reviewed.docx": "contract.docx"
+  }
+}

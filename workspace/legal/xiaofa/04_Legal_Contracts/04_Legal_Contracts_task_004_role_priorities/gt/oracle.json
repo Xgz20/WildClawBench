@@ -1,0 +1,53 @@
+{
+  "task_id": "04_Legal_Contracts_task_004_role_priorities",
+  "facts": {
+    "client_role": "委托方",
+    "budget": 600000,
+    "latest_launch": "2026-09-01",
+    "auto_renewal_acceptable": false,
+    "unilateral_price_change_acceptable": false,
+    "accepted_confidentiality_years": 3,
+    "monthly_payment": 50000
+  },
+  "fact_sources": {
+    "client_role": [
+      "materials.md"
+    ],
+    "budget": [
+      "materials.md"
+    ],
+    "latest_launch": [
+      "materials.md"
+    ],
+    "auto_renewal_acceptable": [
+      "materials.md"
+    ],
+    "unilateral_price_change_acceptable": [
+      "materials.md"
+    ],
+    "accepted_confidentiality_years": [
+      "materials.md"
+    ],
+    "monthly_payment": [
+      "materials.md"
+    ]
+  },
+  "input_hashes": {
+    "answer_schema.json": "ce7f9dcfccbfb2ef611c90f1c96034779113f9922b5eafd61bce71198151fd43",
+    "materials.md": "c277a444cbc14b9dedaa86746100c464d85f06956180285ecc84338b65dfb604"
+  },
+  "deliverables": [
+    {
+      "path": "results/report.md",
+      "kind": "md",
+      "min_chars": 180
+    }
+  ],
+  "copies": {},
+  "semantic_anchors": [
+    "优先处理上线截止、单方涨价/自动续费与付款验收，不能以供应商利益为主要立场。",
+    "区分24小时响应与恢复完成；终止费建议体现已履行部分与实际成本，不只写删除所有责任。",
+    "不重复追问已知预算和立场；已接受C6不无故列高风险，建议有可谈判措辞。"
+  ],
+  "critical_review": "See METRICS.md; critical error review is separate from framework numeric total."
+}

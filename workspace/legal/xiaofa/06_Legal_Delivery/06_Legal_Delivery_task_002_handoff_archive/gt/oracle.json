@@ -1,0 +1,62 @@
+{
+  "task_id": "06_Legal_Delivery_task_002_handoff_archive",
+  "facts": {
+    "A_contract": "AZ01",
+    "B_contract": "BZ02",
+    "A_evidence_deadline": "2026-12-10",
+    "B_court_deadline": null,
+    "unassigned_files": [
+      "note.txt"
+    ],
+    "client_reply_date": "2026-12-08",
+    "client_reply_case": null
+  },
+  "fact_sources": {
+    "A_contract": [
+      "materials.md"
+    ],
+    "B_contract": [
+      "materials.md"
+    ],
+    "A_evidence_deadline": [
+      "materials.md"
+    ],
+    "B_court_deadline": [
+      "materials.md"
+    ],
+    "unassigned_files": [
+      "materials.md"
+    ],
+    "client_reply_date": [
+      "materials.md"
+    ],
+    "client_reply_case": [
+      "materials.md"
+    ]
+  },
+  "input_hashes": {
+    "answer_schema.json": "f53e72eaa98b9524568090a6077b05385b50b7fbe4ee32b7d3651b27139460c2",
+    "incoming/note.txt": "bbce87893916db95fa043e893328b2f434ad8f957d3708ad9601b8a670d0be01",
+    "incoming/source1/合同.txt": "e386206568eb889da86fc909fea9b7e1b1c6aa8b5441a07aacdcae23ae193ca2",
+    "incoming/source2/合同.txt": "3b99c676354d05dfe024aae686d64abed287991a7d731560ce580c97eee4bab0",
+    "materials.md": "2c4df41e9615852116d4e06ec4635303c48dabe3b0200e43473873c48dba983b"
+  },
+  "deliverables": [
+    {
+      "path": "results/report.md",
+      "kind": "md",
+      "min_chars": 180
+    }
+  ],
+  "copies": {
+    "results/cases/N27-A/合同.txt": "incoming/source1/合同.txt",
+    "results/cases/N27-B/合同.txt": "incoming/source2/合同.txt",
+    "results/cases/unassigned/note.txt": "incoming/note.txt"
+  },
+  "semantic_anchors": [
+    "同名不同内容不覆盖，按正文归案，未归案笔记保留。",
+    "客户回复日期与法院期限区分，不把A期限套给B。",
+    "接手索引列文件位置、阶段、待办、依据和待确认负责人；副本可用且原件保留。"
+  ],
+  "critical_review": "See METRICS.md; critical error review is separate from framework numeric total."
+}

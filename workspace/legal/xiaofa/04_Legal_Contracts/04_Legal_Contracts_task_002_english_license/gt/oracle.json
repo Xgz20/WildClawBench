@@ -1,0 +1,62 @@
+{
+  "task_id": "04_Legal_Contracts_task_002_english_license",
+  "facts": {
+    "fee_usd": 24000,
+    "license_months": 12,
+    "confidentiality_years_after_termination": 3,
+    "support_business_days": 10,
+    "commercial_sublicense_allowed": false,
+    "ip_owner": "Cedar Software Ltd"
+  },
+  "fact_sources": {
+    "fee_usd": [
+      "materials.md"
+    ],
+    "license_months": [
+      "materials.md"
+    ],
+    "confidentiality_years_after_termination": [
+      "materials.md"
+    ],
+    "support_business_days": [
+      "materials.md"
+    ],
+    "commercial_sublicense_allowed": [
+      "materials.md"
+    ],
+    "ip_owner": [
+      "materials.md"
+    ]
+  },
+  "input_hashes": {
+    "answer_schema.json": "67744bac8c3c78f02798ae791ee3abb0dc560114536c60b007feeecc665771ea",
+    "license.docx": "851360a3bdd24a04cb07f2ed7f855c901f8726d406cc2cb763a171e1728a858c",
+    "materials.md": "4c04f00cf1602b64304e8d3bf7259c9f392a23239df032c112566bbb092f7f9c"
+  },
+  "deliverables": [
+    {
+      "path": "results/redline.docx",
+      "kind": "docx",
+      "tracked": true,
+      "min_chars": 250
+    },
+    {
+      "path": "results/clean.docx",
+      "kind": "docx",
+      "clean": true,
+      "min_chars": 250
+    },
+    {
+      "path": "results/changes.md",
+      "kind": "md",
+      "min_chars": 150
+    }
+  ],
+  "copies": {},
+  "semantic_anchors": [
+    "C1涵盖内部雇员/受保密约束承包商但不开放商业转授权；C2准确保留重大且可复现缺陷、书面通知和工作日条件。",
+    "不得更改价格、许可期、IP归属或把修复支持期限误写成必定解决所有缺陷的保证。",
+    "修订稿有原生删除与插入，净稿无待接受修订，逐项变更说明与最终两稿一致。"
+  ],
+  "critical_review": "See METRICS.md; critical error review is separate from framework numeric total."
+}

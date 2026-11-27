@@ -1,0 +1,69 @@
+{
+  "task_id": "06_Legal_Delivery_task_004_efficiency_accounting",
+  "facts": {
+    "baseline_minutes": 800,
+    "ai_wall_minutes": 320,
+    "time_saved_percent": 60,
+    "speedup": 2.5,
+    "first_pass_rate": 0.75,
+    "final_pass_rate": 0.875,
+    "ai_service_cost": 64,
+    "ai_human_cost": 400,
+    "ai_total_cost": 464,
+    "cost_per_passed_case": 66.29,
+    "measured_accuracy_from_testimonial": false
+  },
+  "fact_sources": {
+    "baseline_minutes": [
+      "materials.md"
+    ],
+    "ai_wall_minutes": [
+      "materials.md"
+    ],
+    "time_saved_percent": [
+      "materials.md"
+    ],
+    "speedup": [
+      "materials.md"
+    ],
+    "first_pass_rate": [
+      "materials.md"
+    ],
+    "final_pass_rate": [
+      "materials.md"
+    ],
+    "ai_service_cost": [
+      "materials.md"
+    ],
+    "ai_human_cost": [
+      "materials.md"
+    ],
+    "ai_total_cost": [
+      "materials.md"
+    ],
+    "cost_per_passed_case": [
+      "materials.md"
+    ],
+    "measured_accuracy_from_testimonial": [
+      "materials.md"
+    ]
+  },
+  "input_hashes": {
+    "answer_schema.json": "55ab53c13753103b66fe3d100ed16b94d9f9ebe58513ef991df20cc5a3500852",
+    "materials.md": "16f56e23a9e5ccfa0bab058460bc9f63ce82f6e0c9823c06bc47c7d3f87164d6"
+  },
+  "deliverables": [
+    {
+      "path": "results/report.md",
+      "kind": "md",
+      "min_chars": 180
+    }
+  ],
+  "copies": {},
+  "semantic_anchors": [
+    "总耗时320含生成/复核/返工；节省60%，速度2.5倍，不能混称提升2.5倍或只用120分钟。",
+    "成本64+400=464，按7个通过案例计算66.29元/案；保留1案未过和6/8一次通过。",
+    "95%和80分为主观评价，90%为润色稿，无统一准确率依据；不扩成年化收益。"
+  ],
+  "critical_review": "See METRICS.md; critical error review is separate from framework numeric total."
+}

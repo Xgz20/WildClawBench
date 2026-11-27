@@ -1,0 +1,159 @@
+{
+  "schema_version": 1,
+  "task_count": 30,
+  "assertions": 246,
+  "status": "passed",
+  "limitations": "Positive artifacts are structural test doubles, not legal reference answers. No real Agent run or LLM judging performed.",
+  "tasks": [
+    {
+      "task_id": "01_Legal_Intake_task_001_case_registration",
+      "status": "passed",
+      "scope": "mechanics_only_not_legal_semantic_gold"
+    },
+    {
+      "task_id": "01_Legal_Intake_task_002_dossier_versions",
+      "status": "passed",
+      "scope": "mechanics_only_not_legal_semantic_gold"
+    },
+    {
+      "task_id": "01_Legal_Intake_task_003_evidence_purpose",
+      "status": "passed",
+      "scope": "mechanics_only_not_legal_semantic_gold"
+    },
+    {
+      "task_id": "01_Legal_Intake_task_004_dual_timelines",
+      "status": "passed",
+      "scope": "mechanics_only_not_legal_semantic_gold"
+    },
+    {
+      "task_id": "01_Legal_Intake_task_005_case_isolation",
+      "status": "passed",
+      "scope": "mechanics_only_not_legal_semantic_gold"
+    },
+    {
+      "task_id": "02_Legal_Analysis_task_001_clarify_before_advice",
+      "status": "passed",
+      "scope": "mechanics_only_not_legal_semantic_gold"
+    },
+    {
+      "task_id": "02_Legal_Analysis_task_002_payee_direction",
+      "status": "passed",
+      "scope": "mechanics_only_not_legal_semantic_gold"
+    },
+    {
+      "task_id": "02_Legal_Analysis_task_003_citation_verification",
+      "status": "passed",
+      "scope": "mechanics_only_not_legal_semantic_gold"
+    },
+    {
+      "task_id": "02_Legal_Analysis_task_004_labor_risk",
+      "status": "passed",
+      "scope": "mechanics_only_not_legal_semantic_gold"
+    },
+    {
+      "task_id": "02_Legal_Analysis_task_005_revise_with_evidence",
+      "status": "passed",
+      "scope": "mechanics_only_not_legal_semantic_gold"
+    },
+    {
+      "task_id": "03_Legal_Drafting_task_001_complaint",
+      "status": "passed",
+      "scope": "mechanics_only_not_legal_semantic_gold"
+    },
+    {
+      "task_id": "03_Legal_Drafting_task_002_labor_defense",
+      "status": "passed",
+      "scope": "mechanics_only_not_legal_semantic_gold"
+    },
+    {
+      "task_id": "03_Legal_Drafting_task_003_advocacy_memo",
+      "status": "passed",
+      "scope": "mechanics_only_not_legal_semantic_gold"
+    },
+    {
+      "task_id": "03_Legal_Drafting_task_004_batch_five_documents",
+      "status": "passed",
+      "scope": "mechanics_only_not_legal_semantic_gold"
+    },
+    {
+      "task_id": "03_Legal_Drafting_task_005_structured_complaint",
+      "status": "passed",
+      "scope": "mechanics_only_not_legal_semantic_gold"
+    },
+    {
+      "task_id": "04_Legal_Contracts_task_001_editable_comments",
+      "status": "passed",
+      "scope": "mechanics_only_not_legal_semantic_gold"
+    },
+    {
+      "task_id": "04_Legal_Contracts_task_002_english_license",
+      "status": "passed",
+      "scope": "mechanics_only_not_legal_semantic_gold"
+    },
+    {
+      "task_id": "04_Legal_Contracts_task_003_contract_diff",
+      "status": "passed",
+      "scope": "mechanics_only_not_legal_semantic_gold"
+    },
+    {
+      "task_id": "04_Legal_Contracts_task_004_role_priorities",
+      "status": "passed",
+      "scope": "mechanics_only_not_legal_semantic_gold"
+    },
+    {
+      "task_id": "04_Legal_Contracts_task_005_comment_revision",
+      "status": "passed",
+      "scope": "mechanics_only_not_legal_semantic_gold"
+    },
+    {
+      "task_id": "05_Legal_Evidence_task_001_ecommerce_capture",
+      "status": "passed",
+      "scope": "mechanics_only_not_legal_semantic_gold"
+    },
+    {
+      "task_id": "05_Legal_Evidence_task_002_livestream_segments",
+      "status": "passed",
+      "scope": "mechanics_only_not_legal_semantic_gold"
+    },
+    {
+      "task_id": "05_Legal_Evidence_task_003_chat_continuity",
+      "status": "passed",
+      "scope": "mechanics_only_not_legal_semantic_gold"
+    },
+    {
+      "task_id": "05_Legal_Evidence_task_004_qr_source",
+      "status": "passed",
+      "scope": "mechanics_only_not_legal_semantic_gold"
+    },
+    {
+      "task_id": "05_Legal_Evidence_task_005_custody_manifest",
+      "status": "passed",
+      "scope": "mechanics_only_not_legal_semantic_gold"
+    },
+    {
+      "task_id": "06_Legal_Delivery_task_001_court_download",
+      "status": "passed",
+      "scope": "mechanics_only_not_legal_semantic_gold"
+    },
+    {
+      "task_id": "06_Legal_Delivery_task_002_handoff_archive",
+      "status": "passed",
+      "scope": "mechanics_only_not_legal_semantic_gold"
+    },
+    {
+      "task_id": "06_Legal_Delivery_task_003_redacted_handoff",
+      "status": "passed",
+      "scope": "mechanics_only_not_legal_semantic_gold"
+    },
+    {
+      "task_id": "06_Legal_Delivery_task_004_efficiency_accounting",
+      "status": "passed",
+      "scope": "mechanics_only_not_legal_semantic_gold"
+    },
+    {
+      "task_id": "06_Legal_Delivery_task_005_source_bound_brief",
+      "status": "passed",
+      "scope": "mechanics_only_not_legal_semantic_gold"
+    }
+  ]
+}

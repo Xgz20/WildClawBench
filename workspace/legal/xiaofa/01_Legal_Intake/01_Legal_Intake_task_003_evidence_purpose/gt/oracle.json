@@ -1,0 +1,56 @@
+{
+  "task_id": "01_Legal_Intake_task_003_evidence_purpose",
+  "facts": {
+    "evidence_ids": [
+      "E01",
+      "E02",
+      "E03",
+      "E04"
+    ],
+    "manual_receipt_provided": false,
+    "disputed_absence_dates": [
+      "2026-06-10"
+    ],
+    "employer": "澄序公司",
+    "employee": "许某",
+    "chat_provider": "许某"
+  },
+  "fact_sources": {
+    "evidence_ids": [
+      "materials.md"
+    ],
+    "manual_receipt_provided": [
+      "materials.md"
+    ],
+    "disputed_absence_dates": [
+      "materials.md"
+    ],
+    "employer": [
+      "materials.md"
+    ],
+    "employee": [
+      "materials.md"
+    ],
+    "chat_provider": [
+      "materials.md"
+    ]
+  },
+  "input_hashes": {
+    "answer_schema.json": "cfff7e7570b5ff29a39040cff92ff217f2dd5ff4987ab5c5fdd86c0dba006699",
+    "materials.md": "e4db091405a0c36ece65491477456f7ed1452795a13d44c68b676a0ac26d7870"
+  },
+  "deliverables": [
+    {
+      "path": "results/report.md",
+      "kind": "md",
+      "min_chars": 180
+    }
+  ],
+  "copies": {},
+  "semantic_anchors": [
+    "四份证据逐项区分证明目的与已证事实；缺勤记录不等于无正当理由旷工。",
+    "明确员工手册送达和制度程序证据缺口，保留对公司不利的主管聊天。",
+    "目录给出具体补证动作：请假审批、完整聊天、原始导出及制度告知凭证。"
+  ],
+  "critical_review": "See METRICS.md; critical error review is separate from framework numeric total."
+}

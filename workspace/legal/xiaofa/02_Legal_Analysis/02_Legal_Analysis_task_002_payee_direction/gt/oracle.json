@@ -1,0 +1,57 @@
+{
+  "task_id": "02_Legal_Analysis_task_002_payee_direction",
+  "facts": {
+    "claimed_difference": 2000000,
+    "later_contract_payer": "柏舟公司",
+    "later_contract_payee": "南樾公司",
+    "later_contract_amount": 13800000,
+    "written_repricing_proof": false,
+    "refund_date": null,
+    "guarantee_expiry_date": null,
+    "claim_total": 2050000
+  },
+  "fact_sources": {
+    "claimed_difference": [
+      "materials.md"
+    ],
+    "later_contract_payer": [
+      "materials.md"
+    ],
+    "later_contract_payee": [
+      "materials.md"
+    ],
+    "later_contract_amount": [
+      "materials.md"
+    ],
+    "written_repricing_proof": [
+      "materials.md"
+    ],
+    "refund_date": [
+      "materials.md"
+    ],
+    "guarantee_expiry_date": [
+      "materials.md"
+    ],
+    "claim_total": [
+      "materials.md"
+    ]
+  },
+  "input_hashes": {
+    "answer_schema.json": "b4f88c66188b9c36eb47baa89bd9d9a85151a728c942f8fccba61f30ec1a922e",
+    "materials.md": "03e1bafd6905f2d08f459874d6777ae429880491864bf4df55d391bdfd2f7aad"
+  },
+  "deliverables": [
+    {
+      "path": "results/report.md",
+      "kind": "md",
+      "min_chars": 180
+    }
+  ],
+  "copies": {},
+  "semantic_anchors": [
+    "抓住后合同原告是收款方，不能据两个合同相减就证明其多支出；同时说明不当然排除其他损失证据。",
+    "保证成立、履行期限、权利主张等均缺材料，不能照抄“保证已过期”；退款和时效也只能条件分析。",
+    "分别列抗辩、原告可能补强方式、我方补证；不能把约定违约金说成任何情形下绝对赔偿上限。"
+  ],
+  "critical_review": "See METRICS.md; critical error review is separate from framework numeric total."
+}

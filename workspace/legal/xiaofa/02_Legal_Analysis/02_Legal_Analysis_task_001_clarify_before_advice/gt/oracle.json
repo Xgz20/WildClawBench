@@ -1,0 +1,49 @@
+{
+  "task_id": "02_Legal_Analysis_task_001_clarify_before_advice",
+  "facts": {
+    "written_contract_available": false,
+    "bid_file_available": false,
+    "advance_paid": 0,
+    "delivered_units": 0,
+    "claimed_expected_margin": 50000,
+    "acceptance_email_available": false
+  },
+  "fact_sources": {
+    "written_contract_available": [
+      "materials.md"
+    ],
+    "bid_file_available": [
+      "materials.md"
+    ],
+    "advance_paid": [
+      "materials.md"
+    ],
+    "delivered_units": [
+      "materials.md"
+    ],
+    "claimed_expected_margin": [
+      "materials.md"
+    ],
+    "acceptance_email_available": [
+      "materials.md"
+    ]
+  },
+  "input_hashes": {
+    "answer_schema.json": "c433822a35cf4b61f504664298ad2deb58edbf9928a175494329448cf5562e4d",
+    "materials.md": "987d5e6275a9510d223954303671e2cadcd4ef2c346ecc4280f2b246b3f9682e"
+  },
+  "deliverables": [
+    {
+      "path": "results/report.md",
+      "kind": "md",
+      "min_chars": 180
+    }
+  ],
+  "copies": {},
+  "semantic_anchors": [
+    "不把口头沟通自动认定为供货合同或侵权成立；区分可能路径及事实前提。",
+    "50000元只是预期毛利测算，不是已证损失或保证可获赔额；不编造法条和判例。",
+    "给出可执行的合法补证顺序，利用已有答复，不再要求用户重复提供已否认的文件。"
+  ],
+  "critical_review": "See METRICS.md; critical error review is separate from framework numeric total."
+}

@@ -1,0 +1,362 @@
+{
+  "read_date": "2026-11-27",
+  "image_locations": 23,
+  "unique_image_hashes": 22,
+  "notes": "Same event appears in differently cropped images; do not treat hashes as independent feedback sample count. No private raw images committed.",
+  "images": [
+    {
+      "image_id": "IMG01",
+      "source": "产品成效价值",
+      "locator": "doxrzUn64PY6dXzRyDrUmZW0gRh",
+      "asset_token": "boxrzYCmVJVsBouYnJDFqiJlrFg",
+      "sha256": "1e353fe3c856467d66978c6c76d683a255f5dcec1f4c223f0f910332c04b2c6c",
+      "review_method": "original_image_visual_read_and_OCR_crosscheck",
+      "content_extraction_sanitized": "试用民商事功能感觉不错，其他功能仍在探索。",
+      "mapped_questions": [
+        "X07",
+        "X10",
+        "X13"
+      ],
+      "qualification": "主观体验，无准确率样本。",
+      "status": "read"
+    },
+    {
+      "image_id": "IMG02",
+      "source": "产品成效价值",
+      "locator": "doxrzrX5hcf7f2a3dygHGabbKmf",
+      "asset_token": "boxrzJP5PPhCTB7HzlNn1erSfPg",
+      "sha256": "699bf26b2cfd30f05b1d5506528acaf68fdb5f0006e3f6ff354857557953a696",
+      "review_method": "original_image_visual_read_and_OCR_crosscheck",
+      "content_extraction_sanitized": "律师询问套餐/积分，认为比此前垂直AI好用，反映其他工具积分消耗快。",
+      "mapped_questions": [
+        "X29"
+      ],
+      "qualification": "比较对象、任务及样本未统一，不能推出竞争评测排名。",
+      "status": "read"
+    },
+    {
+      "image_id": "IMG03",
+      "source": "产品成效价值",
+      "locator": "doxrz69QJ5a3O0oqE7O4TqSdPdb",
+      "asset_token": "boxrzgfCqfEp5APTQASnBofDELb",
+      "sha256": "9c91e5f261e9d7caa4be7da915527bb899e0c1a928b7c14eef3aef8f823e1df1",
+      "review_method": "original_image_visual_read_and_OCR_crosscheck",
+      "content_extraction_sanitized": "律师评价标红观点和思路符合需要，尤其注意后签合同原告是收款方；提及分析附件。",
+      "mapped_questions": [
+        "X07"
+      ],
+      "qualification": "需求需结合H7正文核对，不把原分析所有法律结论直接作为真值。",
+      "status": "read"
+    },
+    {
+      "image_id": "IMG04",
+      "source": "产品成效价值",
+      "locator": "doxrz1Yh0qpM6WFxAvzzua4ugof",
+      "asset_token": "boxrzdNrTCPeENwNnu49QwyKFBf",
+      "sha256": "a7a0f80e67ee3d5ad796bc15fe2edf3ca8ebb14012f95b27b6731895555bc2e8",
+      "review_method": "original_image_visual_read_and_OCR_crosscheck",
+      "content_extraction_sanitized": "反馈3小时核对8案；自己起草并核对6案约8至10小时，且有同事参与历史稿件。",
+      "mapped_questions": [
+        "X14",
+        "X29"
+      ],
+      "qualification": "用户回忆、不同样本及协作口径，不是严格对照试验。",
+      "status": "read"
+    },
+    {
+      "image_id": "IMG05",
+      "source": "产品成效价值",
+      "locator": "doxrzfg022bGmTe6NRFyVqYH0pd",
+      "asset_token": "boxrzBbdDBUqVOpT8ndzI1mxXme",
+      "sha256": "6f0d401beac73065f4051504e5b6e9448fcb58a862863dbc92a9b316c586f235",
+      "review_method": "original_image_visual_read_and_OCR_crosscheck",
+      "content_extraction_sanitized": "批量案件仿写主观认为可达95%，同时反映速度慢、积分扣得多。",
+      "mapped_questions": [
+        "X14",
+        "X29"
+      ],
+      "qualification": "95%缺分母与标准，不是客观验收阈值。",
+      "status": "read"
+    },
+    {
+      "image_id": "IMG06",
+      "source": "产品成效价值",
+      "locator": "doxrzRKmI1jkKkv9fGLkv7X2Ogh",
+      "asset_token": "boxrzgb4149PgqymFkUinTdBqsR",
+      "sha256": "8ae68df47efaec2d9655230f5364033d3e48e005ad6f8edda417f6bcad61504e",
+      "review_method": "original_image_visual_read_and_OCR_crosscheck",
+      "content_extraction_sanitized": "产品入口显示电商网站侵权取证、直播视频侵权取证；用户表示试过直播取证觉得不错。",
+      "mapped_questions": [
+        "X21",
+        "X22",
+        "X24",
+        "X25"
+      ],
+      "qualification": "截图仅有体验反馈，无完整取证产物。",
+      "status": "read"
+    },
+    {
+      "image_id": "IMG07",
+      "source": "产品成效价值",
+      "locator": "doxrzWEUj72ZxnfNMbDo2aHiprb",
+      "asset_token": "boxrzJkyTK2fZOad0ioUFmR7XJc",
+      "sha256": "bd9e250fc0b737f2f06606f26f43e98c6c455c99ad618272103349b18d1f09a4",
+      "review_method": "original_image_visual_read_and_OCR_crosscheck",
+      "content_extraction_sanitized": "法院文书短信下载试了两个，都可以。",
+      "mapped_questions": [
+        "X26"
+      ],
+      "qualification": "只支持两次使用反馈，不能推导覆盖所有法院。",
+      "status": "read"
+    },
+    {
+      "image_id": "IMG08",
+      "source": "产品成效价值",
+      "locator": "doxrzWG3zqN15TGegjDudNueewc",
+      "asset_token": "boxrzjFjDM5lFCra0QFgCDLxfmh",
+      "sha256": "db166525a5502b888baef209c81d685c0a7040517ad1a88e68ab6285cd845231",
+      "review_method": "original_image_visual_read_and_OCR_crosscheck",
+      "content_extraction_sanitized": "案情梳理2.0基本事实、法院程序更清晰，但同表呈现；用户建议分成两表。另有模型接口报错及已处理的对话。",
+      "mapped_questions": [
+        "X04"
+      ],
+      "qualification": "内嵌故障截图只用作错误处理背景，不据此确认根因或修复效果。",
+      "status": "read"
+    },
+    {
+      "image_id": "IMG09",
+      "source": "用户好评表/TTcsSP",
+      "locator": "E2",
+      "asset_token": "boxrzSMn6ZINUS1gCZc5lcRqwdV",
+      "sha256": "16c7d8621b98a20159106ab66dd250449bbf8245122d3c296995c6a0ef69c804",
+      "review_method": "original_image_visual_read_and_OCR_crosscheck",
+      "content_extraction_sanitized": "投标后替换产品，缺中标合同与投标文件；画面分书面协议、口头事实合作、仅借资质三类。",
+      "mapped_questions": [
+        "X06"
+      ],
+      "qualification": "截图为模型回答，不是法律权威，不能沿用其中确定性法律结论。",
+      "status": "read"
+    },
+    {
+      "image_id": "IMG10",
+      "source": "用户好评表/TTcsSP",
+      "locator": "F2",
+      "asset_token": "boxrzDwUa7i8jv8QxNA31ZaRSgc",
+      "sha256": "077e0c9c72650291efb2d4951c518a8299c742b6a3446908022e50ad6e1f64dc",
+      "review_method": "original_image_visual_read_and_OCR_crosscheck",
+      "content_extraction_sanitized": "追问后用户为口头关系、几乎无书面材料、预期供货收益；法律检索不可用时标明分析与待核，不编造具体法条判例。",
+      "mapped_questions": [
+        "X06",
+        "X08"
+      ],
+      "qualification": "顶端显示登录状态变化/读取失败；不把截图当一次成功完整检索。",
+      "status": "read"
+    },
+    {
+      "image_id": "IMG11",
+      "source": "用户好评表/TTcsSP",
+      "locator": "E8",
+      "asset_token": "boxrzmJEyp9hqPFgN7GnvpyvWhg",
+      "sha256": "a0beb0bc4e008646aa2684426bd86b0bf241923c79530874c65fcc1b69a7257a",
+      "review_method": "original_image_visual_read_and_OCR_crosscheck",
+      "content_extraction_sanitized": "主要使用审合同功能，认为合同风险评估做得较好。",
+      "mapped_questions": [
+        "X16",
+        "X18",
+        "X19"
+      ],
+      "qualification": "没有具体合同证据，合成材料补足测试。",
+      "status": "read"
+    },
+    {
+      "image_id": "IMG12",
+      "source": "用户好评表/TTcsSP",
+      "locator": "E9",
+      "asset_token": "boxrzCVpiTBusWPPo93X0crRJGb",
+      "sha256": "5f7643a8fad1e0224d8b01f0a118c7fe96fe816a5642fc58eb11b3066b088810",
+      "review_method": "original_image_visual_read_and_OCR_crosscheck",
+      "content_extraction_sanitized": "用户先用晓法查询法律问题，认为知识点更全、答复更准。",
+      "mapped_questions": [
+        "X08",
+        "X09"
+      ],
+      "qualification": "主观比较，无客观知识准确率。",
+      "status": "read"
+    },
+    {
+      "image_id": "IMG13",
+      "source": "用户好评表/TTcsSP",
+      "locator": "E10",
+      "asset_token": "boxrz9hJPZTtL5kz8wJpqYFIf9c",
+      "sha256": "25ac96bdb9129daec56c06eedcbb2f05c17f02b0f03d65fd46c12e8e96bd0197",
+      "review_method": "original_image_visual_read_and_OCR_crosscheck",
+      "content_extraction_sanitized": "材料整理太简单，应拆提供方、主要内容、证明目的、应对建议；劳动答辩约80分，排版可改；每段同序号、文本格式不对。",
+      "mapped_questions": [
+        "X03",
+        "X09",
+        "X12",
+        "X29"
+      ],
+      "qualification": "图片中的答辩声称手册签收/通知工会；作为需核实的内容，不作本题已证事实。",
+      "status": "read"
+    },
+    {
+      "image_id": "IMG14",
+      "source": "用户好评表/TTcsSP",
+      "locator": "E11",
+      "asset_token": "boxrzdIHTqRzCorKqKWauNMqtre",
+      "sha256": "bd9e250fc0b737f2f06606f26f43e98c6c455c99ad618272103349b18d1f09a4",
+      "review_method": "original_image_visual_read_and_OCR_crosscheck",
+      "content_extraction_sanitized": "短信下载法院文书试两个都可用，与主文档相同画面。",
+      "mapped_questions": [
+        "X26"
+      ],
+      "qualification": "重复截图不算独立试验。",
+      "status": "read"
+    },
+    {
+      "image_id": "IMG15",
+      "source": "用户好评表/TTcsSP",
+      "locator": "E12",
+      "asset_token": "boxrzkj2yPCD3xZVyGdJraQLPcc",
+      "sha256": "f484c274b212047a38ef9088e102398ee3318809a03db32938b49846ca5e38e6",
+      "review_method": "original_image_visual_read_and_OCR_crosscheck",
+      "content_extraction_sanitized": "用户认为审合同比一般大模型好，几乎没有傻瓜问题。",
+      "mapped_questions": [
+        "X19"
+      ],
+      "qualification": "上方转发的技能长图在原图中仅为缩略图，字不可辨；不据其猜测技能清单。",
+      "status": "read_with_thumbnail_limit"
+    },
+    {
+      "image_id": "IMG16",
+      "source": "用户好评表/3daz2t",
+      "locator": "E2",
+      "asset_token": "boxrzuPdp9fwv2y6EbJRXGRSwnb",
+      "sha256": "f76dffcd76bd6f7ccbe207ee6f4decd2c0fa4325b1ff7a96ca070a6e44721c23",
+      "review_method": "original_image_visual_read_and_OCR_crosscheck",
+      "content_extraction_sanitized": "用户确认每案有文件夹后找材料方便，能省整理时间，并问存储空间。",
+      "mapped_questions": [
+        "X02",
+        "X05",
+        "X27"
+      ],
+      "qualification": "截图不提供存储容量或服务承诺。",
+      "status": "read"
+    },
+    {
+      "image_id": "IMG17",
+      "source": "用户好评表/3daz2t",
+      "locator": "F2",
+      "asset_token": "boxrzRxR6psmRLVSdZMbLQS8YYf",
+      "sha256": "9d571781aadf27c7c4620532f242d6ee250353888fdab9aa379fc9f5f53355e0",
+      "review_method": "original_image_visual_read_and_OCR_crosscheck",
+      "content_extraction_sanitized": "初步使用几次感受可；功能模块不好找，希望按顺序排列；担心为方便直接上传未脱敏文件后的信息保护。",
+      "mapped_questions": [
+        "X27",
+        "X28"
+      ],
+      "qualification": "这是保密需求与疑问，不是系统安全能力已通过证明。",
+      "status": "read"
+    },
+    {
+      "image_id": "IMG18",
+      "source": "用户好评表/3daz2t",
+      "locator": "E3",
+      "asset_token": "boxrz3sNKzzP96xwAPV6lQr4lbb",
+      "sha256": "9df278366cbee196f3aa8185ffe69624b705876179c35175c37927a0fe7f1e3e",
+      "review_method": "original_image_visual_read_and_OCR_crosscheck",
+      "content_extraction_sanitized": "起诉材料生成效果不错，律师只需检查；询问用的是当事人原始证据还是律师筛选证据。",
+      "mapped_questions": [
+        "X11",
+        "X14",
+        "X15"
+      ],
+      "qualification": "需保留人工核查与输入来源，不当作无人审核可直接提交。",
+      "status": "read"
+    },
+    {
+      "image_id": "IMG19",
+      "source": "用户好评表/3daz2t",
+      "locator": "F3",
+      "asset_token": "boxrzynOyYNr02wSX7kTB2AvPlc",
+      "sha256": "af94b3ae417e73269a14028ab01fc10de1ce1c080c54a66380839d56f7d6c632",
+      "review_method": "original_image_visual_read_and_OCR_crosscheck",
+      "content_extraction_sanitized": "再次出现3小时核对8案、个人8至10小时写并核对6案的反馈。",
+      "mapped_questions": [
+        "X14",
+        "X29"
+      ],
+      "qualification": "与主文档重叠的同一事件，不重复扩充样本。",
+      "status": "read"
+    },
+    {
+      "image_id": "IMG20",
+      "source": "用户好评表/3daz2t",
+      "locator": "E4",
+      "asset_token": "boxrzumJUqNqziuNgNkAgldxKdh",
+      "sha256": "bd42655e51f5fa5a786e747d35fd93b1b896aa99afdd2601d0f93a8565a2035a",
+      "review_method": "original_image_visual_read_and_OCR_crosscheck",
+      "content_extraction_sanitized": "民商事功能试用还不错，其他仍待探索。",
+      "mapped_questions": [
+        "X07",
+        "X10",
+        "X13"
+      ],
+      "qualification": "与主文档同一反馈的不同截图。",
+      "status": "read"
+    },
+    {
+      "image_id": "IMG21",
+      "source": "用户好评表/3daz2t",
+      "locator": "E5",
+      "asset_token": "boxrzsqcGYNsC0m8i9cBUfA3KTe",
+      "sha256": "5ac13cae1e2d8ff3b1c7331f593448b70cb60960904f52e0b6558f7a304ea84d",
+      "review_method": "original_image_visual_read_and_OCR_crosscheck",
+      "content_extraction_sanitized": "律师询问收费与积分，主观认为比此前法律垂直AI好用。",
+      "mapped_questions": [
+        "X29"
+      ],
+      "qualification": "不能据截图确定当前价格。",
+      "status": "read"
+    },
+    {
+      "image_id": "IMG22",
+      "source": "用户好评表/3daz2t",
+      "locator": "E6",
+      "asset_token": "boxrzwWYKpOoERlCmSNHKBolZbb",
+      "sha256": "f23a9ff9502f6e0fa6a4b14ace2315c8a43c1c1198af3f8dad4ba2d9244da180",
+      "review_method": "original_image_visual_read_and_OCR_crosscheck",
+      "content_extraction_sanitized": "主观批量仿写95%，但速度慢、积分消耗多。",
+      "mapped_questions": [
+        "X14",
+        "X29"
+      ],
+      "qualification": "与主文档同一评价，不是第二个准确率样本。",
+      "status": "read"
+    },
+    {
+      "image_id": "IMG23",
+      "source": "用户好评表/3daz2t",
+      "locator": "E7",
+      "asset_token": "boxrzpRcvc6zOk9h2FzVct7PmG5",
+      "sha256": "65c2b4f2b14c48db7a99d2b812f4a7cc3a710ffb26bdb3a4e2c37f9a66bd2faa",
+      "review_method": "original_image_visual_read_and_OCR_crosscheck",
+      "content_extraction_sanitized": "律师赞同标红分析，突出收付款方向问题；附件为被告初步分析。",
+      "mapped_questions": [
+        "X07"
+      ],
+      "qualification": "与主文档重叠；附件全文另读。",
+      "status": "read"
+    }
+  ],
+  "attachment": {
+    "source": "用户好评表/3daz2t!H7",
+    "sha256": "563260ec5ade220f403d3bfa1f5ff602d6c5f17f35cb24570f1b305a3101e02f",
+    "embedded_images": 0,
+    "review": "Full text and table structure read; payment-direction insight retained, unverified guarantee limitation and contractual liability conclusions not adopted as unconditional law.",
+    "mapped_questions": [
+      "X07"
+    ]
+  }
+}

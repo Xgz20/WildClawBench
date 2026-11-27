@@ -1,8 +1,15 @@
 scenarios:
+  legal: 晓法法律
   general: 通用场景
   web: Web 站点
   ppt: PPT
 datasets:
+  xiaofa-legal:
+    name: 晓法法律 30 题
+    scene: legal
+    task_root: tasks/legal/xiaofa
+    release_series: xiaofa-legal
+    modes: [cli, e2e]
   general-regression:
     name: 基础回归
     scene: general

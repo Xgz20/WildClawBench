@@ -1,0 +1,66 @@
+{
+  "task_id": "05_Legal_Evidence_task_003_chat_continuity",
+  "facts": {
+    "unique_messages": 5,
+    "chat_date": "2026-06-15",
+    "refund_amount": 3000,
+    "unconditional_refund": false,
+    "condition": "退回全部货物后核验",
+    "seller": "卖方林某",
+    "buyer": "买方何某"
+  },
+  "fact_sources": {
+    "unique_messages": [
+      "chat.mp4"
+    ],
+    "chat_date": [
+      "chat.mp4"
+    ],
+    "refund_amount": [
+      "chat.mp4"
+    ],
+    "unconditional_refund": [
+      "chat.mp4"
+    ],
+    "condition": [
+      "chat.mp4"
+    ],
+    "seller": [
+      "chat.mp4"
+    ],
+    "buyer": [
+      "chat.mp4"
+    ]
+  },
+  "input_hashes": {
+    "answer_schema.json": "2c22f672343e3456c3c649ffd48f8d8aea1d73dce8bb0a133989fefa9d63f095",
+    "chat.mp4": "00f1997f83b168030e2486709d908359c327aecfbb94c0a1b560f92042051076",
+    "materials.md": "91f6bd7fb53906f05f355f582e2916839167088795679dc0541a72b8500a1995"
+  },
+  "deliverables": [
+    {
+      "path": "results/report.md",
+      "kind": "md",
+      "min_chars": 220
+    },
+    {
+      "path": "results/frame_04.png",
+      "kind": "png"
+    },
+    {
+      "path": "results/frame_08.png",
+      "kind": "png"
+    },
+    {
+      "path": "results/frame_12.png",
+      "kind": "png"
+    }
+  ],
+  "copies": {},
+  "semantic_anchors": [
+    "四屏合并去重得到5条消息，保留“先退回全部货物后核验”条件及买方尚未寄回。",
+    "聊天身份仅按画面标识，不声称已实名鉴定；聊天日期与视频位置分列。",
+    "至少三张原尺寸关键截图无剪掉条件，逐条来源和时间码能回查。"
+  ],
+  "critical_review": "See METRICS.md; critical error review is separate from framework numeric total."
+}

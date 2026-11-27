@@ -1,0 +1,12 @@
+{
+  "decoder": "zxing-cpp 3.2.0.post1",
+  "status": "passed",
+  "decoded": {
+    "qr_A.png": [
+      "https://shop.example.invalid/item/sku-73"
+    ],
+    "qr_B.png": [
+      "https://shop-example.invalid/item/sku-73"
+    ]
+  }
+}

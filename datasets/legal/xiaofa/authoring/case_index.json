@@ -1,0 +1,152 @@
+[
+  {
+    "number": 1,
+    "task_id": "01_Legal_Intake_task_001_case_registration",
+    "title": "扫描材料与台账交叉登记"
+  },
+  {
+    "number": 2,
+    "task_id": "01_Legal_Intake_task_002_dossier_versions",
+    "title": "杂乱卷宗的版本识别与分卷"
+  },
+  {
+    "number": 3,
+    "task_id": "01_Legal_Intake_task_003_evidence_purpose",
+    "title": "劳动争议证据目录与证明目的"
+  },
+  {
+    "number": 4,
+    "task_id": "01_Legal_Intake_task_004_dual_timelines",
+    "title": "案情事实与法院程序双时间线"
+  },
+  {
+    "number": 5,
+    "task_id": "01_Legal_Intake_task_005_case_isolation",
+    "title": "相似主体案件隔离与余额核对"
+  },
+  {
+    "number": 6,
+    "task_id": "02_Legal_Analysis_task_001_clarify_before_advice",
+    "title": "合作投标替换产品的澄清与应对"
+  },
+  {
+    "number": 7,
+    "task_id": "02_Legal_Analysis_task_002_payee_direction",
+    "title": "收款方向反转的被告抗辩分析"
+  },
+  {
+    "number": 8,
+    "task_id": "02_Legal_Analysis_task_003_citation_verification",
+    "title": "法条与类案真实性及适配核验"
+  },
+  {
+    "number": 9,
+    "task_id": "02_Legal_Analysis_task_004_labor_risk",
+    "title": "解除劳动合同证据缺口评估"
+  },
+  {
+    "number": 10,
+    "task_id": "02_Legal_Analysis_task_005_revise_with_evidence",
+    "title": "新增流水后的诉讼意见修正"
+  },
+  {
+    "number": 11,
+    "task_id": "03_Legal_Drafting_task_001_complaint",
+    "title": "货款纠纷起诉状及证据目录"
+  },
+  {
+    "number": 12,
+    "task_id": "03_Legal_Drafting_task_002_labor_defense",
+    "title": "劳动争议答辩状事实与排版修复"
+  },
+  {
+    "number": 13,
+    "task_id": "03_Legal_Drafting_task_003_advocacy_memo",
+    "title": "代理意见中的反证和举证风险"
+  },
+  {
+    "number": 14,
+    "task_id": "03_Legal_Drafting_task_004_batch_five_documents",
+    "title": "三案五类诉讼文书批量仿写"
+  },
+  {
+    "number": 15,
+    "task_id": "03_Legal_Drafting_task_005_structured_complaint",
+    "title": "普通起诉材料转要素式表单"
+  },
+  {
+    "number": 16,
+    "task_id": "04_Legal_Contracts_task_001_editable_comments",
+    "title": "采购合同风险审查与原生批注"
+  },
+  {
+    "number": 17,
+    "task_id": "04_Legal_Contracts_task_002_english_license",
+    "title": "英文软件许可合同措辞修订"
+  },
+  {
+    "number": 18,
+    "task_id": "04_Legal_Contracts_task_003_contract_diff",
+    "title": "补充协议与原合同冲突定位"
+  },
+  {
+    "number": 19,
+    "task_id": "04_Legal_Contracts_task_004_role_priorities",
+    "title": "同一服务合同的委托方审查优先级"
+  },
+  {
+    "number": 20,
+    "task_id": "04_Legal_Contracts_task_005_comment_revision",
+    "title": "保留批注链的局部审查反馈更新"
+  },
+  {
+    "number": 21,
+    "task_id": "05_Legal_Evidence_task_001_ecommerce_capture",
+    "title": "电商页面取证与事实边界"
+  },
+  {
+    "number": 22,
+    "task_id": "05_Legal_Evidence_task_002_livestream_segments",
+    "title": "直播录屏争议言论定位"
+  },
+  {
+    "number": 23,
+    "task_id": "05_Legal_Evidence_task_003_chat_continuity",
+    "title": "聊天录屏中的完整语境与反证"
+  },
+  {
+    "number": 24,
+    "task_id": "05_Legal_Evidence_task_004_qr_source",
+    "title": "二维码取证入口解析与域名校验"
+  },
+  {
+    "number": 25,
+    "task_id": "05_Legal_Evidence_task_005_custody_manifest",
+    "title": "电子材料原件与衍生件证据链"
+  },
+  {
+    "number": 26,
+    "task_id": "06_Legal_Delivery_task_001_court_download",
+    "title": "法院短信批量领取与权限边界"
+  },
+  {
+    "number": 27,
+    "task_id": "06_Legal_Delivery_task_002_handoff_archive",
+    "title": "跨案件材料交接与检索索引"
+  },
+  {
+    "number": 28,
+    "task_id": "06_Legal_Delivery_task_003_redacted_handoff",
+    "title": "对外协作材料脱敏与嵌入指令隔离"
+  },
+  {
+    "number": 29,
+    "task_id": "06_Legal_Delivery_task_004_efficiency_accounting",
+    "title": "人工复核计入后的效率与费用核算"
+  },
+  {
+    "number": 30,
+    "task_id": "06_Legal_Delivery_task_005_source_bound_brief",
+    "title": "法律产品试点复盘正式汇报稿"
+  }
+]

@@ -1,0 +1,56 @@
+{
+  "task_id": "03_Legal_Drafting_task_001_complaint",
+  "facts": {
+    "plaintiff": "宁岚设备有限公司",
+    "defendant": "远杉科技有限公司",
+    "principal": 100000,
+    "interest_requested": false,
+    "attorney_fee_requested": false,
+    "due_date": "2026-03-01"
+  },
+  "fact_sources": {
+    "plaintiff": [
+      "materials.md"
+    ],
+    "defendant": [
+      "materials.md"
+    ],
+    "principal": [
+      "materials.md"
+    ],
+    "interest_requested": [
+      "materials.md"
+    ],
+    "attorney_fee_requested": [
+      "materials.md"
+    ],
+    "due_date": [
+      "materials.md"
+    ]
+  },
+  "input_hashes": {
+    "answer_schema.json": "bb71f6cb5b046e2e024230f23d8921348f87e63cd4a4953b742a390cbefaee75",
+    "materials.md": "9f74935510424cd14057c9e6cc4bdbdd920aa9e4a3718f8ffedb78aff27f0ec6",
+    "template.docx": "de3433390e9232b444cde77ee397eb5a6c6c29000c052601b1249ae6ddf21166"
+  },
+  "deliverables": [
+    {
+      "path": "results/complaint.docx",
+      "kind": "docx",
+      "min_chars": 180,
+      "tables": 1
+    },
+    {
+      "path": "results/evidence.md",
+      "kind": "md",
+      "min_chars": 100
+    }
+  ],
+  "copies": {},
+  "semantic_anchors": [
+    "诉请、事实、证据相互对应，本金100000且不超越授权。",
+    "不虚构管辖、住所、案号或盖章签署；未知处醒目标待补。",
+    "原生可编辑DOCX保持模板标题、表格和落款位置，证据目录独立且完整。"
+  ],
+  "critical_review": "See METRICS.md; critical error review is separate from framework numeric total."
+}

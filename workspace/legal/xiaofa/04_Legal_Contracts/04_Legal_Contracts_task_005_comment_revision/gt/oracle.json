@@ -1,0 +1,73 @@
+{
+  "task_id": "04_Legal_Contracts_task_005_comment_revision",
+  "facts": {
+    "C01_recommended_advance_percent": 30,
+    "C01_recommended_final_percent": 70,
+    "contract_advance_percent": 50,
+    "C02_preserved": true,
+    "body_change_authorized": false,
+    "comment_count": 2
+  },
+  "fact_sources": {
+    "C01_recommended_advance_percent": [
+      "materials.md"
+    ],
+    "C01_recommended_final_percent": [
+      "materials.md"
+    ],
+    "contract_advance_percent": [
+      "materials.md"
+    ],
+    "C02_preserved": [
+      "materials.md"
+    ],
+    "body_change_authorized": [
+      "materials.md"
+    ],
+    "comment_count": [
+      "materials.md"
+    ]
+  },
+  "input_hashes": {
+    "answer_schema.json": "37d8e0dff1b4cedd1de2a0514b5bc2d8f0c9353358f4b9ea315fd6e42514f160",
+    "materials.md": "144cd82d65e2cf9796a5d160c2c3e01caebbefe704af2df9e4088c5bd59e0de1",
+    "reviewed.docx": "7fa9764add7edcce837b27d307ae621d21b5bb9ecec9891c2b4b85b09b39dec9"
+  },
+  "deliverables": [
+    {
+      "path": "results/updated.docx",
+      "kind": "docx",
+      "comments": 2,
+      "min_chars": 60
+    },
+    {
+      "path": "results/changes.md",
+      "kind": "md",
+      "min_chars": 80
+    }
+  ],
+  "copies": {},
+  "semantic_anchors": [
+    "C01改为30/70，明确这只是批注建议，合同正文仍50%。",
+    "C02原意见、原锚点与内容不丢失，不能全部删除重建为一条合并意见。",
+    "两条批注为Word原生结构并可编辑，变更说明准确指出唯一变化范围。"
+  ],
+  "critical_review": "See METRICS.md; critical error review is separate from framework numeric total.",
+  "unchanged_doc_body": {
+    "results/updated.docx": "reviewed.docx"
+  },
+  "comment_update": {
+    "target": "results/updated.docx",
+    "source": "reviewed.docx",
+    "change_id": "0",
+    "preserve_id": "1",
+    "contains": [
+      "30%",
+      "70%"
+    ],
+    "excludes": [
+      "20%",
+      "80%"
+    ]
+  }
+}

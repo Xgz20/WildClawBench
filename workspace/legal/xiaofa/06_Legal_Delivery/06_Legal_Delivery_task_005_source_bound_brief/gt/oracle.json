@@ -1,0 +1,67 @@
+{
+  "task_id": "06_Legal_Delivery_task_005_source_bound_brief",
+  "facts": {
+    "participants": 8,
+    "trial_tasks": 12,
+    "passed": 9,
+    "rework": 2,
+    "failed": 1,
+    "pass_rate": 0.75,
+    "historical_import_records": 13049,
+    "sla_promised": false,
+    "overall_accuracy_established": false
+  },
+  "fact_sources": {
+    "participants": [
+      "materials.md"
+    ],
+    "trial_tasks": [
+      "materials.md"
+    ],
+    "passed": [
+      "materials.md"
+    ],
+    "rework": [
+      "materials.md"
+    ],
+    "failed": [
+      "materials.md"
+    ],
+    "pass_rate": [
+      "materials.md"
+    ],
+    "historical_import_records": [
+      "materials.md"
+    ],
+    "sla_promised": [
+      "materials.md"
+    ],
+    "overall_accuracy_established": [
+      "materials.md"
+    ]
+  },
+  "input_hashes": {
+    "answer_schema.json": "9b3df722e9413605e1cff3d03f8b5ce7178b8dd73be4eea76a5c25ca3dc723e9",
+    "draft.docx": "a5fbcca6b2472d1fdce0fc87bc1b35f215f5d7c3bf5a6cdd38a6d7092d61ca06",
+    "materials.md": "32b6e4d372ebf3ddff6c5ebd5a7952c1a6b2d706dcb03008b326d209f6f5e8dd"
+  },
+  "deliverables": [
+    {
+      "path": "results/brief.docx",
+      "kind": "docx",
+      "min_chars": 350
+    },
+    {
+      "path": "results/claim_audit.md",
+      "kind": "md",
+      "min_chars": 180
+    }
+  ],
+  "copies": {},
+  "semantic_anchors": [
+    "正式汇报保留12题9通过/2返工/1未完成的分母，不把历史导入量当本轮成效。",
+    "将95%主观反馈与实测分开，写出费用、隐私、入口和读取失败，不能只保留好评。",
+    "文档结构适合内部复盘，下一步事项可执行但负责人/时间待定，不许诺零幻觉或未经测量的效率。"
+  ],
+  "critical_review": "See METRICS.md; critical error review is separate from framework numeric total."
+}

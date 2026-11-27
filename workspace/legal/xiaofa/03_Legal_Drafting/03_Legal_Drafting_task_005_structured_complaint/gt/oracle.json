@@ -1,0 +1,60 @@
+{
+  "task_id": "03_Legal_Drafting_task_005_structured_complaint",
+  "facts": {
+    "principal": 40000,
+    "loan_amount": 50000,
+    "repaid_principal": 10000,
+    "interest_agreed": false,
+    "interest_requested": false,
+    "delivery_address": null,
+    "court": null
+  },
+  "fact_sources": {
+    "principal": [
+      "materials.md"
+    ],
+    "loan_amount": [
+      "materials.md"
+    ],
+    "repaid_principal": [
+      "materials.md"
+    ],
+    "interest_agreed": [
+      "materials.md"
+    ],
+    "interest_requested": [
+      "materials.md"
+    ],
+    "delivery_address": [
+      "materials.md"
+    ],
+    "court": [
+      "materials.md"
+    ]
+  },
+  "input_hashes": {
+    "answer_schema.json": "987d9caaf025062bc36142e48ae82eace5f1e3beb9e271c5fa2c4609839d5197",
+    "form.docx": "4670d5c9891b007ca5c37d55887899c3e26e38abd51c366b1e28a937513b8938",
+    "materials.md": "e17b5a3fba5185af06cdf8cfdd812edc56e6604cbb231fba322984ed8a032124"
+  },
+  "deliverables": [
+    {
+      "path": "results/form.docx",
+      "kind": "docx",
+      "min_chars": 120,
+      "tables": 1
+    },
+    {
+      "path": "results/missing.md",
+      "kind": "md",
+      "min_chars": 80
+    }
+  ],
+  "copies": {},
+  "semantic_anchors": [
+    "借款发生、本金还款与剩余诉请一致，不擅加借期利息或逾期利率。",
+    "表格如实区分事实、诉请与未核信息，不代填实际送达地址。",
+    "保留模板的全部字段与表格结构，金额和主体可编辑，待补说明独立。"
+  ],
+  "critical_review": "See METRICS.md; critical error review is separate from framework numeric total."
+}

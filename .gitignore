@@ -31,6 +31,7 @@ _workspace/
 # Upstream fixtures are downloaded locally. Track only the self-built materials.
 workspace/*
 !workspace/general/
+!workspace/legal/
 workspace/general/wildclawbench/
 !workspace/web/
 workspace/web/artifactsbench/

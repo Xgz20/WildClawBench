@@ -1,0 +1,64 @@
+{
+  "task_id": "01_Legal_Intake_task_002_dossier_versions",
+  "facts": {
+    "input_count": 6,
+    "unique_content_count": 5,
+    "signed_price": 190000,
+    "draft_price": 210000,
+    "duplicate_files": [
+      "incoming/1.txt",
+      "incoming/复印.txt"
+    ],
+    "service_date": "2026-07-03"
+  },
+  "fact_sources": {
+    "input_count": [
+      "materials.md"
+    ],
+    "unique_content_count": [
+      "materials.md"
+    ],
+    "signed_price": [
+      "materials.md"
+    ],
+    "draft_price": [
+      "materials.md"
+    ],
+    "duplicate_files": [
+      "materials.md"
+    ],
+    "service_date": [
+      "materials.md"
+    ]
+  },
+  "input_hashes": {
+    "answer_schema.json": "cb8b2cb331d328aca6dcece0277c519ae2ea395efb2b7d3ff6149410902c9d75",
+    "incoming/1.txt": "cc0b0bb1985616fa2b8d48090ceb6c93f2f34174e8555878ea6218bce5767c43",
+    "incoming/回款.txt": "d32eebde8b07ae14a81963ba6b47a4e33469818ea9569eb4aebecf19ba24e1a9",
+    "incoming/复印.txt": "cc0b0bb1985616fa2b8d48090ceb6c93f2f34174e8555878ea6218bce5767c43",
+    "incoming/草稿.txt": "61e1a61879acca42fc2106f916da4edeae9b5cf9b7fe1e69f1e8dfeefe84667e",
+    "incoming/补充.txt": "63e9cbd3b1102cc1b9cdbf13c4e1ce6cd8b2b118c98fff679fbec9b2f3be53b2",
+    "incoming/送达.txt": "ff7234aebd151cc4fb2ab3eddc1a3f0b7db0ce65754061b5800dd4b1ec72204f",
+    "materials.md": "b10493b4076d04cb4f9e973cc5c86ff90df43d74d6e8c8cdaa674c0308cc9997"
+  },
+  "deliverables": [
+    {
+      "path": "results/report.md",
+      "kind": "md",
+      "min_chars": 180
+    }
+  ],
+  "copies": {
+    "results/archive/合同/原合同.txt": "incoming/1.txt",
+    "results/archive/合同/补充协议.txt": "incoming/补充.txt",
+    "results/archive/合同/未签草稿.txt": "incoming/草稿.txt",
+    "results/archive/程序/送达.txt": "incoming/送达.txt",
+    "results/archive/履行/回款.txt": "incoming/回款.txt"
+  },
+  "semantic_anchors": [
+    "区分字节重复与法律版本差异；不把草稿当正式变更。",
+    "合同、履行与诉讼程序分卷，重复件仍在索引标记原路径。",
+    "副本可打开、原件哈希不变、命名及索引与实际目录一致。"
+  ],
+  "critical_review": "See METRICS.md; critical error review is separate from framework numeric total."
+}

@@ -1,5 +1,7 @@
 schema_version: 1
 datasets:
+  xiaofa-legal:
+    definition: datasets/legal/xiaofa/dataset.yaml
   general-custom60-v1:
     kind: legacy
     manifest: eval_general_e2e/datasets/manifests/general-custom60-v1.json

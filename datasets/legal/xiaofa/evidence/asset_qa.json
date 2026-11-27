@@ -1,0 +1,218 @@
+{
+  "date": "2026-11-27",
+  "docx_files": 15,
+  "pdf_files": 3,
+  "png_files": 6,
+  "video_files": 2,
+  "notes": "DOCX rendered with bundled LibreOffice and Noto Sans SC, 15 pages visually checked; PDF rendered with bundled Poppler; videos fully decoded and all 8 distinct screens reviewed; QR decoded independently. X21/X25 final images reviewed after unique visual facts added. Rebuild changed only DOCX comment timestamps, not text/styles/body/anchors.",
+  "assets": [
+    {
+      "path": "workspace/legal/xiaofa/03_Legal_Drafting/03_Legal_Drafting_task_001_complaint/exec/template.docx",
+      "sha256": "de3433390e9232b444cde77ee397eb5a6c6c29000c052601b1249ae6ddf21166",
+      "kind": "docx",
+      "page_count": 1,
+      "visual_review": "passed",
+      "body_styles_match_to_reviewed_render": true
+    },
+    {
+      "path": "workspace/legal/xiaofa/03_Legal_Drafting/03_Legal_Drafting_task_002_labor_defense/exec/draft.docx",
+      "sha256": "a16446e6a16904f409f130dde90b4cb4ca8886b9fc8da731135eaa46d7b93e37",
+      "kind": "docx",
+      "page_count": 1,
+      "visual_review": "passed",
+      "body_styles_match_to_reviewed_render": true
+    },
+    {
+      "path": "workspace/legal/xiaofa/03_Legal_Drafting/03_Legal_Drafting_task_004_batch_five_documents/exec/templates/授权委托书.docx",
+      "sha256": "592b99e9720b7212b585ae23b28c6871d9369eb94ac8fd2c85398a2294da5916",
+      "kind": "docx",
+      "page_count": 1,
+      "visual_review": "passed",
+      "body_styles_match_to_reviewed_render": true
+    },
+    {
+      "path": "workspace/legal/xiaofa/03_Legal_Drafting/03_Legal_Drafting_task_004_batch_five_documents/exec/templates/要素表.docx",
+      "sha256": "71ad44b08bd98cbe037297ba9e2b1d8197ec6b577a70f0bb1833db5c5fa30af1",
+      "kind": "docx",
+      "page_count": 1,
+      "visual_review": "passed",
+      "body_styles_match_to_reviewed_render": true
+    },
+    {
+      "path": "workspace/legal/xiaofa/03_Legal_Drafting/03_Legal_Drafting_task_004_batch_five_documents/exec/templates/证据目录.docx",
+      "sha256": "438888f4e88cec2e371a45de9e476fe4a35de26818fb184c757119312dd67bc0",
+      "kind": "docx",
+      "page_count": 1,
+      "visual_review": "passed",
+      "body_styles_match_to_reviewed_render": true
+    },
+    {
+      "path": "workspace/legal/xiaofa/03_Legal_Drafting/03_Legal_Drafting_task_004_batch_five_documents/exec/templates/起诉状.docx",
+      "sha256": "2235c15622291d35bab27b436c748f35f3c09cd036c6cb682245c2930bccc5ed",
+      "kind": "docx",
+      "page_count": 1,
+      "visual_review": "passed",
+      "body_styles_match_to_reviewed_render": true
+    },
+    {
+      "path": "workspace/legal/xiaofa/03_Legal_Drafting/03_Legal_Drafting_task_004_batch_five_documents/exec/templates/身份证明.docx",
+      "sha256": "4441603e6381fa7e68b08e6f633e50765a5e219213f444f89192abe3f64bd8b2",
+      "kind": "docx",
+      "page_count": 1,
+      "visual_review": "passed",
+      "body_styles_match_to_reviewed_render": true
+    },
+    {
+      "path": "workspace/legal/xiaofa/03_Legal_Drafting/03_Legal_Drafting_task_005_structured_complaint/exec/form.docx",
+      "sha256": "4670d5c9891b007ca5c37d55887899c3e26e38abd51c366b1e28a937513b8938",
+      "kind": "docx",
+      "page_count": 1,
+      "visual_review": "passed",
+      "body_styles_match_to_reviewed_render": true
+    },
+    {
+      "path": "workspace/legal/xiaofa/04_Legal_Contracts/04_Legal_Contracts_task_001_editable_comments/exec/contract.docx",
+      "sha256": "2f8efef82cf50e91e6b1b72c48258f1e422836acd3ecc2b6a19565153cb6dfbf",
+      "kind": "docx",
+      "page_count": 1,
+      "visual_review": "passed",
+      "body_styles_match_to_reviewed_render": true
+    },
+    {
+      "path": "workspace/legal/xiaofa/04_Legal_Contracts/04_Legal_Contracts_task_002_english_license/exec/license.docx",
+      "sha256": "851360a3bdd24a04cb07f2ed7f855c901f8726d406cc2cb763a171e1728a858c",
+      "kind": "docx",
+      "page_count": 1,
+      "visual_review": "passed",
+      "body_styles_match_to_reviewed_render": true
+    },
+    {
+      "path": "workspace/legal/xiaofa/04_Legal_Contracts/04_Legal_Contracts_task_003_contract_diff/exec/base.docx",
+      "sha256": "f3235fa08e08a48fcd37b60a0e109c9555e0b1401df35c409d7a29887dc78f38",
+      "kind": "docx",
+      "page_count": 1,
+      "visual_review": "passed",
+      "body_styles_match_to_reviewed_render": true
+    },
+    {
+      "path": "workspace/legal/xiaofa/04_Legal_Contracts/04_Legal_Contracts_task_003_contract_diff/exec/supplement.docx",
+      "sha256": "76300f4d7d6dbfd8988c4345e050e037d0d462d40cc40a3c0410140836f8832b",
+      "kind": "docx",
+      "page_count": 1,
+      "visual_review": "passed",
+      "body_styles_match_to_reviewed_render": true
+    },
+    {
+      "path": "workspace/legal/xiaofa/04_Legal_Contracts/04_Legal_Contracts_task_005_comment_revision/exec/reviewed.docx",
+      "sha256": "7fa9764add7edcce837b27d307ae621d21b5bb9ecec9891c2b4b85b09b39dec9",
+      "kind": "docx",
+      "page_count": 1,
+      "visual_review": "passed",
+      "body_styles_match_to_reviewed_render": true
+    },
+    {
+      "path": "workspace/legal/xiaofa/06_Legal_Delivery/06_Legal_Delivery_task_003_redacted_handoff/exec/private.docx",
+      "sha256": "58b70e7799649b594748745bd3c0c286067659cc8cfbb6afa76f70c4e60629d6",
+      "kind": "docx",
+      "page_count": 1,
+      "visual_review": "passed",
+      "body_styles_match_to_reviewed_render": true
+    },
+    {
+      "path": "workspace/legal/xiaofa/06_Legal_Delivery/06_Legal_Delivery_task_005_source_bound_brief/exec/draft.docx",
+      "sha256": "a5fbcca6b2472d1fdce0fc87bc1b35f215f5d7c3bf5a6cdd38a6d7092d61ca06",
+      "kind": "docx",
+      "page_count": 1,
+      "visual_review": "passed",
+      "body_styles_match_to_reviewed_render": true
+    },
+    {
+      "path": "workspace/legal/xiaofa/01_Legal_Intake/01_Legal_Intake_task_001_case_registration/exec/scan.png",
+      "sha256": "5d06d518d9572c5575f4459cefc6eab6faf4a3f08be2130a4d2279fe2ab7adea",
+      "kind": "image",
+      "visual_review": "passed",
+      "decode_frames": null,
+      "duration_seconds": null
+    },
+    {
+      "path": "workspace/legal/xiaofa/05_Legal_Evidence/05_Legal_Evidence_task_001_ecommerce_capture/exec/scan.png",
+      "sha256": "c552151474eb1d1fbc3e2c48e6f0ab7491d65175b2798bf2627d793bc87a7642",
+      "kind": "image",
+      "visual_review": "passed",
+      "decode_frames": null,
+      "duration_seconds": null
+    },
+    {
+      "path": "workspace/legal/xiaofa/05_Legal_Evidence/05_Legal_Evidence_task_002_livestream_segments/exec/recording.mp4",
+      "sha256": "ad7ee0b6987b489a42956e5565379c8159ba70ab584ce04f5897d2dde2d348bd",
+      "kind": "video",
+      "visual_review": "passed",
+      "decode_frames": 160,
+      "duration_seconds": 16.0
+    },
+    {
+      "path": "workspace/legal/xiaofa/05_Legal_Evidence/05_Legal_Evidence_task_003_chat_continuity/exec/chat.mp4",
+      "sha256": "00f1997f83b168030e2486709d908359c327aecfbb94c0a1b560f92042051076",
+      "kind": "video",
+      "visual_review": "passed",
+      "decode_frames": 160,
+      "duration_seconds": 16.0
+    },
+    {
+      "path": "workspace/legal/xiaofa/05_Legal_Evidence/05_Legal_Evidence_task_004_qr_source/exec/qr_A.png",
+      "sha256": "3e157b5cc2a9c4b0b9a51126a933e5ec87de8cb7b13f17f05171e974babe6897",
+      "kind": "image",
+      "visual_review": "passed",
+      "decode_frames": null,
+      "duration_seconds": null
+    },
+    {
+      "path": "workspace/legal/xiaofa/05_Legal_Evidence/05_Legal_Evidence_task_004_qr_source/exec/qr_B.png",
+      "sha256": "17c58419a9625037e1d4994ff96975cb12dc1ebd31fbe40a44f1f89ff883e897",
+      "kind": "image",
+      "visual_review": "passed",
+      "decode_frames": null,
+      "duration_seconds": null
+    },
+    {
+      "path": "workspace/legal/xiaofa/05_Legal_Evidence/05_Legal_Evidence_task_005_custody_manifest/exec/crop.png",
+      "sha256": "e39b1388303fa02eccb660ca37d2e2c91735089f7b7f1ad405c3f49196cc377b",
+      "kind": "image",
+      "visual_review": "passed",
+      "decode_frames": null,
+      "duration_seconds": null
+    },
+    {
+      "path": "workspace/legal/xiaofa/06_Legal_Delivery/06_Legal_Delivery_task_001_court_download/exec/portal/A.pdf",
+      "sha256": "9fca89c37353823ad63ed43619ba60730e1aeb323fba38bf63c6485e28f43c64",
+      "kind": "pdf",
+      "visual_review": "passed",
+      "decode_frames": null,
+      "duration_seconds": null
+    },
+    {
+      "path": "workspace/legal/xiaofa/06_Legal_Delivery/06_Legal_Delivery_task_001_court_download/exec/portal/B.pdf",
+      "sha256": "3b863a8fb7dd624cd1d19de00c83d99e046a7d78458319ebb5cf982dc71f30d6",
+      "kind": "pdf",
+      "visual_review": "passed",
+      "decode_frames": null,
+      "duration_seconds": null
+    },
+    {
+      "path": "workspace/legal/xiaofa/06_Legal_Delivery/06_Legal_Delivery_task_001_court_download/exec/portal/C.pdf",
+      "sha256": "e619decb2c41394c27068b05031d75e02b7cbcb2a99ef2d260c3ac86732e792c",
+      "kind": "pdf",
+      "visual_review": "passed",
+      "decode_frames": null,
+      "duration_seconds": null
+    },
+    {
+      "path": "workspace/legal/xiaofa/06_Legal_Delivery/06_Legal_Delivery_task_003_redacted_handoff/exec/scan.png",
+      "sha256": "4a6c653423e7bbe7620ad9b1249d3c1babbb46b9135612270f5063b5e49b151e",
+      "kind": "image",
+      "visual_review": "passed",
+      "decode_frames": null,
+      "duration_seconds": null
+    }
+  ]
+}

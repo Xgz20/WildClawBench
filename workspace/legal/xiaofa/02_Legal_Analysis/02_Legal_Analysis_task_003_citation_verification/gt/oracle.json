@@ -1,0 +1,57 @@
+{
+  "task_id": "02_Legal_Analysis_task_003_citation_verification",
+  "facts": {
+    "verified_case_number": 180,
+    "official_related_article": 39,
+    "reliable_cards": [
+      "A"
+    ],
+    "misstated_cards": [
+      "B"
+    ],
+    "unverified_cards": [
+      "C"
+    ],
+    "new_ground_can_automatically_cure": false
+  },
+  "fact_sources": {
+    "verified_case_number": [
+      "law_packet.md"
+    ],
+    "official_related_article": [
+      "law_packet.md"
+    ],
+    "reliable_cards": [
+      "materials.md"
+    ],
+    "misstated_cards": [
+      "materials.md"
+    ],
+    "unverified_cards": [
+      "materials.md"
+    ],
+    "new_ground_can_automatically_cure": [
+      "law_packet.md",
+      "materials.md"
+    ]
+  },
+  "input_hashes": {
+    "answer_schema.json": "251968d473b6562cb8796f14bb5948e90fe0eab029c6ceffc7cec15d42c59542",
+    "law_packet.md": "ab2aa8d8c29de05ff4682e04f39cdd66f41007c3aa718493e43a272e49e43f1c",
+    "materials.md": "86c3dbba51091f0fa39b1fabce4f99f5a3f7913ac07cb447b1d055a0e723caa6"
+  },
+  "deliverables": [
+    {
+      "path": "results/report.md",
+      "kind": "md",
+      "min_chars": 180
+    }
+  ],
+  "copies": {},
+  "semantic_anchors": [
+    "A与官方原文相符；B将审查边界误作旷工实体规则；C仅能标未核验，不能凭缺检索认定世上不存在。",
+    "准确区分指导案例号与裁判案号，说明通知新增事由限制及本案缺勤证据问题。",
+    "每个引用可定位官方原文与链接；不虚构独立联网核验或新增裁判。"
+  ],
+  "critical_review": "See METRICS.md; critical error review is separate from framework numeric total."
+}

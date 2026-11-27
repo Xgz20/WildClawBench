@@ -1,0 +1,53 @@
+{
+  "task_id": "01_Legal_Intake_task_005_case_isolation",
+  "facts": {
+    "A_principal": 100000,
+    "B_principal": 60000,
+    "unassigned_amount": 10000,
+    "unassigned_receipt": "U01",
+    "misnamed_attachment_case": "B",
+    "A_contract": "HF-01",
+    "B_contract": "WH-02"
+  },
+  "fact_sources": {
+    "A_principal": [
+      "materials.md"
+    ],
+    "B_principal": [
+      "materials.md"
+    ],
+    "unassigned_amount": [
+      "materials.md"
+    ],
+    "unassigned_receipt": [
+      "materials.md"
+    ],
+    "misnamed_attachment_case": [
+      "materials.md"
+    ],
+    "A_contract": [
+      "materials.md"
+    ],
+    "B_contract": [
+      "materials.md"
+    ]
+  },
+  "input_hashes": {
+    "answer_schema.json": "38fb2661e907264ba922215c007cba73e25ecd0acbd27b4d8fe00fd37c701372",
+    "materials.md": "e1dfa894a992a806242dbe73c491ef42dba8f2b8c229778ca1b9d1e71479dac9"
+  },
+  "deliverables": [
+    {
+      "path": "results/report.md",
+      "kind": "md",
+      "min_chars": 180
+    }
+  ],
+  "copies": {},
+  "semantic_anchors": [
+    "按合同号和完整主体隔离两案，不按简称或文件名归案。",
+    "10000元保持待认领，既不重复抵扣也不任意分配。",
+    "两张卡片分别标明已确认余额和待核回款的潜在影响。"
+  ],
+  "critical_review": "See METRICS.md; critical error review is separate from framework numeric total."
+}

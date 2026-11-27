@@ -1,0 +1,38 @@
+{
+  "version": 1,
+  "facts_fields": {
+    "participants": {
+      "type": "number"
+    },
+    "trial_tasks": {
+      "type": "number"
+    },
+    "passed": {
+      "type": "number"
+    },
+    "rework": {
+      "type": "number"
+    },
+    "failed": {
+      "type": "number"
+    },
+    "pass_rate": {
+      "type": "number"
+    },
+    "historical_import_records": {
+      "type": "number"
+    },
+    "sla_promised": {
+      "type": "boolean"
+    },
+    "overall_accuracy_established": {
+      "type": "boolean"
+    }
+  },
+  "conventions": "金额为元；日期YYYY-MM-DD；unknown用null；数组无序不重复；source locator须为材料段号、条款、页码、图中文字位置或视频时间码。数字容差0.005。",
+  "output": {
+    "facts": "按facts_fields逐项填入，不在此提供答案",
+    "sources": "每个fact key对应[{file:原始相对路径,locator:具体位置}]",
+    "input_sha256": "原始相对文件路径到实际SHA-256的映射"
+  }
+}

@@ -1,0 +1,147 @@
+{
+  "task_id": "03_Legal_Drafting_task_004_batch_five_documents",
+  "facts": {
+    "P01_principal": 1800,
+    "P02_principal": 960,
+    "P03_principal": 1200,
+    "P01_defendant": "顾某",
+    "P02_defendant": "贺某",
+    "P03_defendant": "姚某",
+    "doc_count": 15,
+    "special_authority": false
+  },
+  "fact_sources": {
+    "P01_principal": [
+      "materials.md"
+    ],
+    "P02_principal": [
+      "materials.md"
+    ],
+    "P03_principal": [
+      "materials.md"
+    ],
+    "P01_defendant": [
+      "materials.md"
+    ],
+    "P02_defendant": [
+      "materials.md"
+    ],
+    "P03_defendant": [
+      "materials.md"
+    ],
+    "doc_count": [
+      "materials.md"
+    ],
+    "special_authority": [
+      "materials.md"
+    ]
+  },
+  "input_hashes": {
+    "answer_schema.json": "a2774760c59fa961c8a5aae818d0e7295711a78a9354d38abea30dbccf53365a",
+    "materials.md": "685a62ccce569c2d5843aadf1168ca7fd9618de64c9f482698d26feeead2e041",
+    "templates/授权委托书.docx": "592b99e9720b7212b585ae23b28c6871d9369eb94ac8fd2c85398a2294da5916",
+    "templates/要素表.docx": "71ad44b08bd98cbe037297ba9e2b1d8197ec6b577a70f0bb1833db5c5fa30af1",
+    "templates/证据目录.docx": "438888f4e88cec2e371a45de9e476fe4a35de26818fb184c757119312dd67bc0",
+    "templates/起诉状.docx": "2235c15622291d35bab27b436c748f35f3c09cd036c6cb682245c2930bccc5ed",
+    "templates/身份证明.docx": "4441603e6381fa7e68b08e6f633e50765a5e219213f444f89192abe3f64bd8b2"
+  },
+  "deliverables": [
+    {
+      "path": "results/P01/起诉状.docx",
+      "kind": "docx",
+      "min_chars": 60,
+      "tables": 1
+    },
+    {
+      "path": "results/P01/要素表.docx",
+      "kind": "docx",
+      "min_chars": 60,
+      "tables": 1
+    },
+    {
+      "path": "results/P01/证据目录.docx",
+      "kind": "docx",
+      "min_chars": 60,
+      "tables": 1
+    },
+    {
+      "path": "results/P01/身份证明.docx",
+      "kind": "docx",
+      "min_chars": 60,
+      "tables": 1
+    },
+    {
+      "path": "results/P01/授权委托书.docx",
+      "kind": "docx",
+      "min_chars": 60,
+      "tables": 1
+    },
+    {
+      "path": "results/P02/起诉状.docx",
+      "kind": "docx",
+      "min_chars": 60,
+      "tables": 1
+    },
+    {
+      "path": "results/P02/要素表.docx",
+      "kind": "docx",
+      "min_chars": 60,
+      "tables": 1
+    },
+    {
+      "path": "results/P02/证据目录.docx",
+      "kind": "docx",
+      "min_chars": 60,
+      "tables": 1
+    },
+    {
+      "path": "results/P02/身份证明.docx",
+      "kind": "docx",
+      "min_chars": 60,
+      "tables": 1
+    },
+    {
+      "path": "results/P02/授权委托书.docx",
+      "kind": "docx",
+      "min_chars": 60,
+      "tables": 1
+    },
+    {
+      "path": "results/P03/起诉状.docx",
+      "kind": "docx",
+      "min_chars": 60,
+      "tables": 1
+    },
+    {
+      "path": "results/P03/要素表.docx",
+      "kind": "docx",
+      "min_chars": 60,
+      "tables": 1
+    },
+    {
+      "path": "results/P03/证据目录.docx",
+      "kind": "docx",
+      "min_chars": 60,
+      "tables": 1
+    },
+    {
+      "path": "results/P03/身份证明.docx",
+      "kind": "docx",
+      "min_chars": 60,
+      "tables": 1
+    },
+    {
+      "path": "results/P03/授权委托书.docx",
+      "kind": "docx",
+      "min_chars": 60,
+      "tables": 1
+    }
+  ],
+  "copies": {},
+  "semantic_anchors": [
+    "三案分别计算1800/960/1200，15文书主体、房号、期间、金额无串案。",
+    "不编造身份证、签名印章、特别授权、原件提交或法院确认；收费摘要与待补证区分。",
+    "保留五模板各自标题、字段表、落款；逐案目录可追溯且实际15份可编辑文件齐备。"
+  ],
+  "critical_review": "See METRICS.md; critical error review is separate from framework numeric total."
+}

@@ -1,0 +1,32 @@
+{
+  "version": 1,
+  "facts_fields": {
+    "A_contract": {
+      "type": "string"
+    },
+    "B_contract": {
+      "type": "string"
+    },
+    "A_evidence_deadline": {
+      "type": "string"
+    },
+    "B_court_deadline": {
+      "type": "any"
+    },
+    "unassigned_files": {
+      "type": "array"
+    },
+    "client_reply_date": {
+      "type": "string"
+    },
+    "client_reply_case": {
+      "type": "any"
+    }
+  },
+  "conventions": "金额为元；日期YYYY-MM-DD；unknown用null；数组无序不重复；source locator须为材料段号、条款、页码、图中文字位置或视频时间码。数字容差0.005。",
+  "output": {
+    "facts": "按facts_fields逐项填入，不在此提供答案",
+    "sources": "每个fact key对应[{file:原始相对路径,locator:具体位置}]",
+    "input_sha256": "原始相对文件路径到实际SHA-256的映射"
+  }
+}

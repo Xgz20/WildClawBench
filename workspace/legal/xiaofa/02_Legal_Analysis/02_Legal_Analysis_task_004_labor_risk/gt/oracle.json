@@ -1,0 +1,54 @@
+{
+  "task_id": "02_Legal_Analysis_task_004_labor_risk",
+  "facts": {
+    "notice_date": "2026-06-12",
+    "alleged_absence_days": 3,
+    "authorized_leave_date": "2026-06-10",
+    "manual_receipt_proven": false,
+    "union_exists": true,
+    "prior_union_notice_proven": false,
+    "all_absence_proven": false
+  },
+  "fact_sources": {
+    "notice_date": [
+      "materials.md"
+    ],
+    "alleged_absence_days": [
+      "materials.md"
+    ],
+    "authorized_leave_date": [
+      "materials.md"
+    ],
+    "manual_receipt_proven": [
+      "materials.md"
+    ],
+    "union_exists": [
+      "materials.md"
+    ],
+    "prior_union_notice_proven": [
+      "materials.md"
+    ],
+    "all_absence_proven": [
+      "materials.md"
+    ]
+  },
+  "input_hashes": {
+    "answer_schema.json": "20c529a43f933f69449c2016f65cb30448aae1ae26e25afd4adcaff389ba814d",
+    "law_packet.md": "ab2aa8d8c29de05ff4682e04f39cdd66f41007c3aa718493e43a272e49e43f1c",
+    "materials.md": "cfddee6dedf6bbdc34023d4febd6150d05176f05a2248e125d0fa3ff717633f9"
+  },
+  "deliverables": [
+    {
+      "path": "results/report.md",
+      "kind": "md",
+      "min_chars": 180
+    }
+  ],
+  "copies": {},
+  "semantic_anchors": [
+    "按解除通知事由审查，不能用后补其他违纪理由兜底。",
+    "明确手册告知、制度程序、工会通知以及请假争议，不把缺证等同确定违法或确定合法。",
+    "区分已知工资与赔偿计算所需的工资基数、年限及适用条件，提供补证清单。"
+  ],
+  "critical_review": "See METRICS.md; critical error review is separate from framework numeric total."
+}

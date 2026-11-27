@@ -1,0 +1,58 @@
+{
+  "task_id": "01_Legal_Intake_task_001_case_registration",
+  "facts": {
+    "seller": "宁岚设备有限公司",
+    "buyer": "远杉科技有限公司",
+    "contract_total": 240000,
+    "paid_total": 120000,
+    "unpaid_principal": 120000,
+    "acceptance_date": "2026-04-06",
+    "exception_count": 2,
+    "case_number": null
+  },
+  "fact_sources": {
+    "seller": [
+      "materials.md"
+    ],
+    "buyer": [
+      "materials.md"
+    ],
+    "contract_total": [
+      "materials.md"
+    ],
+    "paid_total": [
+      "materials.md"
+    ],
+    "unpaid_principal": [
+      "materials.md"
+    ],
+    "acceptance_date": [
+      "scan.png"
+    ],
+    "exception_count": [
+      "scan.png"
+    ],
+    "case_number": [
+      "materials.md"
+    ]
+  },
+  "input_hashes": {
+    "answer_schema.json": "62e610fd50fb6b48828ea6448b86049e58516c627e9e2d0b96041a93fab54b1e",
+    "materials.md": "98cd0be49ee3367e6224d9b4f6a555a20dbc6cc5f9a6960f0020fc1d8f32d5e8",
+    "scan.png": "5d06d518d9572c5575f4459cefc6eab6faf4a3f08be2130a4d2279fe2ab7adea"
+  },
+  "deliverables": [
+    {
+      "path": "results/report.md",
+      "kind": "md",
+      "min_chars": 180
+    }
+  ],
+  "copies": {},
+  "semantic_anchors": [
+    "识别草稿已过时，以两笔真实流水重算余额；不得把合同总额当诉请本金。",
+    "验收单注明两项缺陷待整改，不能写无条件全部验收；尾款是否到期需结合验收条件进一步核实。",
+    "登记表有字段、值、来源、待核状态，未知案号/法院不补造。"
+  ],
+  "critical_review": "See METRICS.md; critical error review is separate from framework numeric total."
+}

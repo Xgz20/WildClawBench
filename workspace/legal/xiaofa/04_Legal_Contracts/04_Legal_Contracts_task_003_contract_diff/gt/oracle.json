@@ -1,0 +1,66 @@
+{
+  "task_id": "04_Legal_Contracts_task_003_contract_diff",
+  "facts": {
+    "original_delivery": "2026-07-01",
+    "new_delivery": "2026-08-15",
+    "payment_days_after_delivery": 30,
+    "price": 360000,
+    "confidentiality_years": 2,
+    "conflicting_fixed_due_date": "2026-07-31"
+  },
+  "fact_sources": {
+    "original_delivery": [
+      "base.docx",
+      "supplement.docx",
+      "materials.md"
+    ],
+    "new_delivery": [
+      "base.docx",
+      "supplement.docx",
+      "materials.md"
+    ],
+    "payment_days_after_delivery": [
+      "materials.md"
+    ],
+    "price": [
+      "base.docx",
+      "supplement.docx",
+      "materials.md"
+    ],
+    "confidentiality_years": [
+      "base.docx",
+      "supplement.docx",
+      "materials.md"
+    ],
+    "conflicting_fixed_due_date": [
+      "base.docx",
+      "supplement.docx",
+      "materials.md"
+    ]
+  },
+  "input_hashes": {
+    "answer_schema.json": "f8a963beb2ace4b97782361480b5e10e3c0897788cc26a3610cce2d5155bf680",
+    "base.docx": "f3235fa08e08a48fcd37b60a0e109c9555e0b1401df35c409d7a29887dc78f38",
+    "materials.md": "76830ded73f5c6e097ab8971297a5525a3e73e39adfc5940100327fce31faf2c",
+    "supplement.docx": "76300f4d7d6dbfd8988c4345e050e037d0d462d40cc40a3c0410140836f8832b"
+  },
+  "deliverables": [
+    {
+      "path": "results/supplement.docx",
+      "kind": "docx",
+      "min_chars": 180
+    },
+    {
+      "path": "results/diff.md",
+      "kind": "md",
+      "min_chars": 180
+    }
+  ],
+  "copies": {},
+  "semantic_anchors": [
+    "识别补充协议延交付却保留7月31日固定付款日的冲突，不把优先条款当消除所有矛盾。",
+    "按授权修复为最终交付后30日，保持总价360000与保密2年不动。",
+    "差异表包含旧条款、新条款、冲突及建议位置，建议稿可编辑且不冒充双方已签。"
+  ],
+  "critical_review": "See METRICS.md; critical error review is separate from framework numeric total."
+}

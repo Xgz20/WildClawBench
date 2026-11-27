@@ -1,0 +1,12 @@
+{
+  "date": "2026-11-27",
+  "live_refresh": "Content equal to earlier same-day folder snapshot",
+  "files": {
+    "doxrzMrfTQZuGPeFDbKfUQcRglf-meta.json": "7dfcb42fc7b30d28880652499fcb39567de78b6da25681fad760cadac370debc",
+    "shtrzsEQxbOLU4t0Nh9ggsiHmLf-sheets.json": "27358578cbe302075045f934451b8e8304bda6fb3a962fc0c83add19712f426e",
+    "doxrzMrfTQZuGPeFDbKfUQcRglf-raw.json": "1303daac7fecf9f3216fd7fdd04cddd18144c8c2209b7eb6d6cd4de0fc0c420b",
+    "shtrzsEQxbOLU4t0Nh9ggsiHmLf-3daz2t-rich.json": "2e4ba5380f0926f6672a7669d8152346d6b480660e01be328d2ff68ad80b526c",
+    "shtrzsEQxbOLU4t0Nh9ggsiHmLf-TTcsSP-rich.json": "678ef8072ea7552086d0d2ac2050add1ebaf5acc8d0c79a967b5803b352621e7",
+    "doxrzMrfTQZuGPeFDbKfUQcRglf-blocks.json": "df275e119455c433ac1ee8fe02c6ed6df6b70e134c0e66e8636c8dcb4f200471"
+  }
+}
