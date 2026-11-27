@@ -119,6 +119,14 @@ def build_parser() -> argparse.ArgumentParser:
     rerun.add_argument("--expected-attempts", type=Path)
     rerun.add_argument("--cancel-before-dispatch", action="store_true", help="保留本次新版本但取消派发")
     rerun.add_argument("--jsonl", action="store_true")
+    selected_rerun = commands.add_parser("rerun-selected", help="为明确选中的多个用例轮次统一创建新执行版本")
+    _batch(selected_rerun)
+    _agentcube(selected_rerun)
+    selected_rerun.add_argument("--execution-key", action="append", required=True)
+    selected_rerun.add_argument("--request-id", required=True)
+    selected_rerun.add_argument("--expected-attempts", type=Path)
+    selected_rerun.add_argument("--cancel-before-dispatch", action="store_true")
+    selected_rerun.add_argument("--jsonl", action="store_true")
     history = commands.add_parser("execution-history", help="只读查询一个用例轮次的历史版本")
     _batch(history)
     history.add_argument("--execution-key", required=True)
@@ -289,6 +297,18 @@ def _rerun_case(args):
 def _execution_history(args):
     from .protocol import execution_history
     return execution_history(_batch_root(args), args.execution_key)
+
+
+def _rerun_selected(args):
+    from .agentcube import AgentCubeConfig
+    from .engine import run_batch
+    from .preparation import _revision
+    request = {"execution_keys": args.execution_key, "request_id": args.request_id,
+               "executor_revision": _revision(Path(__file__).resolve().parents[2]),
+               "expected_attempts": read_json(args.expected_attempts) if args.expected_attempts else {}}
+    progress = (lambda event: _print_event(args, args.batch_id, event)) if args.jsonl else None
+    return run_batch(_batch_root(args), AgentCubeConfig.load(args.agentcube_config), progress=progress,
+                     rerun_selection=request, cancel_before_dispatch=args.cancel_before_dispatch)
 
 
 def _cleanup(args):
@@ -502,7 +522,7 @@ def main(argv=None) -> int:
         except (ValueError, FileExistsError, FileNotFoundError, ModuleNotFoundError) as error:
             print(json.dumps({"type": "POC_INPUT_ERROR", "error": str(error)}, ensure_ascii=False))
             return 2
-    handlers = {"run": _run, "resume": _resume, "rerun-case": _rerun_case, "execution-history": _execution_history,
+    handlers = {"run": _run, "resume": _resume, "rerun-case": _rerun_case, "rerun-selected": _rerun_selected, "execution-history": _execution_history,
                 "recover-native-terminal": _recover_native_terminal, "status": _status, "cleanup": _cleanup, "retention-reap": _retention_reap,
                 "reconcile-absent-creation": _reconcile_absent_creation, "validate-preprocess": _validate_preprocess,
                 "restore": _restore, "export": _export, "import": _import, "pipeline": _pipeline, "headless-score": _headless_score, "desktop-score": _desktop_score, "general-report": _general_report,
@@ -511,7 +531,7 @@ def main(argv=None) -> int:
         result = handlers[args.command](args)
         if args.api_version:
             from .protocol import envelope, snapshot
-            if args.command in {"status", "resume", "rerun-case", "cleanup", "reconcile-absent-creation"} or (args.command == "run" and not args.dry_run):
+            if args.command in {"status", "resume", "rerun-case", "rerun-selected", "cleanup", "reconcile-absent-creation"} or (args.command == "run" and not args.dry_run):
                 result = snapshot(_batch_root(args) if args.command != "run" else args.workspace_root.expanduser().resolve() / "batches" / result["batch_id"])
             print(json.dumps(envelope("result", result), ensure_ascii=False), flush=True)
         elif getattr(args, "jsonl", False):

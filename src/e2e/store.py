@@ -228,14 +228,28 @@ class BatchStore:
     def rerun_case(self, unit_id: str, task_id: str, request_id: str, *, run_indices=None,
                    expected_attempts=None, executor_revision=None) -> dict:
         """Atomically replace only this case's selected rounds, retaining old attempts."""
-        if not isinstance(request_id, str) or not request_id or len(request_id) > 96:
-            raise E2EError("RERUN_REQUEST_ID_INVALID")
         rounds = sorted(set(run_indices or []))
         if any(type(value) is not int or value < 1 for value in rounds):
             raise E2EError("RERUN_ROUND_INVALID")
-        expected = expected_attempts or {}
         request = {"unit_id": unit_id, "task_id": task_id, "run_indices": rounds,
-                   "expected_attempts": expected, "executor_revision": executor_revision}
+                   "expected_attempts": expected_attempts or {}, "executor_revision": executor_revision}
+        return self._rerun(request_id, request)
+
+    def rerun_selected(self, execution_keys: list[str], request_id: str, *,
+                       expected_attempts=None, executor_revision=None) -> dict:
+        """Replace an explicit multi-case/round selection in one transaction."""
+        if (not isinstance(execution_keys, list) or not execution_keys
+                or any(not isinstance(key, str) or not key for key in execution_keys)
+                or len(set(execution_keys)) != len(execution_keys)):
+            raise E2EError("RERUN_EXECUTION_SELECTION_INVALID")
+        return self._rerun(request_id, {"execution_keys": sorted(execution_keys),
+            "expected_attempts": expected_attempts or {}, "executor_revision": executor_revision})
+
+    def _rerun(self, request_id: str, request: dict) -> dict:
+        if not isinstance(request_id, str) or not request_id or len(request_id) > 96:
+            raise E2EError("RERUN_REQUEST_ID_INVALID")
+        expected = request["expected_attempts"]
+        executor_revision = request["executor_revision"]
         metadata_key = "case-rerun:" + request_id
         with self.transaction() as db:
             existing = db.execute("SELECT value FROM metadata WHERE key=?", (metadata_key,)).fetchone()
@@ -252,10 +266,17 @@ class BatchStore:
             rows = [self._with_retention(db, row) for row in rows]
             if any(execution_held(row) or row["phase"] not in {"COMPLETED", "FAILED", "CANCELLED", "NEEDS_ATTENTION"} for row in rows):
                 raise E2EError("RERUN_REQUIRES_RELEASED_EXECUTIONS")
-            case = [row for row in rows if row["unit_id"] == unit_id and row["task_id"] == task_id]
-            if not case or set(rounds) - {row["run_index"] for row in case}:
-                raise E2EError("RERUN_CASE_OR_ROUND_UNKNOWN")
-            selected = [row for row in case if not rounds or row["run_index"] in rounds]
+            if "execution_keys" in request:
+                keys = set(request["execution_keys"])
+                if keys - {row["key"] for row in rows}:
+                    raise E2EError("RERUN_EXECUTION_SELECTION_UNKNOWN")
+                selected = [row for row in rows if row["key"] in keys]
+            else:
+                case = [row for row in rows if row["unit_id"] == request["unit_id"] and row["task_id"] == request["task_id"]]
+                rounds = request["run_indices"]
+                if not case or set(rounds) - {row["run_index"] for row in case}:
+                    raise E2EError("RERUN_CASE_OR_ROUND_UNKNOWN")
+                selected = [row for row in case if not rounds or row["run_index"] in rounds]
             if any(row["phase"] == "NEEDS_ATTENTION" and row["resource_held"] for row in selected):
                 raise E2EError("RERUN_REQUIRES_RECONCILED_ATTENTION_EXECUTION")
             keys = {row["key"] for row in selected}

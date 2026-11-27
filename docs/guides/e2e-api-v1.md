@@ -42,6 +42,32 @@ purpose=scoring 整理成功题的本地 Skill 标准输入。结果包保留父
 
 退出码 0 表示命令成功返回，1 表示执行范围含失败，2 表示输入或协议错误，3 表示待处理，130 表示观察中断。业务终态以公开快照与回执判断。
 
+## 多题、多轮次执行重跑
+
+发布 `execution-selection-rerun-v1` 能力的发行支持 `rerun-selected`。重复传入
+`--execution-key` 选定明确的 `(unit_id, task_id, run_index)`，可同时覆盖多个题目和
+配置单元；不传空范围，不把空选择解释为整批重跑。示例：
+
+```bash
+python eval/run_e2e.py --api-version 1 rerun-selected \
+  --workspace-root /absolute/results --batch-id example \
+  --execution-key unit-a/run-0001/task-1 \
+  --execution-key unit-a/run-0002/task-2 \
+  --request-id rerun-errors-001 \
+  --expected-attempts /absolute/expected-attempts.json \
+  --agentcube-config /absolute/identity.json --jsonl
+```
+
+`expected-attempts.json` 是执行身份到旧 attempt ID 的映射。控制器在同一个事务中
+验证全部范围、资源状态和期望版本，再创建选中轮次的新版本；任一未知或过期身份
+使整个选择失败，不部分重置。相同请求 ID 和相同范围可幂等续接，不重复派题；
+请求范围改变或已被后续执行替代时拒绝复用。
+
+选中轮次共用原批次的并发调度器，不由平台逐题启动互相竞争的控制器。未选中
+轮次、旧原件、备份与评分历史保持原绑定。新执行版本需要重新评分。
+`--cancel-before-dispatch` 仍创建可审计的新版本，但取消其派发。
+原 `rerun-case`、单轮重跑、执行历史和版本化导出接口保持兼容。
+
 ## 本地接续与覆盖
 
 结果包的 `selected_scope` 是本次导出范围，`parent_scope` 保留父批次全部执行身份。`not_exported` 与 `unavailable_executions` 区分未选择和未封存条目。选中题目的 `task-inputs/` 同时保留题目定义、发送 Prompt、依赖和私有评分材料。

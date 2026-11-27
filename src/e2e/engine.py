@@ -309,7 +309,10 @@ def _failure(root, store, item, driver, error, *, final_phase="FAILED"):
 
 def run_batch(root: Path, config: AgentCubeConfig, *, unit_ids: list[str] | None = None,
               task_ids: list[str] | None = None, driver_factory=None, progress=None, rerun_case: dict | None = None,
-              cancel_before_dispatch: bool = False, recovery: dict | None = None) -> dict:
+              cancel_before_dispatch: bool = False, recovery: dict | None = None,
+              rerun_selection: dict | None = None) -> dict:
+    if rerun_selection is not None and (rerun_case is not None or unit_ids or task_ids):
+        raise E2EError("RERUN_SELECTION_SCOPE_CONFLICT")
     manifest = load_batch(root)
     store = BatchStore(root)
     units = {unit["unit_id"]: unit for unit in manifest["units"]}
@@ -328,14 +331,15 @@ def run_batch(root: Path, config: AgentCubeConfig, *, unit_ids: list[str] | None
     stop = threading.Event()
     with controller_lock(root) as owner:
         if recovery is not None:
-            if rerun_case is not None or unit_ids or task_ids:
+            if rerun_case is not None or rerun_selection is not None or unit_ids or task_ids:
                 raise E2EError("RECOVERY_MUST_PRESERVE_BATCH_SCOPE")
             from .recovery import register_recovery
             with controller_lock(root, "scoring-queue"):
                 register_recovery(root, recovery)
-        if rerun_case is not None:
+        if rerun_case is not None or rerun_selection is not None:
             with controller_lock(root, "scoring-queue"):
-                receipt = store.rerun_case(**rerun_case)
+                receipt = (store.rerun_selected(**rerun_selection) if rerun_selection is not None
+                           else store.rerun_case(**rerun_case))
             selected_keys.update(receipt["attempts"])
             if cancel_before_dispatch:
                 for item in store.rows():

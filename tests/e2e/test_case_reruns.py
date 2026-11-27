@@ -105,6 +105,70 @@ class CaseRerunTests(unittest.TestCase):
         self.assertEqual({row["unit_id"] for row in changed}, {"unit"})
         self.assertEqual(snapshot(self.root)["total"], 12)
 
+    def test_selected_cases_and_rounds_are_atomic_versioned_and_idempotent(self):
+        before = {row['key']: row for row in self.store.rows()}
+        keys = ['unit/run-0002/t0', 'unit/run-0001/t1', 'other/run-0003/t1']
+        request = {'execution_keys': keys, 'request_id': 'multi-case',
+                   'expected_attempts': {key: before[key]['attempt_id'] for key in keys}}
+        calls = len(self.fixture.provider.calls)
+        run_batch(self.root, self.fixture.config, driver_factory=self.fixture.factory, rerun_selection=request)
+        after = {row['key']: row for row in self.store.rows()}
+        self.assertEqual(len(self.fixture.provider.calls), calls + 3)
+        for key in before:
+            if key in keys:
+                self.assertEqual(after[key]['execution_version'], 2)
+                self.assertEqual(len(self.store.versions(key)), 2)
+            else:
+                self.assertEqual(before[key], after[key])
+        run_batch(self.root, self.fixture.config, driver_factory=self.fixture.factory,
+                  rerun_selection={**request, 'execution_keys': list(reversed(keys))})
+        self.assertEqual(len(self.fixture.provider.calls), calls + 3)
+
+    def test_selected_rerun_rejects_invalid_or_stale_selection_without_partial_reset(self):
+        before = self.store.rows()
+        keys = ['unit/run-0001/t0', 'other/run-0002/t1']
+        for selected, expected in [([], {}), ([keys[0], keys[0]], {}), ([*keys, 'unknown'], {}),
+                                   (keys, {keys[1]: 'stale-attempt'})]:
+            with self.assertRaises(E2EError):
+                self.store.rerun_selected(selected, 'invalid-selection', expected_attempts=expected)
+            self.assertEqual(self.store.rows(), before)
+        self.assertTrue(all(len(self.store.versions(key)) == 1 for key in keys))
+
+    def test_selected_cases_share_the_existing_three_slot_scheduler(self):
+        fixture = self.fixture
+        run_batch(fixture.root, fixture.config, driver_factory=fixture.factory)
+        store = BatchStore(fixture.root)
+        before = {row['key']: row['attempt_id'] for row in store.rows()}
+        keys = list(before)[:6]
+        fixture.provider.max_active = 0
+        calls = len(fixture.provider.calls)
+        run_batch(fixture.root, fixture.config, driver_factory=fixture.factory,
+                  rerun_selection={'execution_keys': keys, 'request_id': 'three-slots',
+                                   'expected_attempts': {key: before[key] for key in keys}})
+        self.assertEqual(fixture.provider.max_active, 3)
+        self.assertEqual(len(fixture.provider.calls), calls + 6)
+        self.assertEqual({row['key'] for row in store.rows() if row['attempt_id'] != before[row['key']]}, set(keys))
+
+    def test_public_selected_rerun_can_cancel_all_selected_rounds_before_dispatch(self):
+        from src.e2e import cli
+        workspace = self.root.parent / 'selected-cli-workspace'
+        (workspace / 'batches').mkdir(parents=True)
+        moved = workspace / 'batches' / self.root.name
+        self.root.rename(moved);self.root = moved;self.store = BatchStore(moved)
+        keys = ['unit/run-0001/t0', 'other/run-0003/t1']
+        calls = len(self.fixture.provider.calls)
+        output = io.StringIO()
+        with patch('src.e2e.agentcube.AgentCubeConfig.load', return_value=self.fixture.config), contextlib.redirect_stdout(output):
+            cli.main(['--api-version', '1', 'rerun-selected', '--workspace-root', str(workspace),
+                      '--batch-id', moved.name, '--execution-key', keys[0], '--execution-key', keys[1],
+                      '--request-id', 'selected-cancelled', '--cancel-before-dispatch'])
+        envelope = json.loads(output.getvalue().strip().split('\n')[-1])
+        self.assertEqual(envelope['type'], 'result')
+        self.assertEqual(len(self.fixture.provider.calls), calls)
+        for row in self.store.rows():
+            self.assertEqual(row.get('execution_version', 1), 2 if row['key'] in keys else 1)
+            if row['key'] in keys:self.assertEqual(row['phase'], 'CANCELLED')
+
     def test_failed_latest_never_falls_back_and_exports_history_only_when_selected(self):
         key = "unit/run-0001/t0"
         self.store.rerun_case("unit", "t0", "latest-failed", run_indices=[1])

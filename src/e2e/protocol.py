@@ -94,6 +94,7 @@ def describe(repo: Path) -> dict:
             "managed-preprocess-validation-template-v1",
             "execution",
             "case-round-rerun-v1",
+            "execution-selection-rerun-v1",
             "case-attention-isolation-v1",
             "execution-recovery-upgrade-v1",
             "failed-sandbox-retention-v1",
