@@ -8,6 +8,7 @@ import re
 import subprocess
 import sys
 import json
+import shutil
 import time
 import uuid
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -736,6 +737,19 @@ def grade_the_task(
     grade_on_error: bool = False,
     write_error_score_on_failure: bool = False,
 ):
+    if task.get('managed_scoring'):
+        from src.cli_scoring import freeze_input
+        freeze_input(task_id,output_dir,task,transcript_container_path)
+        private_gt=Path(workspace_path)/'gt'
+        frozen=output_dir/'scoring-input'
+        if private_gt.is_dir():
+            shutil.copytree(private_gt,frozen/'workspace/gt')
+        from src.e2e.artifacts import inventory as source_inventory
+        source_manifest=json.loads((frozen/'manifest.json').read_text())
+        source_manifest['files']=[row for row in source_inventory(frozen) if row['path']!='manifest.json']
+        (frozen/'manifest.json').write_text(json.dumps(source_manifest,ensure_ascii=False),encoding='utf-8')
+        result['scoring_status']='pending'
+        return result
     gt_host = os.path.join(workspace_path, "gt")
     if os.path.isdir(gt_host):
         r_gt = subprocess.run(
@@ -1445,6 +1459,15 @@ def main() -> None:
     frozen_source_cache = OUTPUT_DIR / ".dataset-sources" / args.agent_backend / "layout-v1"
     registered_selection = None
     library_tasks = []
+    if getattr(args, 'case_source', None):
+        from src.managed_cases.bundle import cli_tasks
+        _, library_tasks = cli_tasks(args.case_source, args.case_source_sha256,
+            output_root / 'managed-source')
+        if args.library_task:
+            requested = {value.split('=', 1)[0] for value in args.library_task}
+            if requested - {row['task_id'] for row in library_tasks}: raise ValueError('MANAGED_CASE_UNKNOWN')
+            library_tasks = [row for row in library_tasks if row['task_id'] in requested]
+
     if getattr(args, "case_library", None):
         from src.case_catalog import current_cases, dataset_entry
         entry = dataset_entry(ROOT_DIR, args.case_library)

@@ -282,6 +282,8 @@ def _task_contracts(
         "judge_evidence": metadata.get("judge_evidence") or {},
         "private_scoring_sha256": scoring_tree["sha256"],
     }
+    if metadata.get("managed_scoring") is not None:
+        scoring["managed_scoring"] = metadata["managed_scoring"]
     if metadata.get("scoring_runtime") is not None:
         requirements = metadata["scoring_runtime"]
         if (not isinstance(requirements, dict) or set(requirements) - {"office", "office_render", "html_render", "research_sources"}

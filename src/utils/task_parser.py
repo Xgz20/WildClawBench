@@ -365,4 +365,5 @@ def parse_task_md(task_file: Path, *, repo_root: Path | None = None, raw: str | 
         "llm_judge_rubric": llm_judge_rubric,
         "rubric_criteria":  rubric_criteria,
         "judge_evidence":   judge_evidence,
+        "managed_scoring": metadata.get("managed_scoring"),
     }

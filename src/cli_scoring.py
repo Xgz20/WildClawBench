@@ -153,6 +153,9 @@ def score(input_root, output, config, agentcube_config=None):
     if observed != manifest['files']:
         raise RuntimeError('CLI_SCORING_INPUT_DRIFT')
     task = read_json(source / 'task.json')
+    if task.get('managed_scoring'):
+        from .managed_cases.scoring import score as managed_score
+        return managed_score(source,output,config,agentcube_config)
     if task.get('metric_profile') == 'web-site-gen' and config['transport'] != 'agentcube-desktop':
         raise ValueError('Web 场景暂仅支持 AgentCube 桌面评分')
     channel = output / 'channel'

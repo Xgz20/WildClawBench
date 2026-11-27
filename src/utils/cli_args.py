@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+from pathlib import Path
 
 
 def build_run_batch_parser(default_model: str, default_parallel: int) -> argparse.ArgumentParser:
@@ -19,6 +20,8 @@ def build_run_batch_parser(default_model: str, default_parallel: int) -> argpars
         help="Category name, e.g. 01_Productivity_Flow, 02_Code_Intelligence, 03_Social_Interaction, 04_Search_Retrieval, 05_Creative_Synthesis, 06_Safety_Alignment",
     )
     mode.add_argument("--dataset-id", help="Execute an explicitly registered frozen dataset series or release")
+    mode.add_argument("--case-source", type=Path, help="Verified external managed-case archive")
+    parser.add_argument("--case-source-sha256")
     mode.add_argument("--case-library", help="Execute tasks selected from a current case-library dataset")
     parser.add_argument("--library-task", action="append", default=[], help="Selected current task ID and source SHA-256 (ID=SHA)")
     parser.add_argument("--dataset-task-id", action="append", default=[], help="Select specific task IDs within a frozen release")
@@ -215,10 +218,12 @@ def build_run_batch_parser(default_model: str, default_parallel: int) -> argpars
 def parse_run_batch_args(default_model: str, default_parallel: int) -> argparse.Namespace:
     parser = build_run_batch_parser(default_model, default_parallel)
     args = parser.parse_args()
+    if args.case_source and not args.case_source_sha256:
+        parser.error("--case-source requires --case-source-sha256")
     if args.release_id and not args.dataset_id:
         parser.error("--release-id requires --dataset-id")
     if args.dataset_task_id and not args.dataset_id:
         parser.error("--dataset-task-id requires --dataset-id")
-    if bool(args.library_task) != bool(args.case_library):
+    if bool(args.library_task) != bool(args.case_library) and not args.case_source:
         parser.error("--case-library and --library-task are required together")
     return args

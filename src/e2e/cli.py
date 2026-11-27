@@ -398,12 +398,19 @@ def _export(args):
 
 
 def _headless_score(args):
+    from src.managed_cases.scoring import is_managed_batch,score_batch
+    if is_managed_batch(_batch_root(args)):
+        return score_batch(_batch_root(args),args.output_root.resolve(),read_json(args.scorer_config),keys=args.execution_key or None)
     from .headless import run_headless_score
     return run_headless_score(_batch_root(args), args.output_root.resolve(), read_json(args.scorer_config),
                               keys=args.execution_key or None)
 
 
 def _desktop_score(args):
+    from src.managed_cases.scoring import is_managed_batch,score_batch
+    if is_managed_batch(_batch_root(args)):
+        from .agentcube import AgentCubeConfig
+        return score_batch(_batch_root(args),args.output_root.resolve(),read_json(args.scorer_config),AgentCubeConfig.load(args.agentcube_config),keys=args.execution_key or None)
     from .agentcube import AgentCubeConfig
     from .desktop_scoring import run_desktop_score
     return run_desktop_score(_batch_root(args), args.output_root.resolve(), read_json(args.scorer_config),
