@@ -32,6 +32,7 @@ class GeneralImportTests(unittest.TestCase):
 
             class FileDriver(FakeDriver):
                 def execute(self):
+                    self.store.update(self.item['key'], 'PREPARING', prompt=self.prompt_metadata)
                     outcome = super().execute()
                     outcome["cleanup"].update(workspace=r"C:\ProgramData\WGUI\workspace\project",
                                               before=[], root_pid=None, disposition="already_exited")
@@ -44,9 +45,14 @@ class GeneralImportTests(unittest.TestCase):
                     return outcome
 
             def factory(**kwargs):
+                from src.e2e.backend import AStudioSandboxDriver
                 task = kwargs["task"]
                 prompt = (batch / task["input_root"] / "execution/PROMPT.md").read_text()
-                return FileDriver(**{**kwargs, "task": {**task, "prompt": prompt}}, provider=provider)
+                driver = FileDriver(**{**kwargs, "task": {**task, "prompt": prompt}}, provider=provider)
+                driver.product = 'astudio'; driver.key = driver.item['key']
+                payload, driver.prompt_metadata = AStudioSandboxDriver._prompt_input(driver, freeze=True)
+                driver.task['prompt'] = payload.decode()
+                return driver
 
             try:
                 run_batch(batch, AgentCubeConfig(user_id="synthetic", auth_token="synthetic"), driver_factory=factory)
@@ -61,6 +67,14 @@ class GeneralImportTests(unittest.TestCase):
                 self.assertEqual(len(read_json(Path(parent_report["path"]) / "manifest.json")["task_ids"]), 2)
                 self.assertTrue(parent_report["report_only"])
                 context_root = Path(context["context_root"])
+                execution = read_json(context_root / context['execution_record'])
+                unit_manifest = read_json(context_root / 'unit/manifest.json')
+                prompt_meta = unit_manifest['tasks'][0]['prompt']
+                self.assertEqual(prompt_meta['sent_sha256'], execution['prompt']['sha256'])
+                self.assertNotEqual(execution['prompt']['base_sha256'], execution['prompt']['sha256'])
+                self.assertTrue((context_root / 'unit' / Path(prompt_meta['path']).parent / 'base-PROMPT.md').is_file())
+                receipt = next((context_root / 'unit/evidence').rglob('metadata/prompt.json'))
+                self.assertEqual(read_json(receipt)['prompt_transport']['profile'], 'astudio-environment-card-title/v1')
                 self.assertIsNotNone(context["supplemental_verifier"])
                 self.assertTrue((context_root / context["supplemental_verifier"]["path"]).is_dir())
                 project = next((context_root / "unit").glob("evidence/tasks/*/*/candidate/workspace/project"))

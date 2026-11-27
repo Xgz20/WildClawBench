@@ -20,6 +20,8 @@ from tests.e2e.test_scheduler import native_fixture, GUEST
 
 class PromptPluginExecutionTests(unittest.TestCase):
     def setUp(self):
+        environment = patch('src.e2e.workspace_environment.prepare')
+        environment.start(); self.addCleanup(environment.stop)
         self.directory = tempfile.TemporaryDirectory()
         self.addCleanup(self.directory.cleanup)
         self.batch = Path(self.directory.name) / 'batch'
@@ -95,6 +97,20 @@ class PromptPluginExecutionTests(unittest.TestCase):
         self.assertNotIn('prompt', self.store.get(self.item['key']))
         self.assertNotIn('prompt', snapshot(self.batch)['executions'][0])
         self.assertEqual(result['binding']['prompt_sha256'], hashlib.sha256(self.base).hexdigest())
+
+    def test_environment_card_title_binds_actual_native_prompt_and_keeps_base(self):
+        self.base = '[执行环境]\n'.encode() + self.base
+        (self.public / 'PROMPT.md').write_bytes(self.base)
+        self.task.update(prompt_sha256=hashlib.sha256(self.base).hexdigest(),
+                         definition_inventory=inventory(self.public.parent),
+                         workspace_path_profile='wildclawbench.workspace-paths/v1')
+        self.initialize(False); driver = self.driver()
+        result = self.execute(driver)
+        payload, metadata = driver._prompt_input()
+        self.assertNotEqual(payload, self.base)
+        self.assertEqual(result['binding']['prompt_sha256'], hashlib.sha256(payload).hexdigest())
+        self.assertEqual(self.store.get(self.item['key'])['prompt'], metadata)
+        self.assertEqual((self.public / 'PROMPT.md').read_bytes(), self.base)
 
     def test_reference_without_replacement_is_verified_before_dispatch_and_after_completion(self):
         self.initialize(True, replacement=False, runtime_validation=True)

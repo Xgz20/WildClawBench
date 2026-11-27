@@ -1,0 +1,91 @@
+{
+  "date": "2026-11-27",
+  "framework_revision_in_failure": "244218b803bf1ba7ab23a2c0f11e94374ba39f42",
+  "batch_id": 9,
+  "batch_key": "platform-e2e-3a8551e4333143d986c3d68b189a65da",
+  "execution_attempt_id": "exec-5960ecf6452c4899806ad92b0231cfd1",
+  "failure_stage": "set_prompt",
+  "observed_short_card_title": "[执行环境]",
+  "original_title_chars": 6,
+  "native_minimum_prefix_chars": 12,
+  "regression_tests": {
+    "prompt_and_handoff": 72,
+    "backend_and_scoring": 50
+  },
+  "production_redeployed": false,
+  "formal_batch_retried": false,
+  "independent_probe": {
+    "created_at": "2026-11-27T03:12:07.095717+00:00",
+    "status": "passed",
+    "task_sent": false,
+    "session_id": "f02d88fe-f05e-4fc9-bda5-7a631a44c4f1",
+    "template": "winarena-pc-20261125-a",
+    "runtime": {
+      "utc": "2026-11-27T03:14:33.0728708Z",
+      "details": {
+        "sessionRestored": false,
+        "model": "spark-x2.6",
+        "loginSource": "template",
+        "catalogCount": 9,
+        "after": "3.6.3",
+        "catalogAccountMatched": true,
+        "before": "3.7.1",
+        "warmupStopped": true,
+        "installerSha512": "6381ce15ce60d491eb143a1260e53935642e937bfcd03859bc13fdba59392753a2727ed47843fd2fc4c2722439d053b91d9967a7be942376b49da87b7b700b9f",
+        "catalogFetchedAt": "2026-11-27T03:14:19.842Z"
+      },
+      "version": "3.6.3",
+      "stage": "ready",
+      "identity": "698450d61672ee1d01add328b0fc779ce5a4371dc5c3ff6a32c55718904c4e1c"
+    },
+    "native": {
+      "task_sent": false,
+      "status": "passed",
+      "controller_sha256": "6357a92fa35f20d153ffe5db79c083efde0d3aaa1ce1635dff127cd1094e4d9b",
+      "original_chars": 906,
+      "effective_chars": 939,
+      "original_sha256": "356b7f8672d298c07bcbd0c1be01293b2044734d4e3e47a73e0205000e6c9b61",
+      "effective_sha256": "969ae938e46bd3427d7988ee4090f2078a34b6cf590200e3bdfb996169ed514c",
+      "effective_accepted": true,
+      "base_accepted": false,
+      "editor_readback": "把任务丢给我",
+      "matching_titles": [
+        {
+          "name": "[356b7f8672d298c07bcbd0c1be01293b 执行环境]",
+          "value": "[356b7f8672d298c07bcbd0c1be01293b 执行环境]",
+          "type": "Text"
+        }
+      ],
+      "owned_application_closed": true
+    },
+    "transport": {
+      "changed": true,
+      "plugin_mentions": [],
+      "base_prompt_sha256": "356b7f8672d298c07bcbd0c1be01293b2044734d4e3e47a73e0205000e6c9b61",
+      "effective_prompt_sha256": "969ae938e46bd3427d7988ee4090f2078a34b6cf590200e3bdfb996169ed514c",
+      "prompt_transport": {
+        "profile": "astudio-environment-card-title/v1",
+        "source_prompt_sha256": "356b7f8672d298c07bcbd0c1be01293b2044734d4e3e47a73e0205000e6c9b61"
+      }
+    },
+    "release": {
+      "http_status": 200,
+      "response": {
+        "code": 0,
+        "msg": "",
+        "data": {
+          "sessionId": "f02d88fe-f05e-4fc9-bda5-7a631a44c4f1",
+          "status": "released"
+        }
+      },
+      "confirmed": true
+    },
+    "absence": {
+      "confirmed": true,
+      "session_id": "f02d88fe-f05e-4fc9-bda5-7a631a44c4f1",
+      "http_status": 200,
+      "platform_code": 10001,
+      "disposition": "already_absent"
+    }
+  }
+}

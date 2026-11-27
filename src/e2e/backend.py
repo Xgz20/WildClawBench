@@ -426,9 +426,22 @@ try {
         prompt, metadata = preprocessing.augment_prompt(base.decode("utf-8"),
             getattr(self, "prompt_directives", {"plugin_mentions": []}), getattr(self, "preprocess_recipe", None),
             scene=self.task.get("scene", "web"))
-        payload = prompt.encode("utf-8")
         path = self.staging / "metadata/effective-prompt.md"
         lock = self.staging / "metadata/prompt.json"
+        if self.product == "astudio" and self.task.get("workspace_path_profile") == "wildclawbench.workspace-paths/v1":
+            # Already locked or armed legacy attempts must keep their exact sent
+            # bytes. A manual retry is a fresh attempt and gets the new title.
+            saved = read_json(lock) if lock.is_file() and not lock.is_symlink() else None
+            row = self.store.get(self.key)
+            recorded = row.get("prompt") or {}
+            legacy_lock = saved is not None and "prompt_transport" not in saved
+            legacy_dispatch = saved is None and row.get("dispatch_armed_at") and not recorded.get("prompt_transport")
+            if not legacy_lock and not legacy_dispatch:
+                from .prompt_transport import astudio_environment_card
+                prompt, metadata = astudio_environment_card(prompt, metadata)
+            if row.get("dispatch_armed_at") and recorded and recorded != metadata:
+                raise E2EError("EXECUTION_PROMPT_DRIFT")
+        payload = prompt.encode("utf-8")
         if freeze and metadata["changed"]:
             # Before dispatch a partially published pair can safely be completed,
             # but existing bytes must already match this frozen configuration.
