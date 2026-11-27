@@ -3,6 +3,8 @@ name: run-general-e2e
 description: 按用户明确选择的阶段串联 General E2E 准备、执行、证据、评分、回传和报告，并维护恢复状态；不替代各阶段 Skill 的判断与契约。
 ---
 
+`0.7.37` 的 `prepare-score` 在两个 CLI 入口及内部调用中支持显式 `--score-slots 1–8`，默认仍为3。例如4并发使用 `--score-slots 4`，该值传给标准编排器并在新编排中冻结；非法值在读取材料或创建编排前拒绝。外置评分包、原评分及历史编排保持原契约，改变槽位必须创建新编排，不能修改既有状态或 digest。
+
 `0.7.36` 正式派发统一采用完全访问基线，须使用带硬门禁的Execute0.15.22及其对应适配器；客户端默认、询问、未知或切换工作区后漂移均不可发送。历史回放和只读导入继续保留原权限，不能以新基线重写旧记录。模式改变后的正式结果须独立完整执行，不选择性补跑失败题。共享版本注册和受跟踪vendor副本同步；不自动启动客户端或提升现有轮次权限。
 
 `0.7.35` 仅将单数judge-observation/node_modules纳入既有裁判运行依赖排除协议；仍须未被冻结输入、评分或正式取证引用，原链接不删除。任意父链接和其他绝对链接继续拒绝，观察文件及原评分全部保留，排除项进入package-exclusions审计。
@@ -97,6 +99,8 @@ python -X utf8 /absolute/run-general-e2e/scripts/run_general_e2e.py prepare-scor
 收到单端 execution ZIP 后使用 `scripts/run_general_e2e.py install-unit --execution-package ABS`；完整冻结批次可用 `init-round --batch-root ABS`。两者均在评测根建立 Harness/execution/tasks 和 Harness/score/tasks，内部状态在 .general-e2e。已有输入 ZIP 和用户说明保留，冲突拒绝覆盖；单端安装无需提前收到私有评分包。
 
 正式采集后运行 `prepare-score --harness AstronStudio --orchestration-id score-001 --scoring-package ABS --report-config ABS`，返回同一 Harness 内的编排根。新轮次评分必须交接标准轨迹、原始日志、trace-index、候选与私有标准，再按 orchestrate-general-e2e 推荐动作调度独立评分。历史失败证据例外显式保留。
+
+需要非默认评分槽位时，在首次 `prepare-score` 显式增加 `--score-slots 4`，并核验生成编排的 `score_slots=4`。该参数控制独立语义评分槽位；UI 发送槽位、执行并发及规则 Worker 的调度仍由各自阶段配置决定。
 
 修复留在对应单元/单题内，使用新 attempt 和显式选择，不自动重建整批。完成后的轮次可用 scripts/archive_round.py 的 import-final/verify/replay 迁移、校验和脱离旧目录复算，再按明确保留清单清理。
 

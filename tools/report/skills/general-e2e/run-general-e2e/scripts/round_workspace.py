@@ -134,7 +134,8 @@ def init_round(round_root,batch_root,prepare_skill):
         return {'status':'PASS','round_root':str(root),'units':units}
     except BaseException:shutil.rmtree(stage,ignore_errors=True);raise
 
-def prepare_score(round_root,harness,skill_root,orchestration_id,task_ids=(),scoring_package=None,report_config=None,*,keep_scoring_external=False,protect_runtime_office_inputs=False,execution_records=(),sdk_final_authorization=None):
+def prepare_score(round_root,harness,skill_root,orchestration_id,task_ids=(),scoring_package=None,report_config=None,*,keep_scoring_external=False,protect_runtime_office_inputs=False,execution_records=(),sdk_final_authorization=None,score_slots=3):
+    require(type(score_slots) is int and 1 <= score_slots <= 8,'ROUND_SCORE_SLOTS_UNSUPPORTED')
     root=Path(round_root).resolve();doc=load(root/'.general-e2e/round.json');require(doc['kind']=='live','ROUND_HISTORY_NOT_EXECUTABLE')
     rows=[u for u in doc['units'] if harness in (u['harness'],u['directory'],u['unit_id'])];require(len(rows)==1,'ROUND_UNIT_NOT_UNIQUE');u=rows[0]
     unit=root/u['directory']
@@ -158,7 +159,7 @@ def prepare_score(round_root,harness,skill_root,orchestration_id,task_ids=(),sco
     script=Path(skill_root)/'orchestrate-general-e2e/scripts/orchestrate_general_e2e.py'
     command=[sys.executable,str(script),'init','--unit-root',str(unit),'--scoring-package',str(scoring),
         '--report-config',str(config),'--score-skill-dir',str(Path(skill_root)/'score-general-e2e'),
-        '--output-root',str(unit/'score/.orchestrations'),'--orchestration-id',orchestration_id,'--score-slots','3']
+        '--output-root',str(unit/'score/.orchestrations'),'--orchestration-id',orchestration_id,'--score-slots',str(score_slots)]
     if protect_runtime_office_inputs:command+=['--protect-runtime-office-inputs']
     if sdk_final_authorization:command+=['--sdk-final-authorization',str(Path(sdk_final_authorization).resolve())]
     for record in execution_records:command+=['--execution-record',record]
@@ -191,12 +192,13 @@ def main(argv=None):
     s=sub.add_parser('init');s.add_argument('--round-root',type=Path,default=Path.cwd(),help='Default: control conversation project cwd');s.add_argument('--batch-root',type=Path,required=True);s.add_argument('--prepare-skill',type=Path,required=True)
     s=sub.add_parser('install-unit');s.add_argument('--round-root',type=Path,default=Path.cwd());s.add_argument('--execution-package',type=Path,required=True);s.add_argument('--prepare-skill',type=Path,required=True)
     s=sub.add_parser('prepare-score');s.add_argument('--round-root',type=Path,default=Path.cwd());s.add_argument('--harness',required=True);s.add_argument('--skill-root',type=Path,required=True);s.add_argument('--orchestration-id',required=True);s.add_argument('--task-id',action='append',default=[]);s.add_argument('--scoring-package',type=Path);s.add_argument('--report-config',type=Path)
+    s.add_argument('--score-slots',type=int,choices=range(1,9),default=3,help='Semantic scoring slots; frozen by the orchestration')
     s.add_argument('--keep-scoring-external',action='store_true',help='Bind an external scoring ZIP by path/SHA without copying it into round-root')
     s.add_argument('--execution-record',action='append',default=[],help='Explicit source-bound execution record selection, task=path')
     s.add_argument('--protect-runtime-office-inputs',action='store_true',help='Explicitly protect reviewed read-only Office runtime inputs')
     s.add_argument('--sdk-final-authorization',type=Path,help='Explicit SHA-bound same-turn SDK final authorization; only discrepancy tasks receive it')
     a=p.parse_args(argv)
-    result=init_round(a.round_root,a.batch_root,a.prepare_skill) if a.command=='init' else install_unit(a.round_root,a.execution_package,a.prepare_skill) if a.command=='install-unit' else prepare_score(a.round_root,a.harness,a.skill_root,a.orchestration_id,a.task_id,a.scoring_package,a.report_config,keep_scoring_external=a.keep_scoring_external,protect_runtime_office_inputs=a.protect_runtime_office_inputs,execution_records=a.execution_record,sdk_final_authorization=a.sdk_final_authorization)
+    result=init_round(a.round_root,a.batch_root,a.prepare_skill) if a.command=='init' else install_unit(a.round_root,a.execution_package,a.prepare_skill) if a.command=='install-unit' else prepare_score(a.round_root,a.harness,a.skill_root,a.orchestration_id,a.task_id,a.scoring_package,a.report_config,keep_scoring_external=a.keep_scoring_external,protect_runtime_office_inputs=a.protect_runtime_office_inputs,execution_records=a.execution_record,sdk_final_authorization=a.sdk_final_authorization,score_slots=a.score_slots)
     print(json.dumps(result,ensure_ascii=False));return result
 
 if __name__=='__main__':main()

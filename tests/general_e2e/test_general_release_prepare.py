@@ -294,6 +294,7 @@ class GeneralReleasePrepareTests(unittest.TestCase):
         help_result = subprocess.run([sys.executable,str(run_script),'prepare-score','--help'],
             cwd=detached,env=environment,capture_output=True,text=True,check=True)
         self.assertIn('--keep-scoring-external', help_result.stdout)
+        self.assertIn('--score-slots', help_result.stdout)
         orchestration = installed['orchestrate-general-e2e'] / 'scripts/orchestrate_general_e2e.py'
         code = ('import importlib.util; '
                 f's=importlib.util.spec_from_file_location("detached_orchestrator",{str(orchestration)!r}); '

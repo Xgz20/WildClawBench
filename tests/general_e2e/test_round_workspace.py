@@ -145,6 +145,54 @@ class ExternalScoringPackageTests(unittest.TestCase):
         self.assertEqual(self.last_init_command[self.last_init_command.index('--sdk-final-authorization')+1],str(authority.resolve()))
         self.assertFalse(list(self.root.rglob('*.zip')))
 
+    def test_score_slots_default_to_three_in_the_orchestrator_command(self):
+        self.prepare(scoring_package=self.scoring,keep_scoring_external=True)
+        self.assertEqual(self.last_init_command[self.last_init_command.index('--score-slots')+1],'3')
+
+    def test_four_score_slots_reach_orchestrator_without_caching_private_zip(self):
+        self.prepare(scoring_package=self.scoring,keep_scoring_external=True,score_slots=4)
+        self.assertEqual(self.last_init_command[self.last_init_command.index('--score-slots')+1],'4')
+        unit=ROUND.load(self.root/'.general-e2e/round.json')['units'][0]
+        self.assertEqual(unit['scoring_external'],{'path':str(self.scoring.resolve()),'sha256':ROUND.sha(self.scoring)})
+        self.assertNotIn('scoring_package',unit)
+        self.assertFalse(list(self.root.rglob('*.zip')))
+
+    def test_score_slots_accept_supported_range_endpoints(self):
+        for slots in (1,8):
+            with self.subTest(slots=slots):
+                self.prepare(scoring_package=self.scoring,keep_scoring_external=True,score_slots=slots)
+                self.assertEqual(self.last_init_command[self.last_init_command.index('--score-slots')+1],str(slots))
+
+    def test_invalid_score_slots_fail_before_reading_state_or_creating_orchestration(self):
+        for slots in (0,9,-1,True,4.0,'4',None):
+            with self.subTest(slots=slots),patch.object(ROUND,'load') as read,patch.object(ROUND.subprocess,'run') as dispatch:
+                with self.assertRaisesRegex(ValueError,'ROUND_SCORE_SLOTS_UNSUPPORTED'):
+                    ROUND.prepare_score(self.root,'AstronStudio',ROOT/'tools/report/skills/general-e2e','fixture',score_slots=slots)
+                read.assert_not_called()
+                dispatch.assert_not_called()
+
+    def test_both_prepare_score_clis_forward_explicit_and_default_slots(self):
+        import run_general_e2e as run
+        entrypoints=[(run.main,[]),(ROUND.main,['--skill-root',str(ROOT/'tools/report/skills/general-e2e')])]
+        for entrypoint,extra in entrypoints:
+            for supplied,expected in (([],3),(['--score-slots','4'],4)):
+                with self.subTest(entrypoint=entrypoint.__module__,slots=expected):
+                    args=['prepare-score','--harness','AstronStudio','--orchestration-id','fixture',*extra,*supplied]
+                    with patch.object(ROUND,'prepare_score',return_value={'status':'MOCKED'}) as handoff:
+                        with contextlib.redirect_stdout(__import__('io').StringIO()):entrypoint(args)
+                    self.assertEqual(handoff.call_args.kwargs['score_slots'],expected)
+
+    def test_both_prepare_score_clis_reject_invalid_slots_without_handoff(self):
+        import run_general_e2e as run
+        entrypoints=[(run.main,[]),(ROUND.main,['--skill-root',str(ROOT/'tools/report/skills/general-e2e')])]
+        for entrypoint,extra in entrypoints:
+            for value in ('0','9','four'):
+                with self.subTest(entrypoint=entrypoint.__module__,value=value):
+                    args=['prepare-score','--harness','AstronStudio','--orchestration-id','fixture',*extra,'--score-slots',value]
+                    with patch.object(ROUND,'prepare_score') as handoff,contextlib.redirect_stderr(__import__('io').StringIO()):
+                        with self.assertRaises(SystemExit):entrypoint(args)
+                    handoff.assert_not_called()
+
     def test_runtime_office_guard_defaults_off_in_both_entrypoints(self):
         self.prepare(scoring_package=self.scoring,keep_scoring_external=True)
         self.assertNotIn('--protect-runtime-office-inputs',self.last_init_command)
