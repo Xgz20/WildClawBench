@@ -18,6 +18,18 @@ from .trace import ADAPTER, _is_desktop_user, ensure_resource_coverage
 from .preprocessing import execution_prompt
 
 
+def _sent_prompt_metadata(original, base, payload, metadata):
+    from .preprocessing import file_sha256_bytes
+    from .prompt_transport import ASTUDIO_CARD_PROFILE
+    result = {**original, "sent_sha256": file_sha256_bytes(payload)}
+    if (metadata.get("prompt_transport") or {}).get("profile") == ASTUDIO_CARD_PROFILE:
+        delta = len(payload.decode("utf-8").split("\n", 1)[0]) - len(base.decode("utf-8").split("\n", 1)[0])
+        if original.get("public_context_delivery"):
+            result["public_context_delivery"] = [{**row, "char_offset": row["char_offset"] + delta}
+                                                  for row in original["public_context_delivery"]]
+    return result
+
+
 def _bind_prompt_metadata(record, item):
     metadata = item.get("prompt")
     if not metadata:
@@ -123,6 +135,18 @@ def _general_context(batch: Path, temporary: Path, manifest: dict, item: dict, t
         atomic_json(unit_root / "manifest.json", execution_manifest)
     if file_sha256(public_task / "PROMPT.md") != task["prompt_sha256"]:
         raise E2EError("SCORING_PACKAGE_PROMPT_DRIFT")
+    effective_prompt = restored / "metadata/effective-prompt.md"
+    if effective_prompt.is_file():
+        # Derived scoring inputs must describe the exact sent Prompt. Keep the
+        # frozen base alongside it; never change the batch's original inputs.
+        base_prompt = (public_task / "PROMPT.md").read_bytes()
+        payload = execution_prompt(restored, base_prompt, item.get("prompt"))
+        shutil.copyfile(public_task / "PROMPT.md", public_task / "base-PROMPT.md")
+        (public_task / "PROMPT.md").write_bytes(payload)
+        execution_manifest = read_json(unit_root / "manifest.json")
+        public_task_metadata = next(row for row in execution_manifest["tasks"] if row["task_id"] == task["task_id"])
+        public_task_metadata["prompt"] = _sent_prompt_metadata(public_task_metadata["prompt"], base_prompt, payload, item.get("prompt") or {})
+        atomic_json(unit_root / "manifest.json", execution_manifest)
     shutil.rmtree(public_task / "workspace")
     _copy(restored / ready["workspace"], public_task / "workspace")
     evidence_relative = f"evidence/tasks/{task['task_id']}/{item['attempt_id']}"
@@ -159,7 +183,8 @@ def _general_context(batch: Path, temporary: Path, manifest: dict, item: dict, t
     proof = read_json(evidence / "trace/bindings/execution-proof.json")
     atomic_json(evidence / "execution/automation-state.json", proof)
     shutil.copyfile(public_task / "PROMPT.md", evidence / "execution/PROMPT.md")
-    effective_prompt = restored / "metadata/effective-prompt.md"
+    if (public_task / "base-PROMPT.md").is_file():
+        shutil.copyfile(public_task / "base-PROMPT.md", evidence / "execution/base-prompt.md")
     if effective_prompt.is_file():
         shutil.copyfile(effective_prompt, evidence / "execution/effective-prompt.md")
     resources = read_json(restored / "resource-metrics.json")
@@ -171,6 +196,9 @@ def _general_context(batch: Path, temporary: Path, manifest: dict, item: dict, t
     atomic_json(evidence / "resource-metrics.json", resources)
     (evidence / "metadata").mkdir(exist_ok=True)
     shutil.copyfile(restored / "metadata/report.json", evidence / "metadata/report.json")
+    prompt_lock = restored / "metadata/prompt.json"
+    if prompt_lock.is_file():
+        shutil.copyfile(prompt_lock, evidence / "metadata/prompt.json")
     shutil.copyfile(restored / "final-response.md", evidence / "final-response.md")
     atomic_json(evidence / "process-cleanup.json", {**proof["process_cleanup"], "identity": identity,
                                                   "candidate_workspace": f"execution/tasks/{task['task_id']}/workspace"})
@@ -301,6 +329,9 @@ def _web_context(batch: Path, temporary: Path, manifest: dict, item: dict, task:
     shutil.copyfile(restored / "resource-metrics.json", execution_task / "resource-metrics.json")
     (execution_task / "metadata").mkdir()
     shutil.copyfile(restored / "metadata/report.json", execution_task / "metadata/report.json")
+    prompt_lock = restored / "metadata/prompt.json"
+    if prompt_lock.is_file():
+        shutil.copyfile(prompt_lock, execution_task / "metadata/prompt.json")
     resources = read_json(restored / "resource-metrics.json")
     record = prepare.execution_record(identity["batch_id"], unit["harness"], harness_name, ready["actual_model"], task["task_id"])
     record["execution"].update(status="completed", agent_duration_seconds=resources["metrics"]["timing"]["agent_duration_seconds"]["value"])
