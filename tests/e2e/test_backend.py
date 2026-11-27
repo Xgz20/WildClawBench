@@ -195,6 +195,8 @@ class BackendTests(unittest.TestCase):
             old.parent.mkdir(parents=True)
             old.write_bytes(b"prior live observation")
             driver.key = "key"
+            driver.batch = Path(directory)
+            driver.task = {"input_root": "input"}
             driver.store = Mock()
             driver.store.get.return_value = {"session_id": "sid", "dispatch_armed_at": "earlier", "native_before": {}}
             driver.client = Mock()

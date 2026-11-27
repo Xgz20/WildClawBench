@@ -19,6 +19,19 @@ _portable_module = importlib.util.module_from_spec(_portable_spec)
 _portable_spec.loader.exec_module(_portable_module)
 rule_readlinks = _portable_module.rule_readlinks
 
+def _path_alias_module():
+    skill = Path(__file__).resolve().parents[1]
+    candidates = [skill / "vendor/e2e-shared/workspace-paths/rules.py"]
+    candidates.extend(parent / "src/wildclawbench_workspace/rules.py" for parent in skill.parents)
+    for path in candidates:
+        if path.is_file():
+            spec = importlib.util.spec_from_file_location("_general_frozen_rule_paths", path)
+            module = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(module)
+            return module
+    raise ValueError("WORKSPACE_PATH_HELPER_UNAVAILABLE")
+
+
 
 REQUEST_SCHEMA = "wildclawbench.general-e2e-rule-worker-request/v1"
 RESULT_SCHEMA = "wildclawbench.general-e2e-rule-worker-result/v1"
@@ -160,7 +173,12 @@ def execute(request_path: Path, result_path: Path) -> int:
         grade = namespace.get("grade")
         if not callable(grade):
             raise ValueError("automated_checks did not define callable grade()")
-        with rule_readlinks(workspace):
+        from contextlib import nullcontext
+        profile = request.get("workspace_path_profile")
+        if profile is not None and profile != "wildclawbench.frozen-rule-path-aliases/v1":
+            raise ValueError("WORKSPACE_PATH_PROFILE_INVALID")
+        aliases = _path_alias_module().rule_path_aliases(workspace) if profile else nullcontext({})
+        with rule_readlinks(workspace), aliases as path_observations:
             raw = grade(transcript=transcript, workspace_path=str(workspace))
         if not isinstance(raw, dict):
             raise ValueError("grade() must return a JSON object")
@@ -174,6 +192,7 @@ def execute(request_path: Path, result_path: Path) -> int:
                 "schema_version": RESULT_SCHEMA,
                 "ok": True,
                 "result": {} if discovery else adapted,
+                **({"workspace_path_aliases": {"profile": profile, "parsers": list(path_observations.values())}} if profile else {}),
                 **({"raw_result": raw} if request.get("rule_result_adapter") is not None and not discovery else {}),
                 **({'rule_review':{'profile':review['profile'],'mode':review['mode'],
                     'contexts':observed.get('observations',{}),'applied':observed.get('applied',[]),

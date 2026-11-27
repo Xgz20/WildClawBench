@@ -618,6 +618,13 @@ def _exec_container_grade(
     if not loader_src.exists():
         return None, f"transcript loader module not found: {loader_src}"
     shim_src = Path(__file__).with_name("judge_shim.py")
+    path_aliases_src = Path(__file__).resolve().parents[1] / "wildclawbench_workspace/rules.py"
+    path_aliases_copy = subprocess.run(
+        ["docker", "cp", str(path_aliases_src), f"{task_id}:/tmp/_workspace_path_aliases.py"],
+        capture_output=True, text=True,
+    )
+    if path_aliases_copy.returncode:
+        return None, f"docker cp workspace path helper failed: {path_aliases_copy.stderr}"
 
     review_setup = []
     if rule_review_configuration is not None:
@@ -656,7 +663,10 @@ def _exec_container_grade(
         *review_setup,
         automated_checks,
         "",
-        f'result = grade(transcript=_transcript, workspace_path="{TMP_WORKSPACE}")',
+        "from _workspace_path_aliases import rule_path_aliases as _rule_path_aliases",
+        f"with _rule_path_aliases({TMP_WORKSPACE!r}) as _path_alias_receipt:",
+        f'    result = grade(transcript=_transcript, workspace_path={TMP_WORKSPACE!r})',
+        "_Path('/tmp/workspace-path-aliases.json').write_text(json.dumps(dict(profile='wildclawbench.frozen-rule-path-aliases/v1',parsers=list(_path_alias_receipt.values())),ensure_ascii=False),encoding='utf-8')",
         *(["if _GENERAL_E2E_RULE_REVIEW['mode']=='discover':",
            "    result={'profile':_GENERAL_E2E_RULE_REVIEW['profile'],'contexts':_GENERAL_E2E_RULE_REVIEW.get('observations',{}),'input_snapshot':_rr_inputs,'provisional_scores_published':False}"] if rule_review_configuration is not None else []),
         "print(json.dumps(result))",

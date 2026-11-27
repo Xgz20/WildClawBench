@@ -21,10 +21,11 @@ from .artifacts import _members, _protect, copy_stream_readonly, inventory, quar
 from .common import E2EError, atomic_json, digest, file_sha256, identifier, inside, read_json, redact, utc_now
 from .trace import normalize_rollout, windows_equal
 from . import preprocessing, windows_preprocess
+from src.wildclawbench_workspace import WINDOWS_ROOT
 
 
 WGUI = "/opt/wgui-venv/bin/python -m controller.cli.main"
-GUEST_WORKSPACE = r"C:\ProgramData\WGUI\workspace\project"
+GUEST_WORKSPACE = WINDOWS_ROOT
 NATIVE_ROOT = r"C:\Users\Docker\AppData\Local\Programs\AStudio Data\acode-home-overlay\sessions"
 ASTUDIO_CATALOG_MODELS = {"spark-x2.6-preview", "glm-5.3", "glm-5.3-flash", "deepseek-v4.1-flash"}
 
@@ -586,11 +587,14 @@ try {
             self._phase("PREPARING", session_id=sid, created_at=utc_now())
         if not self.store.get(self.key).get("dispatch_armed_at"):
             self._health(sid)
+            from . import workspace_environment
+            workspace_environment.prepare(self, sid, powershell)
             self._prepare_runtime(sid)
             windows_preprocess.apply_recipe(self, sid, self.preprocess_recipe, WGUI, powershell)
             self._upload(sid)
             windows_preprocess.verify_remote_plugins(self, sid, self.preprocess_recipe, powershell)
             windows_preprocess.verify_prompt_plugins(self, sid, WGUI, powershell)
+            workspace_environment.prepare(self, sid, powershell)
             before = self._inventory_native(sid)
             atomic_json(self.staging / "metadata/native-before.json", before)
             _, prompt_metadata = self._prompt_input()

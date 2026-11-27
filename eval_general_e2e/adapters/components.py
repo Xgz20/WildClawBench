@@ -26,6 +26,12 @@ class SharedComponentSpec:
 
 EXPECTED_COMPONENTS: Tuple[SharedComponentSpec, ...] = (
     SharedComponentSpec(
+        name="workspace-paths", version="1.0.0",
+        source_root="src/wildclawbench_workspace",
+        vendor_root="vendor/e2e-shared/workspace-paths",
+        entrypoints=("__init__.py", "rules.py"),
+    ),
+    SharedComponentSpec(
         name="astronstudio-runtime", version="1.0.3",
         source_root="tools/report/e2e-shared/astronstudio-runtime",
         vendor_root="vendor/e2e-shared/astronstudio-runtime",

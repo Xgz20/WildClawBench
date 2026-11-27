@@ -17,7 +17,9 @@
       "name": "prepare-web-e2e-workspaces",
       "scene": "web-e2e",
       "source_root": "tools/report/skills/web-e2e/prepare-web-e2e-workspaces",
-      "components": [],
+      "components": [
+        "workspace-paths"
+      ],
       "development_repository_references": [
         "scripts/prepare_web_e2e_workspaces.py"
       ]
@@ -71,7 +73,8 @@
       "scene": "general-e2e",
       "source_root": "tools/report/skills/general-e2e/prepare-general-e2e-workspaces",
       "components": [
-        "dataset-bundle-verifier"
+        "dataset-bundle-verifier",
+        "workspace-paths"
       ]
     },
     {
@@ -145,7 +148,8 @@
         "desktop-gui",
         "astronstudio-start-rejection",
         "loomy",
-        "desktop-app-discovery"
+        "desktop-app-discovery",
+        "workspace-paths"
       ]
     },
     {

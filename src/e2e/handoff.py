@@ -106,6 +106,21 @@ def _general_context(batch: Path, temporary: Path, manifest: dict, item: dict, t
     unit_root = temporary / "unit"
     extract_zip(execution_zip, unit_root, strip_root=True, allow_symlinks=True)
     public_task = unit_root / "execution/tasks" / task["task_id"]
+    if task.get("workspace_path_profile") == "wildclawbench.workspace-paths/v1":
+        # Scoring may use an older frozen preparation Skill. The authoritative
+        # execution input is the batch's sealed Prompt, including its OS note;
+        # never regenerate it from whichever preparation code is installed now.
+        frozen_prompt = inside(batch, task["input_root"]) / "execution/PROMPT.md"
+        if file_sha256(frozen_prompt) != task["prompt_sha256"]:
+            raise E2EError("FROZEN_TASK_PROMPT_DRIFT")
+        shutil.copyfile(frozen_prompt, public_task / "PROMPT.md")
+        execution_manifest = read_json(unit_root / "manifest.json")
+        prompt_metadata = next(row for row in execution_manifest["tasks"] if row["task_id"] == task["task_id"])["prompt"]
+        prompt_metadata.update(sent_sha256=task["prompt_sha256"], mapping=task["prompt_mapping"],
+                               workspace_path_profile=task["workspace_path_profile"])
+        if task.get("public_context_delivery"):
+            prompt_metadata["public_context_delivery"] = task["public_context_delivery"]
+        atomic_json(unit_root / "manifest.json", execution_manifest)
     if file_sha256(public_task / "PROMPT.md") != task["prompt_sha256"]:
         raise E2EError("SCORING_PACKAGE_PROMPT_DRIFT")
     shutil.rmtree(public_task / "workspace")
