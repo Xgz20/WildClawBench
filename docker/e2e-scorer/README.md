@@ -26,7 +26,7 @@ bash docker/e2e-scorer/build.sh --version v0.2 --platform linux/amd64 --prepare-
 bash /absolute/scorer-v02-amd64/build-prepared.sh
 ```
 
-默认上下文为 `.cache/headless-scorer-build/<版本>/<架构>`（v0.1 保留旧路径）。可配置 `--npm-registry`、`--pip-index-url`、`--debian-mirror`、`--debian-security-mirror`。代理仅通过 `--http-proxy` 或运行时 `HTTP_PROXY_INNER` / `HTTPS_PROXY_INNER` 注入，不写入上下文。
+默认上下文为 `.cache/headless-scorer-build/<版本>/<架构>`（v0.1 保留旧路径）。Docker Hub 下载受限时，可用 `--base-registry mirror.example` 指定镜像源；仅替换公共 Python/Node 底座的 registry，保留清单中的仓库名和版本，实际引用写入构建清单。可配置 `--npm-registry`、`--pip-index-url`、`--debian-mirror`、`--debian-security-mirror`。代理仅通过 `--http-proxy` 或运行时 `HTTP_PROXY_INNER` / `HTTPS_PROXY_INNER` 注入，不写入上下文。
 
 ## 验收与回执
 

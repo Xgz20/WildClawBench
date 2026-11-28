@@ -86,6 +86,21 @@ class HeadlessScorerBuildTests(unittest.TestCase):
             self.assertFalse(any(' run ' in row for row in (root / 'calls').read_text().splitlines()))
             self.assertFalse((root / 'runtime-validation.json').exists())
 
+    def test_base_registry_preserves_pinned_image_versions(self):
+        import argparse
+        resolver = runpy.run_path(str(ROOT / 'tools/e2e-build/build_headless_scorer.py'))['resolve_version']
+        def arguments(registry):
+            return argparse.Namespace(version='v0.2', platform='linux/amd64', tag=None, context=None,
+                eval_base_image=None, node_runtime_image=None, codex_version=None, dsh_version=None,
+                claude_code_version=None, base_registry=registry)
+        args = arguments('mirror.test:5000')
+        resolver(args)
+        self.assertEqual(args.eval_base_image, 'mirror.test:5000/library/python:3.11-bookworm')
+        self.assertEqual(args.node_runtime_image, 'mirror.test:5000/library/node:24-bookworm-slim')
+        for invalid in ['https://mirror.test', 'mirror.test/other-image', 'mirror.test\n']:
+            with self.assertRaises(ValueError):
+                resolver(arguments(invalid))
+
     def test_prepared_build_checks_office_offline_and_stops_on_failure(self):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)

@@ -6,6 +6,7 @@ import argparse
 import hashlib
 import json
 from pathlib import Path
+import re
 import shlex
 import shutil
 import subprocess
@@ -48,6 +49,15 @@ def resolve_version(args: argparse.Namespace) -> dict:
         if supplied is not None and supplied != value:
             raise ValueError(f'{key} must be {value} for {version}; add a new version to versions.json')
         setattr(args, attribute, value)
+    registry = getattr(args, 'base_registry', None)
+    if registry:
+        if not platforms or not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9.-]*(?::[0-9]{1,5})?', registry):
+            raise ValueError('Use a registry host[:port] for v0.2 public base images')
+        for attribute in ['eval_base_image', 'node_runtime_image']:
+            image = getattr(args, attribute)
+            if not image.startswith(('python:', 'node:')):
+                raise ValueError('Registry mirror requires a pinned public Python/Node base')
+            setattr(args, attribute, registry + '/library/' + image)
     if 'claudecode' not in entry['harnesses'] and args.claude_code_version is not None:
         raise ValueError('This scorer version does not include ClaudeCode')
     if args.context is None:
@@ -115,6 +125,7 @@ def main() -> None:
     parser.add_argument('--context', type=Path)
     parser.add_argument('--tag', help='Separate release tag; cannot overwrite another catalog version')
     parser.add_argument('--docker-context', default='default')
+    parser.add_argument('--base-registry', help='Optional Docker Hub mirror host[:port]; preserves pinned repository and version')
     parser.add_argument('--eval-base-image')
     parser.add_argument('--node-runtime-image')
     parser.add_argument('--codex-version')
