@@ -95,7 +95,8 @@ def prepare(args: argparse.Namespace) -> dict:
         shutil.copyfile(source / name, target / name)
     (target / '.dockerignore').write_text(
         '*\n!Dockerfile\n!native-office.Dockerfile\n!runtime-skill/\n!wcb-dsh\n'
-        '!configure_linux_office.py\n!validate_runtime.py\n!build-manifest.json\n', encoding='utf-8')
+        '!configure_linux_office.py\n!validate_runtime.py\n!build-manifest.json\n'
+        + ('!npm-cache/\n' if entry.get('npm_cli_cache') else ''), encoding='utf-8')
     inputs = {
         'IMAGE_TAG': args.tag,
         'DOCKER_CONTEXT': args.docker_context,
@@ -116,6 +117,12 @@ def prepare(args: argparse.Namespace) -> dict:
                 'build_files_sha256': {name: hashlib.sha256((target / name).read_bytes()).hexdigest() for name in assets},
                 'inputs': inputs, 'skill': result['skills'][0],
                 'source_revision': result['source_revision']}
+    if entry.get('npm_cli_cache'):
+        cache_builder = load_script(ROOT / 'tools/e2e-build/scorer_cli_cache.py', 'scorer_cli_cache')
+        manifest['npm_cli_cache'] = cache_builder.prepare_cli_cache(target,
+            platform=args.platform, registry=args.npm_registry,
+            versions={'@openai/codex': args.codex_version, '@deepseek-ai/dsh': args.dsh_version},
+            source=args.npm_cache_dir)
     (target / 'build-manifest.json').write_text(json.dumps(manifest, indent=2) + '\n', encoding='utf-8')
     return manifest
 
@@ -136,6 +143,7 @@ def main() -> None:
     parser.add_argument('--claude-code-version')
     parser.add_argument('--claude-code-image', help='Pinned CLI source image for incremental versions')
     parser.add_argument('--npm-registry', default='https://registry.npmmirror.com')
+    parser.add_argument('--npm-cache-dir', type=Path, help='Reuse a prepared target-platform npm CLI cache')
     parser.add_argument('--pip-index-url', default='https://pypi.org/simple')
     parser.add_argument('--debian-mirror', default='https://mirrors.tuna.tsinghua.edu.cn/debian')
     parser.add_argument('--debian-security-mirror', default='https://mirrors.tuna.tsinghua.edu.cn/debian-security')

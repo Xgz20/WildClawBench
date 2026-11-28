@@ -1,5 +1,5 @@
 {
-  "default": "v0.3",
+  "default": "v0.4",
   "versions": {
     "v0.1": {
       "image": "wildclawbench-e2e-scorer:codex-0.171.0-office-v2",
@@ -64,10 +64,37 @@
         "DSH_VERSION": "0.1.2-rc.1",
         "CLAUDE_CODE_VERSION": "2.1.330"
       }
+    },
+    "v0.4": {
+      "image": "wildclawbench-e2e-scorer:v0.4",
+      "default_platform": "linux/amd64",
+      "platform_images": {
+        "linux/amd64": "wildclawbench-e2e-scorer:v0.4-amd64"
+      },
+      "context": "v4",
+      "dockerfile": "v4/Dockerfile",
+      "assets": [
+        "Dockerfile",
+        "validate_runtime.py",
+        "build-prepared.sh",
+        "wcb-dsh"
+      ],
+      "harnesses": [
+        "codex",
+        "deepseek-harness",
+        "claudecode"
+      ],
+      "build_args": {
+        "EVAL_BASE_IMAGE": "wildclawbench-e2e-scorer:v0.3-amd64",
+        "CODEX_VERSION": "0.172.0",
+        "DSH_VERSION": "0.2.2-rc.5",
+        "CLAUDE_CODE_VERSION": "2.1.330"
+      },
+      "npm_cli_cache": true
     }
   },
   "platform_defaults": {
-    "linux/amd64": "v0.3",
+    "linux/amd64": "v0.4",
     "linux/arm64": "v0.2"
   },
   "legacy_versions": {

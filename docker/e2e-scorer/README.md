@@ -6,14 +6,15 @@
 | --- | --- | --- |
 | v0.1 | `wildclawbench-e2e-scorer:codex-0.171.0-office-v2` | Codex 0.171.0、DSH 0.1.2-rc.1 |
 | v0.2（独立构建） | `wildclawbench-e2e-scorer:v0.2-amd64` / `v0.2-arm64` | Codex 0.171.0、DSH 0.1.2-rc.1、ClaudeCode 2.1.330 |
-| v0.3（AMD64 默认） | `wildclawbench-e2e-scorer:v0.3-amd64` | 同三种 CLI，从旧评分镜像和 ClaudeCode v0.4 镜像增量构建 |
+| v0.3（增量基线） | `wildclawbench-e2e-scorer:v0.3-amd64` | 同三种 CLI，从旧评分镜像和 ClaudeCode v0.4 镜像增量构建 |
+| v0.4（AMD64 默认） | `wildclawbench-e2e-scorer:v0.4-amd64` | Codex 0.172.0、DSH 0.2.2-rc.5、ClaudeCode 2.1.330 |
 
 `v1/` 保留旧构建定义；`v2/` 为三 CLI 独立配方；`v3/` 为 AMD64 增量配方。根目录原 Dockerfile、Office/浏览器修复层和旧验收脚本保留兼容。新版本不占用旧镜像标签，历史作业保留冻结镜像 ID。
 
 ## 构建与回滚
 
 ```bash
-bash docker/e2e-scorer/build.sh --version v0.3 --platform linux/amd64
+bash docker/e2e-scorer/build.sh --version v0.4 --platform linux/amd64
 # 没有旧镜像时，使用独立配方：
 bash docker/e2e-scorer/build.sh --version v0.2 --platform linux/amd64 --docker-context colima
 # Mac ARM64 原生构建：
@@ -21,7 +22,7 @@ bash docker/e2e-scorer/build.sh --version v0.2 --platform linux/arm64 --docker-c
 bash docker/e2e-scorer/build.sh --version v0.1 --docker-context colima
 ```
 
-默认含 Office；v0.2 的中间标签追加 `-runtime`，v0.3 直接继承已验收的 Office 层。CLI 版本和底座由清单固定，升级时新增目录及版本记录。`--tag` 可创建同配方独立发行标签，不能占用其他目录版本的标签。默认 AMD64 使用 v0.3，显式选择 ARM64 时默认使用 v0.2。v0.2 默认目标为 `linux/amd64`，适用于 Linux AMD64 服务器；Mac ARM64 原生构建需显式选择 `--platform linux/arm64`。Docker 构建和最终运行均传入目标平台，验收同时校验镜像元数据与容器内架构。跨架构构建需要 builder 支持相应模拟器，也可把上下文传至对应架构主机原生构建。
+默认含 Office；v0.2 的中间标签追加 `-runtime`，v0.3 直接继承已验收的 Office 层。CLI 版本和底座由清单固定，升级时新增目录及版本记录。`--tag` 可创建同配方独立发行标签，不能占用其他目录版本的标签。默认 AMD64 使用 v0.4，显式选择 ARM64 时默认使用 v0.2。v0.2 默认目标为 `linux/amd64`，适用于 Linux AMD64 服务器；Mac ARM64 原生构建需显式选择 `--platform linux/arm64`。Docker 构建和最终运行均传入目标平台，验收同时校验镜像元数据与容器内架构。跨架构构建需要 builder 支持相应模拟器，也可把上下文传至对应架构主机原生构建。
 
 ```bash
 bash docker/e2e-scorer/build.sh --version v0.2 --platform linux/amd64 --prepare-only --context /tmp/scorer-v02-amd64
@@ -50,7 +51,7 @@ ClaudeCode 仅匹配具有 **Anthropic** 端点和裁判用途的模型，推理
 首次环境导入也可使用：
 
 ```dotenv
-WCB_E2E_SCORING_IMAGES={"codex":"wildclawbench-e2e-scorer:v0.3-amd64","deepseek-harness":"wildclawbench-e2e-scorer:v0.3-amd64","claudecode":"wildclawbench-e2e-scorer:v0.3-amd64"}
+WCB_E2E_SCORING_IMAGES={"codex":"wildclawbench-e2e-scorer:v0.4-amd64","deepseek-harness":"wildclawbench-e2e-scorer:v0.4-amd64","claudecode":"wildclawbench-e2e-scorer:v0.4-amd64"}
 WCB_E2E_SCORING_DOCKER_CONTEXT=default
 ```
 
@@ -63,3 +64,7 @@ WCB_E2E_SCORING_DOCKER_CONTEXT=default
 ## v0.3 增量构建前提
 
 Docker daemon 上须已存在 `wildclawbench-e2e-scorer:codex-0.171.0-office-v1` 和 `wildclawbench-claudecode-ubuntu:v0.4`，且均为 AMD64。构建只复制后者的 npm CLI 安装目录，不复制登录目录或账户配置；原镜像保持只读。旧评分运行时的锁摘要必须与冻结 Skill 完全一致，随后重新执行 Skill 运行时探针、三种 CLI、浏览器和 Office 验收。源镜像 ID 记录在 `source-images.txt`。没有这些预置镜像时使用 v0.2 独立配方。
+
+## v0.4 CLI 升级
+
+v0.4 固定 npm `latest` 通道在 2026-11-28 对应的 Codex 0.172.0 和 DSH 0.2.2-rc.5，保留 ClaudeCode 2.1.330。继承已验收的 v0.3-amd64，只更新两种 CLI。准备上下文时需要 npm，下载 Linux AMD64 的包缓存且不在准备机执行生命周期脚本；服务器使用缓存执行安装。可用 `--npm-cache-dir` 复用带有 `cache-info.json` 的已准备缓存。缓存仅作为 BuildKit 临时挂载，不进入镜像层，源码清单记录其平台、CLI 版本和内容 SHA256。既有 v0.1/v0.2/v0.3 不变。

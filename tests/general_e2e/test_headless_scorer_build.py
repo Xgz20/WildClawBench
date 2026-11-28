@@ -29,7 +29,7 @@ class HeadlessScorerBuildTests(unittest.TestCase):
     def test_prepare_context_is_standalone_and_does_not_persist_proxy(self):
         with tempfile.TemporaryDirectory() as temporary:
             context = Path(temporary) / 'context'
-            subprocess.run(['bash', str(ROOT / 'docker/e2e-scorer/build.sh'), '--prepare-only',
+            subprocess.run(['bash', str(ROOT / 'docker/e2e-scorer/build.sh'), '--version', 'v0.3', '--prepare-only',
                             '--context', str(context), '--http-proxy', 'http://private-proxy:8888'],
                            check=True, capture_output=True)
             manifest = json.loads((context / 'build-manifest.json').read_text())
