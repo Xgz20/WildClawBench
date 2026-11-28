@@ -1229,6 +1229,19 @@ def _write_rerun_summary(output_root: Path) -> None:
         )
 
 
+def _record_task_finalization_error(output_dir: Path, execution_id: str, stage: str, error: Exception) -> None:
+    """Preserve infrastructure failure evidence separately from native status."""
+    path = output_dir / "post-execution-errors.json"
+    try:
+        previous = json.loads(path.read_text(encoding="utf-8")) if path.is_file() else {}
+        _write_json_atomically(path, {
+            "schema": "wildclawbench.cli-post-execution-errors/v1", "execution_id": execution_id,
+            "errors": [*previous.get("errors", []), {"stage": stage, "type": type(error).__name__, "message": str(error)}],
+        })
+    except Exception as recording_error:
+        logger.warning("[%s] Could not record %s failure: %s", execution_id, stage, recording_error)
+
+
 def run_single_task(
     task: dict,
     model: str,
@@ -1322,110 +1335,124 @@ def run_single_task(
         logger.error("[%s] Unexpected backend error: %s", task_id, exc)
 
     finally:
-        grading_transcript_path = backend.transcript_container_path
-        grade_on_error = isinstance(backend, GRADE_ON_ERROR_BACKENDS)
-        # v2: gradable if rule checks OR declarative rubric present.
-        should_grade = (task.get("automated_checks") or task.get("rubric_criteria")) and (
-            not result.get("error") or grade_on_error
-        )
-        if should_grade:
+        try:
             try:
-                grading_transcript_path = backend.prepare_grading_transcript(task_id)
+                grading_transcript_path = backend.transcript_container_path
+                grade_on_error = isinstance(backend, GRADE_ON_ERROR_BACKENDS)
+                # v2: gradable if rule checks OR declarative rubric present.
+                should_grade = (task.get("automated_checks") or task.get("rubric_criteria")) and (
+                    not result.get("error") or grade_on_error
+                )
+                if should_grade:
+                    try:
+                        grading_transcript_path = backend.prepare_grading_transcript(task_id)
+                    except Exception as exc:
+                        logger.warning(
+                            "[%s] Failed to prepare grading transcript, fallback to %s: %s",
+                            task_id,
+                            grading_transcript_path,
+                            exc,
+                        )
+
+                result = grade_the_task(
+                    task_id,
+                    workspace_path,
+                    output_dir,
+                    task,
+                    result,
+                    lobster.get("env") if lobster else None,
+                    transcript_container_path=grading_transcript_path,
+                    grade_on_error=grade_on_error,
+                    write_error_score_on_failure=grade_on_error,
+                )
             except Exception as exc:
-                logger.warning(
-                    "[%s] Failed to prepare grading transcript, fallback to %s: %s",
-                    task_id,
-                    grading_transcript_path,
-                    exc,
-                )
-
-        result = grade_the_task(
-            task_id,
-            workspace_path,
-            output_dir,
-            task,
-            result,
-            lobster.get("env") if lobster else None,
-            transcript_container_path=grading_transcript_path,
-            grade_on_error=grade_on_error,
-            write_error_score_on_failure=grade_on_error,
-        )
-        usage = backend.collect_usage(
-            task_id=task_id,
-            output_dir=output_dir,
-            elapsed_time=elapsed_time,
-        )
-        result = save_usage(output_dir, result, usage, task_id)
-
-        try:
-            collect_task_output(
-                task_id,
-                output_dir,
-                include_workspace_changes=isinstance(
-                    backend,
-                    WORKSPACE_CHANGE_BACKENDS,
-                ),
-            )
-        except Exception as exc:
-            logger.warning("[%s] Failed to collect task output: %s", task_id, exc)
-
-        # 全部产物落盘后做 run 级异常检测（纯读文件，不影响评分产物）
-        try:
-            anomalies = scan_run_dir(output_dir)
-            (output_dir / "anomalies.json").write_text(
-                json.dumps(anomalies, indent=2, ensure_ascii=False), encoding="utf-8"
-            )
-            if anomalies["has_validity_failure"]:
-                logger.warning(
-                    "[%s] Evaluation validity failure detected: %s",
-                    task_id,
-                    ", ".join(i["id"] for i in anomalies["items"]
-                              if i.get("validity_impact") == "fail"),
-                )
-            elif anomalies["needs_review"]:
-                logger.warning(
-                    "[%s] Evaluation anomalies require review: %s",
-                    task_id,
-                    ", ".join(i["id"] for i in anomalies["items"]
-                              if i.get("validity_impact") == "review"),
-                )
-            result["anomalies"] = anomalies
-        except Exception as exc:
-            logger.warning("[%s] Anomaly scan failed: %s", task_id, exc)
-
-        try:
-            rerun_record = _record_rerun_outcome(
-                task_id=task_id_ori,
-                execution_id=task_id,
-                output_dir=output_dir,
-                rerun_metadata=rerun_metadata,
-                anomalies=anomalies,
-            )
-        except Exception as exc:
-            # Rerun observability must never turn a completed scoring run into
-            # a failed evaluation.
-            logger.warning("[%s] Rerun outcome recording failed: %s", task_id, exc)
-            rerun_record = None
-        if rerun_record is not None:
-            result["rerun"] = rerun_record
-
-        if gateway_proc is not None:
-            try:
-                gateway_proc.terminate()
-            except Exception:
-                pass
-        elif backend.expects_gateway:
-            logger.warning("[%s] Gateway not started, task incomplete - likely missing required result files, check %s", task_id, output_dir)
-
-        for _proc in [gateway_proc, agent_proc]:
-            if _proc is not None:
+                stage = "freeze_scoring_input" if os.environ.get("WCB_DEFER_SCORING") == "1" else "grading"
+                _record_task_finalization_error(output_dir, task_id, stage, exc)
+                raise
+            finally:
+                # Evidence and usage still belong to a finished native attempt,
+                # even when scoring-input publication failed. Never synthesize a score.
                 try:
-                    close_proc_log(_proc)
+                    usage = backend.collect_usage(
+                        task_id=task_id,
+                        output_dir=output_dir,
+                        elapsed_time=elapsed_time,
+                    )
+                    result = save_usage(output_dir, result, usage, task_id)
+                except Exception as exc:
+                    _record_task_finalization_error(output_dir, task_id, "collect_usage", exc)
+                    logger.warning("[%s] Failed to collect usage: %s", task_id, exc)
+                try:
+                    collect_task_output(
+                        task_id,
+                        output_dir,
+                        include_workspace_changes=isinstance(
+                            backend,
+                            WORKSPACE_CHANGE_BACKENDS,
+                        ),
+                    )
+                except Exception as exc:
+                    logger.warning("[%s] Failed to collect task output: %s", task_id, exc)
+
+                # 全部产物落盘后做 run 级异常检测（纯读文件，不影响评分产物）
+                try:
+                    anomalies = scan_run_dir(output_dir)
+                    (output_dir / "anomalies.json").write_text(
+                        json.dumps(anomalies, indent=2, ensure_ascii=False), encoding="utf-8"
+                    )
+                    if anomalies["has_validity_failure"]:
+                        logger.warning(
+                            "[%s] Evaluation validity failure detected: %s",
+                            task_id,
+                            ", ".join(i["id"] for i in anomalies["items"]
+                                      if i.get("validity_impact") == "fail"),
+                        )
+                    elif anomalies["needs_review"]:
+                        logger.warning(
+                            "[%s] Evaluation anomalies require review: %s",
+                            task_id,
+                            ", ".join(i["id"] for i in anomalies["items"]
+                                      if i.get("validity_impact") == "review"),
+                        )
+                    result["anomalies"] = anomalies
+                except Exception as exc:
+                    logger.warning("[%s] Anomaly scan failed: %s", task_id, exc)
+
+                try:
+                    rerun_record = _record_rerun_outcome(
+                        task_id=task_id_ori,
+                        execution_id=task_id,
+                        output_dir=output_dir,
+                        rerun_metadata=rerun_metadata,
+                        anomalies=anomalies,
+                    )
+                except Exception as exc:
+                    # Rerun observability must never turn a completed scoring run into
+                    # a failed evaluation.
+                    logger.warning("[%s] Rerun outcome recording failed: %s", task_id, exc)
+                    rerun_record = None
+                if rerun_record is not None:
+                    result["rerun"] = rerun_record
+
+        finally:
+            # No grading/collection exception may bypass owned-process cleanup.
+            if gateway_proc is not None:
+                try:
+                    gateway_proc.terminate()
                 except Exception:
                     pass
+            elif backend.expects_gateway:
+                logger.warning("[%s] Gateway not started, task incomplete - likely missing required result files, check %s", task_id, output_dir)
 
-        remove_container(task_id)
-        logger.info("[%s] Container cleaned up", task_id)
+            for _proc in [gateway_proc, agent_proc]:
+                if _proc is not None:
+                    try:
+                        close_proc_log(_proc)
+                    except Exception:
+                        pass
+
+            remove_container(task_id)
+            logger.info("[%s] Container cleaned up", task_id)
 
     # 用例执行耗时（agent 执行时长，来自 execution），供批级"用例执行总耗时"累加。
     # 只有本次实际执行的 run 带此字段；resume 复用的 result 不带，天然不计入 B。

@@ -42,7 +42,7 @@ class CliScoringTests(unittest.TestCase):
                 self.staging.mkdir(parents=True, exist_ok=True)
                 (self.staging / 'native.jsonl').write_text('fixture native trace')
                 returned = self.staging / 'returned'
-                shutil.copytree(self.batch / 'candidate', returned / 'candidate')
+                shutil.copytree(self.batch / 'candidate', returned / 'candidate', symlinks=True)
                 (returned / 'candidate/answer.txt').chmod(0o444)
                 return {'binding': {'events': [], 'final_response': '{"scores":{"C1":1}}'},
                         'native_path': 'native.jsonl', 'workspace': 'returned'}
@@ -51,6 +51,8 @@ class CliScoringTests(unittest.TestCase):
             work = Path(directory)
             (work / 'candidate').mkdir()
             (work / 'candidate/answer.txt').write_text('original')
+            (work / 'candidate/nested').mkdir()
+            (work / 'candidate/nested/answer-link').symlink_to('../answer.txt')
             atomic_json(work / 'judge-request.json', {'messages': []})
             (work / 'PROMPT.md').write_text('Original scoring instructions')
             with patch('src.e2e.backend.AStudioSandboxDriver', ProbeDriver), \
@@ -59,6 +61,7 @@ class CliScoringTests(unittest.TestCase):
                     'timeout_seconds': 60, 'reasoning_effort': 'high'}, None)
             self.assertEqual(json.loads(response)['scores']['C1'], 1)
             self.assertTrue((work / 'judge-native.jsonl').is_file())
+            self.assertTrue((work / 'input/execution/workspace/candidate/nested/answer-link').is_symlink())
             self.assertTrue(json.loads((work / 'candidate-integrity.json').read_text())['valid'])
 
     def test_desktop_candidate_integrity_still_rejects_content_and_file_set_changes(self):
