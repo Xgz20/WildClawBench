@@ -22,7 +22,7 @@ from src.e2e.artifacts import extract_zip
 def resolve_version(args: argparse.Namespace) -> dict:
     directory = ROOT / 'docker/e2e-scorer'
     catalog = json.loads((directory / 'versions.json').read_text())
-    version = args.version or catalog['default']
+    version = args.version or catalog.get('platform_defaults', {}).get(args.platform, catalog['default'])
     if version not in catalog['versions']:
         raise ValueError('Unknown scorer image version: ' + version)
     entry = catalog['versions'][version]
@@ -60,6 +60,8 @@ def resolve_version(args: argparse.Namespace) -> dict:
             setattr(args, attribute, registry + '/library/' + image)
     if 'claudecode' not in entry['harnesses'] and args.claude_code_version is not None:
         raise ValueError('This scorer version does not include ClaudeCode')
+    if getattr(args, 'claude_code_image', None) is not None and 'CLAUDE_CODE_IMAGE' not in entry['build_args']:
+        raise ValueError('This scorer version does not use a ClaudeCode source image')
     if args.context is None:
         args.context = ROOT / '.cache/headless-scorer-build' / version
         if platforms:
@@ -83,8 +85,8 @@ def prepare(args: argparse.Namespace) -> dict:
             shutil.rmtree(skill)
         extract_zip(packages / result['skills'][0]['archive'], skill, strip_root=True)
     source = ROOT / 'docker/e2e-scorer' / entry['context']
-    assets = ('Dockerfile', 'native-office.Dockerfile', 'configure_linux_office.py',
-              'validate_runtime.py', 'build-prepared.sh', 'wcb-dsh')
+    assets = entry.get('assets', ['Dockerfile', 'native-office.Dockerfile', 'configure_linux_office.py',
+              'validate_runtime.py', 'build-prepared.sh', 'wcb-dsh'])
     for name in assets:
         shutil.copyfile(source / name, target / name)
     (target / '.dockerignore').write_text(
@@ -93,16 +95,13 @@ def prepare(args: argparse.Namespace) -> dict:
     inputs = {
         'IMAGE_TAG': args.tag,
         'DOCKER_CONTEXT': args.docker_context,
-        'EVAL_BASE_IMAGE': args.eval_base_image,
-        'NODE_RUNTIME_IMAGE': args.node_runtime_image,
-        'CODEX_VERSION': args.codex_version,
-        'DSH_VERSION': args.dsh_version,
         'NPM_REGISTRY': args.npm_registry,
         'PIP_INDEX_URL': args.pip_index_url,
         'DEBIAN_MIRROR': args.debian_mirror,
         'DEBIAN_SECURITY_MIRROR': args.debian_security_mirror,
         'WITH_OFFICE': '1' if args.with_office else '0',
     }
+    inputs.update({key: getattr(args, key.lower()) for key in entry['build_args']})
     if 'claudecode' in entry['harnesses']:
         inputs['CLAUDE_CODE_VERSION'] = args.claude_code_version
         inputs['PLATFORM'] = args.platform
@@ -121,7 +120,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--version', help='Version from docker/e2e-scorer/versions.json')
     parser.add_argument('--platform', choices=['linux/amd64', 'linux/arm64'],
-                        help='Target platform; v0.2 defaults to Linux AMD64 for servers')
+                        help='Target platform; defaults to Linux AMD64, selecting the platform default version')
     parser.add_argument('--context', type=Path)
     parser.add_argument('--tag', help='Separate release tag; cannot overwrite another catalog version')
     parser.add_argument('--docker-context', default='default')
@@ -131,6 +130,7 @@ def main() -> None:
     parser.add_argument('--codex-version')
     parser.add_argument('--dsh-version')
     parser.add_argument('--claude-code-version')
+    parser.add_argument('--claude-code-image', help='Pinned CLI source image for incremental versions')
     parser.add_argument('--npm-registry', default='https://registry.npmmirror.com')
     parser.add_argument('--pip-index-url', default='https://pypi.org/simple')
     parser.add_argument('--debian-mirror', default='https://mirrors.tuna.tsinghua.edu.cn/debian')

@@ -35,14 +35,24 @@ class HeadlessScorerBuildTests(unittest.TestCase):
             manifest = json.loads((context / 'build-manifest.json').read_text())
             self.assertEqual(manifest['inputs']['WITH_OFFICE'], '1')
             self.assertEqual(manifest['inputs']['CODEX_VERSION'], '0.171.0')
-            self.assertEqual(manifest['inputs']['IMAGE_TAG'], 'wildclawbench-e2e-scorer:v0.2-amd64')
+            self.assertEqual(manifest['inputs']['IMAGE_TAG'], 'wildclawbench-e2e-scorer:v0.3-amd64')
             self.assertEqual(manifest['inputs']['PLATFORM'], 'linux/amd64')
             self.assertEqual(manifest['inputs']['CLAUDE_CODE_VERSION'], '2.1.330')
+            self.assertEqual(manifest['inputs']['CLAUDE_CODE_IMAGE'], 'wildclawbench-claudecode-ubuntu:v0.4')
             self.assertEqual(manifest['harnesses'], ['codex', 'deepseek-harness', 'claudecode'])
             self.assertTrue((context / 'runtime-skill/bundled-components.json').is_file())
             self.assertTrue((context / 'build-prepared.sh').is_file())
             self.assertFalse(any(b'private-proxy' in path.read_bytes() for path in context.rglob('*') if path.is_file()))
             self.assertNotIn('.env', (context / '.dockerignore').read_text().splitlines()[1:])
+
+    def test_default_arm64_keeps_portable_recipe(self):
+        import argparse
+        resolver = runpy.run_path(str(ROOT / 'tools/e2e-build/build_headless_scorer.py'))['resolve_version']
+        args = argparse.Namespace(version=None, platform='linux/arm64', tag=None, context=None,
+            eval_base_image=None, node_runtime_image=None, codex_version=None, dsh_version=None, claude_code_version=None)
+        resolver(args)
+        self.assertEqual(args.version, 'v0.2')
+        self.assertEqual(args.tag, 'wildclawbench-e2e-scorer:v0.2-arm64')
 
     def test_platforms_have_separate_tags_and_build_contexts(self):
         builder = runpy.run_path(str(ROOT / 'tools/e2e-build/build_headless_scorer.py'))
@@ -100,6 +110,24 @@ class HeadlessScorerBuildTests(unittest.TestCase):
         for invalid in ['https://mirror.test', 'mirror.test/other-image', 'mirror.test\n']:
             with self.assertRaises(ValueError):
                 resolver(arguments(invalid))
+
+    def test_incremental_build_rejects_credential_environment_in_parent(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            (root / 'build-prepared.sh').write_bytes((ROOT / 'docker/e2e-scorer/v3/build-prepared.sh').read_bytes())
+            (root / 'build-inputs.env').write_text('IMAGE_TAG=test:v03\nDOCKER_CONTEXT=default\nPLATFORM=linux/amd64\n' +
+                ''.join(key + '=test\n' for key in ('EVAL_BASE_IMAGE','CLAUDE_CODE_IMAGE','CODEX_VERSION','DSH_VERSION','CLAUDE_CODE_VERSION')))
+            docker = root / 'docker'
+            docker.write_text('#!/bin/sh\nprintf "%s\\n" "$*" >> "$CALLS"\ncase "$*" in\n'
+                '*"{{.Os}}/{{.Architecture}}"*) echo linux/amd64 ;;\n'
+                '*".Config.Env"*) echo "ANTHROPIC_API_KEY=synthetic-private-value" ;;\nesac\n')
+            docker.chmod(0o755)
+            env = {**os.environ, 'PATH':str(root)+os.pathsep+os.environ['PATH'], 'CALLS':str(root/'calls')}
+            result = subprocess.run(['bash', str(root/'build-prepared.sh')],env=env,capture_output=True)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn(b'SCORER_BASE_HAS_CREDENTIAL_ENVIRONMENT',result.stderr)
+            self.assertNotIn(b'synthetic-private-value',result.stderr+result.stdout)
+            self.assertNotIn(' build ',(root/'calls').read_text())
 
     def test_prepared_build_checks_office_offline_and_stops_on_failure(self):
         with tempfile.TemporaryDirectory() as temporary:
