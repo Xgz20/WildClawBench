@@ -85,6 +85,17 @@ echo true
         self.assertIsNone(data['rounds'][1]['total_score'])
         self.assertEqual(data['rounds'][1]['score_status'], 'evaluation_error')
 
+    def test_configuration_discloses_inherited_case_template_identity(self):
+        snapshot = reports.prepare(self.spec)
+        for unit in snapshot['units']:
+            for row in unit['rows']:
+                row['judge'] = {'protocol': 'managed-case-score/v1', 'template_revision_id': 2,
+                                'template_sha256': 'a' * 64}
+        snapshot.pop('snapshot_sha256')
+        snapshot['snapshot_sha256'] = digest(snapshot)
+        table = reports.build(snapshot)['presentation']['tables']['评分配置']
+        self.assertEqual(table['rows'][0][7:9], ['2', 'a' * 64])
+
     def test_dataset_task_scope_and_contract_conflicts_are_rejected(self):
         self.sources[1]['dataset']['release'] = 'different'
         with self.assertRaisesRegex(ValueError, 'VERSION_MISMATCH'):

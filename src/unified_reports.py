@@ -326,10 +326,11 @@ def build(snapshot):
         label = source['label']
         protocols = sorted({(row.get('judge') or {}).get('protocol') or '未记录' for row in source['rows'] if row['score_status'] == 'valid'})
         actual_templates=sorted({str((row.get('judge') or {}).get('template_revision_id')) for row in source['rows'] if (row.get('judge') or {}).get('template_revision_id') is not None})
+        actual_template_hashes=sorted({(row.get('judge') or {}).get('template_sha256') for row in source['rows'] if (row.get('judge') or {}).get('template_sha256')})
         configurations.append([label, source['kind'], source['scorer'].get('harness'), source['scorer'].get('model'),
             source['scorer'].get('reasoning_effort'),source['scorer'].get('transport'),' / '.join(protocols),
             (source['scorer'].get('judge_template') or {}).get('template_revision_id') or ' / '.join(actual_templates) or '用例/场景冻结模板',
-            (source['scorer'].get('judge_template') or {}).get('template_sha256'),source['dataset'].get('release'),source['id']])
+            (source['scorer'].get('judge_template') or {}).get('template_sha256') or ' / '.join(actual_template_hashes) or None,source['dataset'].get('release'),source['id']])
         units.append({'unit_id': source['id'], 'label': label, 'kind': source['kind'], 'harness': source['harness'],
             'model': model, 'scorer': source['scorer'], 'source': source['selection'], 'score': stats})
         tasks.extend(cases);rounds.extend(source['rows'])
