@@ -9,7 +9,7 @@
 | v0.3（增量基线） | `wildclawbench-e2e-scorer:v0.3-amd64` | 同三种 CLI，从旧评分镜像和 ClaudeCode v0.4 镜像增量构建 |
 | v0.4（AMD64 默认） | `wildclawbench-e2e-scorer:v0.4-amd64` | Codex 0.172.0、DSH 0.2.2-rc.5、ClaudeCode 2.1.330 |
 
-`v1/` 保留旧构建定义；`v2/` 为三 CLI 独立配方；`v3/` 为 AMD64 增量配方。根目录原 Dockerfile、Office/浏览器修复层和旧验收脚本保留兼容。新版本不占用旧镜像标签，历史作业保留冻结镜像 ID。
+`v1/` 保留旧构建定义；`v2/` 为三 CLI 独立配方；`v3/` 为 AMD64 增量配方，`v4/` 升级 Codex/DSH。根目录原 Dockerfile、Office/浏览器修复层和旧验收脚本保留兼容。新版本不占用旧镜像标签，历史作业保留冻结镜像 ID。
 
 ## 构建与回滚
 
@@ -68,3 +68,5 @@ Docker daemon 上须已存在 `wildclawbench-e2e-scorer:codex-0.171.0-office-v1`
 ## v0.4 CLI 升级
 
 v0.4 固定 npm `latest` 通道在 2026-11-28 对应的 Codex 0.172.0 和 DSH 0.2.2-rc.5，保留 ClaudeCode 2.1.330。继承已验收的 v0.3-amd64，只更新两种 CLI。准备上下文时需要 npm，下载 Linux AMD64 的包缓存且不在准备机执行生命周期脚本；服务器使用缓存执行安装。可用 `--npm-cache-dir` 复用带有 `cache-info.json` 的已准备缓存。缓存仅作为 BuildKit 临时挂载，不进入镜像层，源码清单记录其平台、CLI 版本和内容 SHA256。既有 v0.1/v0.2/v0.3 不变。
+
+CLI 在线验证的端点须与协议匹配：Codex 使用 OpenAI Responses，DSH 使用 OpenAI Chat/Responses，ClaudeCode 使用 Anthropic Messages。OpenAI 端点通常包含 `/v1`；Anthropic SDK 会追加 `/v1/messages`，二者的 base URL 不应直接混用。

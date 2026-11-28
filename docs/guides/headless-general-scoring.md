@@ -62,3 +62,5 @@ JSON、Markdown、HTML 和 Excel 同源，覆盖总览、效率及任务耗时�
 General 报告读取器对 agentcube-astudio-native 来源重新验证 session、turn、Prompt、模型、档位及原生轨迹 SHA，调用既有 General Skill 的 analyzeRollout Profile 2，从累计/单次 usage 对账并去重后汇总 Token 和模型响应数。缓存读取属于输入，推理属于输出，均不得重复相加；控制器 RunReport 若把推理再次加进输出，不使用该重复数替换原生账本。请求数只表示已核验模型响应，不冒充 HTTP 尝试或重试数。
 
 新增数据写入独立 report-resource-supplement.json，记录原资源 SHA、轨迹 SHA、解析器 SHA 和前后值；不修改原执行、评分、资源文件或旧报告。缺失/无法对账的值保持 null，部分观测保留已知小计和覆盖率。旧报告可复用相同评分单元生成新版，无需重跑任务或调用裁判。新版执行采集器也使用同一原生解析器，但历史批次的执行发行不变。
+
+评分镜像 v0.4 的 AMD64 默认版本固定 Codex 0.172.0 和 DSH 0.2.2-rc.5，具体配方及历史版本见 `docker/e2e-scorer/versions.json`。
