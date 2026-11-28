@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 from pathlib import Path
+import re
 import shlex
 import shutil
 import subprocess
@@ -17,7 +19,62 @@ from src.e2e.common import load_script
 from src.e2e.artifacts import extract_zip
 
 
+def resolve_version(args: argparse.Namespace) -> dict:
+    directory = ROOT / 'docker/e2e-scorer'
+    catalog = json.loads((directory / 'versions.json').read_text())
+    version = args.version or catalog.get('platform_defaults', {}).get(args.platform, catalog['default'])
+    if version not in catalog['versions']:
+        raise ValueError('Unknown scorer image version: ' + version)
+    entry = catalog['versions'][version]
+    args.version = version
+    platforms = entry.get('platform_images', {})
+    if platforms:
+        args.platform = args.platform or entry['default_platform']
+        if args.platform not in platforms:
+            raise ValueError('Unsupported scorer platform: ' + args.platform)
+        official_image = platforms[args.platform]
+    else:
+        if args.platform:
+            raise ValueError('Platform selection requires a version with platform_images (v0.2 or later)')
+        official_image = entry['image']
+    args.tag = args.tag or official_image
+    references = {ref for row in catalog['versions'].values()
+                  for ref in [row['image'], *row.get('platform_images', {}).values()]}
+    references.update(row['image'] for row in catalog.get('legacy_versions', {}).values())
+    reserved = {ref + suffix for ref in references if ref != official_image for suffix in ['', '-runtime']}
+    if args.tag in reserved:
+        raise ValueError('Refusing to overwrite another scorer version: ' + args.tag)
+    for key, value in entry['build_args'].items():
+        attribute = key.lower()
+        supplied = getattr(args, attribute)
+        if supplied is not None and supplied != value:
+            raise ValueError(f'{key} must be {value} for {version}; add a new version to versions.json')
+        setattr(args, attribute, value)
+    registry = getattr(args, 'base_registry', None)
+    if registry:
+        if not platforms or not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9.-]*(?::[0-9]{1,5})?', registry):
+            raise ValueError('Use a registry host[:port] for v0.2 public base images')
+        for attribute in ['eval_base_image', 'node_runtime_image']:
+            image = getattr(args, attribute)
+            if not image.startswith(('python:', 'node:')):
+                raise ValueError('Registry mirror requires a pinned public Python/Node base')
+            setattr(args, attribute, registry + '/library/' + image)
+    if 'claudecode' not in entry['harnesses'] and args.claude_code_version is not None:
+        raise ValueError('This scorer version does not include ClaudeCode')
+    if getattr(args, 'claude_code_image', None) is not None and 'CLAUDE_CODE_IMAGE' not in entry['build_args']:
+        raise ValueError('This scorer version does not use a ClaudeCode source image')
+    source_images = {getattr(args, key.lower()) for key in entry['build_args'] if key.endswith('_IMAGE')}
+    if args.tag in source_images or args.tag + '-runtime' in source_images:
+        raise ValueError('Refusing to overwrite a scorer source image: ' + args.tag)
+    if args.context is None:
+        args.context = ROOT / '.cache/headless-scorer-build' / version
+        if platforms:
+            args.context /= args.platform.split('/')[1]
+    return entry
+
+
 def prepare(args: argparse.Namespace) -> dict:
+    entry = resolve_version(args)
     target = args.context.resolve()
     # Packaging replaces only generated files in this dedicated directory.
     if target == ROOT or ROOT.is_relative_to(target) or (target / '.git').exists():
@@ -31,50 +88,67 @@ def prepare(args: argparse.Namespace) -> dict:
         if skill.exists():
             shutil.rmtree(skill)
         extract_zip(packages / result['skills'][0]['archive'], skill, strip_root=True)
-    for name in ('Dockerfile', 'native-office.Dockerfile', 'configure_linux_office.py',
-                 'validate_runtime.py', 'build-prepared.sh'):
-        shutil.copyfile(ROOT / 'docker/e2e-scorer' / name, target / name)
-    shutil.copyfile(ROOT / 'docker/deepseek-harness/v3/wcb-dsh', target / 'wcb-dsh')
+    source = ROOT / 'docker/e2e-scorer' / entry['context']
+    assets = entry.get('assets', ['Dockerfile', 'native-office.Dockerfile', 'configure_linux_office.py',
+              'validate_runtime.py', 'build-prepared.sh', 'wcb-dsh'])
+    for name in assets:
+        shutil.copyfile(source / name, target / name)
     (target / '.dockerignore').write_text(
         '*\n!Dockerfile\n!native-office.Dockerfile\n!runtime-skill/\n!wcb-dsh\n'
-        '!configure_linux_office.py\n!validate_runtime.py\n!build-manifest.json\n', encoding='utf-8')
+        '!configure_linux_office.py\n!validate_runtime.py\n!build-manifest.json\n'
+        + ('!npm-cache/\n' if entry.get('npm_cli_cache') else ''), encoding='utf-8')
     inputs = {
         'IMAGE_TAG': args.tag,
         'DOCKER_CONTEXT': args.docker_context,
-        'EVAL_BASE_IMAGE': args.eval_base_image,
-        'NODE_RUNTIME_IMAGE': args.node_runtime_image,
-        'CODEX_VERSION': args.codex_version,
-        'DSH_VERSION': args.dsh_version,
         'NPM_REGISTRY': args.npm_registry,
         'PIP_INDEX_URL': args.pip_index_url,
         'DEBIAN_MIRROR': args.debian_mirror,
         'DEBIAN_SECURITY_MIRROR': args.debian_security_mirror,
         'WITH_OFFICE': '1' if args.with_office else '0',
     }
+    inputs.update({key: getattr(args, key.lower()) for key in entry['build_args']})
+    if 'claudecode' in entry['harnesses']:
+        inputs['CLAUDE_CODE_VERSION'] = args.claude_code_version
+        inputs['PLATFORM'] = args.platform
     (target / 'build-inputs.env').write_text(
         ''.join(f'{key}={shlex.quote(value)}\n' for key, value in inputs.items()), encoding='utf-8')
     manifest = {'schema_version': 'wildclawbench.headless-scorer-build/v1',
+                'image_version': args.version, 'harnesses': entry['harnesses'],
+                'build_files_sha256': {name: hashlib.sha256((target / name).read_bytes()).hexdigest() for name in assets},
                 'inputs': inputs, 'skill': result['skills'][0],
                 'source_revision': result['source_revision']}
+    if entry.get('npm_cli_cache'):
+        cache_builder = load_script(ROOT / 'tools/e2e-build/scorer_cli_cache.py', 'scorer_cli_cache')
+        manifest['npm_cli_cache'] = cache_builder.prepare_cli_cache(target,
+            platform=args.platform, registry=args.npm_registry,
+            versions={'@openai/codex': args.codex_version, '@deepseek-ai/dsh': args.dsh_version},
+            source=args.npm_cache_dir)
     (target / 'build-manifest.json').write_text(json.dumps(manifest, indent=2) + '\n', encoding='utf-8')
     return manifest
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--context', type=Path, required=True)
-    parser.add_argument('--tag', required=True)
+    parser.add_argument('--version', help='Version from docker/e2e-scorer/versions.json')
+    parser.add_argument('--platform', choices=['linux/amd64', 'linux/arm64'],
+                        help='Target platform; defaults to Linux AMD64, selecting the platform default version')
+    parser.add_argument('--context', type=Path)
+    parser.add_argument('--tag', help='Separate release tag; cannot overwrite another catalog version')
     parser.add_argument('--docker-context', default='default')
-    parser.add_argument('--eval-base-image', default='python:3.11-bookworm')
-    parser.add_argument('--node-runtime-image', default='node:24-bookworm-slim')
-    parser.add_argument('--codex-version', default='0.171.0')
-    parser.add_argument('--dsh-version', default='0.1.2-rc.1')
+    parser.add_argument('--base-registry', help='Optional Docker Hub mirror host[:port]; preserves pinned repository and version')
+    parser.add_argument('--eval-base-image')
+    parser.add_argument('--node-runtime-image')
+    parser.add_argument('--codex-version')
+    parser.add_argument('--dsh-version')
+    parser.add_argument('--claude-code-version')
+    parser.add_argument('--claude-code-image', help='Pinned CLI source image for incremental versions')
     parser.add_argument('--npm-registry', default='https://registry.npmmirror.com')
+    parser.add_argument('--npm-cache-dir', type=Path, help='Reuse a prepared target-platform npm CLI cache')
     parser.add_argument('--pip-index-url', default='https://pypi.org/simple')
     parser.add_argument('--debian-mirror', default='https://mirrors.tuna.tsinghua.edu.cn/debian')
     parser.add_argument('--debian-security-mirror', default='https://mirrors.tuna.tsinghua.edu.cn/debian-security')
     parser.add_argument('--http-proxy')
-    parser.add_argument('--with-office', action='store_true')
+    parser.add_argument('--with-office', action='store_true', default=True, help='Included in all catalog versions')
     parser.add_argument('--prepare-only', action='store_true', help='Package on one machine, build on another without host Python')
     args = parser.parse_args()
     result = prepare(args)

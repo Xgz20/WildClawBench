@@ -21,7 +21,7 @@ from .store import BatchStore, controller_lock, refresh_controller_heartbeat
 
 SCHEMA = 'wildclawbench.headless-score-job/v1'
 LABEL = 'org.astron.eval.score-job'
-SUPPORTED_HARNESSES = {'codex', 'deepseek-harness'}
+SUPPORTED_HARNESSES = {'codex', 'deepseek-harness', 'claudecode'}
 CONFIG_KEYS = {'harness', 'model', 'base_url', 'reasoning_effort', 'image', 'image_id',
                'docker_context', 'concurrency', 'timeout_seconds', 'rule_timeout_seconds', 'memory', 'cpus', 'api_format', 'dns_overrides',
                'score_skill_dir', 'score_skill_inventory_sha256'}
@@ -30,12 +30,14 @@ CONFIG_KEYS = {'harness', 'model', 'base_url', 'reasoning_effort', 'image', 'ima
 def normalize_config(value: dict) -> dict:
     if set(value) - CONFIG_KEYS:
         raise E2EError('HEADLESS_CONFIG_UNKNOWN_FIELDS')
-    result = {'dns_overrides': {}, 'reasoning_effort': 'high' if value.get('harness') == 'codex' else 'none', 'docker_context': 'default', 'concurrency': 3,
-              'api_format': 'openai_response' if value.get('harness') == 'codex' else 'openai_chat',
+    formats = {'codex': ['openai_response'], 'deepseek-harness': ['openai_chat', 'openai_response'],
+               'claudecode': ['anthropic']}
+    result = {'dns_overrides': {}, 'reasoning_effort': 'none' if value.get('harness') == 'deepseek-harness' else 'high', 'docker_context': 'default', 'concurrency': 3,
+              'api_format': formats.get(value.get('harness'), ['openai_chat'])[0],
               'timeout_seconds': 3600, 'rule_timeout_seconds': 600, 'memory': '4g', 'cpus': '2', **value}
     if result.get('harness') not in SUPPORTED_HARNESSES:
         raise E2EError('HEADLESS_HARNESS_UNSUPPORTED')
-    if result['api_format'] not in ({'openai_response'} if result['harness'] == 'codex' else {'openai_chat', 'openai_response'}):
+    if result['api_format'] not in formats[result['harness']]:
         raise E2EError('HEADLESS_API_FORMAT_UNSUPPORTED')
     for field in ['model', 'base_url', 'image']:
         if not isinstance(result.get(field), str) or not result[field].strip():
@@ -58,6 +60,8 @@ def normalize_config(value: dict) -> dict:
         if type(result[field]) is not int or not 1 <= result[field] <= 14400:
             raise E2EError('HEADLESS_TIMEOUT_INVALID')
     if result['reasoning_effort'] not in {'none', 'minimal', 'low', 'medium', 'high', 'xhigh', 'max', 'ultra'}:
+        raise E2EError('HEADLESS_REASONING_INVALID')
+    if result['harness'] == 'claudecode' and result['reasoning_effort'] not in {'low', 'medium', 'high', 'xhigh', 'max'}:
         raise E2EError('HEADLESS_REASONING_INVALID')
     if result.get('score_skill_dir'):
         root = Path(result['score_skill_dir']).expanduser().resolve(strict=True)
