@@ -1,0 +1,21 @@
+{
+  "date": "2026-11-28",
+  "base_commit": "a2217ad3603d115b8228da1a9db4db98ac45d973",
+  "branch": "feat/cli-freeze-and-judge-isolation-20261128",
+  "regression_tests": 97,
+  "docker_integration_tests": 3,
+  "replayed_workspaces": [
+    49,
+    50,
+    51,
+    52
+  ],
+  "original_snapshots_unchanged": true,
+  "original_candidate_readonly_verified": true,
+  "runtime_python_cache_isolation_verified": true,
+  "materialized_link_negative_rejected_by_original_rules": true,
+  "model_calls": 0,
+  "production_deployed": false,
+  "server_batch_state_modified": false,
+  "server_containers_removed": false
+}
