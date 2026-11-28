@@ -1,0 +1,51 @@
+{
+  "date": "2026-11-28",
+  "source_sha256": "5f102a190baad48fd6712d8e34eb476d2fd321d63bd2b87c7919cde32a711533",
+  "tested_files": {
+    "eval/run_batch.py": "ec1651174dbeff37f4a122953d68e36c5cb5719860e55d3a3f11df6b1e9e5207",
+    "src/cli_scoring.py": "3fb2c5f75b722df8a2656b51ba313b9a4e82fb7f724f058593cb83d0efadb278",
+    "src/managed_cases/scoring.py": "86c6251469acb97c2987d8888561de261a38289d9147428f0763e566474df6f1"
+  },
+  "execution_status": {
+    "status": "finished",
+    "exit_code": 0,
+    "harness": "deepseek-harness",
+    "harness_version": "0.1.2-rc.1",
+    "model": "DeepSeek-V4.1-Flash",
+    "image": "astudio-managed-case-dsh-local:20261128"
+  },
+  "relative_link": {
+    "path": "results/latest.json",
+    "target": "answer.json",
+    "kind": "symlink"
+  },
+  "scoring_verification": {
+    "schema": "wildclawbench.managed-score-verification/v1",
+    "status": "PASS",
+    "total_score": 1.0,
+    "source_manifest_sha256": "16510e1603fe3014ae7cf1776670387e0aab1a9bec25a9258288f941b6782d56",
+    "context_sha256": "f1ad94ee0439b7769b33feb0b646b1b048e89bd15f0e3f7eeb7eaa986274d742",
+    "template_revision_id": null,
+    "template_sha256": "bc42bb1f0c2b9c048b7f9649b10e515e32b4e044e357ec65156984a235519bc9",
+    "prompt_sha256": "73073f2fe5373db547006b0025b3c650baaeaf8060766119c046a27c98ca74ef",
+    "result_sha256": "191ff2eeb3166faafba095b831f26e0b1b6f502f3d1e3615aea4f2e0fbc564df"
+  },
+  "native_judge": {
+    "harness": "deepseek-harness",
+    "model": "DeepSeek-V4.1-Flash",
+    "reasoning_effort": "none",
+    "verification": "native-readback",
+    "sources": [
+      {
+        "path": "agent-home/sessions/--job-runtime--/session-312b5e6b-0c35-464e-b0b9-68000d863cf1/session.jsonl",
+        "sha256": "22b0555d19b09bbec903694cca34124a7f46d1f113029ea6d13988eb4f9497ff"
+      }
+    ]
+  },
+  "execution_output_has_gt": false,
+  "source_unchanged": true,
+  "candidate_integrity_valid": true,
+  "resources_released": true,
+  "platform_backend_tests": 138,
+  "docker_integration_tests": 2
+}

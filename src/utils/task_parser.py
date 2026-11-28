@@ -286,6 +286,9 @@ def parse_task_md(task_file: Path, *, repo_root: Path | None = None, raw: str | 
     llm_judge_rubric = sections.get("LLM Judge Rubric", "").strip()
     rubric_criteria = parse_rubric_criteria(llm_judge_rubric)
     grading_type = str(metadata.get("grading_type", "")).strip()
+    if grading_type in {'llm_judge','hybrid'} and (metadata.get('managed_scoring') or {}).get('schema')=='wildclawbench.managed-cases/v1':
+        from src.managed_cases.contracts import parse_managed_rubric
+        rubric_criteria=parse_managed_rubric(llm_judge_rubric)
     tags = normalize_tags(metadata.get("tags"))
     metric_profile = resolve_metric_profile(tags)
     if metric_profile == "web-site-gen":
@@ -365,4 +368,5 @@ def parse_task_md(task_file: Path, *, repo_root: Path | None = None, raw: str | 
         "llm_judge_rubric": llm_judge_rubric,
         "rubric_criteria":  rubric_criteria,
         "judge_evidence":   judge_evidence,
+        "managed_scoring": metadata.get("managed_scoring"),
     }

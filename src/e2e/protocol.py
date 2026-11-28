@@ -79,6 +79,8 @@ def describe(repo: Path) -> dict:
         "capabilities": [
             "catalog",
             "case-library-v1",
+            "managed-case-source-v1",
+            "managed-judge-templates-v1",
             "managed-agentcube-templates-v1",
             "preflight",
             "runtime-preflight",
@@ -232,6 +234,19 @@ def resolve(
 ) -> tuple[dict, list[dict], dict, dict | None, object]:
     from src.case_catalog import dataset_entry, releases, runnable
     plan = normalize_plan(raw)
+    selection = plan['selection']
+    if source := selection.get('case_source'):
+        from src.managed_cases.bundle import e2e_tasks
+        if set(source) != {'path', 'sha256'}:
+            raise E2EError('MANAGED_CASE_SOURCE_INVALID')
+        path = Path(source['path']).resolve(strict=True)
+        selected, members, manifest = e2e_tasks(path, source['sha256'], path.parent / ('compiled-' + source['sha256']))
+        requested = selection.get('task_ids') or []
+        if requested:
+            if set(requested) - {row['task_id'] for row in selected}: raise E2EError('TASK_SELECTION_UNKNOWN_IDS')
+            selected = [row for row in selected if row['task_id'] in requested]
+        web = canonical_script(repo, 'web-e2e', 'prepare-web-e2e-workspaces', 'prepare_web_e2e_workspaces.py')
+        return plan, selected, members, manifest, web
     selection = plan["selection"]
     library_dataset = selection.get("library_dataset")
     if library_dataset:

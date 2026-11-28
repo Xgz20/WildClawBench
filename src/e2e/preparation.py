@@ -292,7 +292,7 @@ def normalize_plan(raw: dict) -> dict:
     selection = plan["selection"]
     if not isinstance(selection, dict) or not isinstance(plan["units"], list):
         raise E2EError("BATCH_PLAN_SELECTION_OR_UNITS_INVALID")
-    if set(selection) - {"scenario", "dataset", "task", "task_ids", "categories", "tags", "exclude_tags", "modality", "library_dataset", "include_drafts"}:
+    if set(selection) - {"scenario", "dataset", "task", "task_ids", "categories", "tags", "exclude_tags", "modality", "library_dataset", "include_drafts", "case_source"}:
         raise E2EError("TASK_SELECTION_UNKNOWN_KEYS")
     if selection.get("scenario") not in {"general", "legal", "web", "all"}:
         raise E2EError("SCENARIO_REQUIRED")
@@ -300,7 +300,7 @@ def normalize_plan(raw: dict) -> dict:
         raise E2EError("CASE_LIBRARY_DRAFT_FLAG_INVALID")
     if selection.get("library_dataset") and selection["scenario"] == "all":
         raise E2EError("CASE_LIBRARY_SCENARIO_MISMATCH")
-    if selection["scenario"] in {"general", "legal", "all"} and not (selection.get("dataset") or selection.get("library_dataset")):
+    if selection["scenario"] in {"general", "legal", "all"} and not (selection.get("dataset") or selection.get("library_dataset") or selection.get("case_source")):
         raise E2EError("GENERAL_DATASET_REQUIRED")
     if not plan["units"]:
         raise E2EError("HARNESS_UNITS_REQUIRED")
