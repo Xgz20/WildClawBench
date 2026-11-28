@@ -8,7 +8,7 @@
 | v0.2（独立构建） | `wildclawbench-e2e-scorer:v0.2-amd64` / `v0.2-arm64` | Codex 0.171.0、DSH 0.1.2-rc.1、ClaudeCode 2.1.330 |
 | v0.3（AMD64 默认） | `wildclawbench-e2e-scorer:v0.3-amd64` | 同三种 CLI，从旧评分镜像和 ClaudeCode v0.4 镜像增量构建 |
 
-`v1/` 保留旧构建定义；`v2/` 为新三 CLI 版本。根目录原 Dockerfile、Office/浏览器修复层和旧验收脚本保留兼容。新版本不占用旧镜像标签，历史作业保留冻结镜像 ID。
+`v1/` 保留旧构建定义；`v2/` 为三 CLI 独立配方；`v3/` 为 AMD64 增量配方。根目录原 Dockerfile、Office/浏览器修复层和旧验收脚本保留兼容。新版本不占用旧镜像标签，历史作业保留冻结镜像 ID。
 
 ## 构建与回滚
 
@@ -21,7 +21,7 @@ bash docker/e2e-scorer/build.sh --version v0.2 --platform linux/arm64 --docker-c
 bash docker/e2e-scorer/build.sh --version v0.1 --docker-context colima
 ```
 
-默认含 Office；中间标签追加 `-runtime`。CLI 版本和底座由清单固定，升级时新增目录及版本记录。`--tag` 可创建同配方独立发行标签，不能占用其他目录版本的标签。默认 AMD64 使用 v0.3，显式选择 ARM64 时默认使用 v0.2。v0.2 默认目标为 `linux/amd64`，适用于 Linux AMD64 服务器；Mac ARM64 原生构建需显式选择 `--platform linux/arm64`。Docker 构建和最终运行均传入目标平台，验收同时校验镜像元数据与容器内架构。跨架构构建需要 builder 支持相应模拟器，也可把上下文传至对应架构主机原生构建。
+默认含 Office；v0.2 的中间标签追加 `-runtime`，v0.3 直接继承已验收的 Office 层。CLI 版本和底座由清单固定，升级时新增目录及版本记录。`--tag` 可创建同配方独立发行标签，不能占用其他目录版本的标签。默认 AMD64 使用 v0.3，显式选择 ARM64 时默认使用 v0.2。v0.2 默认目标为 `linux/amd64`，适用于 Linux AMD64 服务器；Mac ARM64 原生构建需显式选择 `--platform linux/arm64`。Docker 构建和最终运行均传入目标平台，验收同时校验镜像元数据与容器内架构。跨架构构建需要 builder 支持相应模拟器，也可把上下文传至对应架构主机原生构建。
 
 ```bash
 bash docker/e2e-scorer/build.sh --version v0.2 --platform linux/amd64 --prepare-only --context /tmp/scorer-v02-amd64
@@ -33,7 +33,7 @@ bash /absolute/scorer-v02-amd64/build-prepared.sh
 
 ## 验收与回执
 
-冻结 Score Skill 创建 Python 3.11 受管环境，使用同一解释器安装 Chromium。公开合成探针验证浏览器点击、键盘、窄窗口、减少动画、网络阻断和截图，以及 DOCX/XLSX/PPTX 转 PDF、中文字体、公式重算为 42 和输入未改写。最终在无网络、无凭据、无主机挂载容器内复验全部 CLI 实际版本及浏览器/Office；不调用模型或消费正式题目。
+独立配方使用冻结 Score Skill 创建 Python 3.11 受管环境，并以同一解释器安装 Chromium；增量配方要求旧运行时锁与新 Skill 完全一致，重新执行其运行时探针。公开合成探针验证浏览器点击、键盘、窄窗口、减少动画、网络阻断和截图，以及 DOCX/XLSX/PPTX 转 PDF、中文字体、公式重算为 42 和输入未改写。最终在无网络、无凭据、无主机挂载容器内复验全部 CLI 实际版本及浏览器/Office；不调用模型或消费正式题目。
 
 - `build-manifest.json`：目录版本、CLI/底座参数、构建文件 SHA、Skill 来源与 SHA。
 - `runtime-validation.json`：实测 CLI 版本及浏览器/Office 验收。

@@ -54,6 +54,15 @@ class HeadlessScorerBuildTests(unittest.TestCase):
         self.assertEqual(args.version, 'v0.2')
         self.assertEqual(args.tag, 'wildclawbench-e2e-scorer:v0.2-arm64')
 
+    def test_incremental_release_cannot_overwrite_either_source_image(self):
+        import argparse
+        resolver = runpy.run_path(str(ROOT / 'tools/e2e-build/build_headless_scorer.py'))['resolve_version']
+        for tag in ['wildclawbench-e2e-scorer:codex-0.171.0-office-v1', 'wildclawbench-claudecode-ubuntu:v0.4']:
+            args = argparse.Namespace(version='v0.3', platform='linux/amd64', tag=tag, context=None,
+                eval_base_image=None, codex_version=None, dsh_version=None, claude_code_version=None, claude_code_image=None)
+            with self.assertRaisesRegex(ValueError, 'overwrite'):
+                resolver(args)
+
     def test_platforms_have_separate_tags_and_build_contexts(self):
         builder = runpy.run_path(str(ROOT / 'tools/e2e-build/build_headless_scorer.py'))
         import argparse

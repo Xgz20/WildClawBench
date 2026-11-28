@@ -69,5 +69,15 @@
   "platform_defaults": {
     "linux/amd64": "v0.3",
     "linux/arm64": "v0.2"
+  },
+  "legacy_versions": {
+    "codex-0.171.0-office-v1": {
+      "image": "wildclawbench-e2e-scorer:codex-0.171.0-office-v1",
+      "buildable": false,
+      "harnesses": [
+        "codex",
+        "deepseek-harness"
+      ]
+    }
   }
 }

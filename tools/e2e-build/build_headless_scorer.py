@@ -40,6 +40,7 @@ def resolve_version(args: argparse.Namespace) -> dict:
     args.tag = args.tag or official_image
     references = {ref for row in catalog['versions'].values()
                   for ref in [row['image'], *row.get('platform_images', {}).values()]}
+    references.update(row['image'] for row in catalog.get('legacy_versions', {}).values())
     reserved = {ref + suffix for ref in references if ref != official_image for suffix in ['', '-runtime']}
     if args.tag in reserved:
         raise ValueError('Refusing to overwrite another scorer version: ' + args.tag)
@@ -62,6 +63,9 @@ def resolve_version(args: argparse.Namespace) -> dict:
         raise ValueError('This scorer version does not include ClaudeCode')
     if getattr(args, 'claude_code_image', None) is not None and 'CLAUDE_CODE_IMAGE' not in entry['build_args']:
         raise ValueError('This scorer version does not use a ClaudeCode source image')
+    source_images = {getattr(args, key.lower()) for key in entry['build_args'] if key.endswith('_IMAGE')}
+    if args.tag in source_images or args.tag + '-runtime' in source_images:
+        raise ValueError('Refusing to overwrite a scorer source image: ' + args.tag)
     if args.context is None:
         args.context = ROOT / '.cache/headless-scorer-build' / version
         if platforms:
