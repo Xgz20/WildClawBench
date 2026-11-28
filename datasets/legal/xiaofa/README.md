@@ -28,6 +28,10 @@ python datasets/legal/xiaofa/authoring/check_controls.py
 
 运行正式评测时，通过既有CLI/E2E选择器选`xiaofa-legal`或显式发布ID，并提供项目原有模型、执行器和judge配置。不同执行器仍需具备Word、PDF、图片、二维码和视频读取工具；不能因执行器未安装解码器就把多模态输入改成文字答案。示例bundle是执行和评分分离的分发包，不可把其中gt提供给被测Agent。
 
+法律场景在用例库中保留独立的`legal`身份，执行和评分复用`general-e2e-contract-v1`。CLI冻结版本选择使用`--dataset-id xiaofa-legal`（可加`--release-id xiaofa-legal30-v1`）；沙箱E2E使用`--scenario legal --dataset xiaofa-legal30-v1`，平台用例库可分别选择当前题库或冻结版本。法律场景使用支持General契约的执行模板，也可使用Codex/DeepSeek Harness无头裁判或已发布General评分能力的桌面裁判。
+
+实机接入验证单独记录在[法律场景接入与实机验收](../../../docs/guides/legal-eval-acceptance-20261128.md)，不覆盖本集原始制作和冻结记录。
+
 ## 内容与范围
 
 所有题内交易、客户身份、聊天、视频、门户和合同均为自建合成数据。真实用户原件、头像、姓名、账号、联系方式和私有案卷不入库；仓库保留来源URL、段落/单元格定位、原图哈希、脱敏内容摘记和改编理由。官方指导案例180号单独标明真实来源。
