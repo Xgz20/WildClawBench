@@ -15,6 +15,8 @@
 
 实机暴露并修复了 CLI 来源初始化、快照结果目录、稳定 Rubric 标题兼容、空评分项、原始裁判响应留存、上下文摘要漂移检查和评分端点 DNS 映射等问题。冻结包和既有题目字节保持不变。具体原生评分与下载回执见平台仓库 `docs/local-debug/20261128-user-case-management-acceptance.md`；原始验收材料保存在 `~/EvalDebugWorkspace/e2e-platform/control/user-case-management-20261128/`。
 
+AStudio 桌面评分 #132 也完成真实判分并验分 PASS：客户端 3.6.3、原生模型回读 `xdeepseek-flash-in`、high，V2 指令出现在实际 Prompt 与原生判分说明中，候选/GT 回传摘要吻合，沙箱确认释放。原配置 3.7.0 的 #130 在安装阶段返回退出码 2，该异常保留；本地评分使用另存的 3.6.3 验证配置，不表示已修复 3.7.0 安装器。
+
 原生 Edge + 独立本地验收服务、独立测试租户和私有测试桶验证了：创建评测集、不完整草稿保存、完整编辑页、校验/预览、单题调试交接、Markdown 导入预览/确认、版本发布、删除恢复、输入上传和实际素材预览。调试交接停在配置页，验收服务禁止真实派发。
 
 具体契约与支持边界见 [managed-case-source](../guides/managed-case-source.md)，平台使用及运维说明见另一仓库 `docs/user-case-management.md`。

@@ -88,6 +88,9 @@ echo true
     def test_configuration_discloses_inherited_case_template_identity(self):
         snapshot = reports.prepare(self.spec)
         for unit in snapshot['units']:
+            unit['scorer']['transport'] = 'api'
+            if unit['kind'] == 'e2e':
+                unit['scorer']['judge_template'] = {'template_revision_id': 2, 'template_sha256': 'b' * 64}
             for row in unit['rows']:
                 row['judge'] = {'protocol': 'managed-case-score/v1', 'template_revision_id': 2,
                                 'template_sha256': 'a' * 64}
@@ -95,6 +98,8 @@ echo true
         snapshot['snapshot_sha256'] = digest(snapshot)
         table = reports.build(snapshot)['presentation']['tables']['评分配置']
         self.assertEqual(table['rows'][0][7:9], ['2', 'a' * 64])
+        self.assertEqual(table['rows'][1][7:9], [2, 'a' * 64])
+        self.assertEqual(table['rows'][0][2], '大模型 API')
 
     def test_dataset_task_scope_and_contract_conflicts_are_rejected(self):
         self.sources[1]['dataset']['release'] = 'different'
