@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Canonical full scorer build: Codex + DSH + managed Python/Chromium + Office.
+# Versioned scorer build: CLI pins and tags come from versions.json.
 set -euo pipefail
 SCORER_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCORER_DIR}/../.." && pwd)"
@@ -17,5 +17,4 @@ else
 fi
 # Later explicit --context/--tag arguments override these defaults.
 exec "${PYTHON[@]}" "${REPO_ROOT}/tools/e2e-build/build_headless_scorer.py" \
-  --context "${REPO_ROOT}/.cache/headless-scorer-build" \
-  --tag wildclawbench-e2e-scorer:codex-0.171.0-office-v2 --with-office "$@"
+  --with-office "$@"

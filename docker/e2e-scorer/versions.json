@@ -1,0 +1,37 @@
+{
+  "default": "v0.2",
+  "versions": {
+    "v0.1": {
+      "image": "wildclawbench-e2e-scorer:codex-0.171.0-office-v2",
+      "context": "v1",
+      "dockerfile": "v1/Dockerfile",
+      "harnesses": [
+        "codex",
+        "deepseek-harness"
+      ],
+      "build_args": {
+        "CODEX_VERSION": "0.171.0",
+        "DSH_VERSION": "0.1.2-rc.1",
+        "EVAL_BASE_IMAGE": "python:3.11-bookworm",
+        "NODE_RUNTIME_IMAGE": "node:24-bookworm-slim"
+      }
+    },
+    "v0.2": {
+      "image": "wildclawbench-e2e-scorer:v0.2",
+      "context": "v2",
+      "dockerfile": "v2/Dockerfile",
+      "harnesses": [
+        "codex",
+        "deepseek-harness",
+        "claudecode"
+      ],
+      "build_args": {
+        "CODEX_VERSION": "0.171.0",
+        "DSH_VERSION": "0.1.2-rc.1",
+        "EVAL_BASE_IMAGE": "python:3.11-bookworm",
+        "NODE_RUNTIME_IMAGE": "node:24-bookworm-slim",
+        "CLAUDE_CODE_VERSION": "2.1.330"
+      }
+    }
+  }
+}

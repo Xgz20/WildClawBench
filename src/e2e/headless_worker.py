@@ -118,8 +118,9 @@ def immutable_inventory(attempt):
 def launch_agent(config, prompt, attempt):
     env = os.environ.copy()
     key = env.pop('E2E_SCORER_API_KEY')
-    env['OPENROUTER_API_KEY'] = key
-    env['OPENROUTER_BASE_URL'] = config['base_url']
+    if config['harness'] != 'claudecode':
+        env['OPENROUTER_API_KEY'] = key
+        env['OPENROUTER_BASE_URL'] = config['base_url']
     home = ROOT / 'agent-home'
     home.mkdir(mode=0o700, exist_ok=True)
     effort = config.get('reasoning_effort', 'none')
@@ -141,21 +142,31 @@ def launch_agent(config, prompt, attempt):
         ]) + '\n', encoding='utf-8')
         command = ['codex', 'exec', '--skip-git-repo-check', '--dangerously-bypass-approvals-and-sandbox',
                    '--json', '--output-last-message', str(ROOT / 'agent-final.txt'), '-']
-    else:
+    elif config['harness'] == 'claudecode':
+        env.update(HOME=str(home), CLAUDE_CONFIG_DIR=str(home), ANTHROPIC_API_KEY=key,
+                   ANTHROPIC_BASE_URL=config['base_url'], IS_SANDBOX='1',
+                   CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC='1', DISABLE_AUTOUPDATER='1')
+        command = ['claude', '--print', '--verbose', '--output-format', 'stream-json',
+                   '--dangerously-skip-permissions', '--no-session-persistence', '--no-chrome',
+                   '--setting-sources', '', '--strict-mcp-config', '--mcp-config', '{"mcpServers":{}}',
+                   '--model', config['model'], '--effort', effort]
+    elif config['harness'] == 'deepseek-harness':
         env.update(DSH_HOME=str(home), DSH_MODEL_ID=config['model'], DSH_API='openai-responses' if config.get('api_format') == 'openai_response' else 'openai-completions',
                    DEEPSEEK_SEARCH_ENABLED='false', DSH_TELEMETRY_DISABLED='1', DSH_MAX_TOKENS='16384')
         if effort != 'none':
             env['DSH_REASONING'] = effort
         command = ['wcb-dsh', prompt]
+    else:
+        raise RuntimeError('HEADLESS_HARNESS_UNSUPPORTED')
     write(ROOT / 'agent-launch.json', {'harness': config['harness'], 'model': config['model'],
-                                       'reasoning_effort': effort, 'command': command if config['harness'] == 'codex' else ['wcb-dsh', '<frozen prompt>']})
+                                       'reasoning_effort': effort, 'command': command if config['harness'] != 'deepseek-harness' else ['wcb-dsh', '<frozen prompt>']})
     with (ROOT / 'judge.log').open('w', encoding='utf-8') as log:
-        process = subprocess.Popen(command, cwd=attempt, env=env, stdin=subprocess.PIPE if config['harness'] == 'codex' else subprocess.DEVNULL,
+        process = subprocess.Popen(command, cwd=attempt, env=env, stdin=subprocess.PIPE if config['harness'] != 'deepseek-harness' else subprocess.DEVNULL,
                                    stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, encoding='utf-8',
                                    errors='replace', start_new_session=True)
         write(ROOT / 'agent-process.json', {'pid': process.pid, 'started_at': time.time()})
         try:
-            output, _ = process.communicate(prompt if config['harness'] == 'codex' else None, timeout=config['timeout_seconds'])
+            output, _ = process.communicate(prompt if config['harness'] != 'deepseek-harness' else None, timeout=config['timeout_seconds'])
             log.write(clean(output))
         except subprocess.TimeoutExpired:
             os.killpg(process.pid, signal.SIGTERM)
@@ -168,9 +179,40 @@ def launch_agent(config, prompt, attempt):
             raise RuntimeError('SCORING_AGENT_TIMEOUT')
     if process.returncode:
         raise RuntimeError('SCORING_AGENT_EXIT_' + str(process.returncode))
+    if config['harness'] == 'claudecode':
+        events = [json.loads(line) for line in clean(output).splitlines() if line.startswith('{')]
+        results = [event for event in events if event.get('type') == 'result']
+        if len(results) != 1 or results[0].get('is_error') or results[0].get('subtype') != 'success':
+            raise RuntimeError('SCORING_CLAUDE_RESULT_FAILED')
+        (ROOT / 'agent-final.txt').write_text(results[0].get('result', ''), encoding='utf-8')
+
+
+def claude_identity(config):
+    """Claude emits the native model; effort is bound to its explicit CLI flag."""
+    trace = ROOT / 'judge.log'
+    events = [json.loads(line) for line in trace.read_text(encoding='utf-8').splitlines() if line.startswith('{')]
+    models = {event.get('model') for event in events
+              if event.get('type') == 'system' and event.get('subtype') == 'init'}
+    if models != {config['model']}:
+        raise RuntimeError('SCORING_NATIVE_MODEL_BINDING_MISMATCH')
+    launch = read(ROOT / 'agent-launch.json')
+    command = launch['command']
+    effort = config['reasoning_effort']
+    if (launch['harness'] != 'claudecode' or launch['model'] != config['model']
+            or launch['reasoning_effort'] != effort or command[command.index('--effort') + 1] != effort):
+        raise RuntimeError('SCORING_NATIVE_REASONING_BINDING_MISMATCH')
+    shutil.copyfile(trace, ROOT / 'judge-native.jsonl')
+    proof = {'harness': 'claudecode', 'model': config['model'], 'reasoning_effort': effort,
+             'verification': 'native-model-readback+launch-effort',
+             'sources': [{'path': name, 'sha256': sha(ROOT / name)}
+                         for name in ['judge-native.jsonl', 'agent-launch.json']]}
+    write(ROOT / 'agent-identity.json', proof)
+    return proof
 
 
 def agent_identity(config):
+    if config['harness'] == 'claudecode':
+        return claude_identity(config)
     home = ROOT / 'agent-home/sessions'
     models, efforts, sources = set(), set(), []
     for path in home.rglob('*.jsonl'):

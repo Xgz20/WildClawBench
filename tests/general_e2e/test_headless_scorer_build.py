@@ -35,7 +35,9 @@ class HeadlessScorerBuildTests(unittest.TestCase):
             manifest = json.loads((context / 'build-manifest.json').read_text())
             self.assertEqual(manifest['inputs']['WITH_OFFICE'], '1')
             self.assertEqual(manifest['inputs']['CODEX_VERSION'], '0.171.0')
-            self.assertEqual(manifest['inputs']['IMAGE_TAG'], 'wildclawbench-e2e-scorer:codex-0.171.0-office-v2')
+            self.assertEqual(manifest['inputs']['IMAGE_TAG'], 'wildclawbench-e2e-scorer:v0.2')
+            self.assertEqual(manifest['inputs']['CLAUDE_CODE_VERSION'], '2.1.330')
+            self.assertEqual(manifest['harnesses'], ['codex', 'deepseek-harness', 'claudecode'])
             self.assertTrue((context / 'runtime-skill/bundled-components.json').is_file())
             self.assertTrue((context / 'build-prepared.sh').is_file())
             self.assertFalse(any(b'private-proxy' in path.read_bytes() for path in context.rglob('*') if path.is_file()))
@@ -73,6 +75,21 @@ class HeadlessScorerBuildTests(unittest.TestCase):
         dockerfile = (ROOT / 'docker/e2e-scorer/Dockerfile').read_text()
         self.assertIn('org.astron.eval.codex.version="${CODEX_VERSION}"', dockerfile)
         self.assertIn('org.astron.eval.dsh.version="${DSH_VERSION}"', dockerfile)
+
+    def test_legacy_version_remains_buildable_and_new_version_cannot_retag_it(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            context = Path(temporary) / 'context'
+            command = ['bash', str(ROOT / 'docker/e2e-scorer/build.sh'), '--prepare-only',
+                       '--version', 'v0.1', '--context', str(context)]
+            subprocess.run(command, check=True, capture_output=True)
+            manifest = json.loads((context / 'build-manifest.json').read_text())
+            self.assertEqual(manifest['inputs']['IMAGE_TAG'], 'wildclawbench-e2e-scorer:codex-0.171.0-office-v2')
+            self.assertNotIn('CLAUDE_CODE_VERSION', manifest['inputs'])
+            self.assertEqual((context / 'Dockerfile').read_bytes(), (ROOT / 'docker/e2e-scorer/Dockerfile').read_bytes())
+            for extra in [['--version', 'v0.2', '--tag', manifest['inputs']['IMAGE_TAG']],
+                          ['--codex-version', 'unexpected'], ['--version', 'missing']]:
+                result = subprocess.run(command + extra, capture_output=True)
+                self.assertNotEqual(result.returncode, 0)
 
 
 if __name__ == '__main__':
