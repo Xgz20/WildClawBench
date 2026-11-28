@@ -26,10 +26,11 @@ ASSET_ROOT = ".wildclawbench-assets"
 ASSET_SCHEMA = "wildclawbench.e2e-dataset-assets/v1"
 
 
-def maintained_releases(repo: Path) -> dict[str, dict]:
+def maintained_releases(repo: Path, *, scenario: str | None = None) -> dict[str, dict]:
     result = {}
     for entry in library(repo)["datasets"].values():
-        if entry["scene"] == "general" and "e2e" in entry["modes"]:
+        if (entry["scene"] in {"general", "legal"} and "e2e" in entry["modes"]
+                and (scenario is None or entry["scene"] == scenario)):
             for release in releases(repo, entry):
                 result[release["id"]] = release["manifest"]
     return result

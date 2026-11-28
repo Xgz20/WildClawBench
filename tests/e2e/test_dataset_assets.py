@@ -78,7 +78,7 @@ class DatasetAssetsTests(unittest.TestCase):
 
     def test_only_final_releases_are_offered_and_old_ids_cannot_start_new_batches(self):
         self.assertEqual(set(maintained_releases(REPO)), {
-            'general-custom60-v1', 'general-custom70-v6', 'general-challenge60-v3',
+            'general-custom60-v1', 'general-custom70-v6', 'general-challenge60-v3', 'xiaofa-legal30-v1',
         })
         group = index(REPO, 'general-work')['datasets'][0]
         self.assertEqual([row['id'] for row in group['releases']], ['general-custom70-v6'])

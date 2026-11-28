@@ -125,10 +125,10 @@ def release_summary(value: dict) -> dict:
             "created_at": manifest["created_at"]}
 
 
-def frozen_cases(value: dict, dataset: str, current: dict[str, dict]) -> list[dict]:
+def frozen_cases(value: dict, dataset: str, current: dict[str, dict], *, scene: str = "general") -> list[dict]:
     fields = ("task_id", "name", "category", "difficulty", "modality", "grading_type", "tags", "timeout_seconds")
     return [
-        {**{key: task.get(key) for key in fields}, "scene": "general", "library_dataset": dataset,
+        {**{key: task.get(key) for key in fields}, "scene": scene, "library_dataset": dataset,
          "category_display_name": current.get(task["task_id"], {}).get("category_display_name") or task["category"],
          "capabilities": current.get(task["task_id"], {}).get("capabilities", [])}
         for task in value["manifest"]["tasks"] if "invalid" not in task.get("tags", [])
@@ -148,7 +148,7 @@ def index(repo: Path, dataset: str | None = None, release: str | None = None) ->
             version = next((item for item in versions if item["id"] == release), None)
             if version is None:
                 raise ValueError("CASE_LIBRARY_RELEASE_UNKNOWN")
-            cases = frozen_cases(version, key, {row["task_id"]: row for row in current})
+            cases = frozen_cases(version, key, {row["task_id"]: row for row in current}, scene=entry["scene"])
         groups.append({"id": key, "name": entry["name"], "scene": entry["scene"], "modes": entry["modes"],
                        "task_count": len(current), "draft_count": sum("draft" in row["tags"] for row in current),
                        "releases": [release_summary(item) for item in versions],

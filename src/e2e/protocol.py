@@ -119,6 +119,7 @@ def describe(repo: Path) -> dict:
         ],
         "scenarios": [
             {"id": "general", "display_name": "通用场景", "dataset_required": True},
+            {"id": "legal", "display_name": "晓法法律", "dataset_required": True, "runtime_scene": "general"},
             {"id": "web", "display_name": "Web站点", "dataset_required": False},
             {"id": "all", "display_name": "通用与Web", "dataset_required": True},
         ],
@@ -175,7 +176,7 @@ def catalog(repo: Path, scenario: str = "general", dataset: str | None = None,
 
     from .dataset_assets import maintained_releases
     datasets = []
-    for dataset_id, manifest in maintained_releases(repo).items():
+    for dataset_id, manifest in maintained_releases(repo, scenario="general" if scenario == "all" else scenario).items():
         datasets.append(
             {
                 "id": dataset_id,
@@ -184,7 +185,11 @@ def catalog(repo: Path, scenario: str = "general", dataset: str | None = None,
             }
         )
     tasks = []
-    if scenario in {"general", "all"} and dataset:
+    if scenario in {"general", "legal", "all"} and dataset:
+        from eval_general_e2e.datasets.catalog import load_registered_dataset
+        release = load_registered_dataset(repo, dataset).definition.dataset_id
+        if release not in {row["id"] for row in datasets}:
+            raise E2EError("CASE_LIBRARY_SCENARIO_MISMATCH")
         tasks.extend(_general_catalog(repo, dataset)[0])
     if scenario in {"web", "all"}:
         web = canonical_script(
@@ -239,12 +244,17 @@ def resolve(
         repo, "web-e2e", "prepare-web-e2e-workspaces", "prepare_web_e2e_workspaces.py"
     )
     tasks, members, manifest = [], {}, None
-    scene = plan["selection"]["scenario"]
+    from .scenarios import runtime_scene
+    scene = runtime_scene(plan["selection"]["scenario"])
     if scene in {"general", "all"}:
         if library_dataset and not selection.get("dataset"):
             general, members, manifest = _current_general(repo, library_dataset, selection, web)
         else:
             general, members, manifest = _general_catalog(repo, selection["dataset"])
+            from .dataset_assets import maintained_releases
+            source_scene = "general" if selection["scenario"] == "all" else selection["scenario"]
+            if manifest["dataset_id"] not in maintained_releases(repo, scenario=source_scene):
+                raise E2EError("CASE_LIBRARY_SCENARIO_MISMATCH")
         tasks.extend(general)
     if scene in {"web", "all"}:
         tasks.extend(_web_catalog(repo, web, library_dataset))
