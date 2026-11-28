@@ -34,6 +34,8 @@ class ManagedCasesTests(unittest.TestCase):
             compiled,tasks=b.cli_tasks(source,receipt['sha256'],root/'compiled')
             self.assertEqual(len(tasks),1)
             self.assertIn('Criterion 1',tasks[0]['llm_judge_rubric'])
+            self.assertEqual([row['key'] for row in tasks[0]['rubric_criteria']],['correct'])
+            self.assertEqual(tasks[0]['rubric_criteria'][0]['allowed_scores'],[0.0,1.0])
             self.assertFalse((root/'compiled/sources/workspace/custom/user_case_1/exec/gt').exists())
             rows,members,manifest=b.e2e_tasks(source,receipt['sha256'],root/'compiled')
             self.assertEqual(rows[0]['task_id'],'user_case_1')
@@ -240,3 +242,49 @@ class ManagedAPIWireTests(unittest.TestCase):
             self.assertIn('CUSTOM_IN_WIRE',seen[0][1]['messages'][0]['content'])
             self.assertIn('EXTRA',seen[0][1]['messages'][0]['content'])
         finally:server.shutdown();server.server_close()
+
+
+@unittest.skipUnless(os.environ.get('WCB_MANAGED_TEST_CLI_PYTHON'),'requires the full CLI runtime')
+class ManagedCLIEntryTests(unittest.TestCase):
+    def test_real_cli_initializes_source_before_rejecting_budget_without_dispatch(self):
+        import subprocess
+        with tempfile.TemporaryDirectory() as folder:
+            root=Path(folder);source=root/'source.zip'
+            receipt=b.write_archive({'dataset_id':'managed-entry','cases':[{'document':fixture()}],'scene':{'base_contract':'general'}},{'files/in.txt':b'input'},source)
+            repo=Path(__file__).resolve().parents[1]
+            result=subprocess.run([os.environ['WCB_MANAGED_TEST_CLI_PYTHON'],str(repo/'eval/run_batch.py'),
+                '--case-source',str(source),'--case-source-sha256',receipt['sha256'],'--agent-backend','deepseek-harness'],
+                cwd=repo,env={**os.environ,'OUTPUT_SUBDIR':str(root/'output'),'WILDCLAW_TIMEOUT_MULTIPLIER':'0','OPENROUTER_API_KEY':'synthetic-not-used'},capture_output=True,text=True,timeout=60)
+            self.assertNotEqual(result.returncode,0)
+            self.assertIn('timeout multiplier must be > 0',result.stdout+result.stderr)
+            self.assertNotIn('UnboundLocalError',result.stdout+result.stderr)
+            self.assertTrue(list((root/'output').rglob('source-receipt.json')))
+
+
+class ManagedExecutionEligibilityTests(unittest.TestCase):
+    def test_failed_execution_does_not_become_a_valid_zero_or_call_a_model(self):
+        from unittest.mock import patch
+        from src.managed_cases.scoring import score
+        with tempfile.TemporaryDirectory() as folder:
+            root=Path(folder);source=root/'input';source.mkdir()
+            (source/'manifest.json').write_text(json.dumps({'execution_outcome':{'scoring_allowed':False,'error':'native transport failed'}}))
+            (source/'task.json').write_text('{}')
+            with patch('src.managed_cases.scoring.api_judge') as judge:
+                with self.assertRaisesRegex(ValueError,'EXECUTION_NOT_READY'):score(source,root/'grading',{'transport':'api'})
+                judge.assert_not_called()
+            self.assertFalse((root/'grading/score.json').exists())
+
+
+class ManagedRubricCompatibilityTests(unittest.TestCase):
+    def test_old_frozen_managed_task_gets_criteria_without_changing_raw_input(self):
+        from src.managed_cases.scoring import normalize_task
+        task={'grading_type':'hybrid','rubric_criteria':[],'llm_judge_rubric':c.rubric(fixture()),'managed_scoring':{'schema':c.SCHEMA}}
+        original=c.canonical(task)
+        normalized=normalize_task(task)
+        self.assertEqual(normalized['rubric_criteria'][0]['key'],'correct')
+        self.assertEqual(c.canonical(task),original)
+        self.assertEqual(normalized['llm_judge_rubric'],task['llm_judge_rubric'])
+    def test_dot_keys_and_weight_only_headings_keep_authored_identity(self):
+        body=fixture();body['criteria'][0]['key']='business.correct'
+        self.assertEqual(c.parse_managed_rubric(c.rubric(body))[0]['key'],'business.correct')
+        self.assertFalse(c.validate({**body,'criteria':[],'sections':{'Prompt':'p','LLM Judge Rubric':'free form, no contract'}})['valid'])

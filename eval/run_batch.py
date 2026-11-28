@@ -747,6 +747,7 @@ def grade_the_task(
         from src.e2e.artifacts import inventory as source_inventory
         source_manifest=json.loads((frozen/'manifest.json').read_text())
         source_manifest['files']=[row for row in source_inventory(frozen) if row['path']!='manifest.json']
+        source_manifest['execution_outcome']={'scoring_allowed':not bool(result.get('error')),'error':result.get('error')}
         (frozen/'manifest.json').write_text(json.dumps(source_manifest,ensure_ascii=False),encoding='utf-8')
         result['scoring_status']='pending'
         return result
@@ -1462,7 +1463,7 @@ def main() -> None:
     if getattr(args, 'case_source', None):
         from src.managed_cases.bundle import cli_tasks
         _, library_tasks = cli_tasks(args.case_source, args.case_source_sha256,
-            output_root / 'managed-source')
+            frozen_source_cache / ('managed-' + args.case_source_sha256))
         if args.library_task:
             requested = {value.split('=', 1)[0] for value in args.library_task}
             if requested - {row['task_id'] for row in library_tasks}: raise ValueError('MANAGED_CASE_UNKNOWN')

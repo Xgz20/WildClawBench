@@ -159,12 +159,21 @@ def api_judge(context,config):
     return result['choices'][0]['message']['content']
 
 
+def normalize_task(task):
+    task=deepcopy(task)
+    if task.get('grading_type') in {'llm_judge','hybrid'} and not task.get('rubric_criteria') and (task.get('managed_scoring') or {}).get('schema')=='wildclawbench.managed-cases/v1':
+        from .contracts import parse_managed_rubric
+        task['rubric_criteria']=parse_managed_rubric(task.get('llm_judge_rubric',''))
+    return task
+
+
 def score(source,output,config,agentcube_config=None):
     from src.cli_scoring import docker_judge,desktop_judge
     source=Path(source);output=Path(output);output.mkdir(parents=True,exist_ok=True)
-    manifest=json.loads((source/'manifest.json').read_text());task=json.loads((source/'task.json').read_text())
+    manifest=json.loads((source/'manifest.json').read_text());task=normalize_task(json.loads((source/'task.json').read_text()))
     if not task.get('managed_scoring') and config.get('judge_instructions'):
         task['managed_scoring']={'source_sha256':digest(manifest),'config':{},'scene':{'base_contract':'general'}}
+    if manifest.get('execution_outcome',{}).get('scoring_allowed') is False:raise ValueError('MANAGED_EXECUTION_NOT_READY_FOR_SCORING')
     observed=[r for r in inventory(source) if r['path']!='manifest.json']
     if observed!=manifest['files']:raise ValueError('CLI_SCORING_INPUT_DRIFT')
     work=output/'judge';work.mkdir();shutil.copytree(source/'workspace',work/'candidate')
@@ -178,7 +187,9 @@ def score(source,output,config,agentcube_config=None):
     semantics={};notes=''
     if grading in {'llm_judge','hybrid'}:
         text=api_judge(context,config) if config['transport']=='api' else docker_judge(work,config) if config['transport']=='docker-cli' else desktop_judge(work,config,agentcube_config)
-        response=parse_json_candidate(text);semantics=response.get('scores') if isinstance(response,dict) else None
+        (work/'judge-response.raw.txt').write_text(text,encoding='utf-8')
+        response=parse_json_candidate(text);atomic_json(work/'judge-response.json',response)
+        semantics=response.get('scores') if isinstance(response,dict) else None
         keys={row['key'] for row in task['rubric_criteria']}
         if not isinstance(semantics,dict) or set(semantics)!=keys:raise ValueError('MANAGED_SEMANTIC_KEYS_INVALID')
         for criterion in task['rubric_criteria']:
@@ -278,6 +289,8 @@ def score_batch(batch,output,config,agentcube_config=None,keys=None):
             for kind,relative in [('log','grading/judge/judge.log'),('native_trace','grading/judge/judge-native.jsonl')]:
                 if (work/relative).is_file():entry['artifacts'][kind]={'path':relative,'sha256':file_sha256(work/relative)}
         except Exception as exc:
+            for kind,relative in [('log','grading/judge/judge-response.raw.txt'),('context','grading/judge/scoring-context.json')]:
+                if (work/relative).is_file():entry['artifacts'][kind]={'path':relative,'sha256':file_sha256(work/relative)}
             entry.update(status='evaluation_error',total_score=None,error=str(exc),container_released='RELEASE_UNCONFIRMED' not in str(exc))
         entry['scoring_timing']={'started_at':started,'finished_at':utc_now()}
         atomic_json(work/'control/state.json',{'execution_key':row['key'],'execution_attempt_id':row['attempt_id'],'phase':'COMPLETED' if entry['status']=='valid' else 'FAILED',
@@ -315,7 +328,7 @@ def score_batch(batch,output,config,agentcube_config=None,keys=None):
 def verify_score(source,output):
     """Independent read-only recomputation over frozen inputs and raw judge returns."""
     source=Path(source);output=Path(output)
-    manifest=json.loads((source/'manifest.json').read_text());task=json.loads((source/'task.json').read_text())
+    manifest=json.loads((source/'manifest.json').read_text());task=normalize_task(json.loads((source/'task.json').read_text()))
     if [r for r in inventory(source) if r['path']!='manifest.json']!=manifest['files']:raise ValueError('MANAGED_VERIFY_INPUT_DRIFT')
     receipt=json.loads((output/'result.json').read_text());scores=receipt['scores']
     context=json.loads((output/'judge/scoring-context.json').read_text())

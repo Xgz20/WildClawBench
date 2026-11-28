@@ -230,7 +230,7 @@ def validate(body, scene=None):
         grading=meta.get('grading_type')
         if grading in {'automated','hybrid'} and not checks.strip():error('sections.Automated Checks','请添加自动检查或声明式规则')
         criteria=body.get('criteria',[])
-        if criteria:
+        if criteria and grading in {'llm_judge','hybrid'}:
             keys=[r.get('key') for r in criteria]
             if len(set(keys))!=len(keys) or any(not isinstance(k,str) or k=='overall_score' or not IDENTIFIER.fullmatch(k) for k in keys):raise ValueError('评分项编号无效或重复')
             if set(keys)&{r.get('key') for r in body.get('rules',[])}:raise ValueError('规则和语义评分项编号不能重复')
@@ -243,7 +243,9 @@ def validate(body, scene=None):
                 for anchor in r.get('anchors',[]):
                     score=anchor['score']
                     if type(score) not in (int,float) or not 0<=score<=1 or not anchor.get('description','').strip():raise ValueError('分值锚点必须在 0–1 内')
-        if grading in {'hybrid','llm_judge'} and not rubric(body).strip():error('criteria','请填写语义评分标准')
+        if grading in {'hybrid','llm_judge'}:
+            if not rubric(body).strip():error('criteria','请填写语义评分标准')
+            else:parse_managed_rubric(rubric(body))
         weights=meta.get('grading_weights') or ({'automated':1,'llm_judge':0} if grading=='automated' else {'automated':0,'llm_judge':1} if grading=='llm_judge' else {})
         if grading=='hybrid' and (set(weights)!= {'automated','llm_judge'} or abs(sum(weights.values())-1)>1e-6 or any(w<0 for w in weights.values())):error('metadata.grading_weights','混合评分需设置规则和语义权重，合计 1')
         validate_template(body.get('scoring',{}).get('template',{}))
@@ -275,3 +277,37 @@ def validate_capabilities(scene,transport):
     missing=set(required)-CAPABILITIES[transport]
     if missing:raise ValueError('SCENE_EVIDENCE_CAPABILITY_MISSING: '+','.join(sorted(missing)))
     return True
+
+
+def parse_managed_rubric(text):
+    """Read managed headings without rewriting frozen task/rubric bytes.
+
+    v1 rendered the stable key as its heading name. Existing system documents
+    can instead declare key explicitly in heading metadata. Both are unambiguous;
+    a free-form paragraph is never silently treated as an empty score contract.
+    """
+    result=[];current=None;body=[]
+    heading=re.compile(r'^###\s+(.+?)\s*\(([^()]*)\)\s*$')
+    legacy=re.compile(r'^Criterion\s+\d+\s*[:：]\s*([A-Za-z0-9][A-Za-z0-9._-]{0,119})$')
+    def finish():
+        if current is None:return
+        current['rubric']='\n'.join(body).strip()
+        scores=sorted({float(m[1]) for line in body if (m:=re.match(r'^\s*(?:\*\*\s*)?Score\s+([+-]?(?:\d+(?:\.\d*)?|\.\d+))\s*(?:\*\*)?\s*[:：]',line,re.I))})
+        if not scores or any(not math.isfinite(value) or not 0<=value<=1 for value in scores):raise ValueError('语义评分项必须声明 0–1 范围的分值锚点')
+        current['allowed_scores']=scores;result.append(current)
+    for line in text.splitlines():
+        match=heading.match(line.strip())
+        metadata={key:value.strip() for key,value in re.findall(r'(?:^|,)\s*(key|weight|primary|secondary)\s*:\s*([^,]+)',match[2])} if match else {}
+        if match and 'weight' in metadata:
+            finish();body=[]
+            old=legacy.fullmatch(match[1].strip());key=metadata.get('key') or (old[1] if old else '')
+            if not IDENTIFIER.fullmatch(key):raise ValueError('评分项缺少有效且稳定的 key')
+            weight=float(metadata['weight'])
+            if not math.isfinite(weight) or weight<=0:raise ValueError('评分项权重必须是正数')
+            current={'key':key,'name':re.sub(r'^Criterion\s+\d+\s*[:：]\s*','',match[1].strip()),'weight':weight,
+                'primary':metadata.get('primary',''),'secondary':metadata.get('secondary','')}
+        elif current is not None:body.append(line)
+    finish()
+    if text.strip() and not result:raise ValueError('语义评分标准缺少可解析的检查点、key 和权重')
+    if result and (len({r['key'] for r in result})!=len(result) or abs(sum(r['weight'] for r in result)-1)>1e-6):raise ValueError('评分项 key 不能重复且权重合计必须为 1')
+    return result
