@@ -53,6 +53,13 @@ def docker_judge(work, config):
     from .e2e.headless import docker as run_docker
     from .e2e.headless_worker import __file__ as worker_file
     worker = Path(worker_file)
+    from urllib.parse import urlsplit
+    import ipaddress
+    endpoint_host=urlsplit(config.get('base_url','')).hostname
+    network=[]
+    for host,address in config.get('dns_overrides',{}).items():
+        if host!=endpoint_host:raise ValueError('HEADLESS_DNS_OVERRIDE_HOST_INVALID')
+        network+=['--add-host',host+':'+str(ipaddress.IPv4Address(address))]
     script = ('import sys,json;sys.path.insert(0,"/runner");import headless_worker as w;'
               'from pathlib import Path;c=json.loads(Path("/job/config.json").read_text());'
               'w.launch_agent(c,Path("/job/PROMPT.md").read_text(),Path("/job"));'
@@ -69,7 +76,7 @@ def docker_judge(work, config):
     atomic_json(owner,identity)
     candidate_inventory = digest(inventory(work / 'candidate'))
     try:
-        run_docker(config, 'run', '--name', name,'--label','org.astron.eval.cli-judge='+token, '--env-file', secret,
+        run_docker(config, 'run', '--name', name,'--label','org.astron.eval.cli-judge='+token,*network, '--env-file', secret,
                    '--mount', f'type=bind,src={work},dst=/job',
                    '--mount', f'type=bind,src={worker.parent},dst=/runner,readonly',
                    '--entrypoint', 'python', config['image_id'], '-c', script,

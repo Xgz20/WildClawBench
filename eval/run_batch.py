@@ -458,6 +458,8 @@ def _build_agent_backend(args) -> BaseAgent:
 
 def _is_extension_task(task: dict) -> bool:
     """Return whether a parsed task belongs to a self-built dataset."""
+    if task.get("managed_scoring"):
+        return True
     if task.get("dataset", {}).get("id", "").startswith("general-custom"):
         return True
     try:
@@ -529,7 +531,7 @@ def _task_provenance_or_unavailable(task: dict) -> dict[str, Any]:
 def _task_scope_entry(task: dict) -> dict[str, Any]:
     path = Path(str(task.get("file_path") or ""))
     dataset_id = task.get("dataset", {}).get("id", "")
-    source = ("general_e2e" if dataset_id.startswith("general-custom70-")
+    source = ("managed" if task.get("managed_scoring") else "general_e2e" if dataset_id.startswith("general-custom70-")
               else "extension" if dataset_id == "general-custom60-v1" else "official")
     category = str(task.get("category") or "").strip()
     try:

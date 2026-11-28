@@ -155,6 +155,7 @@ def _row(source, item, core):
                     raise ValueError('REPORT_CLI_FROZEN_TASK_MISMATCH')
             scores = receipt.get('scores') if receipt.get('schema') == 'wildclawbench.cli-score/v1' else receipt
             grading = scores.get('_grading') or {}
+            verified=None
             if grading.get('protocol')=='managed-case-score/v1':
                 from src.managed_cases.scoring import verify_score
                 path=checked(item['score_file'],roots).parent
@@ -166,7 +167,7 @@ def _row(source, item, core):
             if str(grading.get('llm_notes', '')).lstrip().startswith('judge failed:'):
                 raise ValueError('REPORT_CLI_SCORE_INVALID')
             score = scores.get('overall_score')
-            judge = {'protocol':grading.get('protocol'),'template_sha256':grading.get('template_sha256'),'context_sha256':grading.get('context_sha256'), 'receipt_schema': receipt.get('schema', 'legacy-cli-score'),
+            judge = {'protocol':grading.get('protocol'),'template_revision_id':(verified or {}).get('template_revision_id'),'template_sha256':grading.get('template_sha256'),'context_sha256':grading.get('context_sha256'), 'receipt_schema': receipt.get('schema', 'legacy-cli-score'),
                      **{key: receipt.get('config', {}).get(key) for key in ('harness', 'model', 'reasoning_effort')}}
         else:
             if (receipt.get('identity', {}).get('task_id') != item['task_id']
@@ -324,9 +325,10 @@ def build(snapshot):
         model_label = model.get('actual_id') or str(model.get('requested_id') or '未知模型') + '（配置值，未回读）'
         label = source['label']
         protocols = sorted({(row.get('judge') or {}).get('protocol') or '未记录' for row in source['rows'] if row['score_status'] == 'valid'})
+        actual_templates=sorted({str((row.get('judge') or {}).get('template_revision_id')) for row in source['rows'] if (row.get('judge') or {}).get('template_revision_id') is not None})
         configurations.append([label, source['kind'], source['scorer'].get('harness'), source['scorer'].get('model'),
             source['scorer'].get('reasoning_effort'),source['scorer'].get('transport'),' / '.join(protocols),
-            (source['scorer'].get('judge_template') or {}).get('template_revision_id') or '用例/场景冻结模板',
+            (source['scorer'].get('judge_template') or {}).get('template_revision_id') or ' / '.join(actual_templates) or '用例/场景冻结模板',
             (source['scorer'].get('judge_template') or {}).get('template_sha256'),source['dataset'].get('release'),source['id']])
         units.append({'unit_id': source['id'], 'label': label, 'kind': source['kind'], 'harness': source['harness'],
             'model': model, 'scorer': source['scorer'], 'source': source['selection'], 'score': stats})

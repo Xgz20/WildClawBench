@@ -288,3 +288,41 @@ class ManagedRubricCompatibilityTests(unittest.TestCase):
         body=fixture();body['criteria'][0]['key']='business.correct'
         self.assertEqual(c.parse_managed_rubric(c.rubric(body))[0]['key'],'business.correct')
         self.assertFalse(c.validate({**body,'criteria':[],'sections':{'Prompt':'p','LLM Judge Rubric':'free form, no contract'}})['valid'])
+
+
+class ManagedJudgeNetworkTests(unittest.TestCase):
+    def test_cli_judge_honors_frozen_endpoint_dns_without_exposing_other_hosts(self):
+        from unittest.mock import patch
+        from types import SimpleNamespace
+        from src.cli_scoring import docker_judge
+        with tempfile.TemporaryDirectory() as directory:
+            work=Path(directory)/'judge';work.mkdir();(work/'candidate').mkdir();(work/'PROMPT.md').write_text('judge')
+            calls=[]
+            def docker(config,*args,**kwargs):
+                calls.append(args)
+                if args[0]=='run':(work/'judge-response.json').write_text('{"scores":{"ok":1}}')
+                return SimpleNamespace(returncode=0,stderr='')
+            config={'base_url':'http://judge.internal/v1','dns_overrides':{'judge.internal':'10.0.0.8'},'docker_context':'colima','image_id':'sha256:test','timeout_seconds':5}
+            with patch('src.e2e.headless.docker',docker):self.assertIn('"ok":1',docker_judge(work,config))
+            self.assertIn('--add-host',calls[0]);self.assertIn('judge.internal:10.0.0.8',calls[0])
+            with self.assertRaisesRegex(ValueError,'HOST_INVALID'):
+                docker_judge(work,{**config,'dns_overrides':{'other.internal':'10.0.0.8'}})
+
+
+class ManagedPromptIntegrityTests(unittest.TestCase):
+    def test_a_judge_cannot_rewrite_the_recorded_prompt_and_return_a_valid_score(self):
+        from unittest.mock import patch
+        from src.managed_cases.scoring import score
+        from src.e2e.artifacts import inventory
+        with tempfile.TemporaryDirectory() as directory:
+            root=Path(directory);source=root/'input';source.mkdir();(source/'workspace').mkdir()
+            task={'task_id':'t','prompt':'p','grading_type':'llm_judge','rubric_criteria':[{'key':'ok','weight':1,'allowed_scores':[0,1]}],
+                'llm_judge_rubric':'rubric','managed_scoring':{'source_sha256':'a'*64,'config':{},'scene':{}}}
+            (source/'task.json').write_text(json.dumps(task));(source/'transcript.jsonl').write_text('trace')
+            (source/'manifest.json').write_text(json.dumps({'files':inventory(source)}))
+            def judge(work,*args):
+                (work/'PROMPT.md').write_text('rewritten')
+                return '{"scores":{"ok":1}}'
+            with patch('src.cli_scoring.docker_judge',judge):
+                with self.assertRaisesRegex(ValueError,'PROMPT_OR_CONTEXT_DRIFT'):score(source,root/'out',{'transport':'docker-cli'})
+            self.assertFalse((root/'out/score.json').exists())
