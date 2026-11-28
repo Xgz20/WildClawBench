@@ -37,6 +37,8 @@ def _copy(source, destination):
 
 def _source_row(core, source, item, task, original_unit, result, target):
     row_result = next((row for row in result['executions'] if row['execution_key'] == item['key']), None)
+    if result.get('protocol')=='managed-case-score/v1':
+        return _managed_row(core,source,item,task,original_unit,result,row_result)
     if row_result and (row_result.get('execution_attempt_id') or item.get('execution_version', 1) > 1):
         if row_result.get('execution_attempt_id') != item['attempt_id']:
             row_result = None
@@ -354,6 +356,7 @@ def build_report(definition: dict, staging: Path):
         summary = core.unit_summary(rows, unit)
         if original_unit['harness']=='workbuddy': summary['execution_options']={'max_mode':original_unit.get('max_mode',False)}
         summary['scorer'] = {key: result['config'].get(key) for key in ['harness', 'model', 'reasoning_effort', 'concurrency', 'timeout_seconds', 'api_format', 'image_id']}
+        summary['scorer']['judge_template']=result['config'].get('judge_instructions')
         summary['source'] = {'batch_id': result['batch_id'], 'unit_id': source['unit_id'], 'run_index': source['run_index'],
                              'score_operation_id': source['id'], 'agent_invocation_count': sum(bool(row.get('agent_used')) for row in result['executions'] if row['unit_id'] == source['unit_id'] and row['run_index'] == source['run_index'])}
         units.append(summary)
@@ -576,3 +579,28 @@ def _generate_report(definition: dict, output: Path):
     except BaseException:
         # Preserve failed preparation for diagnosis; never publish a partial final report.
         raise
+
+
+
+def _managed_row(core,source,item,task,unit,result,outcome):
+    from src.unified_reports import _row
+    from src.managed_cases.scoring import verify_entry
+    batch=Path(result['source_batch_root']);roots=[str(batch.resolve()),str(Path(source['result_file']).parent.resolve())]
+    def ref(path):return {'path':str(Path(path).resolve()),'sha256':file_sha256(Path(path))}
+    state=outcome.get('status','unscored') if outcome and outcome.get('execution_attempt_id')==item['attempt_id'] else 'unscored'
+    if state=='valid':verify_entry(outcome['work_root'],outcome)
+    spec={'id':source['id'],'kind':'e2e','roots':roots,'dataset':{'original':task['dataset']},
+        'harness':{'id':unit['harness'],'version':None,'platform':'windows'},
+        'model':{'requested_id':unit['model'],'actual_id':item.get('actual_model'),'reasoning_effort':unit.get('reasoning_effort'),'verification_status':'unavailable'}}
+    score_file=ref(outcome['score_path']) if state=='valid' else None
+    row={'task_id':item['task_id'],'task_format':'markdown','task_file':ref(batch/task['input_root']/'task.md'),
+        'files':[ref(Path(source['result_file']))],
+        'score_status':state,'total_score':outcome.get('total_score') if state=='valid' else None,'score_file':score_file,
+        'execution_attempt_id':item['attempt_id'],'scoring_attempt_id':outcome.get('scoring_attempt_id') if outcome else None,
+        'execution_status':item['phase'].lower(),'run_index':item['run_index'],'execution_phase':item['phase'],
+        'metadata':task,'error':outcome.get('error') if outcome else None,
+        'materials':{'workspace_exec_sha256':{'path':str(batch/task['input_root']/'execution/workspace'),'entries':task['materials']['execution']['entries']},
+            'ground_truth_sha256':{'path':str(batch/task['input_root']/'private-scoring/gt'),'entries':task['materials']['private_scoring']['entries']}}}
+    result_row=_row(spec,row,core)
+    result_row['source_execution']={'batch_id':result['batch_id'],'unit_id':item['unit_id'],'run_index':item['run_index'],'attempt_id':item['attempt_id']}
+    return result_row

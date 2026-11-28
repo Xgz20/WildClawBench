@@ -76,8 +76,18 @@ def judge_prompt(request, *, runtime_copy=False):
 
 
 def docker_judge(work, config):
+    import ipaddress
+    from urllib.parse import urlsplit
     from .e2e.headless import docker as run_docker
     from .e2e.headless_worker import __file__ as worker_file
+
+    endpoint_host = urlsplit(config.get('base_url', '')).hostname
+    network = []
+    for host, address in config.get('dns_overrides', {}).items():
+        if host != endpoint_host:
+            raise ValueError('HEADLESS_DNS_OVERRIDE_HOST_INVALID')
+        network.extend(['--add-host', host + ':' + str(ipaddress.IPv4Address(address))])
+
     worker = Path(worker_file)
     work = Path(work)
     original = work / 'candidate'
@@ -85,12 +95,23 @@ def docker_judge(work, config):
     runtime = work / 'runtime'
     runtime.mkdir()
     copy_workspace(original, runtime / 'candidate')
-    # The runtime is a disposable copy. Input modes can legitimately be read-only;
-    # permit local verification there without altering candidate-original modes.
     for path in [runtime / 'candidate', *(runtime / 'candidate').rglob('*')]:
         if not path.is_symlink():
             path.chmod(path.stat().st_mode | 0o200)
-    shutil.copyfile(work / 'judge-request.json', runtime / 'judge-request.json')
+
+    fixed_mounts = []
+    for name in ('judge-request.json', 'scoring-context.json'):
+        source = work / name
+        if source.is_file():
+            shutil.copyfile(source, runtime / name)
+            fixed_mounts.extend(['--mount', f'type=bind,src={source},dst=/job/runtime/{name},readonly'])
+    if (work / 'media-evidence').is_dir():
+        copy_workspace(work / 'media-evidence', runtime / 'media-evidence')
+        fixed_mounts.extend(['--mount', f'type=bind,src={work / "media-evidence"},dst=/job/runtime/media-evidence,readonly'])
+    if (work / 'scoring-context.json').is_file():
+        # Managed checks execute separately without model credentials. Their judge
+        # only reads the frozen candidate and precomputed evidence.
+        fixed_mounts.extend(['--mount', f'type=bind,src={original},dst=/job/runtime/candidate,readonly'])
     (runtime / 'tmp').mkdir()
     (runtime / '.cache').mkdir()
     script = ('import sys,json;sys.path.insert(0,"/runner");import headless_worker as w;'
@@ -98,36 +119,40 @@ def docker_judge(work, config):
               'w.launch_agent(c,Path("/job/PROMPT.md").read_text(),Path("/job/runtime"));'
               'w.agent_identity(c)')
     atomic_json(work / 'config.json', config)
-    key = os.environ.get('E2E_SCORER_API_KEY', '')
-    secret = work.parent / ('.env-' + uuid.uuid4().hex)
-    secret.write_text('E2E_SCORER_API_KEY=' + key + '\n', encoding='utf-8')
+    token = uuid.uuid4().hex
+    name = 'cli-judge-' + token
+    owner = work.parent / 'control/containers' / (name + '.json')
+    identity = {'name': name, 'token': token, 'label': 'org.astron.eval.cli-judge',
+                'docker_context': config.get('docker_context', 'default'), 'released': False}
+    atomic_json(owner, identity)
+    secret = work.parent / ('.env-' + token)
+    secret.write_text('E2E_SCORER_API_KEY=' + os.environ.get('E2E_SCORER_API_KEY', '') + '\n', encoding='utf-8')
     secret.chmod(0o600)
-    name = 'cli-judge-' + uuid.uuid4().hex
     try:
         try:
-            run_docker(config, 'run', '--name', name, '--env-file', secret,
+            run_docker(config, 'run', '--name', name, '--label', 'org.astron.eval.cli-judge=' + token,
+                       *network, '--env-file', secret,
                        '--env', 'PYTHONDONTWRITEBYTECODE=1',
                        '--env', 'TMPDIR=/job/runtime/tmp', '--env', 'XDG_CACHE_HOME=/job/runtime/.cache',
                        '--mount', f'type=bind,src={work},dst=/job',
                        '--mount', f'type=bind,src={original},dst=/job/candidate,readonly',
+                       *fixed_mounts,
                        '--mount', f'type=bind,src={worker.parent},dst=/runner,readonly',
                        '--entrypoint', 'python', config['image_id'], '-c', script,
                        timeout=config['timeout_seconds'] + 30)
         finally:
             verify_judge_candidate(original, expected, work / 'candidate-integrity.json')
-        response = runtime / 'judge-response.json'
-        if not response.is_file():
-            response = work / 'judge-response.json'
-        if not response.is_file():
-            response = work / 'agent-final.txt'
-        if response.is_file():
-            return response.read_text(encoding='utf-8')
-        # DSH writes assistant output to its native stream.
+        for response in (runtime / 'judge-response.json', work / 'judge-response.json', work / 'agent-final.txt'):
+            if response.is_file():
+                return response.read_text(encoding='utf-8')
         from .utils.judge_shim import parse_json_candidate
         return json.dumps(parse_json_candidate((work / 'judge.log').read_text()), ensure_ascii=False)
     finally:
         try:
-            run_docker(config, 'rm', '-f', name, check=False)
+            removed = run_docker(config, 'rm', '-f', name, check=False)
+            if removed is not None and removed.returncode and 'No such' not in removed.stderr:
+                raise RuntimeError('CLI_JUDGE_RELEASE_UNCONFIRMED')
+            atomic_json(owner, {**identity, 'released': True})
         finally:
             secret.unlink(missing_ok=True)
 
@@ -174,6 +199,8 @@ def desktop_judge(work, config, agentcube_config):
     task_root.mkdir(parents=True)
     copy_workspace(work / 'candidate', task_root / 'workspace/candidate')
     shutil.copyfile(work / 'judge-request.json', task_root / 'workspace/judge-request.json')
+    if (work/'scoring-context.json').is_file():shutil.copyfile(work/'scoring-context.json',task_root/'workspace/scoring-context.json')
+    if (work/'media-evidence').is_dir():shutil.copytree(work/'media-evidence',task_root/'workspace/media-evidence')
     shutil.copyfile(work / 'PROMPT.md', task_root / 'PROMPT.md')
     state = JobState(work / 'control/state.json')
     item = {'key': 'judge', 'task_id': 'judge', 'unit_id': 'judge', 'run_index': 1,
@@ -190,7 +217,7 @@ def desktop_judge(work, config, agentcube_config):
         task={'task_id': 'judge', 'input_root': 'input', 'scene': 'general', 'requirements': {},
               'prompt_sha256': file_sha256(task_root / 'PROMPT.md'),
               'definition_inventory': workspace_inventory(work / 'input')}, unit=unit,
-        config=AgentCubeConfig.load(agentcube_config),
+        config=agentcube_config if isinstance(agentcube_config,AgentCubeConfig) else AgentCubeConfig.load(agentcube_config),
         stop_event=Stop(work.parent.parent / 'cancel.json', time.time() + config['timeout_seconds']))
     try:
         response = driver.execute()
@@ -199,12 +226,18 @@ def desktop_judge(work, config, agentcube_config):
         atomic_json(work / 'scorer-trace.json', response['binding']['events'])
         returned = driver.staging / response['workspace'] / 'candidate'
         verify_desktop_candidate(work / 'candidate', returned, work / 'candidate-integrity.json')
+        if (work/'media-evidence').is_dir():verify_desktop_candidate(work/'media-evidence',driver.staging/response['workspace']/'media-evidence',work/'media-integrity.json')
+        result_file=driver.staging/response['workspace']/'judge-response.json'
+        if result_file.is_file():
+            shutil.copyfile(result_file,work/'judge-response.json')
+            return result_file.read_text(encoding='utf-8-sig')
         return response['binding']['final_response']
     finally:
         sid = state.data.get('session_id')
         if sid and state.data.get('resource_held'):
             if not driver.client.delete_session(sid).get('confirmed'):
                 raise RuntimeError('CLI_JUDGE_SANDBOX_RELEASE_UNCONFIRMED')
+        state.update(None,state.data.get('phase','PENDING'),resource_held=False)
         driver.client.close()
 
 
@@ -221,6 +254,9 @@ def score(input_root, output, config, agentcube_config=None):
     if observed != manifest['files']:
         raise RuntimeError('CLI_SCORING_INPUT_DRIFT')
     task = read_json(source / 'task.json')
+    if task.get('managed_scoring') or config.get('judge_instructions'):
+        from .managed_cases.scoring import score as managed_score
+        return managed_score(source,output,config,agentcube_config)
     if task.get('metric_profile') == 'web-site-gen' and config['transport'] != 'agentcube-desktop':
         raise ValueError('Web 场景暂仅支持 AgentCube 桌面评分')
     channel = output / 'channel'

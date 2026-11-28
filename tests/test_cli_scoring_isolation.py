@@ -163,6 +163,24 @@ class CliJudgeIsolationTests(unittest.TestCase):
                         docker_judge(root, config)
                 self.assertFalse(json.loads((root / 'candidate-integrity.json').read_text())['valid'])
 
+    def test_managed_runtime_contains_context_media_and_readonly_candidate(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            config = self.prepare(root)
+            atomic_json(root / 'scoring-context.json', {'custom_instructions': 'FROZEN_TEMPLATE'})
+            (root / 'media-evidence').mkdir()
+            (root / 'media-evidence/page.png').write_bytes(b'frozen-media')
+            def docker(config, *args, **kwargs):
+                if args[0] != 'run':
+                    return
+                self.assertEqual((root / 'runtime/scoring-context.json').read_bytes(), (root / 'scoring-context.json').read_bytes())
+                self.assertEqual((root / 'runtime/media-evidence/page.png').read_bytes(), b'frozen-media')
+                for relative in ('candidate', 'scoring-context.json', 'judge-request.json', 'media-evidence'):
+                    self.assertIn(f'type=bind,src={root / relative},dst=/job/runtime/{relative},readonly', args)
+                atomic_json(root / 'runtime/judge-response.json', {'scores': {'correct': 1}})
+            with patch('src.e2e.headless.docker', side_effect=docker):
+                self.assertEqual(json.loads(docker_judge(root, config))['scores']['correct'], 1)
+
     def test_worker_failure_still_records_integrity_removes_container_and_secret(self):
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp); config = self.prepare(root); removed = []; secrets = []
