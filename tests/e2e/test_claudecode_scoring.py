@@ -32,6 +32,10 @@ assert os.environ['ANTHROPIC_API_KEY'] == 'synthetic-key'
 assert os.environ['ANTHROPIC_BASE_URL'] == 'https://gateway.test/anthropic'
 assert 'E2E_SCORER_API_KEY' not in os.environ
 assert '--strict-mcp-config' in sys.argv
+if os.environ.get('SCORER_TEST_ERROR'):
+    print(json.dumps({'type':'result','subtype':'success','is_error':True,'api_error_status':503,
+                      'result':'API Error: 503 no available channel synthetic-key'}))
+    sys.exit(1)
 print(json.dumps({'type':'system','subtype':'init','model':'test-model'}))
 print(json.dumps({'type':'result','subtype':'success','is_error':False,'result':'{"score": 1}'}))
 ''')
@@ -52,6 +56,10 @@ print(json.dumps({'type':'result','subtype':'success','is_error':False,'result':
                 (root / 'judge.log').write_text('{"type":"system","subtype":"init","model":"other-model"}\n')
                 with self.assertRaisesRegex(RuntimeError, 'MODEL_BINDING_MISMATCH'):
                     worker.agent_identity(self.config())
+                with patch.dict(os.environ, {'SCORER_TEST_ERROR': '1'}), \
+                     self.assertRaisesRegex(RuntimeError, 'SCORING_CLAUDE_API_ERROR_503:.*no available channel') as failure:
+                    worker.launch_agent(self.config(), 'Read the frozen scoring evidence', root)
+                self.assertNotIn('synthetic-key', str(failure.exception))
 
 
 if __name__ == '__main__':

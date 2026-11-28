@@ -145,6 +145,8 @@ def launch_agent(config, prompt, attempt):
     elif config['harness'] == 'claudecode':
         env.update(HOME=str(home), CLAUDE_CONFIG_DIR=str(home), ANTHROPIC_API_KEY=key,
                    ANTHROPIC_BASE_URL=config['base_url'], IS_SANDBOX='1',
+                   DISABLE_PROMPT_CACHING='1', DISABLE_INTERLEAVED_THINKING='1',
+                   CLAUDE_CODE_DISABLE_EXPERIMENTAL_BETAS='1',
                    CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC='1', DISABLE_AUTOUPDATER='1')
         command = ['claude', '--print', '--verbose', '--output-format', 'stream-json',
                    '--dangerously-skip-permissions', '--no-session-persistence', '--no-chrome',
@@ -177,14 +179,21 @@ def launch_agent(config, prompt, attempt):
                 output, _ = process.communicate()
             log.write(clean(output))
             raise RuntimeError('SCORING_AGENT_TIMEOUT')
-    if process.returncode:
-        raise RuntimeError('SCORING_AGENT_EXIT_' + str(process.returncode))
     if config['harness'] == 'claudecode':
         events = [json.loads(line) for line in clean(output).splitlines() if line.startswith('{')]
         results = [event for event in events if event.get('type') == 'result']
-        if len(results) != 1 or results[0].get('is_error') or results[0].get('subtype') != 'success':
+        if len(results) == 1 and results[0].get('is_error'):
+            result = results[0]
+            status = result.get('api_error_status')
+            code = f'SCORING_CLAUDE_API_ERROR_{status}' if status else 'SCORING_CLAUDE_RESULT_FAILED'
+            raise RuntimeError(code + ': ' + clean(str(result.get('result', '')))[:1200])
+        if process.returncode:
+            raise RuntimeError('SCORING_AGENT_EXIT_' + str(process.returncode))
+        if len(results) != 1 or results[0].get('subtype') != 'success':
             raise RuntimeError('SCORING_CLAUDE_RESULT_FAILED')
         (ROOT / 'agent-final.txt').write_text(results[0].get('result', ''), encoding='utf-8')
+    elif process.returncode:
+        raise RuntimeError('SCORING_AGENT_EXIT_' + str(process.returncode))
 
 
 def claude_identity(config):
