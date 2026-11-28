@@ -68,14 +68,15 @@ class LoomyResourceSupplementScopeTests(unittest.TestCase):
 
 
 class DatasetReportMetadataTests(unittest.TestCase):
-    def row(self, *, task_id="general_hard_research_verification_task_001_example", label="研究检索与证据核验"):
-        contract = {"schema_version": "wildclawbench.dataset-report-contract/v1", "series_id": "general-hard",
-                    "category": "research_verification", "category_name": label, "category_order": 2,
-                    "checkpoint_capabilities": {"automated.evidence": ["retrieval_verification"]}}
+    def row(self, *, task_id="general_hard_research_verification_task_001_example", label="研究检索与证据核验",
+            series="general-hard", category="research_verification", capability="retrieval_verification"):
+        contract = {"schema_version": "wildclawbench.dataset-report-contract/v1", "series_id": series,
+                    "category": category, "category_name": label, "category_order": 2,
+                    "checkpoint_capabilities": {"automated.evidence": [capability]}}
         text = "---\nid: " + task_id + "\ndataset_report: " + json.dumps(contract, ensure_ascii=False) + "\n---\n## Prompt\nFind evidence.\n"
         definition = REPORT.report_case_views.parse_task(text)
         definition.update(status="complete", task_sha256=hashlib.sha256(text.encode()).hexdigest())
-        return {"task_id": task_id, "category": "research_verification", "task_definition": definition,
+        return {"task_id": task_id, "category": category, "task_definition": definition,
                 "score_status": "valid", "checkpoints": {"values": {"automated.evidence": .75}}}
 
     def test_dataset_labels_and_capabilities_come_from_frozen_private_task(self):
@@ -88,6 +89,43 @@ class DatasetReportMetadataTests(unittest.TestCase):
         self.assertEqual(score["retrieval_verification"], {"score": .75, "known": 1, "total": 1})
         self.assertEqual(sources[0]["task_sha256"], row["task_definition"]["task_sha256"])
         self.assertNotIn(row["task_id"], references["capabilities"])
+
+    def legal_row(self):
+        return self.row(task_id="02_Legal_Analysis_task_003_citation_verification", label="诉讼分析",
+                        series="xiaofa-legal", category="legal_analysis", capability="information_retrieval")
+
+    def test_category_directory_and_explicit_alias_preserve_frozen_metadata(self):
+        row = self.legal_row()
+        frozen = copy.deepcopy(row["task_definition"])
+        data = {"dataset": {"id": "xiaofa-legal30-v1", "digest": "a" * 64}, "tasks": [row]}
+        references = REPORT.report_views.load_references()
+        mapping, names, _, sources = REPORT.report_views.dataset_references(data, references)
+        self.assertEqual(names["legal_analysis"], "诉讼分析")
+        self.assertEqual(mapping[row["task_id"]]["automated.evidence"], ["retrieval_verification"])
+        self.assertEqual(sources[0]["capability_aliases"], {"information_retrieval": "retrieval_verification"})
+        self.assertEqual(row["task_definition"], frozen)
+
+    def test_category_directory_requires_matching_frozen_family_and_category(self):
+        for dataset in ({"id": "other30-v1", "digest": "a" * 64},
+                        {"id": "xiaofa-legalized-v1", "digest": "a" * 64},
+                        {"id": "xiaofa-legal30-v1", "digest": None}):
+            with self.subTest(dataset=dataset), self.assertRaisesRegex(ValueError, "METADATA_INVALID"):
+                REPORT.report_views.dataset_references({"dataset": dataset, "tasks": [self.legal_row()]},
+                                                       REPORT.report_views.load_references())
+        row = self.legal_row()
+        row["category"] = row["task_definition"]["dataset_report"]["category"] = "legal_contracts"
+        with self.assertRaisesRegex(ValueError, "METADATA_INVALID"):
+            REPORT.report_views.dataset_references({"dataset": {"id": "xiaofa-legal30-v1", "digest": "a" * 64},
+                                                   "tasks": [row]}, REPORT.report_views.load_references())
+
+    def test_aliases_do_not_allow_unknown_duplicate_or_double_counted_dimensions(self):
+        for dimensions in (["not-a-capability"], ["information_retrieval", "retrieval_verification"],
+                           ["information_retrieval", "verification_delivery"]):
+            row = self.legal_row()
+            row["task_definition"]["dataset_report"]["checkpoint_capabilities"]["automated.evidence"] = dimensions
+            with self.subTest(dimensions=dimensions), self.assertRaisesRegex(ValueError, "CAPABILITY_MAP_INVALID"):
+                REPORT.report_views.dataset_references({"dataset": {"id": "xiaofa-legal30-v1", "digest": "a" * 64},
+                                                       "tasks": [row]}, REPORT.report_views.load_references())
 
     def test_conflicting_or_unverified_dataset_metadata_fails_closed(self):
         first = self.row()

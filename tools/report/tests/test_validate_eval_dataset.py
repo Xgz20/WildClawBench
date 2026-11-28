@@ -16,6 +16,42 @@ validate_document = _MODULE.validate_document
 build_action_summary = _MODULE.build_action_summary
 
 
+def test_legal_registered_directory_is_validated_and_alias_is_explicit():
+    repo = Path(__file__).resolve().parents[3]
+    task = repo / "tasks/legal/xiaofa/02_Legal_Analysis/02_Legal_Analysis_task_003_citation_verification.md"
+    issues = _MODULE.validate_registered_registry(repo, [task])
+    assert not [issue for issue in issues if issue.severity in {_MODULE.FAIL, _MODULE.REVIEW}]
+    alias = next(issue for issue in issues if issue.code == "DATASET_CAPABILITY_ALIASES_NORMALIZED")
+    assert alias.evidence["aliases"] == {"information_retrieval": "retrieval_verification"}
+
+
+def test_legal_registered_directory_rejects_unknown_capability(monkeypatch):
+    repo = Path(__file__).resolve().parents[3]
+    task = repo / "tasks/legal/xiaofa/02_Legal_Analysis/02_Legal_Analysis_task_003_citation_verification.md"
+    original = _MODULE.load_mapping
+    def changed(path):
+        data = original(path)
+        if path.name == "checkpoint_capability_map7.yaml":
+            data[task.stem]["automated.fact_accuracy"] = ["unknown-axis"]
+        return data
+    monkeypatch.setattr(_MODULE, "load_mapping", changed)
+    assert any(issue.code == "DATASET_CAPABILITY_MAP_INVALID" and issue.severity == _MODULE.FAIL
+               for issue in _MODULE.validate_registered_registry(repo, [task]))
+
+
+def test_legal_registered_directory_cannot_skip_missing_report_metadata(monkeypatch):
+    repo = Path(__file__).resolve().parents[3]
+    task = repo / "tasks/legal/xiaofa/02_Legal_Analysis/02_Legal_Analysis_task_003_citation_verification.md"
+    original = _MODULE.parse_task_document
+    def without_report(path):
+        document = original(path)
+        document.metadata.pop("dataset_report", None)
+        return document
+    monkeypatch.setattr(_MODULE, "parse_task_document", without_report)
+    assert any(issue.code == "DATASET_REPORT_METADATA_INVALID"
+               for issue in _MODULE.validate_registered_registry(repo, [task]))
+
+
 def _write(path: Path, body: str) -> Path:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(body, encoding="utf-8")

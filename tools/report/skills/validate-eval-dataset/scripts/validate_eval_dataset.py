@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import ast
+import json
 import os
 import re
 import shlex
@@ -38,7 +39,7 @@ from tools.report.lib.eval_dataset.website_contracts import (
     is_website_task,
     validate_website_contract,
 )
-from eval_general_e2e.datasets.catalog import load_mapping, load_registered_dataset, repository_path
+from eval_general_e2e.datasets.catalog import load_catalog, load_mapping, load_registered_dataset, repository_path
 from eval_general_e2e.datasets.layout import load_layout, relocated_task, workspace_for_task
 from eval_general_e2e.datasets.source_history import pre_migration_sources
 
@@ -53,12 +54,18 @@ def _workspace_refs(doc: TaskDocument, workspace: Path) -> list[Path]:
     prose = re.sub(r"```[^\n]*\n.*?```", "", doc.raw, flags=re.S)
     for match in re.finditer(r"`([^`\n]+)`", prose):
         value = match.group(1)
+        if value.startswith("/tmp_workspace/"):
+            value = value[len("/tmp_workspace/"):]
         if not prefix.match(value):
             continue
         line = prose[prose.rfind("\n", 0, match.start()) + 1:match.start()]
         if re.search(r"(?:无|不依赖|无需|no|does not require)\s*$", line, re.I):
             continue
         values.add(value)
+    # Explicit runtime input paths may also appear in ordinary prose. Output
+    # directories are deliberately excluded from required-input checks.
+    for value in re.findall(r"/tmp_workspace/((?:fixtures|inputs?|attachments?)/[^\s`\"'<>，。；]+)", prose):
+        values.add(value.rstrip(".,;:!?)]}，。；：！？"))
     # Parse complete Python string literals. Regexes over code mistake Path
     # division (gt/name), diagnostic phrases and path suffixes for inputs.
     for block in re.findall(r"```python\s*\n(.*?)```", doc.raw, re.S):
@@ -94,7 +101,9 @@ def _workspace_refs(doc: TaskDocument, workspace: Path) -> list[Path]:
         mapped = workspace / "exec" / value
         # Preparation overlays exec/ into the candidate workspace. gt/ remains
         # private; do not map it into the public execution tree.
-        candidate = direct if value.startswith(("exec/", "gt/")) else mapped if (workspace / "exec").is_dir() else direct
+        candidate = (direct if value.startswith(("exec/", "gt/")) else mapped
+                     if (workspace / "exec").is_dir() and (mapped.exists() or mapped.is_symlink() or not direct.exists())
+                     else direct)
         refs.add(candidate.resolve())
     return sorted(refs)
 
@@ -275,9 +284,33 @@ def validate_registered_registry(repo_root: Path, selected: list[Path]) -> list[
     repo_root = repo_root.resolve()
     issues: list[Issue] = []
     cache: dict[str, tuple[Any, dict, dict] | Exception] = {}
+    registered_roots = []
+    try:
+        catalog = load_catalog(repo_root)
+    except (OSError, ValueError):
+        catalog = {}
+    for series, entry in catalog.items():
+        if not isinstance(entry, dict) or not isinstance(entry.get("definition"), str):
+            continue
+        try:
+            declared = load_mapping(repository_path(repo_root, entry["definition"], label="dataset definition"))
+            root = repository_path(repo_root, declared.get("task_root"), label="registered task root")
+            registered_roots.append((root, series))
+        except (OSError, ValueError):
+            continue  # Explicit selections/declarations still report definition errors below.
     for selected_path in selected:
         path = selected_path.resolve()
-        if path.is_relative_to(repo_root / "tasks/general/challenge"):
+        doc = parse_task_document(path)
+        declared = doc.metadata.get("dataset_report")
+        containing = [series for root, series in registered_roots if path.is_relative_to(root)]
+        if len(containing) > 1:
+            issues.append(_issue("DATASET_REGISTRY_INVALID", "任务同时属于多个注册目录", doc))
+            continue
+        if containing:
+            series = containing[0]
+        elif isinstance(declared, dict) and isinstance(declared.get("series_id"), str):
+            series = declared["series_id"]
+        elif path.is_relative_to(repo_root / "tasks/general/challenge"):
             series = "general-challenge"
         elif path.is_relative_to(repo_root / "datasets"):
             series = path.relative_to(repo_root / "datasets").parts[0]
@@ -304,7 +337,6 @@ def validate_registered_registry(repo_root: Path, selected: list[Path]) -> list[
             continue
         registered, entries, mapping = cached
         definition = registered.definition
-        doc = parse_task_document(path)
         task_id = doc.task_id
         category = doc.category
         directory = definition.category_directory(category)
@@ -366,6 +398,15 @@ def validate_registered_registry(repo_root: Path, selected: list[Path]) -> list[
             expected_map.update("llm_judge." + key for key in rubric_keys)
         capabilities = {"code_generation", "tool_use", "data_processing", "retrieval_verification",
                         "reasoning_planning", "content_generation", "verification_delivery"}
+        alias_path = REPO_ROOT / "tools/report/data/capability_aliases7.json"
+        alias_profile = json.loads(alias_path.read_text(encoding="utf-8")) if alias_path.is_file() else {}
+        aliases = alias_profile.get("aliases", {})
+        if (alias_profile and (alias_profile.get("schema_version") != "wildclawbench.capability-aliases7/v1"
+                or not isinstance(aliases, dict)
+                or any(not isinstance(key, str) or key in capabilities or not isinstance(value, str)
+                       or value not in capabilities for key, value in aliases.items()))):
+            issues.append(_issue("DATASET_CAPABILITY_ALIAS_PROFILE_INVALID", "能力别名配置无效", doc))
+            continue
         task_map = mapping.get(task_id)
         report_contract = doc.metadata.get("dataset_report")
         if (not isinstance(report_contract, dict)
@@ -378,13 +419,20 @@ def validate_registered_registry(repo_root: Path, selected: list[Path]) -> list[
                 or report_contract.get("category_order") != list(definition.category_labels).index(category)
                 or report_contract.get("checkpoint_capabilities") != task_map):
             issues.append(_issue("DATASET_REPORT_METADATA_INVALID", "题面中的报告分类/能力快照与系列定义不一致", doc))
-        if (not isinstance(task_map, dict) or not expected_map or set(task_map) != expected_map
+        normalized_map = ({key: [aliases.get(value, value) if isinstance(value, str) else value for value in values]
+                           if isinstance(values, list) else values for key, values in task_map.items()}
+                          if isinstance(task_map, dict) else task_map)
+        if (not isinstance(normalized_map, dict) or not expected_map or set(normalized_map) != expected_map
                 or any(not isinstance(values, list) or not 1 <= len(values) <= 2
                        or any(not isinstance(value, str) or value not in capabilities for value in values)
                        or len(set(values)) != len(values)
                        or {"retrieval_verification", "verification_delivery"}.issubset(values)
-                       for values in task_map.values())):
+                       for values in normalized_map.values())):
             issues.append(_issue("DATASET_CAPABILITY_MAP_INVALID", "能力映射需精确覆盖评分key且符合七维定义", doc))
+        elif any(value in aliases for values in task_map.values() for value in values):
+            issues.append(_issue("DATASET_CAPABILITY_ALIASES_NORMALIZED", "保留冻结能力名称，按已声明别名解析报告七维", doc,
+                severity=PASS, evidence={"profile": alias_profile["schema_version"],
+                    "aliases": {value: aliases[value] for values in task_map.values() for value in values if value in aliases}}))
         code = strip_codeblock(doc.section("Automated Checks"))
         if code:
             try:

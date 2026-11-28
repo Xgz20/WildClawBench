@@ -1,0 +1,6 @@
+{
+  "schema_version": "wildclawbench.capability-aliases7/v1",
+  "aliases": {
+    "information_retrieval": "retrieval_verification"
+  }
+}

@@ -49,6 +49,17 @@ def reference_payload(root):
     import yaml
     paths = [root / "entities.yaml", root / "checkpoint_capability_map7.yaml", root / "checkpoint_capability_map5.yaml"]
     entities, capabilities, capabilities5 = [yaml.safe_load(p.read_text(encoding="utf-8")) for p in paths]
+    alias_file = root / "capability_aliases7.json"
+    alias_profile = None
+    if alias_file.is_file():
+        alias_profile = json.loads(alias_file.read_text(encoding="utf-8"))
+        aliases = alias_profile.get("aliases")
+        if (alias_profile.get("schema_version") != "wildclawbench.capability-aliases7/v1"
+                or not isinstance(aliases, dict)
+                or any(not isinstance(key, str) or key in CAPABILITIES or not isinstance(value, str)
+                       or value not in CAPABILITIES for key, value in aliases.items())):
+            raise ValueError("REPORT_CAPABILITY_ALIAS_PROFILE_INVALID")
+        paths.append(alias_file)
     names = {}
     for kind in ("models", "harnesses"):
         names[kind] = {}
@@ -58,6 +69,7 @@ def reference_payload(root):
     return {"schema_version": "wildclawbench.general-report-reference/v1", **names,
             "capabilities": capabilities,
             "capabilities5": capabilities5,
+            **({"capability_aliases7": alias_profile} if alias_profile is not None else {}),
             "sources": {p.name: hashlib.sha256(p.read_bytes()).hexdigest() for p in paths}}
 
 
@@ -303,6 +315,21 @@ def capability_scores(rows, mapping, dimensions=CAPABILITIES):
     return result
 
 
+def _dataset_task_namespace(task_id, contract, dataset):
+    series = contract.get("series_id")
+    if not isinstance(series, str) or not series:
+        return False
+    if task_id.startswith(series.replace("-", "_").replace(".", "_") + "_"):
+        return True
+    # Category-directory releases have no series prefix. Bind this spelling
+    # to the frozen dataset family and category; never consult today's catalog.
+    match = re.fullmatch(r"\d{2,}_([A-Za-z][A-Za-z0-9]*(?:_[A-Za-z0-9]+)*)_task_\d{3,}_[a-z0-9_]+", task_id)
+    return bool(match and isinstance(dataset, dict)
+        and re.fullmatch(r"[0-9a-f]{64}", str(dataset.get("digest", "")))
+        and re.fullmatch(re.escape(series) + r"(?:[0-9][a-z0-9._-]*|[-.][a-z0-9][a-z0-9._-]*)?", str(dataset.get("id", "")))
+        and match.group(1).lower() == str(contract.get("category", "")).replace("-", "_"))
+
+
 def dataset_references(data, references):
     """Use dataset-specific metadata from verified private task snapshots only."""
     mapping, categories, order = dict(references["capabilities"]), dict(CATEGORIES), {}
@@ -320,13 +347,20 @@ def dataset_references(data, references):
         if (definition.get("status") != "complete" or not re.fullmatch(r"[0-9a-f]{64}", str(definition.get("task_sha256", "")))
                 or not isinstance(contract, dict) or contract.get("schema_version") != "wildclawbench.dataset-report-contract/v1"
                 or not isinstance(contract.get("series_id"), str)
-                or not task_id.startswith(contract["series_id"].replace("-", "_").replace(".", "_") + "_")
+                or not _dataset_task_namespace(task_id, contract, data.get("dataset"))
                 or contract.get("category") != row["category"]
                 or not isinstance(contract.get("category_name"), str) or not contract["category_name"].strip()
                 or type(contract.get("category_order")) is not int or contract["category_order"] < 0):
             raise ValueError("REPORT_DATASET_METADATA_INVALID")
-        task_map = contract.get("checkpoint_capabilities")
-        if (not isinstance(task_map, dict) or not task_map
+        original_map = contract.get("checkpoint_capabilities")
+        alias_profile = references.get("capability_aliases7") or {}
+        aliases = alias_profile.get("aliases", {})
+        if (not isinstance(original_map, dict) or not original_map
+                or any(not isinstance(dims, list) or any(not isinstance(dim, str) for dim in dims)
+                       for dims in original_map.values())):
+            raise ValueError("REPORT_DATASET_CAPABILITY_MAP_INVALID")
+        task_map = {key: [aliases.get(dim, dim) for dim in dims] for key, dims in original_map.items()}
+        if (not task_map
                 or any(not isinstance(key, str) or not isinstance(dims, list) or not 1 <= len(dims) <= 2
                        or any(not isinstance(dim, str) or dim not in CAPABILITIES for dim in dims)
                        or len(dims) != len(set(dims))
@@ -345,6 +379,10 @@ def dataset_references(data, references):
         mapping[task_id] = task_map
         sources.append({"task_id": task_id, "series_id": contract["series_id"],
                         "task_sha256": definition["task_sha256"],
+                        **({"capability_alias_profile": alias_profile["schema_version"],
+                            "capability_aliases": {dim: aliases[dim] for dims in original_map.values()
+                                                   for dim in dims if dim in aliases}}
+                           if any(dim in aliases for dims in original_map.values() for dim in dims) else {}),
                         "report_contract_sha256": hashlib.sha256(json.dumps(contract, ensure_ascii=False,
                             sort_keys=True, separators=(",", ":")).encode()).hexdigest()})
     return mapping, categories, order, sorted(sources, key=lambda item: item["task_id"])

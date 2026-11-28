@@ -3,6 +3,8 @@ name: report-general-e2e
 description: 校验并汇总 General E2E submission 和回传包，生成同源 JSON、Markdown 与 Excel 报告；不执行用例、补评分或把评测异常计为能力零分。
 ---
 
+`0.10.9` 按冻结数据集身份和分类接纳分类目录式任务编号；七维能力旧名称由随报告发行封存的别名表显式规范化，并记录原名称和别名 Profile。原任务、评分、检查点值和历史发行不改，未知维度、规范化后重复维度及跨系列元数据仍失败关闭。
+
 `0.10.8` 补齐 AgentCube 原生 client `tool_search` 调用、工具目录结果及相邻解析错误的独立回放；调用 ID、参数、结果和原始轨迹仍逐项核验，旧批次与评分材料不改。
 
 `0.10.7` 补齐 AgentCube 原生 `list_mcp_resource_templates` 工具名回放，与 Python 执行器一致；调用参数、来源身份、原始轨迹及评分规则保持严格核验。
