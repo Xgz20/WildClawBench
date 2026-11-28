@@ -60,6 +60,14 @@ class LegalScenarioTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'CASE_LIBRARY_MATERIAL_UNKNOWN'):
             document(REPO, 'xiaofa-legal', task, 'xiaofa-legal30-v1', material='../gt/oracle.json')
 
+    def test_managed_case_source_cannot_override_legal_or_frozen_selection(self):
+        for selection in ({'scenario':'legal'}, {'scenario':'general','dataset':'xiaofa-legal30-v1'},
+                          {'scenario':'general','library_dataset':'xiaofa-legal'}):
+            plan = self.plan()
+            plan['selection'] = {**selection, 'case_source':{'path':'/must-not-be-read','sha256':'a'*64}}
+            with self.assertRaisesRegex(ValueError,'MANAGED_CASE_SOURCE_SELECTION_CONFLICT'):
+                resolve(REPO,plan)
+
 
 if __name__ == '__main__':
     unittest.main()

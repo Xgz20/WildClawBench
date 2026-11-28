@@ -381,6 +381,7 @@ def build_report(definition: dict, staging: Path):
             'semantics': {'score_denominator': '均值仅含有效成绩；真实零分保留；异常、未评分不补零。',
                           'resources': '被测端资源只取原执行回执；评分智能体用量不混入被测端指标。',
                           'unit_scope': '保留每个已选单元的全部冻结任务；题目范围不同不能作单因果排名。'}}
+    data['legal_reviews'] = definition.get('legal_reviews', [])
     data['presentation'] = core.report_views.build_views(data, core.report_views.load_references())
     unique_executions = {(row['lineage'].get('source_batch_id'), row['lineage'].get('source_unit_id'), row['execution_attempt_id']) for row in task_rows}
     data['scope']['unique_execution_count'] = len(unique_executions)

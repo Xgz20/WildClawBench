@@ -73,11 +73,14 @@ def profiles() -> list[dict]:
 
 
 def describe(repo: Path) -> dict:
+    from .legal_policy import snapshot as legal_policy
     return {
+        "legal_acceptance_policy": legal_policy(),
         "supported_api_versions": [API_VERSION],
         "engine_revision": _revision(repo),
         "capabilities": [
             "catalog",
+            "legal-business-acceptance-v1",
             "case-library-v1",
             "managed-case-source-v1",
             "managed-judge-templates-v1",
@@ -236,6 +239,8 @@ def resolve(
     plan = normalize_plan(raw)
     selection = plan['selection']
     if source := selection.get('case_source'):
+        if selection['scenario'] != 'general' or selection.get('library_dataset') or selection.get('dataset'):
+            raise E2EError('MANAGED_CASE_SOURCE_SELECTION_CONFLICT')
         from src.managed_cases.bundle import e2e_tasks
         if set(source) != {'path', 'sha256'}:
             raise E2EError('MANAGED_CASE_SOURCE_INVALID')

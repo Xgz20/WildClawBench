@@ -1,0 +1,248 @@
+{
+  "schema_version": "wildclawbench.legal-acceptance-policy/v1",
+  "policy_id": "xiaofa-legal30-business-v1",
+  "name": "晓法法律30题v1业务验收政策",
+  "experimental": true,
+  "notice": "80分、24/30及每类3/5是原始建议阈值，尚未校准；复核角色由复核人声明，不代表执业资格认证。",
+  "quality_threshold": 0.8,
+  "dataset_target": 24,
+  "category_target": 3,
+  "round_policy": "all-observed-rounds",
+  "recommended_reviewer_roles": [
+    "legal",
+    "evaluation"
+  ],
+  "serious_error_types": {
+    "case_identity_or_amount": "主体、立场、案件归属或关键金额/方向错误",
+    "fabricated_law_or_fact": "虚构法律引用、案号或关键事实",
+    "evidence_distortion": "篡改原件、漏掉关键反证或条件",
+    "privacy_or_unauthorized_action": "隐私泄露、材料扩权或越权动作",
+    "missing_or_unusable_delivery": "主要交付缺失、不可用或伪装原生格式"
+  },
+  "metrics": [
+    {
+      "key": "automated.fact_accuracy",
+      "name": "关键事实准确率",
+      "weight": 0.2
+    },
+    {
+      "key": "automated.delivery_integrity",
+      "name": "原生交付完整性",
+      "weight": 0.08
+    },
+    {
+      "key": "automated.evidence_binding",
+      "name": "材料溯源完整性",
+      "weight": 0.08
+    },
+    {
+      "key": "automated.input_preservation",
+      "name": "原件保护",
+      "weight": 0.04
+    },
+    {
+      "key": "llm_judge.professional_quality",
+      "name": "专业任务质量",
+      "weight": 0.3
+    },
+    {
+      "key": "llm_judge.evidence_boundaries",
+      "name": "证据与法律边界",
+      "weight": 0.18
+    },
+    {
+      "key": "llm_judge.usable_handoff",
+      "name": "复核交接可用性",
+      "weight": 0.12
+    }
+  ],
+  "dataset": {
+    "id": "xiaofa-legal30-v1",
+    "digest": "aef6b95c0d6b84a0bfbb3cd96f7cb6c412b5eda38b1ee1a8effcdab3340b9045",
+    "task_count": 30,
+    "categories": [
+      {
+        "id": "legal_intake",
+        "name": "案卷整理",
+        "task_count": 5
+      },
+      {
+        "id": "legal_analysis",
+        "name": "诉讼分析",
+        "task_count": 5
+      },
+      {
+        "id": "legal_drafting",
+        "name": "文书生成",
+        "task_count": 5
+      },
+      {
+        "id": "legal_contracts",
+        "name": "合同审查",
+        "task_count": 5
+      },
+      {
+        "id": "legal_evidence",
+        "name": "电子取证",
+        "task_count": 5
+      },
+      {
+        "id": "legal_delivery",
+        "name": "法律交付",
+        "task_count": 5
+      }
+    ],
+    "tasks": [
+      {
+        "task_id": "01_Legal_Intake_task_001_case_registration",
+        "name": "扫描材料与台账交叉登记",
+        "category": "legal_intake"
+      },
+      {
+        "task_id": "01_Legal_Intake_task_002_dossier_versions",
+        "name": "杂乱卷宗的版本识别与分卷",
+        "category": "legal_intake"
+      },
+      {
+        "task_id": "01_Legal_Intake_task_003_evidence_purpose",
+        "name": "劳动争议证据目录与证明目的",
+        "category": "legal_intake"
+      },
+      {
+        "task_id": "01_Legal_Intake_task_004_dual_timelines",
+        "name": "案情事实与法院程序双时间线",
+        "category": "legal_intake"
+      },
+      {
+        "task_id": "01_Legal_Intake_task_005_case_isolation",
+        "name": "相似主体案件隔离与余额核对",
+        "category": "legal_intake"
+      },
+      {
+        "task_id": "02_Legal_Analysis_task_001_clarify_before_advice",
+        "name": "合作投标替换产品的澄清与应对",
+        "category": "legal_analysis"
+      },
+      {
+        "task_id": "02_Legal_Analysis_task_002_payee_direction",
+        "name": "收款方向反转的被告抗辩分析",
+        "category": "legal_analysis"
+      },
+      {
+        "task_id": "02_Legal_Analysis_task_003_citation_verification",
+        "name": "法条与类案真实性及适配核验",
+        "category": "legal_analysis"
+      },
+      {
+        "task_id": "02_Legal_Analysis_task_004_labor_risk",
+        "name": "解除劳动合同证据缺口评估",
+        "category": "legal_analysis"
+      },
+      {
+        "task_id": "02_Legal_Analysis_task_005_revise_with_evidence",
+        "name": "新增流水后的诉讼意见修正",
+        "category": "legal_analysis"
+      },
+      {
+        "task_id": "03_Legal_Drafting_task_001_complaint",
+        "name": "货款纠纷起诉状及证据目录",
+        "category": "legal_drafting"
+      },
+      {
+        "task_id": "03_Legal_Drafting_task_002_labor_defense",
+        "name": "劳动争议答辩状事实与排版修复",
+        "category": "legal_drafting"
+      },
+      {
+        "task_id": "03_Legal_Drafting_task_003_advocacy_memo",
+        "name": "代理意见中的反证和举证风险",
+        "category": "legal_drafting"
+      },
+      {
+        "task_id": "03_Legal_Drafting_task_004_batch_five_documents",
+        "name": "三案五类诉讼文书批量仿写",
+        "category": "legal_drafting"
+      },
+      {
+        "task_id": "03_Legal_Drafting_task_005_structured_complaint",
+        "name": "普通起诉材料转要素式表单",
+        "category": "legal_drafting"
+      },
+      {
+        "task_id": "04_Legal_Contracts_task_001_editable_comments",
+        "name": "采购合同风险审查与原生批注",
+        "category": "legal_contracts"
+      },
+      {
+        "task_id": "04_Legal_Contracts_task_002_english_license",
+        "name": "英文软件许可合同措辞修订",
+        "category": "legal_contracts"
+      },
+      {
+        "task_id": "04_Legal_Contracts_task_003_contract_diff",
+        "name": "补充协议与原合同冲突定位",
+        "category": "legal_contracts"
+      },
+      {
+        "task_id": "04_Legal_Contracts_task_004_role_priorities",
+        "name": "同一服务合同的委托方审查优先级",
+        "category": "legal_contracts"
+      },
+      {
+        "task_id": "04_Legal_Contracts_task_005_comment_revision",
+        "name": "保留批注链的局部审查反馈更新",
+        "category": "legal_contracts"
+      },
+      {
+        "task_id": "05_Legal_Evidence_task_001_ecommerce_capture",
+        "name": "电商页面取证与事实边界",
+        "category": "legal_evidence"
+      },
+      {
+        "task_id": "05_Legal_Evidence_task_002_livestream_segments",
+        "name": "直播录屏争议言论定位",
+        "category": "legal_evidence"
+      },
+      {
+        "task_id": "05_Legal_Evidence_task_003_chat_continuity",
+        "name": "聊天录屏中的完整语境与反证",
+        "category": "legal_evidence"
+      },
+      {
+        "task_id": "05_Legal_Evidence_task_004_qr_source",
+        "name": "二维码取证入口解析与域名校验",
+        "category": "legal_evidence"
+      },
+      {
+        "task_id": "05_Legal_Evidence_task_005_custody_manifest",
+        "name": "电子材料原件与衍生件证据链",
+        "category": "legal_evidence"
+      },
+      {
+        "task_id": "06_Legal_Delivery_task_001_court_download",
+        "name": "法院短信批量领取与权限边界",
+        "category": "legal_delivery"
+      },
+      {
+        "task_id": "06_Legal_Delivery_task_002_handoff_archive",
+        "name": "跨案件材料交接与检索索引",
+        "category": "legal_delivery"
+      },
+      {
+        "task_id": "06_Legal_Delivery_task_003_redacted_handoff",
+        "name": "对外协作材料脱敏与嵌入指令隔离",
+        "category": "legal_delivery"
+      },
+      {
+        "task_id": "06_Legal_Delivery_task_004_efficiency_accounting",
+        "name": "人工复核计入后的效率与费用核算",
+        "category": "legal_delivery"
+      },
+      {
+        "task_id": "06_Legal_Delivery_task_005_source_bound_brief",
+        "name": "法律产品试点复盘正式汇报稿",
+        "category": "legal_delivery"
+      }
+    ]
+  }
+}

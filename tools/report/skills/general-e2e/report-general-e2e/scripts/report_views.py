@@ -60,6 +60,13 @@ def reference_payload(root):
                        or value not in CAPABILITIES for key, value in aliases.items())):
             raise ValueError("REPORT_CAPABILITY_ALIAS_PROFILE_INVALID")
         paths.append(alias_file)
+    legal_file = root / "legal_acceptance_policy.json"
+    legal_policy = None
+    if legal_file.is_file():
+        from legal_business import validate_policy
+        legal_policy = json.loads(legal_file.read_text(encoding="utf-8"))
+        validate_policy(legal_policy)
+        paths.append(legal_file)
     names = {}
     for kind in ("models", "harnesses"):
         names[kind] = {}
@@ -70,6 +77,7 @@ def reference_payload(root):
             "capabilities": capabilities,
             "capabilities5": capabilities5,
             **({"capability_aliases7": alias_profile} if alias_profile is not None else {}),
+            **({"legal_acceptance_policy": legal_policy} if legal_policy is not None else {}),
             "sources": {p.name: hashlib.sha256(p.read_bytes()).hexdigest() for p in paths}}
 
 
@@ -802,4 +810,6 @@ def build_views(data, references):
             **({"capability_coverage5": caps5} if caps5 else {}),
             "display_overrides": applied_overrides,
             "display_overrides_sha256": hashlib.sha256(json.dumps(overrides, ensure_ascii=False, sort_keys=True).encode()).hexdigest() if overrides else None}
-    return report_display.apply_pending_review(data, presentation)
+    presentation = report_display.apply_pending_review(data, presentation)
+    from legal_business import attach as attach_legal_business
+    return attach_legal_business(data, presentation, references, table)
