@@ -86,6 +86,7 @@ class E2EBuildTests(unittest.TestCase):
                 "workbuddy-jsonl-metrics",
                 "report-reference-data",
                 "workspace-integrity",
+                "workspace-paths",
                 "dataset-bundle-verifier",
                 "grading-core",
                 "general-contracts",

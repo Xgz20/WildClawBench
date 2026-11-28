@@ -19,6 +19,13 @@ CAPABILITIES = {
 }
 
 
+def _legal_business_reader():
+    spec = importlib.util.spec_from_file_location('_general_e2e_legal_business', Path(__file__).with_name('legal_business.py'))
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
 def _independent_v2_reader():
     path=Path(__file__).with_name('independent_report.py')
     spec=importlib.util.spec_from_file_location('_general_e2e_independent_report',path)
@@ -63,9 +70,8 @@ def reference_payload(root):
     legal_file = root / "legal_acceptance_policy.json"
     legal_policy = None
     if legal_file.is_file():
-        from legal_business import validate_policy
         legal_policy = json.loads(legal_file.read_text(encoding="utf-8"))
-        validate_policy(legal_policy)
+        _legal_business_reader().validate_policy(legal_policy)
         paths.append(legal_file)
     names = {}
     for kind in ("models", "harnesses"):
@@ -811,5 +817,4 @@ def build_views(data, references):
             "display_overrides": applied_overrides,
             "display_overrides_sha256": hashlib.sha256(json.dumps(overrides, ensure_ascii=False, sort_keys=True).encode()).hexdigest() if overrides else None}
     presentation = report_display.apply_pending_review(data, presentation)
-    from legal_business import attach as attach_legal_business
-    return attach_legal_business(data, presentation, references, table)
+    return _legal_business_reader().attach(data, presentation, references, table)
