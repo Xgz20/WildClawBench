@@ -3,6 +3,10 @@
 set -euo pipefail
 CONTEXT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${CONTEXT_DIR}/build-inputs.env"
+case "${PLATFORM}" in
+  linux/amd64|linux/arm64) ;;
+  *) echo "Unsupported scorer platform: ${PLATFORM}" >&2; exit 2 ;;
+esac
 # A failed rebuild must not leave a previous success receipt looking current.
 rm -f "${CONTEXT_DIR}/runtime-validation.json" "${CONTEXT_DIR}/image-receipt.txt"
 DOCKER=(docker --context "${DOCKER_CONTEXT}")
@@ -19,17 +23,23 @@ if [[ -n "${HTTPS_PROXY_INNER:-}" ]]; then
 fi
 BASE_TAG="${IMAGE_TAG}"
 if [[ "${WITH_OFFICE}" == 1 ]]; then BASE_TAG="${IMAGE_TAG}-runtime"; fi
-"${DOCKER[@]}" build --progress=plain "${BUILD_ARGS[@]}" \
+"${DOCKER[@]}" build --platform "${PLATFORM}" --progress=plain "${BUILD_ARGS[@]}" \
   --file "${CONTEXT_DIR}/Dockerfile" --tag "${BASE_TAG}" "${CONTEXT_DIR}"
 if [[ "${WITH_OFFICE}" == 1 ]]; then
-  "${DOCKER[@]}" build --progress=plain "${BUILD_ARGS[@]}" \
+  "${DOCKER[@]}" build --platform "${PLATFORM}" --progress=plain "${BUILD_ARGS[@]}" \
     --build-arg "SCORER_BASE_IMAGE=${BASE_TAG}" \
     --file "${CONTEXT_DIR}/native-office.Dockerfile" --tag "${IMAGE_TAG}" "${CONTEXT_DIR}"
 fi
+# Check image metadata before executing it; emulation must not hide a wrong image.
+ACTUAL_PLATFORM="$("${DOCKER[@]}" image inspect --format '{{.Os}}/{{.Architecture}}' "${IMAGE_TAG}")"
+if [[ "${ACTUAL_PLATFORM}" != "${PLATFORM}" ]]; then
+  echo "SCORER_PLATFORM_MISMATCH: expected ${PLATFORM}, got ${ACTUAL_PLATFORM}" >&2
+  exit 1
+fi
 # Recheck the finished image without network, credentials, socket or host mounts.
-VALIDATION_ARGS=(--claude-code-version "${CLAUDE_CODE_VERSION}")
+VALIDATION_ARGS=(--claude-code-version "${CLAUDE_CODE_VERSION}" --platform "${PLATFORM}")
 if [[ "${WITH_OFFICE}" == 1 ]]; then VALIDATION_ARGS+=(--office); fi
-"${DOCKER[@]}" run --rm --network none --entrypoint /opt/scoring-runtime/bin/python \
+"${DOCKER[@]}" run --platform "${PLATFORM}" --rm --network none --entrypoint /opt/scoring-runtime/bin/python \
   "${IMAGE_TAG}" /opt/validate-scorer-runtime.py \
   --codex-version "${CODEX_VERSION}" --dsh-version "${DSH_VERSION}" \
   "${VALIDATION_ARGS[@]}" > "${CONTEXT_DIR}/runtime-validation.json.tmp"

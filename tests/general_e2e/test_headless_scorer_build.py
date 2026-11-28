@@ -35,13 +35,56 @@ class HeadlessScorerBuildTests(unittest.TestCase):
             manifest = json.loads((context / 'build-manifest.json').read_text())
             self.assertEqual(manifest['inputs']['WITH_OFFICE'], '1')
             self.assertEqual(manifest['inputs']['CODEX_VERSION'], '0.171.0')
-            self.assertEqual(manifest['inputs']['IMAGE_TAG'], 'wildclawbench-e2e-scorer:v0.2')
+            self.assertEqual(manifest['inputs']['IMAGE_TAG'], 'wildclawbench-e2e-scorer:v0.2-amd64')
+            self.assertEqual(manifest['inputs']['PLATFORM'], 'linux/amd64')
             self.assertEqual(manifest['inputs']['CLAUDE_CODE_VERSION'], '2.1.330')
             self.assertEqual(manifest['harnesses'], ['codex', 'deepseek-harness', 'claudecode'])
             self.assertTrue((context / 'runtime-skill/bundled-components.json').is_file())
             self.assertTrue((context / 'build-prepared.sh').is_file())
             self.assertFalse(any(b'private-proxy' in path.read_bytes() for path in context.rglob('*') if path.is_file()))
             self.assertNotIn('.env', (context / '.dockerignore').read_text().splitlines()[1:])
+
+    def test_platforms_have_separate_tags_and_build_contexts(self):
+        builder = runpy.run_path(str(ROOT / 'tools/e2e-build/build_headless_scorer.py'))
+        import argparse
+        for platform in ['linux/amd64', 'linux/arm64']:
+            args = argparse.Namespace(version='v0.2', platform=platform, tag=None, context=None,
+                eval_base_image=None, node_runtime_image=None, codex_version=None, dsh_version=None,
+                claude_code_version=None)
+            builder['resolve_version'](args)
+            arch = platform.split('/')[1]
+            self.assertEqual(args.tag, 'wildclawbench-e2e-scorer:v0.2-' + arch)
+            self.assertEqual(args.context, ROOT / '.cache/headless-scorer-build/v0.2' / arch)
+        for tag in ['wildclawbench-e2e-scorer:v0.2', 'wildclawbench-e2e-scorer:v0.2-arm64',
+                    'wildclawbench-e2e-scorer:v0.2-arm64-runtime']:
+            args.tag = tag
+            args.platform = 'linux/amd64'
+            with self.assertRaisesRegex(ValueError, 'overwrite'):
+                builder['resolve_version'](args)
+
+    def test_v2_prepared_build_checks_architecture_before_offline_validation(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            (root / 'build-prepared.sh').write_bytes((ROOT / 'docker/e2e-scorer/v2/build-prepared.sh').read_bytes())
+            (root / 'build-inputs.env').write_text('IMAGE_TAG=test:amd64\nDOCKER_CONTEXT=default\nWITH_OFFICE=1\nPLATFORM=linux/amd64\n' +
+                ''.join(key + '=test\n' for key in ('EVAL_BASE_IMAGE', 'NODE_RUNTIME_IMAGE', 'CODEX_VERSION',
+                    'DSH_VERSION', 'CLAUDE_CODE_VERSION', 'NPM_REGISTRY', 'PIP_INDEX_URL', 'DEBIAN_MIRROR', 'DEBIAN_SECURITY_MIRROR')))
+            docker = root / 'docker'
+            docker.write_text('#!/bin/sh\nprintf "%s\\n" "$*" >> "$CALLS"\n'
+                'case "$*" in *"{{.Os}}/{{.Architecture}}"*) echo "${OBSERVED_PLATFORM:-linux/amd64}" ;; esac\n')
+            docker.chmod(0o755)
+            env = {**os.environ, 'PATH': str(root) + os.pathsep + os.environ['PATH'], 'CALLS': str(root / 'calls')}
+            subprocess.run(['bash', str(root / 'build-prepared.sh')], env=env, check=True, capture_output=True)
+            calls = (root / 'calls').read_text().splitlines()
+            self.assertTrue(all('--platform linux/amd64' in row for row in calls if ' build ' in row or ' run ' in row))
+            self.assertTrue(any('--claude-code-version test --platform linux/amd64 --office' in row for row in calls))
+            (root / 'calls').unlink()
+            result = subprocess.run(['bash', str(root / 'build-prepared.sh')],
+                env={**env, 'OBSERVED_PLATFORM': 'linux/arm64'}, capture_output=True)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn(b'SCORER_PLATFORM_MISMATCH', result.stderr)
+            self.assertFalse(any(' run ' in row for row in (root / 'calls').read_text().splitlines()))
+            self.assertFalse((root / 'runtime-validation.json').exists())
 
     def test_prepared_build_checks_office_offline_and_stops_on_failure(self):
         with tempfile.TemporaryDirectory() as temporary:

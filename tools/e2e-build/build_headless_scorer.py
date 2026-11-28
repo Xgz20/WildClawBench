@@ -26,8 +26,20 @@ def resolve_version(args: argparse.Namespace) -> dict:
         raise ValueError('Unknown scorer image version: ' + version)
     entry = catalog['versions'][version]
     args.version = version
-    args.tag = args.tag or entry['image']
-    reserved = {row['image'] for key, row in catalog['versions'].items() if key != version}
+    platforms = entry.get('platform_images', {})
+    if platforms:
+        args.platform = args.platform or entry['default_platform']
+        if args.platform not in platforms:
+            raise ValueError('Unsupported scorer platform: ' + args.platform)
+        official_image = platforms[args.platform]
+    else:
+        if args.platform:
+            raise ValueError('Platform selection requires a version with platform_images (v0.2 or later)')
+        official_image = entry['image']
+    args.tag = args.tag or official_image
+    references = {ref for row in catalog['versions'].values()
+                  for ref in [row['image'], *row.get('platform_images', {}).values()]}
+    reserved = {ref + suffix for ref in references if ref != official_image for suffix in ['', '-runtime']}
     if args.tag in reserved:
         raise ValueError('Refusing to overwrite another scorer version: ' + args.tag)
     for key, value in entry['build_args'].items():
@@ -38,7 +50,10 @@ def resolve_version(args: argparse.Namespace) -> dict:
         setattr(args, attribute, value)
     if 'claudecode' not in entry['harnesses'] and args.claude_code_version is not None:
         raise ValueError('This scorer version does not include ClaudeCode')
-    args.context = args.context or ROOT / '.cache/headless-scorer-build' / version
+    if args.context is None:
+        args.context = ROOT / '.cache/headless-scorer-build' / version
+        if platforms:
+            args.context /= args.platform.split('/')[1]
     return entry
 
 
@@ -80,6 +95,7 @@ def prepare(args: argparse.Namespace) -> dict:
     }
     if 'claudecode' in entry['harnesses']:
         inputs['CLAUDE_CODE_VERSION'] = args.claude_code_version
+        inputs['PLATFORM'] = args.platform
     (target / 'build-inputs.env').write_text(
         ''.join(f'{key}={shlex.quote(value)}\n' for key, value in inputs.items()), encoding='utf-8')
     manifest = {'schema_version': 'wildclawbench.headless-scorer-build/v1',
@@ -94,6 +110,8 @@ def prepare(args: argparse.Namespace) -> dict:
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--version', help='Version from docker/e2e-scorer/versions.json')
+    parser.add_argument('--platform', choices=['linux/amd64', 'linux/arm64'],
+                        help='Target platform; v0.2 defaults to Linux AMD64 for servers')
     parser.add_argument('--context', type=Path)
     parser.add_argument('--tag', help='Separate release tag; cannot overwrite another catalog version')
     parser.add_argument('--docker-context', default='default')

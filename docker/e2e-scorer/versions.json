@@ -18,6 +18,11 @@
     },
     "v0.2": {
       "image": "wildclawbench-e2e-scorer:v0.2",
+      "default_platform": "linux/amd64",
+      "platform_images": {
+        "linux/amd64": "wildclawbench-e2e-scorer:v0.2-amd64",
+        "linux/arm64": "wildclawbench-e2e-scorer:v0.2-arm64"
+      },
       "context": "v2",
       "dockerfile": "v2/Dockerfile",
       "harnesses": [

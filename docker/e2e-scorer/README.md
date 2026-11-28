@@ -5,26 +5,28 @@
 | 版本 | 最终镜像 | CLI |
 | --- | --- | --- |
 | v0.1 | `wildclawbench-e2e-scorer:codex-0.171.0-office-v2` | Codex 0.171.0、DSH 0.1.2-rc.1 |
-| v0.2（默认） | `wildclawbench-e2e-scorer:v0.2` | Codex 0.171.0、DSH 0.1.2-rc.1、ClaudeCode 2.1.330 |
+| v0.2（默认） | `wildclawbench-e2e-scorer:v0.2-amd64` / `v0.2-arm64` | Codex 0.171.0、DSH 0.1.2-rc.1、ClaudeCode 2.1.330 |
 
 `v1/` 保留旧构建定义；`v2/` 为新三 CLI 版本。根目录原 Dockerfile、Office/浏览器修复层和旧验收脚本保留兼容。新版本不占用旧镜像标签，历史作业保留冻结镜像 ID。
 
 ## 构建与回滚
 
 ```bash
-bash docker/e2e-scorer/build.sh --docker-context colima
+bash docker/e2e-scorer/build.sh --platform linux/amd64 --docker-context colima
+# Mac ARM64 原生构建：
+bash docker/e2e-scorer/build.sh --platform linux/arm64 --docker-context colima
 bash docker/e2e-scorer/build.sh --version v0.1 --docker-context colima
 ```
 
-默认含 Office；中间标签追加 `-runtime`。CLI 版本和底座由清单固定，升级时新增目录及版本记录。`--tag` 可创建同配方独立发行标签，不能占用其他目录版本的标签。Mac 构建为 ARM64；AMD64 服务器应在目标机器构建。
+默认含 Office；中间标签追加 `-runtime`。CLI 版本和底座由清单固定，升级时新增目录及版本记录。`--tag` 可创建同配方独立发行标签，不能占用其他目录版本的标签。v0.2 默认目标为 `linux/amd64`，适用于 Linux AMD64 服务器；Mac ARM64 原生构建需显式选择 `--platform linux/arm64`。Docker 构建和最终运行均传入目标平台，验收同时校验镜像元数据与容器内架构。跨架构构建需要 builder 支持相应模拟器，也可把上下文传至对应架构主机原生构建。
 
 ```bash
-bash docker/e2e-scorer/build.sh --version v0.2 --prepare-only --context /tmp/scorer-v02
+bash docker/e2e-scorer/build.sh --version v0.2 --platform linux/amd64 --prepare-only --context /tmp/scorer-v02-amd64
 # 将整个目录传至目标服务器，无需仓库或主机 Python：
-bash /absolute/scorer-v02/build-prepared.sh
+bash /absolute/scorer-v02-amd64/build-prepared.sh
 ```
 
-默认上下文为 `.cache/headless-scorer-build/<版本>`。可配置 `--npm-registry`、`--pip-index-url`、`--debian-mirror`、`--debian-security-mirror`。代理仅通过 `--http-proxy` 或运行时 `HTTP_PROXY_INNER` / `HTTPS_PROXY_INNER` 注入，不写入上下文。
+默认上下文为 `.cache/headless-scorer-build/<版本>/<架构>`（v0.1 保留旧路径）。可配置 `--npm-registry`、`--pip-index-url`、`--debian-mirror`、`--debian-security-mirror`。代理仅通过 `--http-proxy` 或运行时 `HTTP_PROXY_INNER` / `HTTPS_PROXY_INNER` 注入，不写入上下文。
 
 ## 验收与回执
 
@@ -45,8 +47,12 @@ ClaudeCode 仅匹配具有 **Anthropic** 端点和裁判用途的模型，推理
 首次环境导入也可使用：
 
 ```dotenv
-WCB_E2E_SCORING_IMAGES={"codex":"wildclawbench-e2e-scorer:v0.2","deepseek-harness":"wildclawbench-e2e-scorer:v0.2","claudecode":"wildclawbench-e2e-scorer:v0.2"}
+WCB_E2E_SCORING_IMAGES={"codex":"wildclawbench-e2e-scorer:v0.2-amd64","deepseek-harness":"wildclawbench-e2e-scorer:v0.2-amd64","claudecode":"wildclawbench-e2e-scorer:v0.2-amd64"}
 WCB_E2E_SCORING_DOCKER_CONTEXT=default
 ```
 
 已有 GUI 默认配置不由环境变量覆盖。构建、登记和服务部署分开；回滚时为后续作业选择旧版本，保留既有作业的冻结配置。
+
+模型 ID 原样传入 CLI，不自动增加供应商前缀。例如此网关使用 `claude-opus-5`，不能替换成 `anthropic/claude-opus-5`。
+
+先前本机产物 `wildclawbench-e2e-scorer:v0.2` 为 ARM64，继续保留；新构建使用带架构后缀的标签，禁止覆盖旧通用标签或另一架构的官方标签。

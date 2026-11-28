@@ -6,6 +6,7 @@ import argparse
 import hashlib
 import json
 import os
+import platform
 from pathlib import Path
 import subprocess
 import sys
@@ -94,6 +95,7 @@ def main() -> None:
     parser.add_argument('--codex-version')
     parser.add_argument('--dsh-version')
     parser.add_argument('--claude-code-version')
+    parser.add_argument('--platform', choices=['linux/amd64', 'linux/arm64'])
     parser.add_argument('--output', type=Path)
     parser.add_argument('--evidence-dir', type=Path)
     args = parser.parse_args()
@@ -102,6 +104,11 @@ def main() -> None:
     browsers = browser_directory()
     manifest = json.loads(Path('/opt/scorer-build-manifest.json').read_text())
     inputs = manifest['inputs']
+    machine = {'x86_64': 'amd64', 'aarch64': 'arm64'}.get(platform.machine(), platform.machine())
+    observed_platform = sys.platform + '/' + machine
+    expected_platform = args.platform or inputs.get('PLATFORM')
+    if expected_platform and observed_platform != expected_platform:
+        raise RuntimeError(f'SCORER_PLATFORM_MISMATCH: expected {expected_platform}, got {observed_platform}')
     codex = run(['codex', '--version'])
     dsh = run(['dsh', '--version'])
     if codex.split()[-1] != (args.codex_version or inputs['CODEX_VERSION']):
@@ -118,6 +125,7 @@ def main() -> None:
         run([sys.executable, str(SKILL / 'scripts/offline_browser_validate.py'),
              '--probe', '--output-dir', str(browser)])
         result = {'schema_version': 'wildclawbench.scorer-runtime-validation/v1', 'status': 'PASS',
+                  'platform': observed_platform,
                   'python': sys.version.split()[0], 'codex': codex, 'dsh': dsh, 'claudecode': claude,
                   'source_revision': manifest['source_revision'], 'skill': manifest['skill'],
                   'browser_directory': browsers,
