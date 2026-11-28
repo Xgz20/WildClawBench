@@ -1,4 +1,5 @@
 import copy
+import json
 import tempfile
 import unittest
 from pathlib import Path
@@ -36,6 +37,21 @@ class RoundReportTests(unittest.TestCase):
         self.assertEqual(len(case['rounds']), 3)
         self.assertIsNone(case['scoring_attempt_id'])
         self.assertEqual(rounds, snapshot)
+
+    def test_legal_multi_round_report_preserves_one_case_and_fixed_scope(self):
+        policy=json.loads((Path(__file__).resolve().parents[2]/'tools/report/data/legal_acceptance_policy.json').read_text())
+        task=policy['dataset']['tasks'][0]['task_id']; rows=[]; units=[]
+        for index in (1,2):
+            row=self.row(task,index,.9,1);row['category']='legal_intake';rows.append(row)
+            unit=self.core.unit_summary([row],{'unit_id':row['unit_id'],'harness':row['harness'],'model':row['model'],'execution_mode':'automatic'})
+            unit.update(source={'score_operation_id':1,'unit_id':'original','batch_id':8,'run_index':index,'agent_invocation_count':1},scorer={'harness':'codex','model':'judge','reasoning_effort':'high'})
+            units.append(unit)
+        data={'title':'法律多轮验收','dataset':{k:policy['dataset'][k] for k in ('id','digest')},'scope':{},'semantics':{},'lineage':{'selected_sources':[]},'units':units,'tasks':rows}
+        result=group_round_report(self.core,data)
+        legal=result['legal_business'];self.assertEqual(legal['scope']['observed_unique_tasks'],1)
+        self.assertEqual((legal['units'][0]['valid_scores'],legal['units'][0]['pending_review'],legal['units'][0]['dataset_tasks']),(1,1,30))
+        self.assertEqual(legal['cases'][0]['round_count'],2)
+        self.assertEqual(legal['units'][0]['label'],next(iter(result['presentation']['unit_labels'].values())))
 
     def test_grouped_reports_have_two_judges_not_six_round_units_and_deduplicate_resources(self):
         rows, units = [], []

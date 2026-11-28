@@ -131,4 +131,7 @@ def group_round_report(core, data):
         agent = {'codex': 'Codex CLI', 'deepseek-harness': 'DSH CLI'}.get(profile.get('harness'), profile.get('harness') or '未记录')
         replacements[old] = old.split('〔')[0] + ' · ' + agent + '/' + str(profile.get('model') or '未记录') + ' · ' + str(profile.get('reasoning_effort') or '未记录') + ' · 评分#' + str(unit['source']['score_operation_id'])
     data['presentation'] = _labels(views, replacements)
+    if data.get('legal_business'):
+        for unit in data['legal_business']['units']:
+            unit['label'] = data['presentation']['unit_labels'][unit['unit_id']]
     return data

@@ -157,6 +157,7 @@ def build(data, policy, reviews, labels, policy_sha):
             'semantics':'质量分保持原值；业务验收按全部冻结用例计分母。未复核不通过，未知严重错误总数为空；多轮逐轮复核；角色为用户声明。'}
 
 def attach(data, presentation, references, table):
+    if data.get('resource_round_view'): return presentation
     policy = references.get('legal_acceptance_policy')
     result = build(data, policy, data.get('legal_reviews', []), presentation['unit_labels'],
                    references.get('sources', {}).get('legal_acceptance_policy.json'))
@@ -166,10 +167,10 @@ def attach(data, presentation, references, table):
     note=[policy['notice'],result['semantics'],'覆盖及验收通过率分母来自冻结发布版本30题；不同单元分别统计，不混合排名。',
           '政策SHA256：'+result['policy_sha256']+'；复核快照SHA256：'+result['review_snapshot_sha256']]
     tables = {
-      '法律业务验收':table(['单元','质量均分','评分覆盖(N/30)','业务通过数/30','业务通过率(%)','待复核','未纳入本次运行','已复核发现严重错误','严重错误总数(未知留空)','复核覆盖/30','整集建议目标'],
-        [[u['label'],pct(u['quality_mean']),f"{u['valid_scores']}/{u['dataset_tasks']}",f"{u['accepted']}/{u['dataset_tasks']}",pct(u['acceptance_rate']),u['pending_review'],u['not_selected'],u['serious_errors_known'],u['serious_errors_total'],f"{u['reviewed_cases']}/{u['dataset_tasks']}",'达到' if u['dataset_target_met'] else '未达到/未完成'] for u in result['units']], notes=note),
+      '法律业务验收':table(['单元','质量均分','评分覆盖(N/30)','业务通过数/30','业务通过率(%)','待复核','未纳入本次运行','已复核发现严重错误','严重错误总数(未知显示—)','复核覆盖/30','整集建议目标'],
+        [[u['label'],pct(u['quality_mean']),f"{u['valid_scores']}/{u['dataset_tasks']}",f"{u['accepted']}/{u['dataset_tasks']}",pct(u['acceptance_rate']),u['pending_review'],u['not_selected'],u['serious_errors_known'],u['serious_errors_total'],f"{u['reviewed_cases']}/{u['dataset_tasks']}",'达到' if u['dataset_target_met'] else '未达到/未完成'] for u in result['units']], notes=note[:]),
       '法律分类验收':table(['单元','分类','质量均分','最低质量分','评分覆盖','通过数/分类总题数','业务通过率(%)','待复核','未纳入','已复核严重错误','每类建议目标'],
-        [[labels[c['unit_id']],c['name'],pct(c['quality_mean']),pct(c['quality_min']),f"{c['valid_scores']}/{c['task_count']}",f"{c['accepted']}/{c['task_count']}",pct(c['acceptance_rate']),c['pending_review'],c['not_selected'],c['serious_errors_known'],'达到' if c['target_met'] else '未达到/未完成'] for c in result['categories']], notes=note),
+        [[labels[c['unit_id']],c['name'],pct(c['quality_mean']),pct(c['quality_min']),f"{c['valid_scores']}/{c['task_count']}",f"{c['accepted']}/{c['task_count']}",pct(c['acceptance_rate']),c['pending_review'],c['not_selected'],c['serious_errors_known'],'达到' if c['target_met'] else '未达到/未完成'] for c in result['categories']], notes=note[:]),
       '法律七项质量指标':table(['单元','指标','总分占比(%)','指标均分','有效覆盖/30'],
         [[labels[m['unit_id']],m['name'],m['weight']*100,pct(m['mean']),f"{m['known']}/{m['total']}"] for m in result['metrics']],notes=['各指标取原检查点值，缺失保持空，不用总分替代，不重复加权计分。']),
       '法律严重错误复核':table(['单元','分类','用例','质量分','业务验收状态','严重错误复核','严重错误类型','证据定位','复核人/声明角色','复核时间','双角色复核声明'],
@@ -177,7 +178,7 @@ def attach(data, presentation, references, table):
           '；'.join(policy['serious_error_types'][e] for e in c['error_types']),
           '\n'.join(e['path']+'：'+e['locator'] for r in c['reviews'] for e in r['evidence']),
           '；'.join(r['reviewer']['name']+'/'+r['reviewer'].get('role','unspecified') for r in c['reviews']),
-          '；'.join(r['reviewed_at'] for r in c['reviews']), '完整' if c['dual_role_review'] else '待补充'] for c in result['cases']],notes=note)}
+          '；'.join(r['reviewed_at'] for r in c['reviews']), '完整' if c['dual_role_review'] else '待补充'] for c in result['cases']],notes=note[:])}
     presentation['tables'].update(tables)
     presentation['sheet_order'][1:1]=list(tables)
     return presentation
